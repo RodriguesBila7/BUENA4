@@ -17,10 +17,7 @@ function notifyAll(data) {
 async function apiFetch(method, path, body) {
   const res = await fetch(`/api/employees${path}`, {
     method,
-    headers: { 
-      'Content-Type': 'application/json',
-      ...(localStorage.getItem('sernic_jwt_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('sernic_jwt_token') } : {})
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {

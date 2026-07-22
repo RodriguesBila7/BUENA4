@@ -10,9 +10,9 @@ export default function TabbedAdminActsManager({ mainTitle, tabs }) {
       <h2 style={styles.mainTitle}>{mainTitle}</h2>
       
       <DraggableTabs 
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={(index) => setActiveTab(index)}
+        tabs={tabs.map((tab, idx) => ({ id: idx, label: tab.label }))} 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
       />
 
       <div style={styles.contentContainer}>

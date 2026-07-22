@@ -86,8 +86,8 @@ export default function ActTypesManager() {
                     <td style={{ ...styles.td, width: '100px' }}>
                       <span style={{
                         ...styles.badge,
-                        backgroundColor: act.is_active === 1 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                        color: act.is_active === 1 ? '#10B981' : '#EF4444'
+                        backgroundColor: act.is_active === 1 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        color: act.is_active === 1 ? '#059669' : '#dc2626'
                       }}>
                         {act.is_active === 1 ? 'Activo' : 'Inactivo'}
                       </span>
@@ -97,7 +97,7 @@ export default function ActTypesManager() {
                         {act.is_active === 1 ? 'Desativar' : 'Ativar'}
                       </button>
                       <button style={styles.btnAction} onClick={() => handleOpenEdit(act)}>✏️</button>
-                      <button style={{ ...styles.btnAction, color: '#EF4444' }} onClick={() => handleDelete(act.id)}>🗑️</button>
+                      <button style={{ ...styles.btnAction, color: '#dc2626' }} onClick={() => handleDelete(act.id)}>🗑️</button>
                     </td>
                   </tr>
                 ))}
@@ -131,12 +131,11 @@ export default function ActTypesManager() {
             />
           </div>
           <div style={styles.formGroup}>
-            <label style={styles.checkboxLabel}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: 'var(--color-text-base)' }}>
               <input 
                 type="checkbox" 
                 checked={formData.is_active === 1}
                 onChange={(e) => setFormData({...formData, is_active: e.target.checked ? 1 : 0})}
-                style={styles.checkbox}
               />
               Acto Activo
             </label>
@@ -163,39 +162,30 @@ export default function ActTypesManager() {
 }
 
 const styles = {
-  container: { padding: '24px', backgroundColor: 'var(--color-bg-base)', minHeight: '100%' },
-  loading: { padding: '24px', textAlign: 'center', color: 'var(--color-text-muted)' },
+  container: { padding: '24px' },
+  loading: { padding: '24px', textAlign: 'center', color: '#64748b' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
-  title: { margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: 'var(--color-text-base)' },
-  subtitle: { margin: 0, fontSize: '14px', color: 'var(--color-text-muted)' },
-  btnAdd: { padding: '10px 20px', backgroundColor: 'var(--color-primary)', color: '#ffffff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
+  title: { margin: '0 0 8px 0', fontSize: '24px', color: '#1e293b' },
+  subtitle: { margin: 0, fontSize: '14px', color: '#64748b' },
+  btnAdd: { padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '500', cursor: 'pointer' },
   groupsContainer: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '20px' },
-  groupCard: { backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', padding: '20px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' },
-  groupTitle: { margin: '0 0 16px 0', fontSize: '16px', fontWeight: '700', color: 'var(--color-text-base)', borderBottom: '2px solid var(--color-border)', paddingBottom: '8px' },
+  groupCard: { backgroundColor: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
+  groupTitle: { margin: '0 0 16px 0', fontSize: '16px', color: '#334155', borderBottom: '2px solid #e2e8f0', paddingBottom: '8px' },
   table: { width: '100%', borderCollapse: 'collapse' },
-  tr: { borderBottom: '1px solid var(--color-border)' },
-  td: { padding: '12px 8px', fontSize: '14px', color: 'var(--color-text-base)' },
-  badge: { padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' },
-  btnAction: { background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', color: 'var(--color-text-muted)', fontSize: '13px' },
+  tr: { borderBottom: '1px solid #f1f5f9' },
+  td: { padding: '12px 8px', fontSize: '14px', color: '#475569' },
+  badge: { padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' },
+  btnAction: { background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', color: '#64748b', fontSize: '13px' },
   
-  form: { display: 'flex', flexDirection: 'column', gap: '18px' },
-  formGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '13px', fontWeight: '600', color: 'var(--color-text-muted)' },
-  input: {
-    width: '100%',
-    padding: '10px 14px',
-    border: '1px solid var(--color-border)',
-    borderRadius: '8px',
-    fontSize: '14px',
-    backgroundColor: 'var(--color-bg-base)',
-    color: 'var(--color-text-base)',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.2s'
-  },
-  checkboxLabel: { display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: 'var(--color-text-base)', fontWeight: '500' },
-  checkbox: { width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--color-primary)' },
-  modalFooter: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '10px' },
-  btnCancel: { padding: '10px 20px', backgroundColor: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-base)', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px' },
-  btnSave: { padding: '10px 20px', backgroundColor: 'var(--color-primary)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }
+  overlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 },
+  modal: { backgroundColor: 'white', borderRadius: '12px', width: '500px', maxWidth: '90%', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' },
+  modalHeader: { padding: '20px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  closeBtn: { background: 'none', border: 'none', fontSize: '20px', color: '#94a3b8', cursor: 'pointer' },
+  form: { padding: '20px' },
+  formGroup: { marginBottom: '20px' },
+  label: { display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: '600', color: '#475569' },
+  input: { width: '100%', padding: '10px 12px', border: '1px solid #cbd5e0', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' },
+  modalFooter: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' },
+  btnCancel: { padding: '10px 16px', backgroundColor: 'transparent', border: '1px solid #cbd5e0', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' },
+  btnSave: { padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '500' }
 };

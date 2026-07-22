@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import ConfirmModal from '../ConfirmModal';
+import DraggableModal from '../common/DraggableModal';
 import useAdminActsData from '../../hooks/useAdminActsData';
 
-export default function EmployeeDeletedTab({ employees = [], orgData = {}, onRestore, onPermanentDelete }) {
+export default function EmployeeDeletedTab({ employees = [], orgData, onRestore, onPermanentDelete }) {
   const deletedEmployees = (employees || []).filter(e => ['Apagado', 'Demitido', 'Expulso', 'Falecido'].includes(e.status));
   const { registerAct } = useAdminActsData();
   const [confirmModal, setConfirmModal] = useState({ isOpen: false });
@@ -223,59 +224,61 @@ export default function EmployeeDeletedTab({ employees = [], orgData = {}, onRes
       )}
 
       {/* Modal de Reintegração */}
-      {restoreModal.isOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: 'var(--color-bg-card)', padding: '24px', borderRadius: '8px', width: '90%', maxWidth: '400px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ marginTop: 0, color: 'var(--color-primary)', fontSize: '18px' }}>Despacho de Reintegração</h3>
-            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
-              Para reintegrar o funcionário <strong>{restoreModal.employee?.name}</strong> (Estado: {restoreModal.employee?.status}), é necessário anexar o despacho oficial. O processo ficará pendente de confirmação.
-            </p>
-            <form onSubmit={submitReintegration}>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: 'var(--color-text-base)' }}>Documento Anexo (PDF/Imagem) *</label>
-                <input 
-                  type="file" 
-                  accept=".pdf,image/*" 
-                  onChange={handleFileChange}
-                  style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: '4px', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)' }}
-                  required
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button type="button" onClick={() => setRestoreModal({isOpen: false, employee: null})} style={{ padding: '8px 16px', backgroundColor: 'transparent', border: '1px solid var(--color-border)', borderRadius: '4px', cursor: 'pointer', color: 'var(--color-text-base)' }}>
-                  Cancelar
-                </button>
-                <button type="submit" style={{ padding: '10px 16px', backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
-                  Submeter
-                </button>
-              </div>
-            </form>
+      <DraggableModal
+        isOpen={restoreModal.isOpen}
+        title="Despacho de Reintegração"
+        onClose={() => setRestoreModal({isOpen: false, employee: null})}
+        maxWidth="440px"
+      >
+        <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+          Para reintegrar o funcionário <strong>{restoreModal.employee?.name}</strong> (Estado: {restoreModal.employee?.status}), é necessário anexar o despacho oficial. O processo ficará pendente de confirmação.
+        </p>
+        <form onSubmit={submitReintegration}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: 'var(--color-text-base)' }}>Documento Anexo (PDF/Imagem) *</label>
+            <input 
+              type="file" 
+              accept=".pdf,image/*" 
+              onChange={handleFileChange}
+              style={{ width: '100%', padding: '10px', border: '1px solid var(--color-border)', borderRadius: '4px', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)' }}
+              required
+            />
           </div>
-        </div>
-      )}
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+            <button type="button" onClick={() => setRestoreModal({isOpen: false, employee: null})} style={{ padding: '8px 16px', backgroundColor: 'transparent', border: '1px solid var(--color-border)', borderRadius: '4px', cursor: 'pointer', color: 'var(--color-text-base)' }}>
+              Cancelar
+            </button>
+            <button type="submit" style={{ padding: '10px 16px', backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
+              Submeter
+            </button>
+          </div>
+        </form>
+      </DraggableModal>
     </div>
   );
 }
 
 const styles = {
   statCard: {
-    backgroundColor: 'var(--color-bg-base)',
-    padding: '16px',
+    backgroundColor: 'var(--color-bg-card)',
+    padding: '16px 20px',
     borderRadius: '8px',
     border: '1px solid var(--color-border)',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
   },
   statTitle: {
     fontSize: '12px',
     fontWeight: '600',
     color: 'var(--color-text-muted)',
-    marginBottom: '6px',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.5px'
   },
   statValue: {
     fontSize: '24px',
-    fontWeight: '700',
-  },
+    fontWeight: '800',
+    lineHeight: '1.2'
+  }
 };
-

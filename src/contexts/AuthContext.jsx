@@ -12,8 +12,8 @@ export const AuthProvider = ({ children }) => {
         if (parsed && parsed.roleDetails && parsed.roleDetails.permissions) {
           const ALL_MODULES = [
             'Dashboard', 'Funcionarios', 'Estrutura Organizacional', 'Processo Disciplinar',
-            'Avaliacao de Desempenho', 'Transferencias',
-            'Carreiras', 'Categorias', 'Configuracoes',
+            'Formacao', 'Avaliacao de Desempenho', 'Ferias', 'Licencas', 'Transferencias',
+            'Promocoes', 'Carreiras', 'Categorias', 'Relatorios', 'Configuracoes',
             'Utilizadores', 'Auditoria', 'Efetividade'
           ];
           let updated = false;
@@ -46,7 +46,6 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('sernic_logged_user');
-    localStorage.removeItem('sernic_jwt_token');
     localStorage.removeItem('sernic_last_activity');
   };
 

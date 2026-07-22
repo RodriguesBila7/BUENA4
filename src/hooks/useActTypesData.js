@@ -4,17 +4,10 @@ export default function useActTypesData() {
   const [actTypes, setActTypes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const getAuthHeaders = () => ({
-    'Content-Type': 'application/json',
-    ...(localStorage.getItem('sernic_jwt_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('sernic_jwt_token') } : {})
-  });
-
   const fetchActTypes = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/act-types', {
-        headers: getAuthHeaders()
-      });
+      const res = await fetch('/api/act-types');
       if (res.ok) {
         const data = await res.json();
         setActTypes(data);
@@ -34,7 +27,7 @@ export default function useActTypesData() {
     try {
       const res = await fetch('/api/act-types', {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(actTypeData)
       });
       if (res.ok) {
@@ -51,7 +44,7 @@ export default function useActTypesData() {
     try {
       const res = await fetch(`/api/act-types/${id}`, {
         method: 'PUT',
-        headers: getAuthHeaders(),
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(actTypeData)
       });
       if (res.ok) {
@@ -66,10 +59,7 @@ export default function useActTypesData() {
 
   const deleteActType = async (id) => {
     try {
-      const res = await fetch(`/api/act-types/${id}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-      });
+      const res = await fetch(`/api/act-types/${id}`, { method: 'DELETE' });
       if (res.ok) {
         await fetchActTypes();
         return { success: true };

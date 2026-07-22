@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import useAuthData from '../../../hooks/useAuthData';
 import ConfirmModal from '../../ConfirmModal';
 import DraggableModal from '../../common/DraggableModal';
+import useDraggable from '../../../hooks/useDraggable';
 
 export default function AccountList({ t }) {
   const { users, roles, addUser, updateUser } = useAuthData();
@@ -17,6 +18,7 @@ export default function AccountList({ t }) {
 
   // Confirmation Modal
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, isDestructive: false });
+  const { position, onPointerDown } = useDraggable();
 
   // Filtered Users
   const filteredUsers = useMemo(() => {
@@ -75,7 +77,7 @@ export default function AccountList({ t }) {
     });
   };
 
-  const handleSaveUser = async (e) => {
+  const handleSaveUser = (e) => {
     e.preventDefault();
     setFormError('');
 
@@ -90,7 +92,7 @@ export default function AccountList({ t }) {
     }
 
     if (modalMode === 'create') {
-      const result = await addUser({
+      const result = addUser({
         name: formData.name,
         username: formData.username,
         email: formData.email,
@@ -103,8 +105,8 @@ export default function AccountList({ t }) {
         status: formData.status
       });
 
-      if (!result || !result.success) {
-        setFormError(result?.error || 'Erro ao criar utilizador.');
+      if (!result.success) {
+        setFormError(result.error);
         return;
       }
     } else {
@@ -124,9 +126,9 @@ export default function AccountList({ t }) {
         updatePayload.password = formData.password;
       }
 
-      const result = await updateUser(formData.id, updatePayload);
-      if (!result || !result.success) {
-        setFormError(result?.error || 'Erro ao atualizar utilizador.');
+      const result = updateUser(formData.id, updatePayload);
+      if (!result.success) {
+        setFormError(result.error);
         return;
       }
     }
@@ -230,7 +232,7 @@ export default function AccountList({ t }) {
         isOpen={isModalOpen}
         title={modalMode === 'create' ? 'Criar Nova Conta' : 'Editar Conta'}
         onClose={() => setIsModalOpen(false)}
-        maxWidth="500px"
+        maxWidth="520px"
       >
         <form onSubmit={handleSaveUser} style={styles.form}>
           {formError && (

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import useOrgData from '../hooks/useOrgData';
 import ConfirmModal from './ConfirmModal';
-import DraggableTabs from './common/DraggableTabs';
 import DistrictDashboard from './org/DistrictDashboard';
 import DistrictQueries from './org/DistrictQueries';
 import DistrictOrganogram from './org/DistrictOrganogram';
@@ -331,23 +330,19 @@ export default function OrgStructureManager({ t }) {
       </div>
 
       {/* Tabs */}
-      <DraggableTabs
-        tabs={[
-          { id: 'dir', label: t('org_tab_dir') },
-          { id: 'dep', label: t('org_tab_dep') },
-          { id: 'rep', label: t('org_tab_rep') },
-          { id: 'sec', label: t('org_tab_sec') },
-          { id: 'dist_dir', label: 'Direções Distritais' },
-          { id: 'dist_sec', label: 'Secções Distritais' },
-          { id: 'dist_tree', label: 'Organograma Distrital' },
-          { id: 'dist_queries', label: 'Pesquisa Distrital' },
-          { id: 'dist_dash', label: 'Estatísticas Distritais' },
-          { id: 'car', label: t('org_tab_car') },
-          { id: 'cat', label: t('org_tab_cat') }
-        ]}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
+      <div style={styles.tabsContainer}>
+        <button onClick={() => handleTabChange('dir')} style={activeTab === 'dir' ? styles.activeTab : styles.tab}>{t('org_tab_dir')}</button>
+        <button onClick={() => handleTabChange('dep')} style={activeTab === 'dep' ? styles.activeTab : styles.tab}>{t('org_tab_dep')}</button>
+        <button onClick={() => handleTabChange('rep')} style={activeTab === 'rep' ? styles.activeTab : styles.tab}>{t('org_tab_rep')}</button>
+        <button onClick={() => handleTabChange('sec')} style={activeTab === 'sec' ? styles.activeTab : styles.tab}>{t('org_tab_sec')}</button>
+        <button onClick={() => handleTabChange('dist_dir')} style={activeTab === 'dist_dir' ? styles.activeTab : styles.tab}>Direções Distritais</button>
+        <button onClick={() => handleTabChange('dist_sec')} style={activeTab === 'dist_sec' ? styles.activeTab : styles.tab}>Secções Distritais</button>
+        <button onClick={() => handleTabChange('dist_tree')} style={activeTab === 'dist_tree' ? styles.activeTab : styles.tab}>Organograma Distrital</button>
+        <button onClick={() => handleTabChange('dist_queries')} style={activeTab === 'dist_queries' ? styles.activeTab : styles.tab}>Pesquisa Distrital</button>
+        <button onClick={() => handleTabChange('dist_dash')} style={activeTab === 'dist_dash' ? styles.activeTab : styles.tab}>Estatísticas Distritais</button>
+        <button onClick={() => handleTabChange('car')} style={activeTab === 'car' ? styles.activeTab : styles.tab}>{t('org_tab_car')}</button>
+        <button onClick={() => handleTabChange('cat')} style={activeTab === 'cat' ? styles.activeTab : styles.tab}>{t('org_tab_cat')}</button>
+      </div>
 
       <div style={{ ...styles.contentArea, gridTemplateColumns: ['dist_tree', 'dist_queries', 'dist_dash'].includes(activeTab) ? '1fr' : '350px 1fr' }}>
         {activeTab === 'dist_tree' && (

@@ -6,7 +6,7 @@ import ConfirmModal from '../ConfirmModal';
 import EmployeeDetailsModal from './EmployeeDetailsModal';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import useDisciplinaryData from '../../hooks/useDisciplinaryData';
 import useEvaluationData from '../../hooks/useEvaluationData';
 import { getClassification } from '../../utils/evaluationRules';

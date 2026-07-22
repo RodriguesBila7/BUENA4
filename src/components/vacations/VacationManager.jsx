@@ -4,6 +4,7 @@ import VacationPlan from './VacationPlan';
 import VacationRequests from './VacationRequests';
 import VacationHistory from './VacationHistory';
 import VacationSettings from './VacationSettings';
+import DraggableTabs from '../common/DraggableTabs';
 
 export default function VacationManager() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -18,18 +19,7 @@ export default function VacationManager() {
 
   return (
     <div style={styles.container}>
-
-      <div style={styles.tabsContainer}>
-        {tabs.map(tab => (
-          <button 
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)} 
-            style={activeTab === tab.id ? styles.activeTab : styles.tab}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <DraggableTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div style={styles.contentArea}>
         {activeTab === 'dashboard' && <VacationDashboard />}

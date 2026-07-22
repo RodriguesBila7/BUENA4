@@ -28,9 +28,8 @@ export default function DraggableModal({
           maxWidth,
           transform: `translate(${position.x}px, ${position.y}px)`
         }}
-        onPointerDown={onPointerDown}
       >
-        <div style={styles.header} className="drag-handle">
+        <div style={styles.header} className="drag-handle" onPointerDown={onPointerDown}>
           <div style={styles.titleContainer}>
             {icon && <span style={styles.icon}>{icon}</span>}
             <h3 style={styles.title}>{title}</h3>

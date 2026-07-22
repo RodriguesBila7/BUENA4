@@ -6,6 +6,7 @@ import TransferDashboard from './TransferDashboard';
 import TransferList from './TransferList';
 import TransferForm from './TransferForm';
 import TransferHistory from './TransferHistory';
+import DraggableTabs from '../common/DraggableTabs';
 
 export default function TransferManager() {
   const { 
@@ -120,31 +121,16 @@ export default function TransferManager() {
         </button>
       </div>
 
-      <div style={styles.tabsContainer}>
-        <button 
-          onClick={() => setActiveTab('dashboard')} 
-          style={activeTab === 'dashboard' ? styles.activeTab : styles.tab}
-        >
-          Dashboard
-        </button>
-        <button 
-          onClick={() => setActiveTab('list')} 
-          style={activeTab === 'list' ? styles.activeTab : styles.tab}
-        >
-          Lista de Processos
-        </button>
-        <button 
-          onClick={() => setActiveTab('history')} 
-          style={activeTab === 'history' ? styles.activeTab : styles.tab}
-        >
-          Histórico de Colaborador
-        </button>
-        {activeTab === 'form' && (
-          <button style={styles.activeTab}>
-            {editingTransfer ? 'Editar Movimentação' : 'Nova Movimentação'}
-          </button>
-        )}
-      </div>
+      <DraggableTabs 
+        tabs={[
+          { id: 'dashboard', label: 'Dashboard' },
+          { id: 'list', label: 'Lista de Processos' },
+          { id: 'history', label: 'Histórico de Colaborador' },
+          ...(activeTab === 'form' ? [{ id: 'form', label: editingTransfer ? 'Editar Movimentação' : 'Nova Movimentação' }] : [])
+        ]} 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+      />
 
       <div style={styles.contentArea}>
         {activeTab === 'dashboard' && (

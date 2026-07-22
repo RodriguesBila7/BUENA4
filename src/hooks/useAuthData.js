@@ -19,10 +19,7 @@ function notifyAll(users, roles) {
 async function api(method, path, body) {
   const res = await fetch(`/api/auth${path}`, {
     method,
-    headers: { 
-      'Content-Type': 'application/json',
-      ...(localStorage.getItem('sernic_jwt_token') ? { 'Authorization': 'Bearer ' + localStorage.getItem('sernic_jwt_token') } : {})
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -95,7 +92,6 @@ export default function useAuthData() {
   const authenticate = useCallback(async (username, password, policies) => {
     try {
       const res = await api('POST', '/login', { username, password });
-      if (res.token) localStorage.setItem('sernic_jwt_token', res.token);
       return { success: true, user: { ...res.user, roleDetails: res.user.permissions ? { permissions: res.user.permissions } : null } };
     } catch (e) {
       if (e.message === 'invalid_credentials') return { success: false, error: 'Credenciais invalidas.' };

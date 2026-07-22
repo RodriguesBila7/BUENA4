@@ -3,7 +3,6 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import useTranslation from './hooks/useTranslation';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
-import ErrorBoundary from './components/common/ErrorBoundary';
 
 const DEFAULT_SETTINGS = {
   nome_instituicao: 'Serviço Nacional de Investigação Criminal',
@@ -146,18 +145,16 @@ export default function App() {
   return (
     <>
       {user ? (
-        <ErrorBoundary>
-          <Dashboard 
-            user={user} 
-            settings={settings} 
-            updateSettings={updateSettings} 
-            resetSettings={resetSettings} 
-            onLogout={handleLogout}
-            t={t}
-            language={language}
-            setLanguage={setLanguage}
-          />
-        </ErrorBoundary>
+        <Dashboard 
+          user={user} 
+          settings={settings} 
+          updateSettings={updateSettings} 
+          resetSettings={resetSettings} 
+          onLogout={handleLogout}
+          t={t}
+          language={language}
+          setLanguage={setLanguage}
+        />
       ) : (
         <Login 
           settings={settings} 

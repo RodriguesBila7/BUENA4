@@ -32,9 +32,8 @@ export default function ConfirmModal({
     <div style={styles.overlay}>
       <div 
         style={{ ...styles.modal, transform: `translate(${position.x}px, ${position.y}px)` }}
-        onPointerDown={onPointerDown}
       >
-        <div style={styles.header} className="drag-handle">
+        <div style={styles.header} className="drag-handle" onPointerDown={onPointerDown}>
             <h3 style={styles.title}>{title || 'Atenção'}</h3>
           <button onClick={onCancel} style={styles.closeBtn}>×</button>
         </div>

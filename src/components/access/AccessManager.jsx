@@ -6,18 +6,26 @@ import SecurityPolicies from './SecurityPolicies';
 import AuditViewer from './AuditViewer';
 import ModulePermissions from './ModulePermissions';
 import PermissionGuard from '../PermissionGuard';
-import DraggableTabs from '../common/DraggableTabs';
 
 const styles = {
   container: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', boxSizing: 'border-box' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  title: { margin: 0, fontSize: '24px', color: 'var(--color-primary)' }
+  title: { margin: 0, fontSize: '24px', color: 'var(--color-primary)' },
+  tabsContainer: { display: 'flex', borderBottom: '1px solid var(--color-border)', gap: '20px' },
+  tab: (active) => ({
+    padding: '10px 15px',
+    cursor: 'pointer',
+    borderBottom: active ? '3px solid var(--color-primary)' : '3px solid transparent',
+    color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+    fontWeight: active ? 'bold' : 'normal',
+    transition: 'all 0.2s',
+    userSelect: 'none'
+  })
 };
 
 export default function AccessManager({ currentView, onViewChange }) {
   const mapTab = (id) => {
     switch(id) {
-      case 'users_dashboard': return 'dashboard';
       case 'users_manage': return 'users';
       case 'users_roles': return 'roles';
       case 'users_permissions': return 'permissions';
@@ -29,13 +37,13 @@ export default function AccessManager({ currentView, onViewChange }) {
   const activeTab = mapTab(currentView);
 
   const handleTab = (tab) => {
-    let id = 'users_dashboard'; // default
-    if (tab === 'dashboard') id = 'users_dashboard';
-    if (tab === 'users') id = 'users_manage';
-    if (tab === 'roles') id = 'users_roles';
-    if (tab === 'permissions') id = 'users_permissions';
-    if (tab === 'policies') id = 'users_policies';
-    if (tab === 'audit') id = 'users_audit';
+    let id = 'users_manage'; // default
+    if(tab === 'dashboard') id = 'users_manage'; // could create 'users_dashboard' if needed, mapping 'dashboard' to 'users_manage' for now
+    if(tab === 'users') id = 'users_manage';
+    if(tab === 'roles') id = 'users_roles';
+    if(tab === 'permissions') id = 'users_permissions';
+    if(tab === 'policies') id = 'users_policies';
+    if(tab === 'audit') id = 'users_audit';
     onViewChange(id);
   };
 
@@ -45,21 +53,29 @@ export default function AccessManager({ currentView, onViewChange }) {
         <h2 style={styles.title}>Segurança e Acessos</h2>
       </div>
 
-      <DraggableTabs
-        tabs={[
-          { id: 'dashboard', label: 'Dashboard de Segurança' },
-          { id: 'users', label: 'Utilizadores' },
-          { id: 'roles', label: 'Perfis de Acesso' },
-          { id: 'permissions', label: 'Permissões por Módulo' },
-          { id: 'policies', label: 'Políticas' },
-          { id: 'audit', label: 'Auditoria' }
-        ]}
-        activeTab={activeTab}
-        onTabChange={handleTab}
-      />
+      <div style={styles.tabsContainer}>
+        <div style={styles.tab(activeTab === 'dashboard')} onClick={() => handleTab('dashboard')}>
+          Dashboard
+        </div>
+        <div style={styles.tab(activeTab === 'users')} onClick={() => handleTab('users')}>
+          Utilizadores
+        </div>
+        <div style={styles.tab(activeTab === 'roles')} onClick={() => handleTab('roles')}>
+          Perfis de Acesso
+        </div>
+        <div style={styles.tab(activeTab === 'permissions')} onClick={() => handleTab('permissions')}>
+          Permissões por Módulo
+        </div>
+        <div style={styles.tab(activeTab === 'policies')} onClick={() => handleTab('policies')}>
+          Políticas
+        </div>
+        <div style={styles.tab(activeTab === 'audit')} onClick={() => handleTab('audit')}>
+          Auditoria
+        </div>
+      </div>
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        {activeTab === 'dashboard' && <SecurityDashboard onNavigate={handleTab} />}
+        {activeTab === 'dashboard' && <SecurityDashboard />}
         {activeTab === 'users' && <UserManager />}
         {activeTab === 'roles' && <RoleManager />}
         {activeTab === 'permissions' && <ModulePermissions />}

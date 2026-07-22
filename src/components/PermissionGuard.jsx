@@ -28,5 +28,25 @@ export default function PermissionGuard({ module, action, children, fallback = n
     return children;
   }
 
-  return fallback;
+  const defaultFallback = (
+    <div style={{
+      padding: '40px 20px',
+      textAlign: 'center',
+      backgroundColor: 'var(--color-bg-card)',
+      borderRadius: '12px',
+      border: '1px solid var(--color-border)',
+      margin: '20px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
+    }}>
+      <div style={{ fontSize: '40px', marginBottom: '12px' }}>🔒</div>
+      <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-text-base)', marginBottom: '8px' }}>
+        Acesso Não Autorizado
+      </h3>
+      <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', maxWidth: '450px', margin: '0 auto' }}>
+        O seu perfil atual não tem permissão para <strong>{action || 'acessar'}</strong> o módulo de <strong>{module || 'Sistema'}</strong>. Contacte o Administrador se necessitar de acesso.
+      </p>
+    </div>
+  );
+
+  return fallback !== null ? fallback : defaultFallback;
 }

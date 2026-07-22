@@ -6,7 +6,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { getDb } from '../db.js';
-import { generateToken, requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -150,8 +149,7 @@ router.post('/login', (req, res) => {
       safeUser.roleName = activeRoleName;
       safeUser.isDelegated = isDelegated;
       
-      const token = generateToken(user);
-      res.json({ success: true, token, user: { ...safeUser, permissions: activePermissions ? JSON.parse(activePermissions) : {} } });
+      res.json({ success: true, user: { ...safeUser, permissions: activePermissions ? JSON.parse(activePermissions) : {} } });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

@@ -20,7 +20,7 @@ router.get('/history/:employeeId', (req, res) => {
   const db = getDb();
   try {
     const { employeeId } = req.params;
-    const history = db.prepare('SELECT * FROM functional_history WHERE employee_id = ? ORDER BY date(act_date) DESC, created_at DESC').all();
+    const history = db.prepare('SELECT * FROM functional_history WHERE employee_id = ? ORDER BY date(act_date) DESC, created_at DESC').all(employeeId);
     res.json(history.map(h => ({
       id: h.id,
       actType: h.act_type,

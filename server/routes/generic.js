@@ -147,13 +147,7 @@ auditRouter.post('/', (req, res) => {
   if (!user || !action || !module) return res.status(400).json({ error: 'user, action, module obrigatorios' });
   try {
     const db = getDb();
-    
-    // Capturar IP real e User-Agent
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const userAgent = req.headers['user-agent'] || 'Unknown';
-    const enrichedDetails = details ? `${details} | IP: ${ip} | UA: ${userAgent}` : `IP: ${ip} | UA: ${userAgent}`;
-
-    const result = db.prepare('INSERT INTO audit_log (user, action, module, details) VALUES (?, ?, ?, ?)').run(user, action, module, enrichedDetails);
+    const result = db.prepare('INSERT INTO audit_log (user, action, module, details) VALUES (?, ?, ?, ?)').run(user, action, module, details || null);
     res.json({ success: true, id: result.lastInsertRowid });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 
 const MODULES = [
   'Dashboard', 'Funcionarios', 'Estrutura Organizacional', 'Processo Disciplinar',
-  'Avaliacao de Desempenho', 'Transferencias',
-  'Carreiras', 'Categorias', 'Configuracoes',
-  'Utilizadores', 'Auditoria', 'Efetividade'
+  'Formacao', 'Avaliacao de Desempenho', 'Ferias', 'Licencas', 'Transferencias',
+  'Promocoes', 'Carreiras', 'Categorias', 'Relatorios', 'Configuracoes',
+  'Utilizadores', 'Auditoria', 'Acessos'
 ];
 
 const ACTIONS = ['Visualizar', 'Criar', 'Editar', 'Eliminar', 'Validar', 'Exportar', 'Importar', 'Imprimir', 'Administrar'];

@@ -1,10 +1,10 @@
 import React from 'react';
 
-const AVAILABLE_MODULES = [
+const MODULES = [
   'Dashboard', 'Funcionarios', 'Estrutura Organizacional', 'Processo Disciplinar',
-  'Avaliacao de Desempenho', 'Transferencias',
-  'Carreiras', 'Categorias', 'Configuracoes',
-  'Utilizadores', 'Auditoria', 'Efetividade'
+  'Formacao', 'Avaliacao de Desempenho', 'Ferias', 'Licencas', 'Transferencias',
+  'Promocoes', 'Carreiras', 'Categorias', 'Relatorios', 'Configuracoes',
+  'Utilizadores', 'Auditoria', 'Acessos'
 ];
 
 const styles = {
@@ -28,7 +28,7 @@ export default function ModulePermissions() {
       </div>
 
       <div style={styles.grid}>
-        {AVAILABLE_MODULES.map(mod => (
+        {MODULES.map(mod => (
           <div key={mod} style={styles.card}>
             <h4 style={styles.cardTitle}>{mod}</h4>
             <ul style={styles.roleList}>

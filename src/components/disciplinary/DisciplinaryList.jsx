@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import useDisciplinaryData from '../../hooks/useDisciplinaryData';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export default function DisciplinaryList({ orgData, employeesData }) {
   const { data } = orgData;

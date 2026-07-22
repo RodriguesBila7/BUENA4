@@ -10,7 +10,6 @@ import EvaluationManager from './evaluations/EvaluationManager';
 import AccessManager from './access/AccessManager';
 import PermissionGuard from './PermissionGuard';
 import ConfirmModal from './ConfirmModal';
-import ErrorBoundary from './common/ErrorBoundary';
 import useEmployeeData from '../hooks/useEmployeeData';
 import useOrgData from '../hooks/useOrgData';
 import useActTypesData from '../hooks/useActTypesData';
@@ -20,6 +19,9 @@ import AccountManager from './settings/accounts/AccountManager';
 import BackupCenter from './settings/BackupCenter';
 import ActTypesManager from './settings/ActTypesManager';
 import CareerManager from './career/CareerManager';
+import TransferManager from './transfers/TransferManager';
+import VacationManager from './vacations/VacationManager';
+import ErrorBoundary from './common/ErrorBoundary';
 
 const getDynamicGroupIcon = (groupName) => {
   switch(groupName) {
@@ -415,7 +417,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                  {[
                    { id: 'admin_acts_dashboard', label: 'Dashboard Executivo', icon: <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path> },
                    { id: 'career', label: 'Promoção e Progressão', icon: <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path> },
-                 ...Object.keys((actTypes || []).reduce((acc, act) => { if (act.is_active) acc[act.group_name] = true; return acc; }, {}))
+                 ...Object.keys(actTypes.reduce((acc, act) => { if (act.is_active) acc[act.group_name] = true; return acc; }, {}))
                    .filter(group => group !== 'Promoção e Progressão' && group !== 'Processos Disciplinares')
                    .sort()
                    .map(group => ({
@@ -651,7 +653,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       <div style={{ position: 'absolute', left: '56px', top: '0', bottom: '20px', width: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
 
                       {[
-                        { id: 'users_dashboard', label: 'Dashboard de Segurança' },
                         { id: 'users_manage', label: 'Gestão de utilizadores' },
                         { id: 'users_roles', label: 'Perfis / roles' },
                         { id: 'users_permissions', label: 'Permissões por módulo' },
@@ -988,6 +989,24 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             <HomeDashboard t={t} onTabChange={handleTabChange} />
           )}
 
+          {/* TAB TRANSFERÊNCIAS */}
+          {activeTab === 'transfers' && (
+            <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
+              <PermissionGuard module="Transferências" action="Visualizar">
+                <TransferManager />
+              </PermissionGuard>
+            </div>
+          )}
+
+          {/* TAB FÉRIAS E LICENÇAS */}
+          {activeTab === 'vacations' && (
+            <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
+              <PermissionGuard module="Férias" action="Visualizar">
+                <VacationManager />
+              </PermissionGuard>
+            </div>
+          )}
+
           {/* TAB AVALIAÇÕES */}
           {activeTab === 'evaluations' && (
             <PermissionGuard module="Avaliacao de Desempenho" action="Visualizar">
@@ -1035,7 +1054,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           )}
 
           {/* TAB SEGURANÇA E ACESSOS */}
-          {['users_dashboard', 'users_manage', 'users_roles', 'users_permissions', 'users_policies', 'users_audit'].includes(activeTab) && (
+          {['users_manage', 'users_roles', 'users_permissions', 'users_policies', 'users_audit'].includes(activeTab) && (
             <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
               <PermissionGuard module="Acessos" action="Visualizar" fallback={<div style={{padding: '20px', color: 'red'}}>Acesso não autorizado.</div>}>
                 <AccessManager currentView={activeTab} onViewChange={handleTabChange} />
@@ -1367,13 +1386,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           {activeTab === 'settings_act_types' && (
             <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
               <ActTypesManager />
-            </div>
-          )}
-
-          {/* TAB ESTRUTURA ORGANIZACIONAL */}
-          {activeTab === 'org_structure' && (
-            <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
-              <OrgStructureManager t={t} />
             </div>
           )}
 
