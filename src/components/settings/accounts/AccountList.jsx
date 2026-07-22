@@ -45,13 +45,13 @@ export default function AccountList({ t }) {
   const handleOpenEdit = (user) => {
     setFormError('');
     setFormData({
-      id: user.id,
-      name: user.name,
-      username: user.username,
+      id: user.id || '',
+      name: user.name || '',
+      username: user.username || '',
       email: user.email || '',
       contact: user.contact || '',
       password: '', // Do not load password
-      roleId: user.roleId,
+      roleId: user.roleId || '',
       delegatedRoleId: user.delegatedRoleId || '',
       delegationStartDate: user.delegationStartDate || '',
       delegationEndDate: user.delegationEndDate || '',
