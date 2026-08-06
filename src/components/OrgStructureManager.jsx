@@ -390,7 +390,6 @@ export default function OrgStructureManager({ t }) {
         <button onClick={() => handleTabChange('rep')} style={activeTab === 'rep' ? styles.activeTab : styles.tab}>{t('org_tab_rep')}</button>
         <button onClick={() => handleTabChange('sec')} style={activeTab === 'sec' ? styles.activeTab : styles.tab}>{t('org_tab_sec')}</button>
         <button onClick={() => handleTabChange('dist_dir')} style={activeTab === 'dist_dir' ? styles.activeTab : styles.tab}>Direcções Distritais</button>
-        <button onClick={() => handleTabChange('dist_sec')} style={activeTab === 'dist_sec' ? styles.activeTab : styles.tab}>Secções Distritais</button>
         <button onClick={() => handleTabChange('dist_tree')} style={activeTab === 'dist_tree' ? styles.activeTab : styles.tab}>Organograma Distrital</button>
         <button onClick={() => handleTabChange('dist_queries')} style={activeTab === 'dist_queries' ? styles.activeTab : styles.tab}>Pesquisa Distrital</button>
         <button onClick={() => handleTabChange('dist_dash')} style={activeTab === 'dist_dash' ? styles.activeTab : styles.tab}>Estatísticas Distritais</button>
@@ -519,7 +518,16 @@ export default function OrgStructureManager({ t }) {
                     )}
 
                     {selectedDistrictId && selectedDistrictId !== 'NEW' && (() => {
-                      const distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(selectedDistrictId));
+                      let distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(selectedDistrictId));
+                      if (distSecs.length === 0) {
+                        const DEFAULT_NAMES = [
+                          "Piquete Operativo", "Secretaria", "Secção Técnica Criminalística",
+                          "Secção de Apoio e Documentação", "Secção de Armamento e Segurança",
+                          "Secção de Identificação e Registo Policial", "Secção de Investigação Operativa",
+                          "Secção de Investigação e Instrução Criminal"
+                        ];
+                        distSecs = DEFAULT_NAMES.map((name, idx) => ({ id: `default_${idx}`, name }));
+                      }
                       return (
                         <div style={{
                           padding: '12px 14px',
@@ -531,27 +539,21 @@ export default function OrgStructureManager({ t }) {
                           <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-primary)', display: 'block', marginBottom: '8px' }}>
                             🔖 Secções Integrantes do Organograma deste Distrito ({distSecs.length}):
                           </label>
-                          {distSecs.length > 0 ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                              {distSecs.map(sec => (
-                                <span key={sec.id} style={{
-                                  padding: '3px 8px',
-                                  borderRadius: '12px',
-                                  backgroundColor: 'var(--color-bg-base)',
-                                  border: '1px solid var(--color-border)',
-                                  fontSize: '11px',
-                                  fontWeight: '600',
-                                  color: 'var(--color-text-main)'
-                                }}>
-                                  • {sec.name}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                              Nenhuma secção registada para este distrito.
-                            </span>
-                          )}
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                            {distSecs.map(sec => (
+                              <span key={sec.id} style={{
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                backgroundColor: 'var(--color-bg-base)',
+                                border: '1px solid var(--color-border)',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                color: 'var(--color-text-main)'
+                              }}>
+                                • {sec.name}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       );
                     })()}
@@ -654,18 +656,22 @@ export default function OrgStructureManager({ t }) {
                     {activeTab === 'dist_dir' && displayDistricts.map(item => {
                       const pDir = data.directorates.find(d => d.id === item.provincialDirectorateId);
                       const distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(item.id));
+                      const DEFAULT_SECS = [
+                        "Piquete Operativo", "Secretaria", "Secção Técnica Criminalística",
+                        "Secção de Apoio e Documentação", "Secção de Armamento e Segurança",
+                        "Secção de Identificação e Registo Policial", "Secção de Investigação Operativa",
+                        "Secção de Investigação e Instrução Criminal"
+                      ];
+                      const sectionNames = distSecs.length > 0 ? distSecs.map(s => s.name) : DEFAULT_SECS;
+
                       return (
                         <tr key={item.id} {...getTrProps(item.id)}>
                           <td><strong style={{ color: 'var(--color-primary)' }}>{formatDistrictName(item.name)}</strong></td>
                           <td>{pDir?.name || '-'}</td>
                           <td>
-                            {distSecs.length > 0 ? (
-                              <span style={{ fontSize: '12px', fontWeight: '500' }}>
-                                {distSecs.map(s => s.name).join(', ')}
-                              </span>
-                            ) : (
-                              <span style={{ color: '#a0aec0', fontStyle: 'italic', fontSize: '12px' }}>Sem secções</span>
-                            )}
+                            <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--color-text-main)' }}>
+                              {sectionNames.join(', ')}
+                            </span>
                           </td>
                           <td>
                             <span style={item.isActive ? styles.badgeActive : styles.badgeInactive}>
