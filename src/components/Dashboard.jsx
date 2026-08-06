@@ -66,9 +66,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const canGoBack = navIndex > 0;
   const canGoForward = navIndex < navHistory.length - 1;
 
-  const [reportViewLevel, setReportViewLevel] = useState('directorates'); // 'directorates' | 'departments' | 'districts'
+  const [reportViewLevel, setReportViewLevel] = useState('directorates'); // 'directorates' | 'departments' | 'divisions' | 'sections' | 'districts'
   const [selectedReportDirectorate, setSelectedReportDirectorate] = useState('ALL');
   const [selectedReportDepartment, setSelectedReportDepartment] = useState('ALL');
+  const [selectedReportDivision, setSelectedReportDivision] = useState('ALL');
+  const [selectedReportSection, setSelectedReportSection] = useState('ALL');
   const [selectedReportDistrict, setSelectedReportDistrict] = useState('ALL');
   const [searchReportText, setSearchReportText] = useState('');
 
@@ -110,7 +112,50 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     }
     let unassignedDep = { id: 'unassigned', name: 'Sem Departamento Especificado', count: 0, M: 0, F: 0, employees: [] };
 
-    // 3. Distribution by District (Direcções Distritais)
+    // 3. Distribution by Division (Repartição)
+    const byDivision = {};
+    if (orgData && orgData.divisions) {
+      orgData.divisions.forEach(div => {
+        const idStr = String(div.id);
+        const parentDep = orgData.departments ? orgData.departments.find(d => String(d.id) === String(div.departmentId)) : null;
+        const parentDir = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(div.directorateId || (parentDep ? parentDep.directorateId : null))) : null;
+        byDivision[idStr] = {
+          id: idStr,
+          name: div.name,
+          departmentId: div.departmentId ? String(div.departmentId) : null,
+          departmentName: parentDep ? parentDep.name : 'Departamento N/A',
+          directorateId: div.directorateId ? String(div.directorateId) : (parentDep && parentDep.directorateId ? String(parentDep.directorateId) : null),
+          directorateName: parentDir ? parentDir.name : 'Direcção N/A',
+          count: 0, M: 0, F: 0, employees: []
+        };
+      });
+    }
+    let unassignedDiv = { id: 'unassigned', name: 'Sem Repartição Especificada', count: 0, M: 0, F: 0, employees: [] };
+
+    // 4. Distribution by Section (Secção)
+    const bySection = {};
+    if (orgData && orgData.sections) {
+      orgData.sections.forEach(sec => {
+        const idStr = String(sec.id);
+        const parentDiv = orgData.divisions ? orgData.divisions.find(d => String(d.id) === String(sec.divisionId)) : null;
+        const parentDep = orgData.departments ? orgData.departments.find(d => String(d.id) === String(sec.departmentId || (parentDiv ? parentDiv.departmentId : null))) : null;
+        const parentDir = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(sec.directorateId || (parentDep ? parentDep.directorateId : null))) : null;
+        bySection[idStr] = {
+          id: idStr,
+          name: sec.name,
+          divisionId: sec.divisionId ? String(sec.divisionId) : null,
+          divisionName: parentDiv ? parentDiv.name : 'Repartição N/A',
+          departmentId: sec.departmentId ? String(sec.departmentId) : (parentDiv && parentDiv.departmentId ? String(parentDiv.departmentId) : null),
+          departmentName: parentDep ? parentDep.name : 'Departamento N/A',
+          directorateId: sec.directorateId ? String(sec.directorateId) : (parentDep && parentDep.directorateId ? String(parentDep.directorateId) : null),
+          directorateName: parentDir ? parentDir.name : 'Direcção N/A',
+          count: 0, M: 0, F: 0, employees: []
+        };
+      });
+    }
+    let unassignedSec = { id: 'unassigned', name: 'Sem Secção Especificada', count: 0, M: 0, F: 0, employees: [] };
+
+    // 5. Distribution by District (Direcções Distritais)
     const byDistrict = {};
     if (orgData && orgData.districtDirectorates) {
       orgData.districtDirectorates.forEach(dist => {
@@ -127,7 +172,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     }
     let unassignedDist = { id: 'unassigned', name: 'Sem Afetação Distrital', count: 0, M: 0, F: 0, employees: [] };
 
-    // 4. Distribution by Career
+    // 6. Distribution by Career
     const byCareer = {};
     if (orgData && orgData.careers) {
       orgData.careers.forEach(c => {
@@ -137,7 +182,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     }
     let unassignedCareer = { id: 'unassigned', name: 'Sem Carreira', count: 0, M: 0, F: 0, employees: [] };
 
-    // 5. Distribution by Academic Level
+    // 7. Distribution by Academic Level
     const academicLevels = {
       'Ensino Básico': 0,
       'Ensino Médio': 0,
@@ -177,6 +222,34 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         unassignedDep.employees.push(emp);
         if (isM) unassignedDep.M++;
         if (isF) unassignedDep.F++;
+      }
+
+      // Division (Repartição)
+      const divId = emp.divisionId || emp.reparticaoId ? String(emp.divisionId || emp.reparticaoId) : null;
+      if (divId && byDivision[divId]) {
+        byDivision[divId].count++;
+        byDivision[divId].employees.push(emp);
+        if (isM) byDivision[divId].M++;
+        if (isF) byDivision[divId].F++;
+      } else {
+        unassignedDiv.count++;
+        unassignedDiv.employees.push(emp);
+        if (isM) unassignedDiv.M++;
+        if (isF) unassignedDiv.F++;
+      }
+
+      // Section (Secção)
+      const secId = emp.sectionId || emp.seccaoId ? String(emp.sectionId || emp.seccaoId) : null;
+      if (secId && bySection[secId]) {
+        bySection[secId].count++;
+        bySection[secId].employees.push(emp);
+        if (isM) bySection[secId].M++;
+        if (isF) bySection[secId].F++;
+      } else {
+        unassignedSec.count++;
+        unassignedSec.employees.push(emp);
+        if (isM) unassignedSec.M++;
+        if (isF) unassignedSec.F++;
       }
 
       // District
@@ -222,6 +295,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     const activeDepartments = Object.values(byDepartment).filter(d => d.count > 0).sort((a,b) => b.count - a.count);
     const allDepartmentsList = Object.values(byDepartment).sort((a,b) => b.count - a.count);
 
+    const activeDivisions = Object.values(byDivision).filter(d => d.count > 0).sort((a,b) => b.count - a.count);
+    const allDivisionsList = Object.values(byDivision).sort((a,b) => b.count - a.count);
+
+    const activeSections = Object.values(bySection).filter(s => s.count > 0).sort((a,b) => b.count - a.count);
+    const allSectionsList = Object.values(bySection).sort((a,b) => b.count - a.count);
+
     const activeDistricts = Object.values(byDistrict).filter(d => d.count > 0).sort((a,b) => b.count - a.count);
     const allDistrictsList = Object.values(byDistrict).sort((a,b) => b.count - a.count);
 
@@ -239,6 +318,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       departments: activeDepartments,
       allDepartmentsList,
       unassignedDep,
+      divisions: activeDivisions,
+      allDivisionsList,
+      unassignedDiv,
+      sections: activeSections,
+      allSectionsList,
+      unassignedSec,
       districts: activeDistricts,
       allDistrictsList,
       unassignedDist,
@@ -1553,77 +1638,122 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
                   {/* BARRA SELETORA DE NÍVEL DA ESTRUTURA ORGÂNICA (no-print) */}
                   <div className="no-print" style={{ 
-                    display: 'flex', 
-                    gap: '10px', 
                     marginTop: '24px', 
-                    marginBottom: '16px', 
-                    padding: '10px 14px', 
-                    borderRadius: '8px', 
+                    marginBottom: '20px', 
+                    padding: '14px 18px', 
+                    borderRadius: '10px', 
                     backgroundColor: 'var(--color-bg-base)', 
                     border: '1px solid var(--color-border)',
-                    alignItems: 'center',
-                    flexWrap: 'wrap'
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                   }}>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-primary)', marginRight: '6px' }}>
-                      Filtrar Efetivo por Nível:
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        Filtrar por Estrutura Orgânica:
+                      </span>
+                      
+                      <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                        💡 Navegação em Cascatas: Direcção ➔ Departamento ➔ Repartição ➔ Secção
+                      </span>
+                    </div>
 
-                    <button
-                      onClick={() => { setReportViewLevel('directorates'); setSelectedReportDirectorate('ALL'); setSelectedReportDepartment('ALL'); setSelectedReportDistrict('ALL'); setSearchReportText(''); }}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: '6px',
-                        border: reportViewLevel === 'directorates' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                        backgroundColor: reportViewLevel === 'directorates' ? 'var(--color-primary)' : 'var(--color-card-bg)',
-                        color: reportViewLevel === 'directorates' ? 'var(--color-accent)' : 'var(--color-text-main)',
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      🏢 Direcções ({reportStats.allDirectoratesList.length})
-                    </button>
+                    {/* ABAS DA ESTRUTURA ORGÂNICA */}
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <button
+                        onClick={() => { setReportViewLevel('directorates'); setSearchReportText(''); }}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: reportViewLevel === 'directorates' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                          backgroundColor: reportViewLevel === 'directorates' ? 'var(--color-primary)' : 'var(--color-card-bg)',
+                          color: reportViewLevel === 'directorates' ? 'var(--color-accent)' : 'var(--color-text-main)',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        🏢 Direcções ({reportStats.allDirectoratesList.length})
+                      </button>
 
-                    <button
-                      onClick={() => { setReportViewLevel('departments'); setSelectedReportDirectorate('ALL'); setSelectedReportDepartment('ALL'); setSelectedReportDistrict('ALL'); setSearchReportText(''); }}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: '6px',
-                        border: reportViewLevel === 'departments' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                        backgroundColor: reportViewLevel === 'departments' ? 'var(--color-primary)' : 'var(--color-card-bg)',
-                        color: reportViewLevel === 'departments' ? 'var(--color-accent)' : 'var(--color-text-main)',
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      🏬 Departamentos ({reportStats.allDepartmentsList.length})
-                    </button>
+                      <button
+                        onClick={() => { setReportViewLevel('departments'); setSearchReportText(''); }}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: reportViewLevel === 'departments' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                          backgroundColor: reportViewLevel === 'departments' ? 'var(--color-primary)' : 'var(--color-card-bg)',
+                          color: reportViewLevel === 'departments' ? 'var(--color-accent)' : 'var(--color-text-main)',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        🏬 Departamentos ({reportStats.allDepartmentsList.length})
+                      </button>
 
-                    <button
-                      onClick={() => { setReportViewLevel('districts'); setSelectedReportDirectorate('ALL'); setSelectedReportDepartment('ALL'); setSelectedReportDistrict('ALL'); setSearchReportText(''); }}
-                      style={{
-                        padding: '6px 14px',
-                        borderRadius: '6px',
-                        border: reportViewLevel === 'districts' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
-                        backgroundColor: reportViewLevel === 'districts' ? 'var(--color-primary)' : 'var(--color-card-bg)',
-                        color: reportViewLevel === 'districts' ? 'var(--color-accent)' : 'var(--color-text-main)',
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      📍 Distritos ({reportStats.allDistrictsList.length})
-                    </button>
+                      <button
+                        onClick={() => { setReportViewLevel('divisions'); setSearchReportText(''); }}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: reportViewLevel === 'divisions' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                          backgroundColor: reportViewLevel === 'divisions' ? 'var(--color-primary)' : 'var(--color-card-bg)',
+                          color: reportViewLevel === 'divisions' ? 'var(--color-accent)' : 'var(--color-text-main)',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        🏛️ Repartições ({reportStats.allDivisionsList.length})
+                      </button>
+
+                      <button
+                        onClick={() => { setReportViewLevel('sections'); setSearchReportText(''); }}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: reportViewLevel === 'sections' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                          backgroundColor: reportViewLevel === 'sections' ? 'var(--color-primary)' : 'var(--color-card-bg)',
+                          color: reportViewLevel === 'sections' ? 'var(--color-accent)' : 'var(--color-text-main)',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        🔖 Secções ({reportStats.allSectionsList.length})
+                      </button>
+
+                      <button
+                        onClick={() => { setReportViewLevel('districts'); setSearchReportText(''); }}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: reportViewLevel === 'districts' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                          backgroundColor: reportViewLevel === 'districts' ? 'var(--color-primary)' : 'var(--color-card-bg)',
+                          color: reportViewLevel === 'districts' ? 'var(--color-accent)' : 'var(--color-text-main)',
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                      >
+                        📍 Distritos ({reportStats.allDistrictsList.length})
+                      </button>
+                    </div>
                   </div>
 
                   {/* ──────────────────────────────────────────────────────────
@@ -1634,7 +1764,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
                         <h4 style={{ color: 'var(--color-primary)', margin: 0, fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                          Por Onde Está Afecto (Direcção)
+                          Por Onde Está Afecto (Direcções)
                         </h4>
 
                         <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -1761,7 +1891,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             </tbody>
                           </table>
                           <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
-                            💡 Dica: Clique em qualquer linha da tabela para ver a lista de funcionários afetos a essa Direcção.
+                            💡 Dica: Clique em qualquer linha da tabela para ver a lista de funcionários e os Departamentos afetos a essa Direcção.
                           </p>
                         </>
                       ) : (
@@ -1773,6 +1903,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
                           if (!selectedObj) return null;
                           const pct = reportStats.total > 0 ? ((selectedObj.count / reportStats.total) * 100).toFixed(1) : 0;
+
+                          // Departamentos pertencentes a esta direcção
+                          const childDeps = reportStats.allDepartmentsList.filter(dep => String(dep.directorateId) === String(selectedReportDirectorate));
 
                           return (
                             <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
@@ -1800,6 +1933,44 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                   </div>
                                 </div>
                               </div>
+
+                              {/* TABELA DE DEPARTAMENTOS DESTA DIRECÇÃO */}
+                              {childDeps.length > 0 && (
+                                <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      🏬 Departamentos Pertencentes a esta Direcção ({childDeps.length})
+                                    </h5>
+                                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                                      Clique num departamento para filtrar repartições e funcionários
+                                    </span>
+                                  </div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+                                    {childDeps.map(dep => (
+                                      <div
+                                        key={dep.id}
+                                        onClick={() => {
+                                          setReportViewLevel('departments');
+                                          setSelectedReportDepartment(dep.id);
+                                        }}
+                                        style={{
+                                          padding: '8px 12px',
+                                          borderRadius: '6px',
+                                          border: '1px solid var(--color-border)',
+                                          backgroundColor: 'var(--color-bg-base)',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s'
+                                        }}
+                                      >
+                                        <div style={{ fontWeight: 'bold', fontSize: '12px', color: 'var(--color-text-main)' }}>{dep.name}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '2px' }}>
+                                          {dep.count} {dep.count === 1 ? 'funcionário' : 'funcionários'} ({dep.M} H / {dep.F} M)
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
 
                               <h5 style={{ color: 'var(--color-text-main)', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
                                 Lista Nominal dos Funcionários Afetos ({selectedObj.count})
@@ -1865,7 +2036,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                         <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
-                              Direcção:
+                              Direcção Pai:
                             </label>
                             <select
                               value={selectedReportDirectorate}
@@ -1975,7 +2146,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                   <tr 
                                     key={dep.id}
                                     onClick={() => setSelectedReportDepartment(dep.id)}
-                                    title="Clique para ver os funcionários deste departamento"
+                                    title="Clique para ver os funcionários e repartições deste departamento"
                                     style={{ cursor: 'pointer' }}
                                   >
                                     <td><strong style={{ color: 'var(--color-primary)' }}>{dep.name}</strong></td>
@@ -2010,7 +2181,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             </tbody>
                           </table>
                           <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
-                            💡 Dica: Clique em qualquer linha para ver os funcionários afetos àquele departamento.
+                            💡 Dica: Clique em qualquer linha para ver os funcionários e Repartições pertencentes àquele departamento.
                           </p>
                         </>
                       ) : (
@@ -2022,6 +2193,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
                           if (!selectedObj) return null;
                           const pct = reportStats.total > 0 ? ((selectedObj.count / reportStats.total) * 100).toFixed(1) : 0;
+
+                          // Repartições pertencentes a este departamento
+                          const childDivs = reportStats.allDivisionsList.filter(div => String(div.departmentId) === String(selectedReportDepartment));
 
                           return (
                             <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
@@ -2049,6 +2223,44 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                   </div>
                                 </div>
                               </div>
+
+                              {/* TABELA DE REPARTIÇÕES DESTE DEPARTAMENTO */}
+                              {childDivs.length > 0 && (
+                                <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      🏛️ Repartições Pertencentes a este Departamento ({childDivs.length})
+                                    </h5>
+                                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                                      Clique numa repartição para filtrar secções e funcionários
+                                    </span>
+                                  </div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+                                    {childDivs.map(div => (
+                                      <div
+                                        key={div.id}
+                                        onClick={() => {
+                                          setReportViewLevel('divisions');
+                                          setSelectedReportDivision(div.id);
+                                        }}
+                                        style={{
+                                          padding: '8px 12px',
+                                          borderRadius: '6px',
+                                          border: '1px solid var(--color-border)',
+                                          backgroundColor: 'var(--color-bg-base)',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s'
+                                        }}
+                                      >
+                                        <div style={{ fontWeight: 'bold', fontSize: '12px', color: 'var(--color-text-main)' }}>{div.name}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '2px' }}>
+                                          {div.count} {div.count === 1 ? 'funcionário' : 'funcionários'} ({div.M} H / {div.F} M)
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
 
                               <h5 style={{ color: 'var(--color-text-main)', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
                                 Lista Nominal dos Funcionários deste Departamento ({selectedObj.count})
@@ -2101,7 +2313,554 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   )}
 
                   {/* ──────────────────────────────────────────────────────────
-                      NÍVEL 3: DISTRITOS
+                      NÍVEL 3: REPARTIÇÕES
+                  ────────────────────────────────────────────────────────── */}
+                  {reportViewLevel === 'divisions' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+                        <h4 style={{ color: 'var(--color-primary)', margin: 0, fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                          Distribuição por Repartições
+                        </h4>
+
+                        <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                              Departamento Pai:
+                            </label>
+                            <select
+                              value={selectedReportDepartment}
+                              onChange={(e) => { setSelectedReportDepartment(e.target.value); setSelectedReportDivision('ALL'); }}
+                              style={{
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--color-border)',
+                                backgroundColor: 'var(--color-bg-base)',
+                                color: 'var(--color-text-main)',
+                                fontSize: '12px'
+                              }}
+                            >
+                              <option value="ALL">Todos os Departamentos</option>
+                              {reportStats.allDepartmentsList.map(dep => (
+                                <option key={dep.id} value={dep.id}>{dep.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                              Repartição:
+                            </label>
+                            <select
+                              value={selectedReportDivision}
+                              onChange={(e) => setSelectedReportDivision(e.target.value)}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--color-primary)',
+                                backgroundColor: 'var(--color-bg-base)',
+                                color: 'var(--color-text-main)',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                outline: 'none'
+                              }}
+                            >
+                              <option value="ALL">Todas as Repartições ({reportStats.allDivisionsList.length})</option>
+                              {reportStats.allDivisionsList
+                                .filter(div => selectedReportDepartment === 'ALL' || String(div.departmentId) === String(selectedReportDepartment))
+                                .map(div => (
+                                  <option key={div.id} value={div.id}>
+                                    {div.name} ({div.count} {div.count === 1 ? 'funcionário' : 'funcionários'})
+                                  </option>
+                                ))}
+                              {reportStats.unassignedDiv.count > 0 && (
+                                <option value="unassigned">Sem Repartição Especificada ({reportStats.unassignedDiv.count})</option>
+                              )}
+                            </select>
+                          </div>
+
+                          {selectedReportDivision === 'ALL' && (
+                            <div style={{ position: 'relative' }}>
+                              <input
+                                type="text"
+                                placeholder="Pesquisar repartição..."
+                                value={searchReportText}
+                                onChange={(e) => setSearchReportText(e.target.value)}
+                                style={{
+                                  padding: '6px 10px 6px 30px',
+                                  borderRadius: '6px',
+                                  border: '1px solid var(--color-border)',
+                                  backgroundColor: 'var(--color-bg-base)',
+                                  color: 'var(--color-text-main)',
+                                  fontSize: '13px',
+                                  width: '190px'
+                                }}
+                              />
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                          )}
+
+                          {selectedReportDivision !== 'ALL' && (
+                            <button
+                              onClick={() => setSelectedReportDivision('ALL')}
+                              style={{
+                                padding: '6px 12px', borderRadius: '6px', border: 'none',
+                                backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)',
+                                fontSize: '12px', cursor: 'pointer', fontWeight: 'bold'
+                              }}
+                            >
+                              ✕ Ver Todas
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedReportDivision === 'ALL' ? (
+                        <>
+                          <table className="premium-table">
+                            <thead>
+                              <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                <th>Repartição</th>
+                                <th>Departamento Pai</th>
+                                <th>Direcção de Origem</th>
+                                <th>Homens</th>
+                                <th>Mulheres</th>
+                                <th>Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {reportStats.divisions
+                                .filter(div => selectedReportDepartment === 'ALL' || String(div.departmentId) === String(selectedReportDepartment))
+                                .filter(div => div.name.toLowerCase().includes(searchReportText.toLowerCase()) || div.departmentName.toLowerCase().includes(searchReportText.toLowerCase()))
+                                .map(div => (
+                                  <tr 
+                                    key={div.id}
+                                    onClick={() => setSelectedReportDivision(div.id)}
+                                    title="Clique para ver os funcionários e secções desta repartição"
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <td><strong style={{ color: 'var(--color-primary)' }}>{div.name}</strong></td>
+                                    <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{div.departmentName}</td>
+                                    <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{div.directorateName}</td>
+                                    <td>{div.M}</td>
+                                    <td>{div.F}</td>
+                                    <td>
+                                      <span style={{ fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)' }}>
+                                        {div.count}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              {reportStats.unassignedDiv.count > 0 && 
+                               (selectedReportDepartment === 'ALL' || selectedReportDepartment === 'unassigned') &&
+                               ('sem repartição'.includes(searchReportText.toLowerCase()) || !searchReportText) && (
+                                <tr onClick={() => setSelectedReportDivision('unassigned')} style={{ cursor: 'pointer' }}>
+                                  <td><strong>Sem Repartição Especificada</strong></td>
+                                  <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>-</td>
+                                  <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>-</td>
+                                  <td>{reportStats.unassignedDiv.M}</td>
+                                  <td>{reportStats.unassignedDiv.F}</td>
+                                  <td>{reportStats.unassignedDiv.count}</td>
+                                </tr>
+                              )}
+                              <tr style={{ fontWeight: 'bold', borderTop: '2px solid var(--color-primary)' }}>
+                                <td>Total Geral</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>{reportStats.men}</td>
+                                <td>{reportStats.women}</td>
+                                <td>{reportStats.total}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
+                            💡 Dica: Clique em qualquer linha para ver os funcionários e Secções pertencentes àquela repartição.
+                          </p>
+                        </>
+                      ) : (
+                        (() => {
+                          const selectedObj = selectedReportDivision === 'unassigned'
+                            ? reportStats.unassignedDiv
+                            : (reportStats.divisions.find(div => String(div.id) === String(selectedReportDivision)) ||
+                               reportStats.allDivisionsList.find(div => String(div.id) === String(selectedReportDivision)));
+
+                          if (!selectedObj) return null;
+                          const pct = reportStats.total > 0 ? ((selectedObj.count / reportStats.total) * 100).toFixed(1) : 0;
+
+                          // Secções pertencentes a esta repartição
+                          const childSecs = reportStats.allSectionsList.filter(sec => String(sec.divisionId) === String(selectedReportDivision));
+
+                          return (
+                            <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                                <div>
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
+                                    🏛️ {selectedObj.name}
+                                  </h3>
+                                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                                    Departamento Pai: {selectedObj.departmentName} • Direcção: {selectedObj.directorateName}
+                                  </p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-primary)' }}>{selectedObj.count}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Total Afetos</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{selectedObj.M} H | {selectedObj.F} M</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Género</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-accent)' }}>{pct}%</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>do Efetivo Total</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* TABELA DE SECÇÕES DESTA REPARTIÇÃO */}
+                              {childSecs.length > 0 && (
+                                <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      🔖 Secções Pertencentes a esta Repartição ({childSecs.length})
+                                    </h5>
+                                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                                      Clique numa secção para ver os funcionários afetos
+                                    </span>
+                                  </div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+                                    {childSecs.map(sec => (
+                                      <div
+                                        key={sec.id}
+                                        onClick={() => {
+                                          setReportViewLevel('sections');
+                                          setSelectedReportSection(sec.id);
+                                        }}
+                                        style={{
+                                          padding: '8px 12px',
+                                          borderRadius: '6px',
+                                          border: '1px solid var(--color-border)',
+                                          backgroundColor: 'var(--color-bg-base)',
+                                          cursor: 'pointer',
+                                          transition: 'all 0.2s'
+                                        }}
+                                      >
+                                        <div style={{ fontWeight: 'bold', fontSize: '12px', color: 'var(--color-text-main)' }}>{sec.name}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '2px' }}>
+                                          {sec.count} {sec.count === 1 ? 'funcionário' : 'funcionários'} ({sec.M} H / {sec.F} M)
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              <h5 style={{ color: 'var(--color-text-main)', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+                                Lista Nominal dos Funcionários desta Repartição ({selectedObj.count})
+                              </h5>
+
+                              {selectedObj.employees && selectedObj.employees.length > 0 ? (
+                                <table className="premium-table">
+                                  <thead>
+                                    <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                      <th>Nome Completo</th>
+                                      <th>NUIT</th>
+                                      <th>Cargo / Carreira</th>
+                                      <th>Patente</th>
+                                      <th>Género</th>
+                                      <th>Estado</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {selectedObj.employees.map(emp => {
+                                      const carObj = orgData?.careers?.find(c => String(c.id) === String(emp.careerId));
+                                      return (
+                                        <tr key={emp.id}>
+                                          <td><strong>{emp.name}</strong></td>
+                                          <td>{emp.nuit || '-'}</td>
+                                          <td>{carObj ? carObj.name : (emp.position || emp.career || '-')}</td>
+                                          <td>{emp.rank || emp.patente || '-'}</td>
+                                          <td>{emp.gender === 'M' || emp.gender === 'Masculino' ? 'Homem' : (emp.gender === 'F' || emp.gender === 'Feminino' ? 'Mulher' : '-')}</td>
+                                          <td>
+                                            <span style={{
+                                              padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
+                                              backgroundColor: emp.isActive !== false ? 'rgba(40, 167, 69, 0.15)' : 'rgba(220, 53, 69, 0.15)',
+                                              color: emp.isActive !== false ? '#28a745' : '#dc3545'
+                                            }}>
+                                              {emp.isActive !== false ? 'Ativo' : 'Inativo'}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p style={{ fontStyle: 'italic', color: 'var(--color-text-muted)', fontSize: '13px' }}>Nenhum funcionário cadastrado nesta repartição.</p>
+                              )}
+                            </div>
+                          );
+                        })()
+                      )}
+                    </>
+                  )}
+
+                  {/* ──────────────────────────────────────────────────────────
+                      NÍVEL 4: SECÇÕES
+                  ────────────────────────────────────────────────────────── */}
+                  {reportViewLevel === 'sections' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+                        <h4 style={{ color: 'var(--color-primary)', margin: 0, fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                          Distribuição por Secções
+                        </h4>
+
+                        <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                              Repartição Pai:
+                            </label>
+                            <select
+                              value={selectedReportDivision}
+                              onChange={(e) => { setSelectedReportDivision(e.target.value); setSelectedReportSection('ALL'); }}
+                              style={{
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--color-border)',
+                                backgroundColor: 'var(--color-bg-base)',
+                                color: 'var(--color-text-main)',
+                                fontSize: '12px'
+                              }}
+                            >
+                              <option value="ALL">Todas as Repartições</option>
+                              {reportStats.allDivisionsList.map(div => (
+                                <option key={div.id} value={div.id}>{div.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                              Secção:
+                            </label>
+                            <select
+                              value={selectedReportSection}
+                              onChange={(e) => setSelectedReportSection(e.target.value)}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--color-primary)',
+                                backgroundColor: 'var(--color-bg-base)',
+                                color: 'var(--color-text-main)',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                outline: 'none'
+                              }}
+                            >
+                              <option value="ALL">Todas as Secções ({reportStats.allSectionsList.length})</option>
+                              {reportStats.allSectionsList
+                                .filter(sec => selectedReportDivision === 'ALL' || String(sec.divisionId) === String(selectedReportDivision))
+                                .map(sec => (
+                                  <option key={sec.id} value={sec.id}>
+                                    {sec.name} ({sec.count} {sec.count === 1 ? 'funcionário' : 'funcionários'})
+                                  </option>
+                                ))}
+                              {reportStats.unassignedSec.count > 0 && (
+                                <option value="unassigned">Sem Secção Especificada ({reportStats.unassignedSec.count})</option>
+                              )}
+                            </select>
+                          </div>
+
+                          {selectedReportSection === 'ALL' && (
+                            <div style={{ position: 'relative' }}>
+                              <input
+                                type="text"
+                                placeholder="Pesquisar secção..."
+                                value={searchReportText}
+                                onChange={(e) => setSearchReportText(e.target.value)}
+                                style={{
+                                  padding: '6px 10px 6px 30px',
+                                  borderRadius: '6px',
+                                  border: '1px solid var(--color-border)',
+                                  backgroundColor: 'var(--color-bg-base)',
+                                  color: 'var(--color-text-main)',
+                                  fontSize: '13px',
+                                  width: '190px'
+                                }}
+                              />
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                          )}
+
+                          {selectedReportSection !== 'ALL' && (
+                            <button
+                              onClick={() => setSelectedReportSection('ALL')}
+                              style={{
+                                padding: '6px 12px', borderRadius: '6px', border: 'none',
+                                backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)',
+                                fontSize: '12px', cursor: 'pointer', fontWeight: 'bold'
+                              }}
+                            >
+                              ✕ Ver Todas
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedReportSection === 'ALL' ? (
+                        <>
+                          <table className="premium-table">
+                            <thead>
+                              <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                <th>Secção</th>
+                                <th>Repartição Pai</th>
+                                <th>Departamento Pai</th>
+                                <th>Homens</th>
+                                <th>Mulheres</th>
+                                <th>Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {reportStats.sections
+                                .filter(sec => selectedReportDivision === 'ALL' || String(sec.divisionId) === String(selectedReportDivision))
+                                .filter(sec => sec.name.toLowerCase().includes(searchReportText.toLowerCase()) || sec.divisionName.toLowerCase().includes(searchReportText.toLowerCase()))
+                                .map(sec => (
+                                  <tr 
+                                    key={sec.id}
+                                    onClick={() => setSelectedReportSection(sec.id)}
+                                    title="Clique para ver os funcionários desta secção"
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <td><strong style={{ color: 'var(--color-primary)' }}>{sec.name}</strong></td>
+                                    <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{sec.divisionName}</td>
+                                    <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{sec.departmentName}</td>
+                                    <td>{sec.M}</td>
+                                    <td>{sec.F}</td>
+                                    <td>
+                                      <span style={{ fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)' }}>
+                                        {sec.count}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              {reportStats.unassignedSec.count > 0 && 
+                               (selectedReportDivision === 'ALL' || selectedReportDivision === 'unassigned') &&
+                               ('sem secção'.includes(searchReportText.toLowerCase()) || !searchReportText) && (
+                                <tr onClick={() => setSelectedReportSection('unassigned')} style={{ cursor: 'pointer' }}>
+                                  <td><strong>Sem Secção Especificada</strong></td>
+                                  <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>-</td>
+                                  <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>-</td>
+                                  <td>{reportStats.unassignedSec.M}</td>
+                                  <td>{reportStats.unassignedSec.F}</td>
+                                  <td>{reportStats.unassignedSec.count}</td>
+                                </tr>
+                              )}
+                              <tr style={{ fontWeight: 'bold', borderTop: '2px solid var(--color-primary)' }}>
+                                <td>Total Geral</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>{reportStats.men}</td>
+                                <td>{reportStats.women}</td>
+                                <td>{reportStats.total}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
+                            💡 Dica: Clique em qualquer linha para ver a lista de funcionários pertencentes àquela secção.
+                          </p>
+                        </>
+                      ) : (
+                        (() => {
+                          const selectedObj = selectedReportSection === 'unassigned'
+                            ? reportStats.unassignedSec
+                            : (reportStats.sections.find(sec => String(sec.id) === String(selectedReportSection)) ||
+                               reportStats.allSectionsList.find(sec => String(sec.id) === String(selectedReportSection)));
+
+                          if (!selectedObj) return null;
+                          const pct = reportStats.total > 0 ? ((selectedObj.count / reportStats.total) * 100).toFixed(1) : 0;
+
+                          return (
+                            <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                                <div>
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
+                                    🔖 {selectedObj.name}
+                                  </h3>
+                                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                                    Repartição Pai: {selectedObj.divisionName} • Dept: {selectedObj.departmentName} • Dir: {selectedObj.directorateName}
+                                  </p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-primary)' }}>{selectedObj.count}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Total Afetos</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{selectedObj.M} H | {selectedObj.F} M</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Género</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-accent)' }}>{pct}%</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>do Efetivo Total</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <h5 style={{ color: 'var(--color-text-main)', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+                                Lista Nominal dos Funcionários desta Secção ({selectedObj.count})
+                              </h5>
+
+                              {selectedObj.employees && selectedObj.employees.length > 0 ? (
+                                <table className="premium-table">
+                                  <thead>
+                                    <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                      <th>Nome Completo</th>
+                                      <th>NUIT</th>
+                                      <th>Cargo / Carreira</th>
+                                      <th>Patente</th>
+                                      <th>Género</th>
+                                      <th>Estado</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {selectedObj.employees.map(emp => {
+                                      const carObj = orgData?.careers?.find(c => String(c.id) === String(emp.careerId));
+                                      return (
+                                        <tr key={emp.id}>
+                                          <td><strong>{emp.name}</strong></td>
+                                          <td>{emp.nuit || '-'}</td>
+                                          <td>{carObj ? carObj.name : (emp.position || emp.career || '-')}</td>
+                                          <td>{emp.rank || emp.patente || '-'}</td>
+                                          <td>{emp.gender === 'M' || emp.gender === 'Masculino' ? 'Homem' : (emp.gender === 'F' || emp.gender === 'Feminino' ? 'Mulher' : '-')}</td>
+                                          <td>
+                                            <span style={{
+                                              padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
+                                              backgroundColor: emp.isActive !== false ? 'rgba(40, 167, 69, 0.15)' : 'rgba(220, 53, 69, 0.15)',
+                                              color: emp.isActive !== false ? '#28a745' : '#dc3545'
+                                            }}>
+                                              {emp.isActive !== false ? 'Ativo' : 'Inativo'}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p style={{ fontStyle: 'italic', color: 'var(--color-text-muted)', fontSize: '13px' }}>Nenhum funcionário cadastrado nesta secção.</p>
+                              )}
+                            </div>
+                          );
+                        })()
+                      )}
+                    </>
+                  )}
+
+                  {/* ──────────────────────────────────────────────────────────
+                      NÍVEL 5: DISTRITOS
                   ────────────────────────────────────────────────────────── */}
                   {reportViewLevel === 'districts' && (
                     <>
