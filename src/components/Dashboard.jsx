@@ -85,13 +85,24 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     const men = employees.filter(e => e.gender === 'M' || e.gender === 'Masculino').length;
     const women = employees.filter(e => e.gender === 'F' || e.gender === 'Feminino').length;
 
-    // Helper para normalizar o nome da direcção e eliminar duplicados de ortografia (ex: Direção vs Direcção)
+    // Helper para normalizar o nome da direcção e eliminar duplicados de ortografia/nomenclatura
     const getCanonicalDirName = (rawName) => {
       if (!rawName) return '';
       let norm = rawName.trim().replace(/^Direção\b/i, 'Direcção');
-      if (norm.toLowerCase() === 'direcção provincial de zambézia' || norm.toLowerCase() === 'direção provincial de zambézia') {
-        norm = 'Direcção Provincial da Zambézia';
+      const lower = norm.toLowerCase();
+
+      // Unificar variações da Cidade de Maputo para a nomenclatura oficial: "Direcção da Cidade de Maputo"
+      if (
+        lower.includes('cidade de maputo') ||
+        lower.includes('maputo cidade')
+      ) {
+        return 'Direcção da Cidade de Maputo';
       }
+
+      if (lower === 'direcção provincial de zambézia' || lower === 'direção provincial de zambézia') {
+        return 'Direcção Provincial da Zambézia';
+      }
+
       return norm;
     };
 
