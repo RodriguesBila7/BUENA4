@@ -15,11 +15,32 @@ const _id = () => `${Date.now().toString(36)}-${Math.random().toString(36).subst
 let _cache = null;
 const _listeners = new Set();
 
-const EMPTY = { directorates: [], districtDirectorates: [], departments: [], divisions: [], sections: [], careers: [], categories: [] };
+export function getCanonicalDirName(name) {
+  if (!name) return '';
+  let str = name.trim();
+  if (/cidade\s+de\s+maputo|maputo\s+cidade/i.test(str)) {
+    return 'Direcção da Cidade de Maputo';
+  }
+  if (/maputo\s+prov[ií]ncia/i.test(str) || (/\bmaputo\b/i.test(str) && !/cidade/i.test(str))) {
+    return 'Direcção Provincial de Maputo';
+  }
+  return str.replace(/^Direção\b/i, 'Direcção');
+}
+
+function normalizeOrgData(raw) {
+  if (!raw) return EMPTY;
+  return {
+    ...raw,
+    directorates: (raw.directorates || []).map(d => ({
+      ...d,
+      name: getCanonicalDirName(d.name)
+    }))
+  };
+}
 
 function notifyAll(data) {
-  _cache = data;
-  _listeners.forEach(fn => fn(data));
+  _cache = normalizeOrgData(data);
+  _listeners.forEach(fn => fn(_cache));
 }
 
 // ─── API HELPERS ──────────────────────────────────────────────────────────────

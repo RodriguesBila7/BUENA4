@@ -348,7 +348,7 @@ function initSchema(db) {
     );
   }
 
-  // Executar Migrações dinâmicas para esquemas já existentes
+  // Migrações e correções automáticas de nomenclatura para esquemas existentes
   try { db.exec("ALTER TABLE directorates ADD COLUMN province TEXT DEFAULT NULL"); } catch (e) {}
   try { db.exec("ALTER TABLE sections ADD COLUMN district_directorate_id TEXT DEFAULT NULL REFERENCES district_directorates(id)"); } catch (e) {}
   try { db.exec("ALTER TABLE employees ADD COLUMN unit_type TEXT DEFAULT 'normal'"); } catch (e) {}
@@ -356,21 +356,51 @@ function initSchema(db) {
   try { db.exec("ALTER TABLE employees ADD COLUMN provincial_directorate_id TEXT DEFAULT NULL REFERENCES directorates(id)"); } catch (e) {}
   try { db.exec("ALTER TABLE district_directorates ADD COLUMN sort_order INTEGER DEFAULT 0"); } catch (e) {}
 
+  // Rectificação profunda e deduplicação automática de nomes legados de Maputo na BD
+  try {
+    const maputoCidadeDirs = db.prepare(`SELECT id, name FROM directorates WHERE lower(name) LIKE '%maputo%cidade%' OR lower(name) LIKE '%cidade%maputo%'`).all();
+    const maputoProvDirs = db.prepare(`SELECT id, name FROM directorates WHERE lower(name) LIKE '%maputo%prov%' OR (lower(name) LIKE '%maputo%' AND lower(name) NOT LIKE '%cidade%')`).all();
+
+    if (maputoCidadeDirs.length > 0) {
+      const mainId = maputoCidadeDirs.find(d => d.name === 'Direcção da Cidade de Maputo')?.id || maputoCidadeDirs[0].id;
+      db.prepare("UPDATE directorates SET name = 'Direcção da Cidade de Maputo', province = 'Cidade de Maputo' WHERE id = ?").run(mainId);
+      maputoCidadeDirs.forEach(d => {
+        if (d.id !== mainId) {
+          db.prepare("UPDATE district_directorates SET provincial_directorate_id = ? WHERE provincial_directorate_id = ?").run(mainId, d.id);
+          db.prepare("UPDATE employees SET directorate_id = ? WHERE directorate_id = ?").run(mainId, d.id);
+          db.prepare("DELETE FROM directorates WHERE id = ?").run(d.id);
+        }
+      });
+    }
+
+    if (maputoProvDirs.length > 0) {
+      const mainProvId = maputoProvDirs.find(d => d.name === 'Direcção Provincial de Maputo')?.id || maputoProvDirs[0].id;
+      db.prepare("UPDATE directorates SET name = 'Direcção Provincial de Maputo', province = 'Maputo Província' WHERE id = ?").run(mainProvId);
+      maputoProvDirs.forEach(d => {
+        if (d.id !== mainProvId) {
+          db.prepare("UPDATE district_directorates SET provincial_directorate_id = ? WHERE provincial_directorate_id = ?").run(mainProvId, d.id);
+          db.prepare("UPDATE employees SET directorate_id = ? WHERE directorate_id = ?").run(mainProvId, d.id);
+          db.prepare("DELETE FROM directorates WHERE id = ?").run(d.id);
+        }
+      });
+    }
+  } catch (e) {}
+
   // Auto-seeding das Direções Provinciais se a tabela estiver vazia
   const dirCount = db.prepare('SELECT COUNT(*) as c FROM directorates').get().c;
   if (dirCount === 0) {
     const provincialDirs = [
-      { id: "dir_maputo_cidade", name: "Direção Provincial de Maputo Cidade", province: "Cidade de Maputo" },
-      { id: "dir_maputo_provincia", name: "Direção Provincial de Maputo Província", province: "Maputo Província" },
-      { id: "dir_gaza", name: "Direção Provincial de Gaza", province: "Gaza" },
-      { id: "dir_inhambane", name: "Direção Provincial de Inhambane", province: "Inhambane" },
-      { id: "dir_sofala", name: "Direção Provincial de Sofala", province: "Sofala" },
-      { id: "dir_manica", name: "Direção Provincial de Manica", province: "Manica" },
-      { id: "dir_tete", name: "Direção Provincial de Tete", province: "Tete" },
-      { id: "dir_zambezia", name: "Direção Provincial de Zambézia", province: "Zambézia" },
-      { id: "dir_nampula", name: "Direção Provincial de Nampula", province: "Nampula" },
-      { id: "dir_niassa", name: "Direção Provincial de Niassa", province: "Niassa" },
-      { id: "dir_cabo_delgado", name: "Direção Provincial de Cabo Delgado", province: "Cabo Delgado" }
+      { id: "dir_maputo_cidade", name: "Direcção da Cidade de Maputo", province: "Cidade de Maputo" },
+      { id: "dir_maputo_provincia", name: "Direcção Provincial de Maputo", province: "Maputo Província" },
+      { id: "dir_gaza", name: "Direcção Provincial de Gaza", province: "Gaza" },
+      { id: "dir_inhambane", name: "Direcção Provincial de Inhambane", province: "Inhambane" },
+      { id: "dir_sofala", name: "Direcção Provincial de Sofala", province: "Sofala" },
+      { id: "dir_manica", name: "Direcção Provincial de Manica", province: "Manica" },
+      { id: "dir_tete", name: "Direcção Provincial de Tete", province: "Tete" },
+      { id: "dir_zambezia", name: "Direcção Provincial de Zambézia", province: "Zambézia" },
+      { id: "dir_nampula", name: "Direcção Provincial de Nampula", province: "Nampula" },
+      { id: "dir_niassa", name: "Direcção Provincial de Niassa", province: "Niassa" },
+      { id: "dir_cabo_delgado", name: "Direcção Provincial de Cabo Delgado", province: "Cabo Delgado" }
     ];
 
     const insertDir = db.prepare(`
