@@ -1,12 +1,22 @@
 import React, { useState, useMemo } from 'react';
 import useAuthData from '../../../hooks/useAuthData';
+import useEmployeeData from '../../../hooks/useEmployeeData';
+import useOrgData from '../../../hooks/useOrgData';
 import ConfirmModal from '../../ConfirmModal';
 import DraggableModal from '../../common/DraggableModal';
 import useDraggable from '../../../hooks/useDraggable';
 
 export default function AccountList({ t }) {
   const { users, roles, addUser, updateUser } = useAuthData();
+  const { employees } = useEmployeeData();
+  const { data: orgData } = useOrgData();
+
   const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+
+  // State para Pesquisa/Seleção de Funcionário no Modal
+  const [empSearchQuery, setEmpSearchQuery] = useState('');
+  const [selectedEmpId, setSelectedEmpId] = useState('');
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -20,15 +30,36 @@ export default function AccountList({ t }) {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, isDestructive: false });
   const { position, onPointerDown } = useDraggable();
 
-  // Filtered Users
+  // Lista de funcionários filtrados para o dropdown do modal
+  const filteredEmployeesList = useMemo(() => {
+    const list = employees || [];
+    if (!empSearchQuery.trim()) return list;
+    const q = empSearchQuery.toLowerCase();
+    return list.filter(emp => {
+      const nameMatch = emp.name && emp.name.toLowerCase().includes(q);
+      const nipMatch = emp.nip && String(emp.nip).toLowerCase().includes(q);
+      const nuitMatch = emp.nuit && String(emp.nuit).toLowerCase().includes(q);
+      return nameMatch || nipMatch || nuitMatch;
+    });
+  }, [employees, empSearchQuery]);
+
+  const getDirectorateName = (directorateId) => {
+    if (!orgData?.directorates) return '';
+    const dir = orgData.directorates.find(d => String(d.id) === String(directorateId));
+    return dir ? dir.name : '';
+  };
+
+  // Filtered Users na tabela principal
   const filteredUsers = useMemo(() => {
     if (!users) return [];
-    return users.filter(acc => 
-      (acc.name && acc.name.toLowerCase().includes(searchTerm.toLowerCase())) || 
-      (acc.username && acc.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (acc.email && acc.email.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  }, [users, searchTerm]);
+    return users.filter(acc => {
+      const matchText = (acc.name && acc.name.toLowerCase().includes(searchTerm.toLowerCase())) || 
+                        (acc.username && acc.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                        (acc.email && acc.email.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchRole = roleFilter ? String(acc.roleId) === String(roleFilter) : true;
+      return matchText && matchRole;
+    });
+  }, [users, searchTerm, roleFilter]);
 
   const getRoleName = (roleId) => {
     const role = roles.find(r => r.id === roleId);
@@ -37,6 +68,8 @@ export default function AccountList({ t }) {
 
   const handleOpenCreate = () => {
     setFormError('');
+    setEmpSearchQuery('');
+    setSelectedEmpId('');
     setFormData({ id: '', name: '', username: '', email: '', contact: '', password: '', roleId: roles.length > 0 ? roles[0].id : '', delegatedRoleId: '', delegationStartDate: '', delegationEndDate: '', status: 'Ativo' });
     setModalMode('create');
     setIsModalOpen(true);
@@ -44,6 +77,8 @@ export default function AccountList({ t }) {
 
   const handleOpenEdit = (user) => {
     setFormError('');
+    setEmpSearchQuery('');
+    setSelectedEmpId('');
     setFormData({
       id: user.id || '',
       name: user.name || '',
@@ -59,6 +94,36 @@ export default function AccountList({ t }) {
     });
     setModalMode('edit');
     setIsModalOpen(true);
+  };
+
+  const handleSelectEmployee = (empId) => {
+    setSelectedEmpId(empId);
+    if (!empId) return;
+
+    const emp = (employees || []).find(e => String(e.id) === String(empId));
+    if (emp) {
+      // Sugerir username com base no nome do funcionário
+      const nameParts = (emp.name || '').trim().split(' ').filter(Boolean);
+      let suggestedUsername = '';
+      if (nameParts.length >= 2) {
+        suggestedUsername = `${nameParts[0]}${nameParts[nameParts.length - 1]}`;
+      } else if (nameParts.length === 1) {
+        suggestedUsername = nameParts[0];
+      }
+      suggestedUsername = suggestedUsername.replace(/[^a-zA-Z0-9]/g, '');
+
+      // Sugerir email se não existir
+      const suggestedEmail = emp.email || emp.contactEmail || (suggestedUsername ? `${suggestedUsername.toLowerCase()}@sernic.gov.mz` : '');
+      const suggestedPhone = emp.phone || emp.contacto || emp.mobile || '';
+
+      setFormData(prev => ({
+        ...prev,
+        name: emp.name || prev.name,
+        username: prev.username || suggestedUsername || prev.username,
+        email: suggestedEmail || prev.email,
+        contact: suggestedPhone || prev.contact
+      }));
+    }
   };
 
   const handleToggleStatus = (user) => {
@@ -121,7 +186,6 @@ export default function AccountList({ t }) {
         delegationEndDate: formData.delegationEndDate || null,
         status: formData.status
       };
-      // Only update password if user typed something new
       if (formData.password.trim() !== '') {
         updatePayload.password = formData.password;
       }
@@ -150,9 +214,31 @@ export default function AccountList({ t }) {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+
+        {/* Filtro por Perfil (Role) */}
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value)}
+          style={{
+            padding: '10px 14px',
+            borderRadius: '8px',
+            border: '1px solid var(--color-border)',
+            backgroundColor: 'var(--color-bg-base)',
+            color: 'var(--color-text-base)',
+            fontSize: '13px',
+            outline: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          <option value="">Todos os Perfis de Acesso</option>
+          {roles.map(r => (
+            <option key={r.id} value={r.id}>{r.name}</option>
+          ))}
+        </select>
+
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button style={{...styles.button, backgroundColor: 'var(--color-primary)'}} onClick={handleOpenCreate}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: '6px'}}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <button style={{ ...styles.button, backgroundColor: 'var(--color-primary)' }} onClick={handleOpenCreate}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             Nova Conta
           </button>
         </div>
@@ -176,7 +262,7 @@ export default function AccountList({ t }) {
               <tr key={acc.id} style={styles.tr}>
                 <td>
                   <div style={styles.userCell}>
-                    <div style={styles.avatar}>{acc.name.charAt(0).toUpperCase()}</div>
+                    <div style={styles.avatar}>{acc.name ? acc.name.charAt(0).toUpperCase() : 'U'}</div>
                     <div>
                       <div style={{ fontWeight: '700', color: 'var(--color-text-base)' }}>{acc.name}</div>
                       <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>@{acc.username}</div>
@@ -195,15 +281,15 @@ export default function AccountList({ t }) {
                 <td>
                   <span style={styles.statusBadge(acc.status)}>{acc.status}</span>
                 </td>
-                <td style={{...styles.td, textAlign: 'right'}}>
+                <td style={{ ...styles.td, textAlign: 'right' }}>
                   <div style={styles.actions}>
                     <button onClick={() => handleOpenEdit(acc)} style={styles.actionBtn} title="Editar Conta">
                       ✏️ Editar
                     </button>
-                    {acc.id !== 'usr_admin' && ( // Prevent blocking main admin
+                    {acc.id !== 'usr_admin' && (
                       <button 
                         onClick={() => handleToggleStatus(acc)} 
-                        style={{...styles.actionBtn, color: acc.status === 'Ativo' ? 'var(--color-danger)' : 'var(--color-success)'}}
+                        style={{ ...styles.actionBtn, color: acc.status === 'Ativo' ? 'var(--color-danger)' : 'var(--color-success)' }}
                         title={acc.status === 'Ativo' ? 'Bloquear Acesso' : 'Desbloquear Acesso'}
                       >
                         {acc.status === 'Ativo' ? '🔒 Bloquear' : '🔓 Desbloq.'}
@@ -232,7 +318,7 @@ export default function AccountList({ t }) {
         isOpen={isModalOpen}
         title={modalMode === 'create' ? 'Criar Nova Conta' : 'Editar Conta'}
         onClose={() => setIsModalOpen(false)}
-        maxWidth="520px"
+        maxWidth="540px"
       >
         <form onSubmit={handleSaveUser} style={styles.form}>
           {formError && (
@@ -240,34 +326,76 @@ export default function AccountList({ t }) {
           )}
 
           <div style={styles.formGrid}>
+            {/* PESQUISA E SELEÇÃO DE FUNCIONÁRIO (PREENCHIMENTO AUTOMÁTICO) */}
+            <div style={{
+              padding: '12px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(27, 54, 93, 0.06)',
+              border: '1px solid var(--color-primary)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px'
+            }}>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                🔍 Pesquisar & Selecionar Funcionário (Auto-preencher)
+              </label>
+
+              <input
+                type="text"
+                placeholder="Filtrar por nome, NUIT ou NIP..."
+                value={empSearchQuery}
+                onChange={(e) => setEmpSearchQuery(e.target.value)}
+                style={{ ...styles.input, fontSize: '13px', backgroundColor: 'var(--color-bg-base)' }}
+              />
+
+              <select
+                value={selectedEmpId}
+                onChange={(e) => handleSelectEmployee(e.target.value)}
+                style={{ ...styles.input, fontWeight: 'bold', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', cursor: 'pointer' }}
+              >
+                <option value="">-- Seleccionar da Lista ({filteredEmployeesList.length} funcionários) --</option>
+                {filteredEmployeesList.map(emp => {
+                  const dirName = getDirectorateName(emp.directorateId);
+                  return (
+                    <option key={emp.id} value={emp.id}>
+                      👤 {emp.name} {emp.nip ? `(NIP: ${emp.nip})` : (emp.nuit ? `(NUIT: ${emp.nuit})` : '')} {dirName ? `- ${dirName}` : ''}
+                    </option>
+                  );
+                })}
+              </select>
+              <p style={{ margin: 0, fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                💡 Ao selecionar um funcionário, Nome Completo, Email e Contacto serão preenchidos automaticamente.
+              </p>
+            </div>
+
             <div style={styles.formGroup}>
-              <label style={styles.label}>Nome Completo <span style={{color:'red'}}>*</span></label>
-              <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} style={styles.input} placeholder="Ex: Mário Silva" required />
+              <label style={styles.label}>Nome Completo <span style={{ color: 'red' }}>*</span></label>
+              <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} style={styles.input} placeholder="Ex: Mário Silva" required />
             </div>
             
             <div style={styles.formGroup}>
-              <label style={styles.label}>Username <span style={{color:'red'}}>*</span></label>
-              <input type="text" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} style={styles.input} placeholder="Ex: msilva" required />
+              <label style={styles.label}>Username <span style={{ color: 'red' }}>*</span></label>
+              <input type="text" value={formData.username} onChange={e => setFormData({ ...formData, username: e.target.value })} style={styles.input} placeholder="Ex: msilva" required />
             </div>
 
             <div style={styles.formGroup}>
               <label style={styles.label}>Email Corporativo</label>
-              <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} style={styles.input} placeholder="msilva@sernic.gov.mz" />
+              <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} style={styles.input} placeholder="msilva@sernic.gov.mz" />
             </div>
 
             <div style={styles.formGroup}>
               <label style={styles.label}>Contacto Telefónico</label>
-              <input type="text" value={formData.contact} onChange={e => setFormData({...formData, contact: e.target.value})} style={styles.input} placeholder="+258 8X XXX XXXX" />
+              <input type="text" value={formData.contact} onChange={e => setFormData({ ...formData, contact: e.target.value })} style={styles.input} placeholder="+258 8X XXX XXXX" />
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Palavra-passe {modalMode === 'create' ? <span style={{color:'red'}}>*</span> : <span style={{fontSize:'10px', color:'var(--color-text-muted)'}}>(Preencha para alterar)</span>}</label>
-              <input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} style={styles.input} placeholder="••••••••" />
+              <label style={styles.label}>Palavra-passe {modalMode === 'create' ? <span style={{ color: 'red' }}>*</span> : <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>(Preencha para alterar)</span>}</label>
+              <input type="password" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} style={styles.input} placeholder="••••••••" />
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Perfil de Acesso (Role) <span style={{color:'red'}}>*</span></label>
-              <select value={formData.roleId} onChange={e => setFormData({...formData, roleId: e.target.value})} style={styles.input} required>
+              <label style={styles.label}>Perfil de Acesso (Role) <span style={{ color: 'red' }}>*</span></label>
+              <select value={formData.roleId} onChange={e => setFormData({ ...formData, roleId: e.target.value })} style={styles.input} required>
                 {roles.map(r => (
                   <option key={r.id} value={r.id}>{r.name}</option>
                 ))}
@@ -276,7 +404,7 @@ export default function AccountList({ t }) {
 
             <div style={styles.formGroup}>
               <label style={styles.label}>Perfil Delegado (Substituição Temporária)</label>
-              <select value={formData.delegatedRoleId} onChange={e => setFormData({...formData, delegatedRoleId: e.target.value})} style={styles.input}>
+              <select value={formData.delegatedRoleId} onChange={e => setFormData({ ...formData, delegatedRoleId: e.target.value })} style={styles.input}>
                 <option value="">Nenhuma Delegação</option>
                 {roles.map(r => (
                   <option key={r.id} value={r.id}>{r.name}</option>
@@ -293,23 +421,23 @@ export default function AccountList({ t }) {
                      if (val && !formData.delegationEndDate) {
                        const start = new Date(val);
                        start.setDate(start.getDate() + 35);
-                       setFormData({...formData, delegationStartDate: val, delegationEndDate: start.toISOString().split('T')[0]});
+                       setFormData({ ...formData, delegationStartDate: val, delegationEndDate: start.toISOString().split('T')[0] });
                      } else {
-                       setFormData({...formData, delegationStartDate: val});
+                       setFormData({ ...formData, delegationStartDate: val });
                      }
                   }} style={styles.input} />
                 </div>
                 <div style={{ ...styles.formGroup, flex: 1 }}>
                   <label style={styles.label}>Fim Delegação</label>
-                  <input type="date" value={formData.delegationEndDate} onChange={e => setFormData({...formData, delegationEndDate: e.target.value})} style={styles.input} />
+                  <input type="date" value={formData.delegationEndDate} onChange={e => setFormData({ ...formData, delegationEndDate: e.target.value })} style={styles.input} />
                 </div>
               </div>
             )}
 
             {modalMode === 'edit' && (
               <div style={styles.formGroup}>
-                <label style={styles.label}>Estado da Conta <span style={{color:'red'}}>*</span></label>
-                <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} style={styles.input} required disabled={formData.id === 'usr_admin'}>
+                <label style={styles.label}>Estado da Conta <span style={{ color: 'red' }}>*</span></label>
+                <select value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })} style={styles.input} required disabled={formData.id === 'usr_admin'}>
                   <option value="Ativo">Ativo</option>
                   <option value="Bloqueada">Bloqueada</option>
                   <option value="Inativo">Inativo</option>
@@ -375,7 +503,7 @@ const styles = {
   closeBtn: { background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '4px', display: 'flex' },
   
   form: { display: 'flex', flexDirection: 'column' },
-  formGrid: { padding: '24px', display: 'grid', gridTemplateColumns: '1fr', gap: '16px', maxHeight: '60vh', overflowY: 'auto' },
+  formGrid: { padding: '24px', display: 'grid', gridTemplateColumns: '1fr', gap: '16px', maxHeight: '65vh', overflowY: 'auto' },
   formGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', fontWeight: '600', color: 'var(--color-text-muted)' },
   input: { padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-base)', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px' },
