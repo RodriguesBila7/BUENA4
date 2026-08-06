@@ -420,7 +420,6 @@ export default function OrgStructureManager({ t }) {
         <button onClick={() => handleTabChange('rep')} style={activeTab === 'rep' ? styles.activeTab : styles.tab}>{t('org_tab_rep')}</button>
         <button onClick={() => handleTabChange('sec')} style={activeTab === 'sec' ? styles.activeTab : styles.tab}>{t('org_tab_sec')}</button>
         <button onClick={() => handleTabChange('dist_dir')} style={activeTab === 'dist_dir' ? styles.activeTab : styles.tab}>Direcções Distritais</button>
-        <button onClick={() => handleTabChange('dist_sec')} style={activeTab === 'dist_sec' ? styles.activeTab : styles.tab}>Secções Distritais</button>
         <button onClick={() => handleTabChange('dist_dash')} style={activeTab === 'dist_dash' ? styles.activeTab : styles.tab}>Estatística Organizacional</button>
         <button onClick={() => handleTabChange('car')} style={activeTab === 'car' ? styles.activeTab : styles.tab}>{t('org_tab_car')}</button>
         <button onClick={() => handleTabChange('cat')} style={activeTab === 'cat' ? styles.activeTab : styles.tab}>{t('org_tab_cat')}</button>

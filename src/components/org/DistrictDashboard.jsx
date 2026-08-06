@@ -152,6 +152,10 @@ export default function DistrictDashboard({ data, t }) {
     };
   }, [data, employees, logs]);
 
+  const [secSearchTerm, setSecSearchTerm] = useState('');
+  const [secCurrentPage, setSecCurrentPage] = useState(1);
+  const [secItemsPerPage, setSecItemsPerPage] = useState(10);
+
   const filteredDistricts = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
     return (data.districtDirectorates || []).filter(d => {
@@ -164,6 +168,45 @@ export default function DistrictDashboard({ data, t }) {
   const totalPages = Math.ceil(filteredDistricts.length / itemsPerPage) || 1;
   const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
   const paginatedDistricts = filteredDistricts.slice((safeCurrentPage - 1) * itemsPerPage, safeCurrentPage * itemsPerPage);
+
+  const allDistrictSections = useMemo(() => {
+    const secs = (data.sections || []).filter(s => s.districtDirectorateId || s.districtId);
+    if (secs.length > 0) return secs;
+
+    // Fallback: 8 secções por distrito
+    const DEFAULT_NAMES = [
+      "Piquete Operativo", "Secretaria", "Secção Técnica Criminalística",
+      "Secção de Apoio e Documentação", "Secção de Armamento e Segurança",
+      "Secção de Identificação e Registo Policial", "Secção de Investigação Operativa",
+      "Secção de Investigação e Instrução Criminal"
+    ];
+    const generated = [];
+    (data.districtDirectorates || []).forEach(dist => {
+      DEFAULT_NAMES.forEach((name, idx) => {
+        generated.push({
+          id: `v_dash_sec_${dist.id}_${idx}`,
+          name,
+          districtDirectorateId: dist.id,
+          isActive: dist.isActive !== false
+        });
+      });
+    });
+    return generated;
+  }, [data.sections, data.districtDirectorates]);
+
+  const filteredSections = useMemo(() => {
+    const term = secSearchTerm.toLowerCase().trim();
+    return allDistrictSections.filter(s => {
+      const nameMatch = s.name.toLowerCase().includes(term);
+      const dist = (data.districtDirectorates || []).find(d => String(d.id) === String(s.districtDirectorateId || s.districtId));
+      const distMatch = dist ? formatDistrictName(dist.name).toLowerCase().includes(term) : false;
+      return !term || nameMatch || distMatch;
+    });
+  }, [allDistrictSections, data.districtDirectorates, secSearchTerm]);
+
+  const secTotalPages = Math.ceil(filteredSections.length / secItemsPerPage) || 1;
+  const safeSecCurrentPage = Math.min(Math.max(secCurrentPage, 1), secTotalPages);
+  const paginatedSections = filteredSections.slice((safeSecCurrentPage - 1) * secItemsPerPage, safeSecCurrentPage * secItemsPerPage);
 
   return (
     <div style={styles.container}>
@@ -193,6 +236,25 @@ export default function DistrictDashboard({ data, t }) {
           }}
         >
           📋 Registos Guardados
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSubTab('sections')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '6px',
+            border: 'none',
+            backgroundColor: subTab === 'sections' ? 'var(--color-primary)' : 'var(--color-bg-card)',
+            color: subTab === 'sections' ? '#ffffff' : 'var(--color-text-main)',
+            fontWeight: '600',
+            fontSize: '13px',
+            cursor: 'pointer',
+            boxShadow: subTab === 'sections' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          📁 Secções Distritais
         </button>
 
         <button
@@ -442,6 +504,195 @@ export default function DistrictDashboard({ data, t }) {
                 onChange={(e) => {
                   setItemsPerPage(Number(e.target.value));
                   setCurrentPage(1);
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  color: 'var(--color-text-main)',
+                  fontSize: '12px',
+                  marginLeft: '8px'
+                }}
+              >
+                <option value={10}>10 por pág.</option>
+                <option value={20}>20 por pág.</option>
+                <option value={50}>50 por pág.</option>
+                <option value={100}>100 por pág.</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {subTab === 'sections' && (
+        <div style={{
+          backgroundColor: 'var(--color-bg-card)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '10px',
+          padding: '24px',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 }}>
+              📁 Registos de Secções Distritais ({filteredSections.length})
+            </h3>
+            <input
+              type="text"
+              placeholder="🔍 Pesquisar por secção ou distrito..."
+              value={secSearchTerm}
+              onChange={(e) => {
+                setSecSearchTerm(e.target.value);
+                setSecCurrentPage(1);
+              }}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '6px',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-bg-base)',
+                color: 'var(--color-text-main)',
+                fontSize: '13px',
+                width: '320px'
+              }}
+            />
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table className="premium-table" style={{ width: '100%' }}>
+              <thead>
+                <tr>
+                  <th>Nome da Secção</th>
+                  <th>Direcções</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedSections.map(item => {
+                  const dist = (data.districtDirectorates || []).find(d => String(d.id) === String(item.districtDirectorateId || item.districtId));
+                  const distName = dist ? formatDistrictName(dist.name) : '-';
+
+                  return (
+                    <tr key={item.id}>
+                      <td><strong style={{ color: 'var(--color-text-main)' }}>{item.name}</strong></td>
+                      <td>{distName}</td>
+                      <td>
+                        <span style={{
+                          padding: '4px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          backgroundColor: item.isActive !== false ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                          color: item.isActive !== false ? '#10B981' : '#EF4444'
+                        }}>
+                          {item.isActive !== false ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Barra de Controlo de Paginação das Secções */}
+          <div style={{
+            display: 'flex',
+            justify: 'space-between',
+            alignItems: 'center',
+            marginTop: '20px',
+            paddingTop: '14px',
+            borderTop: '1px solid var(--color-border)',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+              A mostrar <strong>{filteredSections.length === 0 ? 0 : (safeSecCurrentPage - 1) * secItemsPerPage + 1}</strong> a <strong>{Math.min(safeSecCurrentPage * secItemsPerPage, filteredSections.length)}</strong> de <strong>{filteredSections.length}</strong> secções
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                disabled={safeSecCurrentPage === 1}
+                onClick={() => setSecCurrentPage(1)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  cursor: safeSecCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                  opacity: safeSecCurrentPage === 1 ? 0.5 : 1,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'var(--color-text-main)'
+                }}
+              >
+                ⏮ Primeira
+              </button>
+              <button
+                type="button"
+                disabled={safeSecCurrentPage === 1}
+                onClick={() => setSecCurrentPage(prev => Math.max(prev - 1, 1))}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  cursor: safeSecCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                  opacity: safeSecCurrentPage === 1 ? 0.5 : 1,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'var(--color-text-main)'
+                }}
+              >
+                ◀ Anterior
+              </button>
+
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-primary)', padding: '0 8px' }}>
+                Página {safeSecCurrentPage} de {secTotalPages}
+              </span>
+
+              <button
+                type="button"
+                disabled={safeSecCurrentPage >= secTotalPages}
+                onClick={() => setSecCurrentPage(prev => Math.min(prev + 1, secTotalPages))}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  cursor: safeSecCurrentPage >= secTotalPages ? 'not-allowed' : 'pointer',
+                  opacity: safeSecCurrentPage >= secTotalPages ? 0.5 : 1,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'var(--color-text-main)'
+                }}
+              >
+                Próxima ▶
+              </button>
+              <button
+                type="button"
+                disabled={safeSecCurrentPage >= secTotalPages}
+                onClick={() => setSecCurrentPage(secTotalPages)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  cursor: safeSecCurrentPage >= secTotalPages ? 'not-allowed' : 'pointer',
+                  opacity: safeSecCurrentPage >= secTotalPages ? 0.5 : 1,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'var(--color-text-main)'
+                }}
+              >
+                Última ⏭
+              </button>
+
+              <select
+                value={secItemsPerPage}
+                onChange={(e) => {
+                  setSecItemsPerPage(Number(e.target.value));
+                  setSecCurrentPage(1);
                 }}
                 style={{
                   padding: '6px 10px',
