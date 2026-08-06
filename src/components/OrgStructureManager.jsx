@@ -601,9 +601,7 @@ export default function OrgStructureManager({ t }) {
                     <tr>
                       <th>{t('org_name')}</th>
                       {activeTab === 'dir' && <th>Província</th>}
-                      {activeTab === 'dist_dir' && <th>Direcção Provincial</th>}
-                      {activeTab === 'dist_dir' && <th>Secções Registadas</th>}
-                      {activeTab === 'dist_sec' && <th>Direcções</th>}
+                      {['dist_dir', 'dist_sec'].includes(activeTab) && <th>Direcções</th>}
                       {['dep', 'rep', 'sec'].includes(activeTab) && <th>{t('org_tab_dir')}</th>}
                       {['rep', 'sec'].includes(activeTab) && <th>{t('org_tab_dep')}</th>}
                       {activeTab === 'sec' && <th>{t('org_tab_rep')}</th>}
@@ -632,40 +630,42 @@ export default function OrgStructureManager({ t }) {
                       </tr>
                     ))}
                     
-                    {activeTab === 'dist_dir' && displayDistricts.map(item => {
-                      const pDir = data.directorates.find(d => d.id === item.provincialDirectorateId);
-                      const distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(item.id));
-                      const DEFAULT_SECS = [
-                        "Piquete Operativo", "Secretaria", "Secção Técnica Criminalística",
-                        "Secção de Apoio e Documentação", "Secção de Armamento e Segurança",
-                        "Secção de Identificação e Registo Policial", "Secção de Investigação Operativa",
-                        "Secção de Investigação e Instrução Criminal"
-                      ];
-                      const sectionNames = distSecs.length > 0 ? distSecs.map(s => s.name) : DEFAULT_SECS;
+                    {activeTab === 'dist_dir' && displayDistricts.flatMap(item => {
+                      let distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(item.id));
+                      if (distSecs.length === 0) {
+                        const DEFAULT_SECS = [
+                          "Piquete Operativo", "Secretaria", "Secção Técnica Criminalística",
+                          "Secção de Apoio e Documentação", "Secção de Armamento e Segurança",
+                          "Secção de Identificação e Registo Policial", "Secção de Investigação Operativa",
+                          "Secção de Investigação e Instrução Criminal"
+                        ];
+                        distSecs = DEFAULT_SECS.map((name, idx) => ({
+                          id: `v_sec_${item.id}_${idx}`,
+                          name,
+                          districtDirectorateId: item.id,
+                          isActive: item.isActive !== false
+                        }));
+                      }
+                      const distName = formatDistrictName(item.name);
 
-                      return (
-                        <tr key={item.id} {...getTrProps(item.id)}>
-                          <td><strong style={{ color: 'var(--color-primary)' }}>{formatDistrictName(item.name)}</strong></td>
-                          <td>{pDir?.name || '-'}</td>
+                      return distSecs.map(sec => (
+                        <tr key={sec.id} {...getTrProps(sec.id)}>
+                          <td><strong style={{ color: 'var(--color-text-main)' }}>{sec.name}</strong></td>
+                          <td>{distName}</td>
                           <td>
-                            <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--color-text-main)' }}>
-                              {sectionNames.join(', ')}
-                            </span>
-                          </td>
-                          <td>
-                            <span style={item.isActive ? styles.badgeActive : styles.badgeInactive}>
-                              {item.isActive ? 'Ativo' : 'Inativo'}
+                            <span style={sec.isActive !== false ? styles.badgeActive : styles.badgeInactive}>
+                              {sec.isActive !== false ? 'Activo' : 'Inactivo'}
                             </span>
                           </td>
                           <td style={styles.tdActions}>
                             <span style={{...styles.btnIcon, cursor: 'grab', fontSize: '16px', display: 'inline-flex'}} title="Arraste para reordenar">☰</span>
                             <span style={styles.divider}></span>
-                            <button onClick={() => handleToggleStatus(item.id)} style={styles.btnIcon} title="Toggle Status">⏻</button>
-                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}>✎</button>
-                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
+                            <button onClick={() => handleToggleStatus(sec.id)} style={styles.btnIcon} title="Toggle Status">⏻</button>
+                            <button onClick={() => handleEdit(sec)} style={styles.btnIcon}>✎</button>
+                            <button onClick={() => requestDelete(sec.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
                           </td>
                         </tr>
-                      );
+                      ));
                     })}
 
                     {activeTab === 'dist_sec' && displayDistrictSections.map(item => {
