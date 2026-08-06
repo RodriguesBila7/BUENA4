@@ -85,24 +85,51 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     const men = employees.filter(e => e.gender === 'M' || e.gender === 'Masculino').length;
     const women = employees.filter(e => e.gender === 'F' || e.gender === 'Feminino').length;
 
-    // 1. Distribution by Directorate
+    // Helper para normalizar o nome da direcção e eliminar duplicados de ortografia (ex: Direção vs Direcção)
+    const getCanonicalDirName = (rawName) => {
+      if (!rawName) return '';
+      let norm = rawName.trim().replace(/^Direção\b/i, 'Direcção');
+      if (norm.toLowerCase() === 'direcção provincial de zambézia' || norm.toLowerCase() === 'direção provincial de zambézia') {
+        norm = 'Direcção Provincial da Zambézia';
+      }
+      return norm;
+    };
+
+    // Mapeamento de id de direcção para chave canónica
+    const dirIdToCanonicalKey = {};
+
+    // 1. Distribution by Directorate (com deduplicação ortográfica)
     const byDirectorate = {};
     if (orgData && orgData.directorates) {
       orgData.directorates.forEach(d => {
-        const idStr = String(d.id);
+        const canonicalName = getCanonicalDirName(d.name);
+        const key = canonicalName.toLowerCase();
+        dirIdToCanonicalKey[String(d.id)] = key;
+
         const childDistricts = (orgData && orgData.districtDirectorates) 
-          ? orgData.districtDirectorates.filter(dist => String(dist.provincialDirectorateId) === idStr)
+          ? orgData.districtDirectorates.filter(dist => String(dist.provincialDirectorateId) === String(d.id))
           : [];
-        byDirectorate[idStr] = { 
-          id: idStr, 
-          name: d.name, 
-          count: 0, M: 0, F: 0, 
-          employees: [],
-          districtDirectorates: childDistricts
-        };
+
+        if (!byDirectorate[key]) {
+          byDirectorate[key] = { 
+            id: String(d.id), 
+            ids: [String(d.id)],
+            name: canonicalName, 
+            count: 0, M: 0, F: 0, 
+            employees: [],
+            districtDirectorates: [...childDistricts]
+          };
+        } else {
+          byDirectorate[key].ids.push(String(d.id));
+          childDistricts.forEach(dist => {
+            if (!byDirectorate[key].districtDirectorates.some(existing => String(existing.id) === String(dist.id))) {
+              byDirectorate[key].districtDirectorates.push(dist);
+            }
+          });
+        }
       });
     }
-    let unassignedDir = { id: 'unassigned', name: 'Sem Afetação / Outros', count: 0, M: 0, F: 0, employees: [] };
+    let unassignedDir = { id: 'unassigned', ids: ['unassigned'], name: 'Sem Afetação / Outros', count: 0, M: 0, F: 0, employees: [], districtDirectorates: [] };
 
     // 2. Distribution by Department
     const byDepartment = {};
@@ -212,11 +239,16 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
       // Directorate
       const dId = emp.directorateId ? String(emp.directorateId) : null;
-      if (dId && byDirectorate[dId]) {
-        byDirectorate[dId].count++;
-        byDirectorate[dId].employees.push(emp);
-        if (isM) byDirectorate[dId].M++;
-        if (isF) byDirectorate[dId].F++;
+      let dirKey = dId ? dirIdToCanonicalKey[dId] : null;
+      if (!dirKey && emp.directorate) {
+        dirKey = getCanonicalDirName(emp.directorate).toLowerCase();
+      }
+
+      if (dirKey && byDirectorate[dirKey]) {
+        byDirectorate[dirKey].count++;
+        byDirectorate[dirKey].employees.push(emp);
+        if (isM) byDirectorate[dirKey].M++;
+        if (isF) byDirectorate[dirKey].F++;
       } else {
         unassignedDir.count++;
         unassignedDir.employees.push(emp);
@@ -304,7 +336,14 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     });
 
     const activeDirectorates = Object.values(byDirectorate).filter(d => d.count > 0).sort((a,b) => b.count - a.count);
-    const allDirectoratesList = Object.values(byDirectorate).sort((a,b) => b.count - a.count);
+    const allDirectoratesList = Object.values(byDirectorate).sort((a,b) => a.name.localeCompare(b.name));
+    const provincialDirectoratesList = allDirectoratesList.filter(d => {
+      const nameLower = d.name.toLowerCase();
+      return nameLower.includes('provincial') || 
+             nameLower.includes('cidade de maputo') || 
+             nameLower.includes('geral') ||
+             (d.districtDirectorates && d.districtDirectorates.length > 0);
+    }).sort((a,b) => a.name.localeCompare(b.name));
 
     const activeDepartments = Object.values(byDepartment).filter(d => d.count > 0).sort((a,b) => b.count - a.count);
     const allDepartmentsList = Object.values(byDepartment).sort((a,b) => b.count - a.count);
@@ -328,6 +367,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       women,
       directorates: activeDirectorates,
       allDirectoratesList,
+      provincialDirectoratesList,
       unassignedDir,
       departments: activeDepartments,
       allDepartmentsList,
@@ -2954,7 +2994,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               }}
                             >
                               <option value="ALL">Todas as Províncias</option>
-                              {reportStats.allDirectoratesList.map(d => (
+                              {(reportStats.provincialDirectoratesList || reportStats.allDirectoratesList).map(d => (
                                 <option key={d.id} value={d.id}>{d.name}</option>
                               ))}
                             </select>
@@ -2981,7 +3021,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             >
                               <option value="ALL">Todos os Distritos ({reportStats.total} funcionários)</option>
                               {reportStats.allDistrictsList
-                                .filter(dist => selectedReportDirectorate === 'ALL' || String(dist.provincialDirectorateId) === String(selectedReportDirectorate))
+                                .filter(dist => {
+                                  if (selectedReportDirectorate === 'ALL') return true;
+                                  const selDirObj = reportStats.allDirectoratesList.find(d => String(d.id) === String(selectedReportDirectorate) || (d.ids && d.ids.includes(String(selectedReportDirectorate))));
+                                  if (!selDirObj) return String(dist.provincialDirectorateId) === String(selectedReportDirectorate);
+                                  return selDirObj.ids ? selDirObj.ids.includes(String(dist.provincialDirectorateId)) : String(dist.provincialDirectorateId) === String(selectedReportDirectorate);
+                                })
                                 .map(dist => (
                                   <option key={dist.id} value={dist.id}>
                                     {dist.name} ({dist.count} {dist.count === 1 ? 'funcionário' : 'funcionários'})
@@ -3043,7 +3088,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             </thead>
                             <tbody>
                               {reportStats.districts
-                                .filter(dist => selectedReportDirectorate === 'ALL' || String(dist.provincialDirectorateId) === String(selectedReportDirectorate))
+                                .filter(dist => {
+                                  if (selectedReportDirectorate === 'ALL') return true;
+                                  const selDirObj = reportStats.allDirectoratesList.find(d => String(d.id) === String(selectedReportDirectorate) || (d.ids && d.ids.includes(String(selectedReportDirectorate))));
+                                  if (!selDirObj) return String(dist.provincialDirectorateId) === String(selectedReportDirectorate);
+                                  return selDirObj.ids ? selDirObj.ids.includes(String(dist.provincialDirectorateId)) : String(dist.provincialDirectorateId) === String(selectedReportDirectorate);
+                                })
                                 .filter(dist => dist.name.toLowerCase().includes(searchReportText.toLowerCase()) || dist.provinceName.toLowerCase().includes(searchReportText.toLowerCase()))
                                 .map(dist => (
                                   <tr 
