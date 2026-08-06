@@ -318,7 +318,7 @@ export default function AccountList({ t }) {
         isOpen={isModalOpen}
         title={modalMode === 'create' ? 'Criar Nova Conta' : 'Editar Conta'}
         onClose={() => setIsModalOpen(false)}
-        maxWidth="540px"
+        maxWidth="660px"
       >
         <form onSubmit={handleSaveUser} style={styles.form}>
           {formError && (
@@ -502,14 +502,14 @@ const styles = {
   modalTitle: { margin: 0, fontSize: '18px', fontWeight: '700', color: 'var(--color-text-base)' },
   closeBtn: { background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '4px', display: 'flex' },
   
-  form: { display: 'flex', flexDirection: 'column' },
-  formGrid: { padding: '24px', display: 'grid', gridTemplateColumns: '1fr', gap: '16px', maxHeight: '65vh', overflowY: 'auto' },
-  formGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '600', color: 'var(--color-text-muted)' },
-  input: { padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-base)', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px' },
-  errorAlert: { margin: '20px 24px 0 24px', padding: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', borderRadius: '8px', fontSize: '13px', fontWeight: '500' },
+  form: { display: 'flex', flexDirection: 'column', width: '100%', boxSizing: 'border-box' },
+  formGrid: { padding: '4px 0 16px 0', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '68vh', overflowY: 'auto', overflowX: 'hidden', boxSizing: 'border-box', width: '100%' },
+  formGroup: { display: 'flex', flexDirection: 'column', gap: '6px', width: '100%', boxSizing: 'border-box' },
+  label: { fontSize: '13px', fontWeight: '600', color: 'var(--color-text-base)' },
+  input: { width: '100%', boxSizing: 'border-box', padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-base)', outline: 'none', transition: 'border-color 0.2s', fontSize: '14px' },
+  errorAlert: { margin: '0 0 16px 0', padding: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', borderRadius: '8px', fontSize: '13px', fontWeight: '500', boxSizing: 'border-box' },
   
-  modalFooter: { padding: '20px 24px', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: '12px' },
-  btnCancel: { padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'transparent', color: 'var(--color-text-base)', fontWeight: '600', cursor: 'pointer' },
-  btnSave: { padding: '10px 20px', borderRadius: '8px', border: 'none', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', fontWeight: '600', cursor: 'pointer' }
+  modalFooter: { paddingTop: '16px', marginTop: '8px', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: '12px', width: '100%', boxSizing: 'border-box' },
+  btnCancel: { padding: '10px 18px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'transparent', color: 'var(--color-text-base)', fontWeight: '600', cursor: 'pointer' },
+  btnSave: { padding: '10px 24px', borderRadius: '8px', border: 'none', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', fontWeight: '600', cursor: 'pointer' }
 };

@@ -59,26 +59,29 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
     backdropFilter: 'blur(4px)',
     WebkitBackdropFilter: 'blur(4px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 99999,
-    animation: 'fadeIn 0.25s ease'
+    animation: 'fadeIn 0.25s ease',
+    padding: '20px',
+    boxSizing: 'border-box'
   },
   modal: {
     backgroundColor: 'var(--color-bg-card, #ffffff)',
     color: 'var(--color-text-base, #1e293b)',
     borderRadius: '16px',
-    width: '92%',
+    width: '95%',
     boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--color-border, #e2e8f0)',
     border: '1px solid var(--color-border, #e2e8f0)',
     overflow: 'hidden',
     animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    boxSizing: 'border-box'
   },
   header: {
     padding: '18px 24px',
@@ -88,7 +91,8 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     cursor: 'grab',
-    userSelect: 'none'
+    userSelect: 'none',
+    boxSizing: 'border-box'
   },
   titleContainer: {
     display: 'flex',
@@ -125,7 +129,9 @@ const styles = {
   body: {
     padding: '24px',
     backgroundColor: 'var(--color-bg-card, #ffffff)',
-    maxHeight: '80vh',
-    overflowY: 'auto'
+    maxHeight: '82vh',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    boxSizing: 'border-box'
   }
 };
