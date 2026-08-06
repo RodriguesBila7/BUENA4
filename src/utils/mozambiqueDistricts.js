@@ -60,10 +60,19 @@ export const getDistrictsByProvinceName = (provName) => {
 
 export const formatDistrictName = (rawName) => {
   if (!rawName) return '';
-  const trimmed = rawName.trim();
+  let trimmed = rawName.trim();
+
+  // Limpar repetições de prefixo (ex: "Direcção Distrital de Direção Distrital de Funhalouro")
+  while (/^Direcçã?o\s+Distrital\s+(de|da|do)?\s+Direcçã?o\s+Distrital/i.test(trimmed)) {
+    trimmed = trimmed.replace(/^Direcçã?o\s+Distrital\s+(de|da|do)?\s+/i, '');
+  }
+
+  // Se já começa com "Direcção Distrital" ou "Direção Distrital", apenas padronizar para duplo cc
   if (/^Direcçã?o\s+Distrital/i.test(trimmed)) {
     return trimmed.replace(/^Direção\b/i, 'Direcção');
   }
+
+  // Se for apenas o nome puro do distrito (ex: "Funhalouro", "Jangamo")
   const lower = trimmed.toLowerCase();
   if (['matola', 'beira', 'manhiça', 'namaacha', 'mavia', 'maganja da costa'].includes(lower) || lower.startsWith('ilha ') || lower.startsWith('cidade ')) {
     return `Direcção Distrital da ${trimmed}`;
