@@ -433,9 +433,17 @@ export default function OrgStructureManager({ t }) {
                         required
                       >
                         <option value="">-- Selecione a Direção Provincial --</option>
-                        {(data.directorates || []).filter(d => d.isActive && d.province).map(d => (
-                          <option key={d.id} value={d.id}>{d.name} ({d.province})</option>
-                        ))}
+                        {(data.directorates || [])
+                          .filter(d => d.isActive && d.province)
+                          .reduce((acc, current) => {
+                            if (!acc.some(item => item.province === current.province)) {
+                              acc.push(current);
+                            }
+                            return acc;
+                          }, [])
+                          .map(d => (
+                            <option key={d.id} value={d.id}>{d.name} ({d.province})</option>
+                          ))}
                       </select>
                     </div>
 

@@ -356,34 +356,43 @@ function initSchema(db) {
   try { db.exec("ALTER TABLE employees ADD COLUMN provincial_directorate_id TEXT DEFAULT NULL REFERENCES directorates(id)"); } catch (e) {}
   try { db.exec("ALTER TABLE district_directorates ADD COLUMN sort_order INTEGER DEFAULT 0"); } catch (e) {}
 
-  // Rectificação profunda e deduplicação automática de nomes legados de Maputo na BD
+  // Rectificação profunda e deduplicação de TODAS as Direcções Provinciais
   try {
-    const maputoCidadeDirs = db.prepare(`SELECT id, name FROM directorates WHERE lower(name) LIKE '%maputo%cidade%' OR lower(name) LIKE '%cidade%maputo%'`).all();
-    const maputoProvDirs = db.prepare(`SELECT id, name FROM directorates WHERE lower(name) LIKE '%maputo%prov%' OR (lower(name) LIKE '%maputo%' AND lower(name) NOT LIKE '%cidade%')`).all();
+    const PROVINCES_LIST = [
+      { name: 'Cidade de Maputo', dirName: 'Direcção da Cidade de Maputo' },
+      { name: 'Maputo Província', dirName: 'Direcção Provincial de Maputo' },
+      { name: 'Gaza', dirName: 'Direcção Provincial de Gaza' },
+      { name: 'Inhambane', dirName: 'Direcção Provincial de Inhambane' },
+      { name: 'Sofala', dirName: 'Direcção Provincial de Sofala' },
+      { name: 'Manica', dirName: 'Direcção Provincial de Manica' },
+      { name: 'Tete', dirName: 'Direcção Provincial de Tete' },
+      { name: 'Zambézia', dirName: 'Direcção Provincial de Zambézia' },
+      { name: 'Nampula', dirName: 'Direcção Provincial de Nampula' },
+      { name: 'Niassa', dirName: 'Direcção Provincial de Niassa' },
+      { name: 'Cabo Delgado', dirName: 'Direcção Provincial de Cabo Delgado' }
+    ];
 
-    if (maputoCidadeDirs.length > 0) {
-      const mainId = maputoCidadeDirs.find(d => d.name === 'Direcção da Cidade de Maputo')?.id || maputoCidadeDirs[0].id;
-      db.prepare("UPDATE directorates SET name = 'Direcção da Cidade de Maputo', province = 'Cidade de Maputo' WHERE id = ?").run(mainId);
-      maputoCidadeDirs.forEach(d => {
-        if (d.id !== mainId) {
-          db.prepare("UPDATE district_directorates SET provincial_directorate_id = ? WHERE provincial_directorate_id = ?").run(mainId, d.id);
-          db.prepare("UPDATE employees SET directorate_id = ? WHERE directorate_id = ?").run(mainId, d.id);
-          db.prepare("DELETE FROM directorates WHERE id = ?").run(d.id);
-        }
-      });
-    }
+    PROVINCES_LIST.forEach(p => {
+      const matching = db.prepare(`
+        SELECT id, name, province FROM directorates 
+        WHERE province = ? OR lower(name) LIKE ? OR lower(name) LIKE ?
+      `).all(p.name, `%${p.name.toLowerCase()}%`, `%direc%${p.name.toLowerCase()}%`);
 
-    if (maputoProvDirs.length > 0) {
-      const mainProvId = maputoProvDirs.find(d => d.name === 'Direcção Provincial de Maputo')?.id || maputoProvDirs[0].id;
-      db.prepare("UPDATE directorates SET name = 'Direcção Provincial de Maputo', province = 'Maputo Província' WHERE id = ?").run(mainProvId);
-      maputoProvDirs.forEach(d => {
-        if (d.id !== mainProvId) {
-          db.prepare("UPDATE district_directorates SET provincial_directorate_id = ? WHERE provincial_directorate_id = ?").run(mainProvId, d.id);
-          db.prepare("UPDATE employees SET directorate_id = ? WHERE directorate_id = ?").run(mainProvId, d.id);
-          db.prepare("DELETE FROM directorates WHERE id = ?").run(d.id);
-        }
-      });
-    }
+      if (matching.length > 1) {
+        let mainDir = matching.find(m => m.name === p.dirName) || matching[0];
+        db.prepare("UPDATE directorates SET name = ?, province = ? WHERE id = ?").run(p.dirName, p.name, mainDir.id);
+
+        matching.forEach(dup => {
+          if (dup.id !== mainDir.id) {
+            db.prepare("UPDATE district_directorates SET provincial_directorate_id = ? WHERE provincial_directorate_id = ?").run(mainDir.id, dup.id);
+            db.prepare("UPDATE departments SET directorate_id = ? WHERE directorate_id = ?").run(mainDir.id, dup.id);
+            db.prepare("UPDATE employees SET directorate_id = ? WHERE directorate_id = ?").run(mainDir.id, dup.id);
+            db.prepare("UPDATE employees SET provincial_directorate_id = ? WHERE provincial_directorate_id = ?").run(mainDir.id, dup.id);
+            db.prepare("DELETE FROM directorates WHERE id = ?").run(dup.id);
+          }
+        });
+      }
+    });
   } catch (e) {}
 
   // Auto-seeding das Direções Provinciais se a tabela estiver vazia
