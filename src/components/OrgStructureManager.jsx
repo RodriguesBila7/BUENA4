@@ -376,6 +376,7 @@ export default function OrgStructureManager({ t }) {
   const displaySections = parentRepId 
     ? data.sections.filter(s => s.divisionId === parentRepId) 
     : (parentDepId ? data.sections.filter(s => s.departmentId === parentDepId) : data.sections.filter(s => !s.districtDirectorateId));
+  const displayDistricts = parentDirId ? availableDistricts : (data.districtDirectorates || []);
   const rawDistrictSections = selectedDistrictId
     ? (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(selectedDistrictId))
     : (parentDirId
