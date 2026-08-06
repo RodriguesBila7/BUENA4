@@ -15,6 +15,8 @@ const _id = () => `${Date.now().toString(36)}-${Math.random().toString(36).subst
 let _cache = null;
 const _listeners = new Set();
 
+const EMPTY = { directorates: [], districtDirectorates: [], departments: [], divisions: [], sections: [], careers: [], categories: [] };
+
 export function getCanonicalDirName(name) {
   if (!name) return '';
   let str = name.trim();
