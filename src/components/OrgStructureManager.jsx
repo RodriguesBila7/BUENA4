@@ -208,22 +208,16 @@ export default function OrgStructureManager({ t }) {
         const formattedDistName = formatDistrictName(name);
         success = await updateDistrict(editingId, formattedDistName, parentDirId, notes, 'Ativo');
       } else {
-        let distId = selectedDistrictId;
-        if (!selectedDistrictId || selectedDistrictId === 'NEW') {
-          if (!name.trim()) return showError('Selecione uma Direção Distrital ou digite o nome para criar');
+        if (selectedDistrictId === 'NEW') {
+          if (!name.trim()) return showError('Digite o Nome da Nova Direção Distrital');
           const formattedDistName = formatDistrictName(name);
           const newDist = await addDistrict(formattedDistName, parentDirId, '', notes);
-          if (newDist && newDist.id) {
-            distId = newDist.id;
-            success = true;
-          }
+          if (newDist && newDist.id) success = true;
+        } else if (selectedDistrictId) {
+          const formattedDistName = formatDistrictName(name);
+          success = await updateDistrict(selectedDistrictId, formattedDistName, parentDirId, notes, 'Ativo');
         } else {
-          success = true;
-        }
-
-        if (sectionName.trim() && distId) {
-          const secRes = await addSection(distId, sectionName.trim(), 'districtId');
-          if (secRes) success = true;
+          return showError('Selecione uma Direção Distrital');
         }
       }
     } else if (activeTab === 'dist_sec') {
@@ -487,19 +481,43 @@ export default function OrgStructureManager({ t }) {
                       </div>
                     )}
 
-                    {!editingId && (
-                      <div style={styles.formGroup}>
-                        <label style={styles.label}>3. Adicionar Secção a este Distrito (Ex: Secção de Operações)</label>
-                        <input
-                          type="text"
-                          value={sectionName}
-                          onChange={(e) => setSectionName(e.target.value)}
-                          onKeyDown={handleKeyPress}
-                          style={styles.input}
-                          placeholder="Ex: Secção de Operações, Secção de RH..."
-                        />
-                      </div>
-                    )}
+                    {selectedDistrictId && selectedDistrictId !== 'NEW' && (() => {
+                      const distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(selectedDistrictId));
+                      return (
+                        <div style={{
+                          padding: '12px 14px',
+                          borderRadius: '8px',
+                          backgroundColor: 'rgba(27, 54, 93, 0.05)',
+                          border: '1px solid var(--color-primary)',
+                          marginBottom: '14px'
+                        }}>
+                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-primary)', display: 'block', marginBottom: '8px' }}>
+                            🔖 Secções Integrantes do Organograma deste Distrito ({distSecs.length}):
+                          </label>
+                          {distSecs.length > 0 ? (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {distSecs.map(sec => (
+                                <span key={sec.id} style={{
+                                  padding: '3px 8px',
+                                  borderRadius: '12px',
+                                  backgroundColor: 'var(--color-bg-base)',
+                                  border: '1px solid var(--color-border)',
+                                  fontSize: '11px',
+                                  fontWeight: '600',
+                                  color: 'var(--color-text-main)'
+                                }}>
+                                  • {sec.name}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                              Nenhuma secção registada para este distrito.
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
 
                     <div style={styles.formGroup}>
                       <label style={styles.label}>Observações</label>
