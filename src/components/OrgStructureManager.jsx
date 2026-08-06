@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import useOrgData from '../hooks/useOrgData';
 import ConfirmModal from './ConfirmModal';
 import DistrictDashboard from './org/DistrictDashboard';
-import DistrictQueries from './org/DistrictQueries';
-import DistrictOrganogram from './org/DistrictOrganogram';
 import { formatDistrictName, getDistrictsByProvinceName } from '../utils/mozambiqueDistricts';
 
 export default function OrgStructureManager({ t }) {
@@ -423,25 +421,17 @@ export default function OrgStructureManager({ t }) {
         <button onClick={() => handleTabChange('sec')} style={activeTab === 'sec' ? styles.activeTab : styles.tab}>{t('org_tab_sec')}</button>
         <button onClick={() => handleTabChange('dist_dir')} style={activeTab === 'dist_dir' ? styles.activeTab : styles.tab}>Direcções Distritais</button>
         <button onClick={() => handleTabChange('dist_sec')} style={activeTab === 'dist_sec' ? styles.activeTab : styles.tab}>Secções Distritais</button>
-        <button onClick={() => handleTabChange('dist_tree')} style={activeTab === 'dist_tree' ? styles.activeTab : styles.tab}>Organograma Distrital</button>
-        <button onClick={() => handleTabChange('dist_queries')} style={activeTab === 'dist_queries' ? styles.activeTab : styles.tab}>Pesquisa Distrital</button>
-        <button onClick={() => handleTabChange('dist_dash')} style={activeTab === 'dist_dash' ? styles.activeTab : styles.tab}>Estatísticas Distritais</button>
+        <button onClick={() => handleTabChange('dist_dash')} style={activeTab === 'dist_dash' ? styles.activeTab : styles.tab}>Estatística Organizacional</button>
         <button onClick={() => handleTabChange('car')} style={activeTab === 'car' ? styles.activeTab : styles.tab}>{t('org_tab_car')}</button>
         <button onClick={() => handleTabChange('cat')} style={activeTab === 'cat' ? styles.activeTab : styles.tab}>{t('org_tab_cat')}</button>
       </div>
 
-      <div style={{ ...styles.contentArea, gridTemplateColumns: ['dist_tree', 'dist_queries', 'dist_dash'].includes(activeTab) ? '1fr' : '350px 1fr' }}>
-        {activeTab === 'dist_tree' && (
-          <div style={{ width: '100%' }}><DistrictOrganogram data={data} t={t} /></div>
-        )}
-        {activeTab === 'dist_queries' && (
-          <div style={{ width: '100%' }}><DistrictQueries data={data} t={t} /></div>
-        )}
+      <div style={{ ...styles.contentArea, gridTemplateColumns: activeTab === 'dist_dash' ? '1fr' : '350px 1fr' }}>
         {activeTab === 'dist_dash' && (
           <div style={{ width: '100%' }}><DistrictDashboard data={data} t={t} /></div>
         )}
 
-        {!['dist_tree', 'dist_queries', 'dist_dash'].includes(activeTab) && (
+        {activeTab !== 'dist_dash' && (
           <>
             {/* Formulário */}
             <div style={styles.formCard}>
