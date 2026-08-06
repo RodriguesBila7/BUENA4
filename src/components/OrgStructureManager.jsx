@@ -376,7 +376,9 @@ export default function OrgStructureManager({ t }) {
   const displaySections = parentRepId 
     ? data.sections.filter(s => s.divisionId === parentRepId) 
     : (parentDepId ? data.sections.filter(s => s.departmentId === parentDepId) : data.sections.filter(s => !s.districtDirectorateId));
-  const displayDistricts = parentDirId ? availableDistricts : (data.districtDirectorates || []);
+  const displayDistricts = selectedDistrictId && selectedDistrictId !== 'NEW'
+    ? (data.districtDirectorates || []).filter(d => String(d.id) === String(selectedDistrictId))
+    : (parentDirId ? availableDistricts : (data.districtDirectorates || []));
   const rawDistrictSections = selectedDistrictId
     ? (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(selectedDistrictId))
     : (parentDirId
@@ -547,59 +549,6 @@ export default function OrgStructureManager({ t }) {
                         />
                       </div>
                     )}
-
-                    {selectedDistrictId && selectedDistrictId !== 'NEW' && (() => {
-                      let distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(selectedDistrictId));
-                      if (distSecs.length === 0) {
-                        const DEFAULT_NAMES = [
-                          "Piquete Operativo", "Secretaria", "Secção Técnica Criminalística",
-                          "Secção de Apoio e Documentação", "Secção de Armamento e Segurança",
-                          "Secção de Identificação e Registo Policial", "Secção de Investigação Operativa",
-                          "Secção de Investigação e Instrução Criminal"
-                        ];
-                        distSecs = DEFAULT_NAMES.map((name, idx) => ({ id: `default_${idx}`, name }));
-                      }
-                      return (
-                        <div style={{
-                          padding: '12px 14px',
-                          borderRadius: '8px',
-                          backgroundColor: 'rgba(27, 54, 93, 0.05)',
-                          border: '1px solid var(--color-primary)',
-                          marginBottom: '14px'
-                        }}>
-                          <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-primary)', display: 'block', marginBottom: '8px' }}>
-                            🔖 Secções Integrantes do Organograma deste Distrito ({distSecs.length}):
-                          </label>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                            {distSecs.map(sec => (
-                              <span key={sec.id} style={{
-                                padding: '3px 8px',
-                                borderRadius: '12px',
-                                backgroundColor: 'var(--color-bg-base)',
-                                border: '1px solid var(--color-border)',
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                color: 'var(--color-text-main)'
-                              }}>
-                                • {sec.name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    <div style={styles.formGroup}>
-                      <label style={styles.label}>Observações</label>
-                      <input 
-                        type="text" 
-                        value={notes} 
-                        onChange={(e) => setNotes(e.target.value)} 
-                        onKeyDown={handleKeyPress}
-                        style={styles.input} 
-                        placeholder="Notas administrativas..." 
-                      />
-                    </div>
                   </>
                 )}
 
