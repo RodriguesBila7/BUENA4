@@ -395,6 +395,51 @@ function initSchema(db) {
     });
   } catch (e) {}
 
+  // Rectificação e deduplicação de TODAS as Direcções Distritais na BD
+  try {
+    const allDistricts = db.prepare('SELECT id, name, province, provincial_directorate_id FROM district_directorates').all();
+    const map = new Map();
+
+    const cleanName = (rawName) => {
+      if (!rawName) return '';
+      let str = rawName.trim();
+      str = str.replace(/^(Direc?çã?o\s+Distrital\s+(de|da|do)?\s*)+/i, '');
+      str = str.replace(/^(Direc?çã?o\s+Distrital\s*)+/i, '');
+      str = str.trim();
+      if (!str) return '';
+      const lower = str.toLowerCase();
+      if (['matola', 'beira', 'manhiça', 'namaacha', 'mavia', 'maganja da costa'].includes(lower) || lower.startsWith('ilha ') || lower.startsWith('cidade ')) {
+        return `Direcção Distrital da ${str}`;
+      }
+      return `Direcção Distrital de ${str}`;
+    };
+
+    allDistricts.forEach(d => {
+      const canonicalName = cleanName(d.name);
+      const key = `${canonicalName.toLowerCase()}||${(d.province || '').toLowerCase()}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push({ ...d, canonicalName });
+    });
+
+    map.forEach((items) => {
+      if (items.length > 1) {
+        const mainDist = items[0];
+        db.prepare('UPDATE district_directorates SET name = ? WHERE id = ?').run(mainDist.canonicalName, mainDist.id);
+        for (let i = 1; i < items.length; i++) {
+          const dup = items[i];
+          db.prepare('UPDATE sections SET district_directorate_id = ? WHERE district_directorate_id = ?').run(mainDist.id, dup.id);
+          db.prepare('UPDATE employees SET district_directorate_id = ? WHERE district_directorate_id = ?').run(mainDist.id, dup.id);
+          db.prepare('DELETE FROM district_directorates WHERE id = ?').run(dup.id);
+        }
+      } else if (items.length === 1) {
+        const dist = items[0];
+        if (dist.name !== dist.canonicalName) {
+          db.prepare('UPDATE district_directorates SET name = ? WHERE id = ?').run(dist.canonicalName, dist.id);
+        }
+      }
+    });
+  } catch (e) {}
+
   // Auto-seeding das Direções Provinciais se a tabela estiver vazia
   const dirCount = db.prepare('SELECT COUNT(*) as c FROM directorates').get().c;
   if (dirCount === 0) {

@@ -339,21 +339,29 @@ export default function OrgStructureManager({ t }) {
 
   let availableDistricts = [];
   if (parentDirId) {
-    availableDistricts = (data.districtDirectorates || []).filter(d => {
+    let rawDistricts = (data.districtDirectorates || []).filter(d => {
       if (String(d.provincialDirectorateId) === String(parentDirId)) return true;
       if (selectedProvinceName && d.province && d.province.toLowerCase() === selectedProvinceName.toLowerCase()) return true;
       return false;
     });
 
-    if (availableDistricts.length === 0 && selectedProvinceName) {
+    if (rawDistricts.length === 0 && selectedProvinceName) {
       const officialDistNames = getDistrictsByProvinceName(selectedProvinceName);
-      availableDistricts = officialDistNames.map((distName, idx) => ({
+      rawDistricts = officialDistNames.map((distName, idx) => ({
         id: `dist_${selectedProvinceName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${distName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
         name: distName,
         provincialDirectorateId: parentDirId,
         province: selectedProvinceName
       }));
     }
+
+    availableDistricts = rawDistricts.reduce((acc, current) => {
+      const formattedCurrent = formatDistrictName(current.name);
+      if (!acc.some(item => formatDistrictName(item.name).toLowerCase() === formattedCurrent.toLowerCase())) {
+        acc.push(current);
+      }
+      return acc;
+    }, []);
   }
 
   // List filters
