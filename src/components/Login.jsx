@@ -404,7 +404,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
 
       {/* ══════════════ RODÁPÉ ══════════════ */}
       <footer style={{...s.footer, color: bwMode === 'claro' ? '#7f8c8d' : 'rgba(255,255,255,0.7)'}}>
-        <p>Copyright © 2026 – Serviço Nacional de Investigação Criminal (SERNIC). Todos os direitos reservados. | Versão: 01.00.00</p>
+        <p>Copyright © 2026 – Serviço Nacional de Investigação Criminal (SERNIC). Todos os direitos reservados. | Versão: 05.01.00</p>
       </footer>
     </div>
   );

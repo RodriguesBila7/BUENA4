@@ -41,7 +41,7 @@ export default function SettingsSystem({ t }) {
           </h4>
           <div style={styles.infoRow}>
             <span style={styles.infoLabel}>Versão do Sistema</span>
-            <span style={styles.infoValue}>v3.2.0 (Build 2026)</span>
+            <span style={styles.infoValue}>v05.01.00 (Build 2026)</span>
           </div>
           <div style={styles.infoRow}>
             <span style={styles.infoLabel}>Última Atualização</span>

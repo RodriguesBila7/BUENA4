@@ -225,10 +225,12 @@ export default function OrgStructureManager({ t }) {
       if (editingId) success = await updateSection(editingId, name, targetDistId, 'districtDirectorateId');
       else success = await addSection(targetDistId, name, 'districtDirectorateId');
     } else if (activeTab === 'car') {
+      if (!name.trim()) return showError('Digite o Nome da Carreira');
       if (editingId) success = await updateCareer(editingId, name);
       else success = await addCareer(name);
     } else if (activeTab === 'cat') {
       if (!parentCarId) return showError('Selecione a Carreira');
+      if (!name.trim()) return showError('Digite o Nome da Categoria');
       if (editingId) success = await updateCategory(editingId, parentCarId, name);
       else success = await addCategory(parentCarId, name);
     }
@@ -420,9 +422,9 @@ export default function OrgStructureManager({ t }) {
         <button onClick={() => handleTabChange('rep')} style={activeTab === 'rep' ? styles.activeTab : styles.tab}>{t('org_tab_rep')}</button>
         <button onClick={() => handleTabChange('sec')} style={activeTab === 'sec' ? styles.activeTab : styles.tab}>{t('org_tab_sec')}</button>
         <button onClick={() => handleTabChange('dist_dir')} style={activeTab === 'dist_dir' ? styles.activeTab : styles.tab}>Direcções Distritais</button>
-        <button onClick={() => handleTabChange('dist_dash')} style={activeTab === 'dist_dash' ? styles.activeTab : styles.tab}>Estatística Organizacional</button>
         <button onClick={() => handleTabChange('car')} style={activeTab === 'car' ? styles.activeTab : styles.tab}>{t('org_tab_car')}</button>
         <button onClick={() => handleTabChange('cat')} style={activeTab === 'cat' ? styles.activeTab : styles.tab}>{t('org_tab_cat')}</button>
+        <button onClick={() => handleTabChange('dist_dash')} style={activeTab === 'dist_dash' ? styles.activeTab : styles.tab}>Estatística Organizacional</button>
       </div>
 
       <div style={{ ...styles.contentArea, gridTemplateColumns: activeTab === 'dist_dash' ? '1fr' : '350px 1fr' }}>
@@ -539,6 +541,39 @@ export default function OrgStructureManager({ t }) {
                       </div>
                     )}
                   </>
+                )}
+
+                {activeTab === 'cat' && (
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>{t('org_tab_car')} *</label>
+                    <select 
+                      value={parentCarId} 
+                      onChange={(e) => setParentCarId(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      style={styles.input}
+                      required
+                    >
+                      <option value="">-- Seleccione a Carreira --</option>
+                      {(data.careers || []).map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {activeTab !== 'dist_dir' && (
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>{t('org_name')} *</label>
+                    <input 
+                      type="text" 
+                      value={name} 
+                      onChange={(e) => setName(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      placeholder={activeTab === 'car' ? 'Ex: Investigação Criminal' : (activeTab === 'cat' ? 'Ex: Investigador Principal' : 'Escreva o nome...')}
+                      style={styles.input}
+                      required
+                    />
+                  </div>
                 )}
 
                 {activeTab === 'dir' && (

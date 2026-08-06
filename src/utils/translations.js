@@ -18,7 +18,7 @@ const translations = {
     login_drh: 'DIRECÇÃO DE RECURSOS HUMANOS',
     login_system: 'SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS',
     login_footer: 'Copyright © 2026 –',
-    login_footer_rights: '. Todos os direitos reservados. | Versão: 01.00.00',
+    login_footer_rights: '. Todos os direitos reservados. | Versão: 05.01.00',
 
     /* ── Registo ── */
     register_title: 'Solicitar Acesso',
