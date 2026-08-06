@@ -49,6 +49,15 @@ export const mozambiqueStructure = [
   }
 ];
 
+export const getDistrictsByProvinceName = (provName) => {
+  if (!provName) return [];
+  const pLower = provName.toLowerCase();
+  const found = mozambiqueStructure.find(p => 
+    p.province.toLowerCase().includes(pLower) || pLower.includes(p.province.toLowerCase())
+  );
+  return found ? found.districts : [];
+};
+
 export const formatDistrictName = (rawName) => {
   if (!rawName) return '';
   const trimmed = rawName.trim();

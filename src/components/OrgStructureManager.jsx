@@ -4,7 +4,7 @@ import ConfirmModal from './ConfirmModal';
 import DistrictDashboard from './org/DistrictDashboard';
 import DistrictQueries from './org/DistrictQueries';
 import DistrictOrganogram from './org/DistrictOrganogram';
-import { formatDistrictName } from '../utils/mozambiqueDistricts';
+import { formatDistrictName, getDistrictsByProvinceName } from '../utils/mozambiqueDistricts';
 
 export default function OrgStructureManager({ t }) {
   const {
@@ -333,13 +333,36 @@ export default function OrgStructureManager({ t }) {
   const availableDepartments = data.departments.filter(d => d.directorateId === parentDirId);
   const availableDivisions = data.divisions.filter(d => d.departmentId === parentDepId);
 
+  // Província selecionada no form dist_dir
+  const selectedProvDir = (data.directorates || []).find(d => String(d.id) === String(parentDirId));
+  const selectedProvinceName = selectedProvDir ? selectedProvDir.province : null;
+
+  let availableDistricts = [];
+  if (parentDirId) {
+    availableDistricts = (data.districtDirectorates || []).filter(d => {
+      if (String(d.provincialDirectorateId) === String(parentDirId)) return true;
+      if (selectedProvinceName && d.province && d.province.toLowerCase() === selectedProvinceName.toLowerCase()) return true;
+      return false;
+    });
+
+    if (availableDistricts.length === 0 && selectedProvinceName) {
+      const officialDistNames = getDistrictsByProvinceName(selectedProvinceName);
+      availableDistricts = officialDistNames.map((distName, idx) => ({
+        id: `dist_${selectedProvinceName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${distName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+        name: distName,
+        provincialDirectorateId: parentDirId,
+        province: selectedProvinceName
+      }));
+    }
+  }
+
   // List filters
   const displayDepartments = parentDirId ? data.departments.filter(d => d.directorateId === parentDirId) : data.departments;
   const displayDivisions = parentDepId ? data.divisions.filter(d => d.departmentId === parentDepId) : data.divisions;
   const displaySections = parentRepId 
     ? data.sections.filter(s => s.divisionId === parentRepId) 
     : (parentDepId ? data.sections.filter(s => s.departmentId === parentDepId) : data.sections.filter(s => !s.districtDirectorateId));
-  const displayDistricts = parentDirId ? (data.districtDirectorates || []).filter(d => d.provincialDirectorateId === parentDirId) : (data.districtDirectorates || []);
+  const displayDistricts = parentDirId ? availableDistricts : (data.districtDirectorates || []);
   const displayDistrictSections = parentDirId ? (data.sections || []).filter(s => s.districtDirectorateId === parentDirId) : (data.sections || []).filter(s => s.districtDirectorateId);
   const displayCategories = parentCarId ? data.categories.filter(c => c.careerId === parentCarId) : data.categories;
 
@@ -358,7 +381,7 @@ export default function OrgStructureManager({ t }) {
         <button onClick={() => handleTabChange('dep')} style={activeTab === 'dep' ? styles.activeTab : styles.tab}>{t('org_tab_dep')}</button>
         <button onClick={() => handleTabChange('rep')} style={activeTab === 'rep' ? styles.activeTab : styles.tab}>{t('org_tab_rep')}</button>
         <button onClick={() => handleTabChange('sec')} style={activeTab === 'sec' ? styles.activeTab : styles.tab}>{t('org_tab_sec')}</button>
-        <button onClick={() => handleTabChange('dist_dir')} style={activeTab === 'dist_dir' ? styles.activeTab : styles.tab}>Direções Distritais</button>
+        <button onClick={() => handleTabChange('dist_dir')} style={activeTab === 'dist_dir' ? styles.activeTab : styles.tab}>Direcções Distritais</button>
         <button onClick={() => handleTabChange('dist_sec')} style={activeTab === 'dist_sec' ? styles.activeTab : styles.tab}>Secções Distritais</button>
         <button onClick={() => handleTabChange('dist_tree')} style={activeTab === 'dist_tree' ? styles.activeTab : styles.tab}>Organograma Distrital</button>
         <button onClick={() => handleTabChange('dist_queries')} style={activeTab === 'dist_queries' ? styles.activeTab : styles.tab}>Pesquisa Distrital</button>
@@ -385,7 +408,7 @@ export default function OrgStructureManager({ t }) {
               <h3 style={styles.cardTitle}>
                 {editingId 
                   ? t('org_edit_title') 
-                  : (activeTab === 'dist_dir' ? 'Criar Direção Distrital' : (activeTab === 'dist_sec' ? 'Criar Secção Distrital' : t(`org_create_${activeTab}`)))}
+                  : (activeTab === 'dist_dir' ? 'Criar Direcção Distrital' : (activeTab === 'dist_sec' ? 'Criar Secção Distrital' : t(`org_create_${activeTab}`)))}
               </h3>
               
               {activeTab === 'dist_dir' && !editingId && (!data.districtDirectorates || data.districtDirectorates.length === 0) && (
@@ -421,7 +444,7 @@ export default function OrgStructureManager({ t }) {
                 {activeTab === 'dist_dir' && (
                   <>
                     <div style={styles.formGroup}>
-                      <label style={styles.label}>1. Direção Provincial *</label>
+                      <label style={styles.label}>1. Direcção Provincial *</label>
                       <select 
                         value={parentDirId} 
                         onChange={(e) => {
@@ -432,7 +455,7 @@ export default function OrgStructureManager({ t }) {
                         style={styles.input}
                         required
                       >
-                        <option value="">-- Selecione a Direção Provincial --</option>
+                        <option value="">-- Seleccione a Direcção Provincial --</option>
                         {(data.directorates || [])
                           .filter(d => d.isActive && d.province)
                           .reduce((acc, current) => {
@@ -448,14 +471,14 @@ export default function OrgStructureManager({ t }) {
                     </div>
 
                     <div style={styles.formGroup}>
-                      <label style={styles.label}>2. Seleccionar Direção Distrital *</label>
+                      <label style={styles.label}>2. Seleccionar Direcção Distrital *</label>
                       <select
                         value={selectedDistrictId}
                         onChange={(e) => {
                           const val = e.target.value;
                           setSelectedDistrictId(val);
                           if (val !== 'NEW') {
-                            const distObj = (data.districtDirectorates || []).find(d => String(d.id) === String(val));
+                            const distObj = availableDistricts.find(d => String(d.id) === String(val));
                             if (distObj) setName(distObj.name);
                           } else {
                             setName('');
@@ -464,19 +487,17 @@ export default function OrgStructureManager({ t }) {
                         style={styles.input}
                         disabled={!parentDirId}
                       >
-                        <option value="">-- Selecione a Direção Distrital --</option>
-                        {(data.districtDirectorates || [])
-                          .filter(d => String(d.provincialDirectorateId) === String(parentDirId))
-                          .map(d => (
-                            <option key={d.id} value={d.id}>{formatDistrictName(d.name)}</option>
-                          ))}
-                        <option value="NEW">➕ Criar Nova Direção Distrital...</option>
+                        <option value="">-- Seleccione a Direcção Distrital --</option>
+                        {availableDistricts.map(d => (
+                          <option key={d.id} value={d.id}>{formatDistrictName(d.name)}</option>
+                        ))}
+                        <option value="NEW">➕ Criar Nova Direcção Distrital...</option>
                       </select>
                     </div>
 
                     {(selectedDistrictId === 'NEW' || editingId) && (
                       <div style={styles.formGroup}>
-                        <label style={styles.label}>Nome da Nova Direção Distrital *</label>
+                        <label style={styles.label}>Nome da Nova Direcção Distrital *</label>
                         <input
                           type="text"
                           value={name}
@@ -590,9 +611,9 @@ export default function OrgStructureManager({ t }) {
                     <tr>
                       <th>{t('org_name')}</th>
                       {activeTab === 'dir' && <th>Província</th>}
-                      {activeTab === 'dist_dir' && <th>Direção Provincial</th>}
+                      {activeTab === 'dist_dir' && <th>Direcção Provincial</th>}
                       {activeTab === 'dist_dir' && <th>Secções Registadas</th>}
-                      {activeTab === 'dist_sec' && <th>Direção Distrital</th>}
+                      {activeTab === 'dist_sec' && <th>Direcção Distrital</th>}
                       {activeTab === 'dist_sec' && <th>Província Associada</th>}
                       {['dep', 'rep', 'sec'].includes(activeTab) && <th>{t('org_tab_dir')}</th>}
                       {['rep', 'sec'].includes(activeTab) && <th>{t('org_tab_dep')}</th>}
