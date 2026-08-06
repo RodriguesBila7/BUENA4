@@ -271,7 +271,8 @@ export default function OrgStructureManager({ t }) {
       }
     } else if (activeTab === 'dist_dir') {
       setParentDirId(item.provincialDirectorateId);
-      setCode(item.code);
+      setSelectedDistrictId(item.id);
+      setCode(item.code || '');
       setNotes(item.notes || '');
     } else if (activeTab === 'dist_sec') {
       const distId = item.districtDirectorateId || item.districtId;

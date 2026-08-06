@@ -578,13 +578,14 @@ router.post('/move', (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 router.post('/district-directorates', (req, res) => {
   const { id, name, code, provincialDirectorateId, notes } = req.body;
-  if (!name?.trim() || !code?.trim() || !provincialDirectorateId) {
+  if (!name?.trim() || !provincialDirectorateId) {
     return res.status(400).json({ error: 'Campos obrigatorios' });
   }
   try {
     const db = getDb();
-    const exists = db.prepare('SELECT id FROM district_directorates WHERE lower(code) = lower(?)').get(code.trim());
-    if (exists) return res.status(409).json({ error: 'duplicate_code' });
+    const finalCode = (code?.trim() || ('DIST-' + Math.random().toString(36).substring(2, 6))).toUpperCase();
+    const exists = db.prepare('SELECT id FROM district_directorates WHERE lower(code) = lower(?)').get(finalCode.toLowerCase());
+    if (exists && code?.trim()) return res.status(409).json({ error: 'duplicate_code' });
 
     const provDir = db.prepare('SELECT province FROM directorates WHERE id = ?').get(provincialDirectorateId);
     const province = provDir ? provDir.province : '';
@@ -594,7 +595,7 @@ router.post('/district-directorates', (req, res) => {
     db.prepare(`
       INSERT INTO district_directorates (id, name, code, provincial_directorate_id, province, notes, status, is_active, sort_order)
       VALUES (?, ?, ?, ?, ?, ?, 'Ativo', 1, ?)
-    `).run(id, name.trim(), code.trim().toUpperCase(), provincialDirectorateId, province, notes || '', maxOrder + 1);
+    `).run(id, name.trim(), finalCode, provincialDirectorateId, province, notes || '', maxOrder + 1);
 
     // Criar as 8 secções padrão para este novo distrito
     const DISTRICT_SECTIONS = [
