@@ -39,6 +39,7 @@ export default function DisciplinaryList({ orgData, employeesData }) {
   const [formData, setFormData] = useState(initialFormState);
   const [confirmDelete, setConfirmDelete] = useState({ isOpen: false, processId: null, processNumber: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [empModalSearchQuery, setEmpModalSearchQuery] = useState('');
 
   const employeesList = useMemo(() => {
     if (!employeesData) return [];
@@ -48,6 +49,19 @@ export default function DisciplinaryList({ orgData, employeesData }) {
   }, [employeesData]);
 
   const getName = (list, id) => (list && Array.isArray(list) ? list.find(item => String(item.id) === String(id))?.name || '-' : '-');
+
+  const filteredModalEmployees = useMemo(() => {
+    if (!empModalSearchQuery.trim()) return employeesList;
+    const q = empModalSearchQuery.toLowerCase();
+    return employeesList.filter(emp => {
+      const nameMatch = emp.name && emp.name.toLowerCase().includes(q);
+      const nipMatch = emp.nip && String(emp.nip).toLowerCase().includes(q);
+      const nuitMatch = emp.nuit && String(emp.nuit).toLowerCase().includes(q);
+      const dirName = getName(data?.directorates, emp.directorateId);
+      const dirMatch = dirName && dirName.toLowerCase().includes(q);
+      return nameMatch || nipMatch || nuitMatch || dirMatch;
+    });
+  }, [employeesList, empModalSearchQuery, data]);
 
   const enrichedProcesses = useMemo(() => {
     return processes.map(p => {
@@ -92,6 +106,7 @@ export default function DisciplinaryList({ orgData, employeesData }) {
   const handleOpenNew = (empId = '') => {
     setEditingProcess(null);
     setIsViewOnly(false);
+    setEmpModalSearchQuery('');
     setFormData({ ...initialFormState, employeeId: empId });
     setIsModalOpen(true);
   };
@@ -361,24 +376,69 @@ export default function DisciplinaryList({ orgData, employeesData }) {
         maxWidth="750px"
       >
         <form onSubmit={handleSaveProcess} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* SELEÇÃO DO FUNCIONÁRIO */}
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Funcionário *</label>
+          {/* SELEÇÃO E PESQUISA DO FUNCIONÁRIO NO MODAL */}
+          <div style={{
+            padding: '12px 14px',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(27, 54, 93, 0.05)',
+            border: '1px solid var(--color-primary)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label style={{ ...styles.label, color: 'var(--color-primary)', fontWeight: 'bold' }}>
+                🔍 Pesquisar & Seleccionar Funcionário *
+              </label>
+              {formData.employeeId && (
+                <span style={{ fontSize: '11px', color: 'var(--color-success)', fontWeight: 'bold' }}>
+                  ✓ Funcionário Seleccionado
+                </span>
+              )}
+            </div>
+
+            {!isViewOnly && !editingProcess && (
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="Digite o nome, NIP, NUIT ou Direcção para pesquisar..."
+                  value={empModalSearchQuery}
+                  onChange={(e) => setEmpModalSearchQuery(e.target.value)}
+                  style={{
+                    ...styles.input,
+                    paddingLeft: '32px',
+                    fontSize: '13px',
+                    backgroundColor: 'var(--color-bg-base)',
+                    borderColor: 'var(--color-primary)'
+                  }}
+                />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }}>
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+            )}
+
             <select
               name="employeeId"
               value={formData.employeeId}
               onChange={handleFormChange}
               disabled={isViewOnly || (editingProcess && formData.employeeId)}
-              style={{ ...styles.input, fontWeight: 'bold' }}
+              style={{ ...styles.input, fontWeight: 'bold', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', cursor: 'pointer' }}
               required
             >
-              <option value="">-- Seleccione o Funcionário --</option>
-              {employeesList.map(emp => (
+              <option value="">
+                -- Seleccione o Funcionário ({filteredModalEmployees.length} {filteredModalEmployees.length === 1 ? 'encontrado' : 'encontrados'}) --
+              </option>
+              {filteredModalEmployees.map(emp => (
                 <option key={emp.id} value={emp.id}>
-                  {emp.name} (NIP/NUIT: {emp.nip || emp.nuit || 'N/A'}) - {getName(data?.directorates, emp.directorateId)}
+                  👤 {emp.name} {emp.nip ? `(NIP: ${emp.nip})` : (emp.nuit ? `(NUIT: ${emp.nuit})` : '')} - {getName(data?.directorates, emp.directorateId)}
                 </option>
               ))}
             </select>
+            <p style={{ margin: 0, fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+              💡 Pode digitar o nome no campo acima para localizar e selecionar o funcionário.
+            </p>
           </div>
 
           <div style={styles.grid2}>
