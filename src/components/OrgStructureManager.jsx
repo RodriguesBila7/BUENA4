@@ -390,6 +390,7 @@ export default function OrgStructureManager({ t }) {
         <button onClick={() => handleTabChange('rep')} style={activeTab === 'rep' ? styles.activeTab : styles.tab}>{t('org_tab_rep')}</button>
         <button onClick={() => handleTabChange('sec')} style={activeTab === 'sec' ? styles.activeTab : styles.tab}>{t('org_tab_sec')}</button>
         <button onClick={() => handleTabChange('dist_dir')} style={activeTab === 'dist_dir' ? styles.activeTab : styles.tab}>Direcções Distritais</button>
+        <button onClick={() => handleTabChange('dist_sec')} style={activeTab === 'dist_sec' ? styles.activeTab : styles.tab}>Secções Distritais</button>
         <button onClick={() => handleTabChange('dist_tree')} style={activeTab === 'dist_tree' ? styles.activeTab : styles.tab}>Organograma Distrital</button>
         <button onClick={() => handleTabChange('dist_queries')} style={activeTab === 'dist_queries' ? styles.activeTab : styles.tab}>Pesquisa Distrital</button>
         <button onClick={() => handleTabChange('dist_dash')} style={activeTab === 'dist_dash' ? styles.activeTab : styles.tab}>Estatísticas Distritais</button>
@@ -397,7 +398,7 @@ export default function OrgStructureManager({ t }) {
         <button onClick={() => handleTabChange('cat')} style={activeTab === 'cat' ? styles.activeTab : styles.tab}>{t('org_tab_cat')}</button>
       </div>
 
-      <div style={{ ...styles.contentArea, gridTemplateColumns: ['dist_tree', 'dist_queries', 'dist_dash'].includes(activeTab) ? '1fr' : '350px 1fr' }}>
+      <div style={{ ...styles.contentArea, gridTemplateColumns: (['dist_tree', 'dist_queries', 'dist_dash'].includes(activeTab) || activeTab === 'dist_dir') ? '1fr' : '350px 1fr' }}>
         {activeTab === 'dist_tree' && (
           <div style={{ width: '100%' }}><DistrictOrganogram data={data} t={t} /></div>
         )}
@@ -612,9 +613,10 @@ export default function OrgStructureManager({ t }) {
               </form>
             </div>
 
-            {/* Lista de Registos */}
-            <div style={styles.listCard}>
-              <h3 style={styles.cardTitle}>Registos Guardados</h3>
+            {/* Lista de Registos (Oculta na aba dist_dir pois os registos estao nas Estatisticas Distritais) */}
+            {activeTab !== 'dist_dir' && (
+              <div style={styles.listCard}>
+                <h3 style={styles.cardTitle}>Registos Guardados</h3>
               <div style={styles.tableContainer}>
                 <table className="premium-table">
                   <thead>
@@ -838,8 +840,9 @@ export default function OrgStructureManager({ t }) {
                 </table>
               </div>
             </div>
-          </>
-        )}
+          )}
+        </>
+      )}
       </div>
 
       <ConfirmModal

@@ -1,13 +1,16 @@
-import React, { useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useAuditLog from '../../hooks/useAuditLog';
+import { formatDistrictName } from '../../utils/mozambiqueDistricts';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#374151', '#6B7280', '#06B6D4', '#14B8A6'];
 
 export default function DistrictDashboard({ data, t }) {
   const { employees } = useEmployeeData();
   const { logs } = useAuditLog();
+  const [subTab, setSubTab] = useState('records');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const stats = useMemo(() => {
     // 1. Total Direções Provinciais (Direções com Província associada e ativas)
@@ -99,36 +102,32 @@ export default function DistrictDashboard({ data, t }) {
       (l.action.toLowerCase().includes('exone') || l.details?.toLowerCase().includes('exone'))
     ).length;
 
-    // Dados para Gráficos
+    // Dados para Gráfico 1: Funcionários por Província
     const provinceChartData = Object.keys(empByProvinceCount).map(prov => ({
       name: prov,
-      value: empByProvinceCount[prov]
+      count: empByProvinceCount[prov]
     }));
 
-    const districtChartData = Object.keys(empByDistrictCount).map(distId => {
-      const dist = distMap[distId];
-      return {
-        name: dist ? dist.name : 'Desconhecido',
-        Funcionários: empByDistrictCount[distId]
-      };
-    }).sort((a, b) => b.Funcionários - a.Funcionários).slice(0, 10); // Top 10
+    // Dados para Gráfico 2: Top Distritos com mais funcionários
+    const districtChartData = (data.districtDirectorates || [])
+      .map(d => ({
+        name: formatDistrictName(d.name),
+        count: empByDistrictCount[d.id] || 0
+      }))
+      .filter(d => d.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
 
-    // Distribuição das Secções (Ocupadas vs Vagas)
+    // Dados para Gráfico 3: Estado das Secções (Com Chefe vs Sem Chefe)
     const sectionsStatusData = [
-      { name: 'Ocupadas (Com Chefe)', value: activeDistSecs.length - totalSecsWithoutChief },
-      { name: 'Vagas (Sem Chefe)', value: totalSecsWithoutChief }
+      { name: 'Com Chefe Nomeado', value: totalSections - totalSecsWithoutChief },
+      { name: 'Sem Chefe (Vaga)', value: totalSecsWithoutChief }
     ];
 
-    // Distribuição dos Cargos de Chefia (Total de Diretores vs Chefes)
-    const chefiaDistributionData = [
-      { name: 'Diretores Distritais', value: districtsWithDirector.size },
-      { name: 'Chefes de Secção', value: sectionsWithChief.size }
-    ];
-
-    // Ocupação Geral dos Distritos
+    // Dados para Gráfico 4: Cobertura de Diretores Distritais
     const districtsStatusData = [
-      { name: 'Com Diretor', value: activeDistricts.length - totalDistsWithoutDirector },
-      { name: 'Sem Diretor', value: totalDistsWithoutDirector }
+      { name: 'Com Diretor Nomeado', value: totalDistDirs - totalDistsWithoutDirector },
+      { name: 'Sem Diretor (Vaga)', value: totalDistsWithoutDirector }
     ];
 
     return {
@@ -145,185 +144,272 @@ export default function DistrictDashboard({ data, t }) {
       provinceChartData,
       districtChartData,
       sectionsStatusData,
-      chefiaDistributionData,
       districtsStatusData
     };
   }, [data, employees, logs]);
 
+  const filteredDistricts = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim();
+    return (data.districtDirectorates || []).filter(d => {
+      const formatted = formatDistrictName(d.name).toLowerCase();
+      const prov = (d.province || '').toLowerCase();
+      return !term || formatted.includes(term) || prov.includes(term);
+    });
+  }, [data.districtDirectorates, searchTerm]);
+
   return (
     <div style={styles.container}>
-      {/* Indicadores Grid */}
-      <div style={styles.grid}>
-        <div style={{ ...styles.card, borderLeft: '4px solid #3B82F6' }}>
-          <div style={styles.cardHeader}>
-            <span style={styles.cardVal}>{stats.totalProvDirs}</span>
-            <span style={styles.cardIcon}>🏢</span>
+      {subTab === 'records' ? (
+        <div style={{
+          backgroundColor: 'var(--color-bg-card)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '10px',
+          padding: '24px',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 }}>
+              📋 Registos Guardados de Direcções Distritais ({filteredDistricts.length})
+            </h3>
+            <input
+              type="text"
+              placeholder="🔍 Pesquisar por distrito ou província..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '6px',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-bg-base)',
+                color: 'var(--color-text-main)',
+                fontSize: '13px',
+                width: '320px'
+              }}
+            />
           </div>
-          <p style={styles.cardTitle}>Direções Provinciais</p>
-        </div>
 
-        <div style={{ ...styles.card, borderLeft: '4px solid #10B981' }}>
-          <div style={styles.cardHeader}>
-            <span style={styles.cardVal}>{stats.totalDistDirs}</span>
-            <span style={styles.cardIcon}>📍</span>
-          </div>
-          <p style={styles.cardTitle}>Direções Distritais Ativas</p>
-        </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="premium-table" style={{ width: '100%' }}>
+              <thead>
+                <tr>
+                  <th>Nome da Direcção Distrital</th>
+                  <th>Direcção Provincial</th>
+                  <th>Secções Registadas</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredDistricts.map(item => {
+                  const pDir = (data.directorates || []).find(d => d.id === item.provincialDirectorateId);
+                  const distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(item.id));
+                  const DEFAULT_SECS = [
+                    "Piquete Operativo", "Secretaria", "Secção Técnica Criminalística",
+                    "Secção de Apoio e Documentação", "Secção de Armamento e Segurança",
+                    "Secção de Identificação e Registo Policial", "Secção de Investigação Operativa",
+                    "Secção de Investigação e Instrução Criminal"
+                  ];
+                  const sectionNames = distSecs.length > 0 ? distSecs.map(s => s.name) : DEFAULT_SECS;
 
-        <div style={{ ...styles.card, borderLeft: '4px solid #F59E0B' }}>
-          <div style={styles.cardHeader}>
-            <span style={styles.cardVal}>{stats.totalSections}</span>
-            <span style={styles.cardIcon}>📁</span>
+                  return (
+                    <tr key={item.id}>
+                      <td><strong style={{ color: 'var(--color-primary)' }}>{formatDistrictName(item.name)}</strong></td>
+                      <td>{pDir?.name || item.province || '-'}</td>
+                      <td>
+                        <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--color-text-main)' }}>
+                          {sectionNames.join(', ')}
+                        </span>
+                      </td>
+                      <td>
+                        <span style={{
+                          padding: '4px 8px',
+                          borderRadius: '12px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          backgroundColor: item.isActive !== false ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                          color: item.isActive !== false ? '#10B981' : '#EF4444'
+                        }}>
+                          {item.isActive !== false ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          <p style={styles.cardTitle}>Secções Distritais</p>
         </div>
+      ) : (
+        <>
+          {/* Indicadores Grid */}
+          <div style={styles.grid}>
+            <div style={{ ...styles.card, borderLeft: '4px solid #3B82F6' }}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardVal}>{stats.totalProvDirs}</span>
+                <span style={styles.cardIcon}>🏢</span>
+              </div>
+              <p style={styles.cardTitle}>Direções Provinciais</p>
+            </div>
 
-        <div style={{ ...styles.card, borderLeft: '4px solid #8B5CF6' }}>
-          <div style={styles.cardHeader}>
-            <span style={styles.cardVal}>{stats.totalEmployees}</span>
-            <span style={styles.cardIcon}>👤</span>
-          </div>
-          <p style={styles.cardTitle}>Efetivos em Distritos</p>
-        </div>
-      </div>
+            <div style={{ ...styles.card, borderLeft: '4px solid #10B981' }}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardVal}>{stats.totalDistDirs}</span>
+                <span style={styles.cardIcon}>📍</span>
+              </div>
+              <p style={styles.cardTitle}>Direções Distritais Ativas</p>
+            </div>
 
-      <div style={styles.grid}>
-        <div style={{ ...styles.card, borderLeft: '4px solid #EF4444' }}>
-          <div style={styles.cardHeader}>
-            <span style={{ ...styles.cardVal, color: '#EF4444' }}>{stats.totalDistsWithoutDirector}</span>
-            <span style={styles.cardIcon}>⚠️</span>
-          </div>
-          <p style={styles.cardTitle}>Distritos sem Diretor</p>
-        </div>
+            <div style={{ ...styles.card, borderLeft: '4px solid #F59E0B' }}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardVal}>{stats.totalSections}</span>
+                <span style={styles.cardIcon}>📁</span>
+              </div>
+              <p style={styles.cardTitle}>Secções Distritais</p>
+            </div>
 
-        <div style={{ ...styles.card, borderLeft: '4px solid #EF4444' }}>
-          <div style={styles.cardHeader}>
-            <span style={{ ...styles.cardVal, color: '#EF4444' }}>{stats.totalSecsWithoutChief}</span>
-            <span style={styles.cardIcon}>⚠️</span>
+            <div style={{ ...styles.card, borderLeft: '4px solid #8B5CF6' }}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardVal}>{stats.totalEmployees}</span>
+                <span style={styles.cardIcon}>👤</span>
+              </div>
+              <p style={styles.cardTitle}>Efetivos em Distritos</p>
+            </div>
           </div>
-          <p style={styles.cardTitle}>Secções sem Chefe</p>
-        </div>
 
-        <div style={{ ...styles.card, borderLeft: '4px solid #F59E0B' }}>
-          <div style={styles.cardHeader}>
-            <span style={styles.cardVal}>{stats.totalVacantPositions}</span>
-            <span style={styles.cardIcon}>💼</span>
-          </div>
-          <p style={styles.cardTitle}>Cargos Vagos</p>
-        </div>
+          <div style={styles.grid}>
+            <div style={{ ...styles.card, borderLeft: '4px solid #EF4444' }}>
+              <div style={styles.cardHeader}>
+                <span style={{ ...styles.cardVal, color: '#EF4444' }}>{stats.totalDistsWithoutDirector}</span>
+                <span style={styles.cardIcon}>⚠️</span>
+              </div>
+              <p style={styles.cardTitle}>Distritos sem Diretor</p>
+            </div>
 
-        <div style={{ ...styles.card, borderLeft: '4px solid #10B981' }}>
-          <div style={styles.cardHeader}>
-            <span style={styles.cardVal} title={`Nomeações: ${stats.totalAppointments} / Exonerações: ${stats.totalExonerations}`}>
-              {stats.totalAppointments + stats.totalExonerations}
-            </span>
-            <span style={styles.cardIcon}>📝</span>
-          </div>
-          <p style={styles.cardTitle}>Movimentações de Cargo</p>
-        </div>
-      </div>
+            <div style={{ ...styles.card, borderLeft: '4px solid #EF4444' }}>
+              <div style={styles.cardHeader}>
+                <span style={{ ...styles.cardVal, color: '#EF4444' }}>{stats.totalSecsWithoutChief}</span>
+                <span style={styles.cardIcon}>⚠️</span>
+              </div>
+              <p style={styles.cardTitle}>Secções sem Chefe</p>
+            </div>
 
-      {/* Gráficos Grid */}
-      <div style={styles.chartsGrid}>
-        {/* Gráfico 1: Funcionários por Província */}
-        <div style={styles.chartCard}>
-          <h4 style={styles.chartTitle}>Efetivos por Província</h4>
-          <div style={styles.chartWrapper}>
-            {stats.provinceChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={stats.provinceChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {stats.provinceChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <div style={styles.noData}>Nenhum funcionário alocado a distritos</div>
-            )}
-          </div>
-        </div>
+            <div style={{ ...styles.card, borderLeft: '4px solid #F59E0B' }}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardVal}>{stats.totalVacantPositions}</span>
+                <span style={styles.cardIcon}>💼</span>
+              </div>
+              <p style={styles.cardTitle}>Cargos Vagos</p>
+            </div>
 
-        {/* Gráfico 2: Funcionários por Distrito (Top 10) */}
-        <div style={styles.chartCard}>
-          <h4 style={styles.chartTitle}>Efetivos por Distrito (Top 10)</h4>
-          <div style={styles.chartWrapper}>
-            {stats.districtChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={stats.districtChartData}>
-                  <XAxis dataKey="name" stroke="var(--color-text-muted)" fontSize={11} tickLine={false} />
-                  <YAxis stroke="var(--color-text-muted)" fontSize={11} tickLine={false} />
-                  <Tooltip cursor={{ fill: 'rgba(0,0,0,0.02)' }} />
-                  <Bar dataKey="Funcionários" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div style={styles.noData}>Nenhum funcionário alocado a distritos</div>
-            )}
+            <div style={{ ...styles.card, borderLeft: '4px solid #10B981' }}>
+              <div style={styles.cardHeader}>
+                <span style={styles.cardVal} title={`Nomeações: ${stats.totalAppointments} / Exonerações: ${stats.totalExonerations}`}>
+                  {stats.totalAppointments + stats.totalExonerations}
+                </span>
+                <span style={styles.cardIcon}>📝</span>
+              </div>
+              <p style={styles.cardTitle}>Movimentações de Cargo</p>
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div style={styles.chartsGrid}>
-        {/* Gráfico 3: Estado de Ocupação das Secções */}
-        <div style={styles.chartCard}>
-          <h4 style={styles.chartTitle}>Ocupação das Secções Distritais</h4>
-          <div style={styles.chartWrapper}>
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie
-                  data={stats.sectionsStatusData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                  dataKey="value"
-                >
-                  <Cell fill="#10B981" />
-                  <Cell fill="#EF4444" />
-                </Pie>
-                <Tooltip />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          {/* Gráficos Grid */}
+          <div style={styles.chartsGrid}>
+            <div style={styles.chartCard}>
+              <h4 style={styles.chartTitle}>Efetivos por Província</h4>
+              <div style={styles.chartWrapper}>
+                {stats.provinceChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <PieChart>
+                      <Pie
+                        data={stats.provinceChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={4}
+                        dataKey="count"
+                      >
+                        {stats.provinceChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={styles.noData}>Nenhum funcionário alocado a distritos</div>
+                )}
+              </div>
+            </div>
 
-        {/* Gráfico 4: Ocupação dos Distritos (Diretor) */}
-        <div style={styles.chartCard}>
-          <h4 style={styles.chartTitle}>Nomeações de Diretor Distrital</h4>
-          <div style={styles.chartWrapper}>
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie
-                  data={stats.districtsStatusData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                  dataKey="value"
-                >
-                  <Cell fill="#3B82F6" />
-                  <Cell fill="#EF4444" />
-                </Pie>
-                <Tooltip />
-                <Legend verticalAlign="bottom" height={36} />
-              </PieChart>
-            </ResponsiveContainer>
+            <div style={styles.chartCard}>
+              <h4 style={styles.chartTitle}>Efetivos por Distrito (Top 10)</h4>
+              <div style={styles.chartWrapper}>
+                {stats.districtChartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={stats.districtChartData}>
+                      <XAxis dataKey="name" stroke="var(--color-text-muted)" fontSize={11} tickLine={false} />
+                      <YAxis stroke="var(--color-text-muted)" fontSize={11} tickLine={false} />
+                      <Tooltip cursor={{ fill: 'rgba(0,0,0,0.02)' }} />
+                      <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={styles.noData}>Nenhum funcionário alocado a distritos</div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+
+          <div style={styles.chartsGrid}>
+            <div style={styles.chartCard}>
+              <h4 style={styles.chartTitle}>Ocupação das Secções Distritais</h4>
+              <div style={styles.chartWrapper}>
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={stats.sectionsStatusData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      dataKey="value"
+                    >
+                      <Cell fill="#10B981" />
+                      <Cell fill="#EF4444" />
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div style={styles.chartCard}>
+              <h4 style={styles.chartTitle}>Nomeações de Diretor Distrital</h4>
+              <div style={styles.chartWrapper}>
+                <ResponsiveContainer width="100%" height={260}>
+                  <PieChart>
+                    <Pie
+                      data={stats.districtsStatusData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      dataKey="value"
+                    >
+                      <Cell fill="#3B82F6" />
+                      <Cell fill="#EF4444" />
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
