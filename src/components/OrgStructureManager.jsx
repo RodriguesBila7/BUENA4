@@ -365,7 +365,7 @@ export default function OrgStructureManager({ t }) {
                   : (activeTab === 'dist_dir' ? 'Criar Direção Distrital' : (activeTab === 'dist_sec' ? 'Criar Secção Distrital' : t(`org_create_${activeTab}`)))}
               </h3>
               
-              {activeTab === 'dist_dir' && !editingId && (
+              {activeTab === 'dist_dir' && !editingId && (!data.districtDirectorates || data.districtDirectorates.length === 0) && (
                 <div style={{marginBottom: '20px'}}>
                   <button type="button" onClick={handleBootstrapDistricts} style={{...styles.btnPrimary, backgroundColor: '#38a169', borderColor: '#2f855a', width: '100%'}}>
                     🌟 Injetar Todos os Distritos Nacionais Automaticamente
