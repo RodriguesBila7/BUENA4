@@ -90,7 +90,16 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     if (orgData && orgData.directorates) {
       orgData.directorates.forEach(d => {
         const idStr = String(d.id);
-        byDirectorate[idStr] = { id: idStr, name: d.name, count: 0, M: 0, F: 0, employees: [] };
+        const childDistricts = (orgData && orgData.districtDirectorates) 
+          ? orgData.districtDirectorates.filter(dist => String(dist.provincialDirectorateId) === idStr)
+          : [];
+        byDirectorate[idStr] = { 
+          id: idStr, 
+          name: d.name, 
+          count: 0, M: 0, F: 0, 
+          employees: [],
+          districtDirectorates: childDistricts
+        };
       });
     }
     let unassignedDir = { id: 'unassigned', name: 'Sem Afetação / Outros', count: 0, M: 0, F: 0, employees: [] };
@@ -140,6 +149,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         const parentDiv = orgData.divisions ? orgData.divisions.find(d => String(d.id) === String(sec.divisionId)) : null;
         const parentDep = orgData.departments ? orgData.departments.find(d => String(d.id) === String(sec.departmentId || (parentDiv ? parentDiv.departmentId : null))) : null;
         const parentDir = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(sec.directorateId || (parentDep ? parentDep.directorateId : null))) : null;
+        const parentDist = orgData.districtDirectorates ? orgData.districtDirectorates.find(d => String(d.id) === String(sec.districtDirectorateId || sec.districtId)) : null;
         bySection[idStr] = {
           id: idStr,
           name: sec.name,
@@ -149,6 +159,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           departmentName: parentDep ? parentDep.name : 'Departamento N/A',
           directorateId: sec.directorateId ? String(sec.directorateId) : (parentDep && parentDep.directorateId ? String(parentDep.directorateId) : null),
           directorateName: parentDir ? parentDir.name : 'Direcção N/A',
+          districtDirectorateId: sec.districtDirectorateId || sec.districtId ? String(sec.districtDirectorateId || sec.districtId) : null,
+          districtDirectorateName: parentDist ? parentDist.name : null,
           count: 0, M: 0, F: 0, employees: []
         };
       });
@@ -161,11 +173,13 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       orgData.districtDirectorates.forEach(dist => {
         const idStr = String(dist.id);
         const parentProv = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(dist.provincialDirectorateId)) : null;
+        const districtSecs = orgData.sections ? orgData.sections.filter(sec => String(sec.districtDirectorateId || sec.districtId) === idStr) : [];
         byDistrict[idStr] = {
           id: idStr,
           name: dist.name,
           provincialDirectorateId: dist.provincialDirectorateId ? String(dist.provincialDirectorateId) : null,
           provinceName: parentProv ? parentProv.name : 'Província N/A',
+          sections: districtSecs,
           count: 0, M: 0, F: 0, employees: []
         };
       });
@@ -1906,6 +1920,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
                           // Departamentos pertencentes a esta direcção
                           const childDeps = reportStats.allDepartmentsList.filter(dep => String(dep.directorateId) === String(selectedReportDirectorate));
+                          // Direcções Distritais pertencentes a esta direcção provincial
+                          const childDistricts = reportStats.allDistrictsList.filter(dist => String(dist.provincialDirectorateId) === String(selectedReportDirectorate));
 
                           return (
                             <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
@@ -1934,7 +1950,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 </div>
                               </div>
 
-                              {/* TABELA DE DEPARTAMENTOS DESTA DIRECÇÃO */}
+                              {/* TABELA DE DEPARTAMENTOS DESTA DIRECÇÃO (SE HOUVER) */}
                               {childDeps.length > 0 && (
                                 <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -1965,6 +1981,56 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                         <div style={{ fontWeight: 'bold', fontSize: '12px', color: 'var(--color-text-main)' }}>{dep.name}</div>
                                         <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '2px' }}>
                                           {dep.count} {dep.count === 1 ? 'funcionário' : 'funcionários'} ({dep.M} H / {dep.F} M)
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* DIRECÇÕES DISTRITAIS SUBORDINADAS A ESTA DIRECÇÃO PROVINCIAL */}
+                              {childDistricts.length > 0 && (
+                                <div style={{ marginBottom: '20px', padding: '14px', backgroundColor: 'rgba(27, 54, 93, 0.04)', borderRadius: '8px', border: '1px solid var(--color-primary)' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                                    <div>
+                                      <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        📍 Direcções Distritais Subordinadas a esta Direcção Provincial ({childDistricts.length})
+                                      </h5>
+                                      <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                                        As Direcções Distritais enquadram-se na estrutura provincial e possuem Secções diretamente.
+                                      </p>
+                                    </div>
+                                    <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 'bold' }}>
+                                      Clique numa Direcção Distrital para ver o seu Efetivo e Secções
+                                    </span>
+                                  </div>
+
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '10px' }}>
+                                    {childDistricts.map(dist => (
+                                      <div
+                                        key={dist.id}
+                                        onClick={() => {
+                                          setReportViewLevel('districts');
+                                          setSelectedReportDistrict(dist.id);
+                                        }}
+                                        style={{
+                                          padding: '10px 14px',
+                                          borderRadius: '8px',
+                                          border: '1.5px solid var(--color-primary)',
+                                          backgroundColor: 'var(--color-bg-base)',
+                                          cursor: 'pointer',
+                                          boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                                          transition: 'transform 0.15s, border-color 0.15s'
+                                        }}
+                                      >
+                                        <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)' }}>
+                                          📍 {dist.name}
+                                        </div>
+                                        <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-text-main)', marginTop: '4px' }}>
+                                          {dist.count} {dist.count === 1 ? 'funcionário' : 'funcionários'} ({dist.M} H / {dist.F} M)
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                                          🔖 {dist.sections ? dist.sections.length : 0} Secção(ões) Registadas
                                         </div>
                                       </div>
                                     ))}
@@ -3057,6 +3123,28 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                   </div>
                                 </div>
                               </div>
+
+                              {/* SECÇÕES DA DIRECÇÃO DISTRITAL */}
+                              {selectedObj.sections && selectedObj.sections.length > 0 && (
+                                <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                                  <h5 style={{ margin: '0 0 8px 0', color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    🔖 Secções Registadas nesta Direcção Distrital ({selectedObj.sections.length})
+                                  </h5>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+                                    {selectedObj.sections.map(sec => {
+                                      const secEmpCount = (selectedObj.employees || []).filter(e => String(e.sectionId || e.seccaoId) === String(sec.id)).length;
+                                      return (
+                                        <div key={sec.id} style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)' }}>
+                                          <div style={{ fontWeight: 'bold', fontSize: '12px', color: 'var(--color-text-main)' }}>{sec.name}</div>
+                                          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                                            {secEmpCount} funcionário(s) nesta secção
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
 
                               <h5 style={{ color: 'var(--color-text-main)', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
                                 Lista Nominal dos Funcionários deste Distrito ({selectedObj.count})
