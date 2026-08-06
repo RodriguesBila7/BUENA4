@@ -16,24 +16,20 @@ const db = new Database(dbPath);
 
 export const formatDistrictName = (rawName) => {
   if (!rawName) return '';
-  let trimmed = rawName.trim();
+  let str = rawName.trim();
 
-  // Limpar repetidos (ex: "Direcção Distrital de Direção Distrital de Funhalouro")
-  while (/^Direcçã?o\s+Distrital\s+(de|da|do)?\s+Direcçã?o\s+Distrital/i.test(trimmed)) {
-    trimmed = trimmed.replace(/^Direcçã?o\s+Distrital\s+(de|da|do)?\s+/i, '');
-  }
+  // Remover todas as variações de prefixo (Direcção Distrital de, Direção Distrital de, etc.)
+  str = str.replace(/^(Direc?çã?o\s+Distrital\s+(de|da|do)?\s*)+/i, '');
+  str = str.replace(/^(Direc?çã?o\s+Distrital\s*)+/i, '');
+  str = str.trim();
 
-  // Se já começa com "Direcção Distrital" ou "Direção Distrital", padronizar a grafia
-  if (/^Direcçã?o\s+Distrital/i.test(trimmed)) {
-    return trimmed.replace(/^Direção\b/i, 'Direcção');
-  }
+  if (!str) return '';
 
-  // Se for apenas o nome do distrito
-  const lower = trimmed.toLowerCase();
+  const lower = str.toLowerCase();
   if (['matola', 'beira', 'manhiça', 'namaacha', 'mavia', 'maganja da costa'].includes(lower) || lower.startsWith('ilha ') || lower.startsWith('cidade ')) {
-    return `Direcção Distrital da ${trimmed}`;
+    return `Direcção Distrital da ${str}`;
   }
-  return `Direcção Distrital de ${trimmed}`;
+  return `Direcção Distrital de ${str}`;
 };
 
 db.transaction(() => {
