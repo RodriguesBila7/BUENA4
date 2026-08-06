@@ -48,3 +48,17 @@ export const mozambiqueStructure = [
     districts: ["Ancuabe", "Balama", "Chiúre", "Ibo", "Macomia", "Mecúfi", "Meluco", "Metuge", "Mocímboa da Praia", "Montepuez", "Mueda", "Muidumbe", "Namuno", "Nangade", "Palma", "Pemba", "Quissanga"]
   }
 ];
+
+export const formatDistrictName = (rawName) => {
+  if (!rawName) return '';
+  const trimmed = rawName.trim();
+  if (/^Direcçã?o\s+Distrital/i.test(trimmed)) {
+    return trimmed.replace(/^Direção\b/i, 'Direcção');
+  }
+  const lower = trimmed.toLowerCase();
+  if (['matola', 'beira', 'manhiça', 'namaacha', 'mavia', 'maganja da costa'].includes(lower) || lower.startsWith('ilha ') || lower.startsWith('cidade ')) {
+    return `Direcção Distrital da ${trimmed}`;
+  }
+  return `Direcção Distrital de ${trimmed}`;
+};
+

@@ -213,6 +213,20 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     }
     let unassignedSec = { id: 'unassigned', name: 'Sem Secção Especificada', count: 0, M: 0, F: 0, employees: [] };
 
+    // Helper para padronizar nomes das Direcções Distritais (ex: Direcção Distrital de Moatize)
+    const formatDistrictName = (rawName) => {
+      if (!rawName) return '';
+      const trimmed = rawName.trim();
+      if (/^Direcçã?o\s+Distrital/i.test(trimmed)) {
+        return trimmed.replace(/^Direção\b/i, 'Direcção');
+      }
+      const lower = trimmed.toLowerCase();
+      if (['matola', 'beira', 'manhiça', 'namaacha', 'mavia', 'maganja da costa'].includes(lower) || lower.startsWith('ilha ') || lower.startsWith('cidade ')) {
+        return `Direcção Distrital da ${trimmed}`;
+      }
+      return `Direcção Distrital de ${trimmed}`;
+    };
+
     // 5. Distribution by District (Direcções Distritais)
     const byDistrict = {};
     if (orgData && orgData.districtDirectorates) {
@@ -222,7 +236,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         const districtSecs = orgData.sections ? orgData.sections.filter(sec => String(sec.districtDirectorateId || sec.districtId) === idStr) : [];
         byDistrict[idStr] = {
           id: idStr,
-          name: dist.name,
+          name: formatDistrictName(dist.name),
           provincialDirectorateId: dist.provincialDirectorateId ? String(dist.provincialDirectorateId) : null,
           provinceName: parentProv ? parentProv.name : 'Província N/A',
           sections: districtSecs,

@@ -4,6 +4,7 @@ import ConfirmModal from './ConfirmModal';
 import DistrictDashboard from './org/DistrictDashboard';
 import DistrictQueries from './org/DistrictQueries';
 import DistrictOrganogram from './org/DistrictOrganogram';
+import { formatDistrictName } from '../utils/mozambiqueDistricts';
 
 export default function OrgStructureManager({ t }) {
   const {
@@ -29,6 +30,8 @@ export default function OrgStructureManager({ t }) {
   // Confirm/Alert modal state
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', isDestructive: false, onConfirm: null, hideCancel: false });
   const [notes, setNotes] = useState('');
+  const [selectedDistrictId, setSelectedDistrictId] = useState('');
+  const [sectionName, setSectionName] = useState('');
 
   // Drag and Drop state
   const [draggedId, setDraggedId] = useState(null);
@@ -115,6 +118,8 @@ export default function OrgStructureManager({ t }) {
     setParentDepId('');
     setParentRepId('');
     setParentCarId('');
+    setSelectedDistrictId('');
+    setSectionName('');
     setProvince('');
     setCode('');
     setNotes('');
@@ -171,22 +176,25 @@ export default function OrgStructureManager({ t }) {
 
   const handleSave = async (e) => {
     if (e) e.preventDefault();
-    if (!name.trim()) return;
 
     let success = false;
 
     if (activeTab === 'dir') {
+      if (!name.trim()) return showError('Digite o nome');
       if (editingId) success = await updateDirectorate(editingId, name, province);
       else success = await addDirectorate(name, province);
     } else if (activeTab === 'dep') {
+      if (!name.trim()) return showError('Digite o nome');
       if (!parentDirId) return showError('org_select_dir');
       if (editingId) success = await updateDepartment(editingId, name);
       else success = await addDepartment(parentDirId, name);
     } else if (activeTab === 'rep') {
+      if (!name.trim()) return showError('Digite o nome');
       if (!parentDepId) return showError('org_select_dep');
       if (editingId) success = await updateDivision(editingId, name);
       else success = await addDivision(parentDepId, name);
     } else if (activeTab === 'sec') {
+      if (!name.trim()) return showError('Digite o nome');
       if (!parentDepId) return showError('org_select_dep');
       const pId = parentRepId || parentDepId;
       const pType = parentRepId ? 'divisionId' : 'departmentId';
@@ -194,9 +202,30 @@ export default function OrgStructureManager({ t }) {
       else success = await addSection(pId, name, pType);
     } else if (activeTab === 'dist_dir') {
       if (!parentDirId) return showError('Selecione a Direção Provincial');
-      if (!code.trim()) return showError('Código do distrito é obrigatório');
-      if (editingId) success = await updateDistrict(editingId, name, parentDirId, notes, 'Ativo');
-      else success = await addDistrict(name, parentDirId, code, notes);
+
+      if (editingId) {
+        if (!name.trim()) return showError('Digite o Nome da Direção Distrital');
+        const formattedDistName = formatDistrictName(name);
+        success = await updateDistrict(editingId, formattedDistName, parentDirId, notes, 'Ativo');
+      } else {
+        let distId = selectedDistrictId;
+        if (!selectedDistrictId || selectedDistrictId === 'NEW') {
+          if (!name.trim()) return showError('Selecione uma Direção Distrital ou digite o nome para criar');
+          const formattedDistName = formatDistrictName(name);
+          const newDist = await addDistrict(formattedDistName, parentDirId, '', notes);
+          if (newDist && newDist.id) {
+            distId = newDist.id;
+            success = true;
+          }
+        } else {
+          success = true;
+        }
+
+        if (sectionName.trim() && distId) {
+          const secRes = await addSection(distId, sectionName.trim(), 'districtId');
+          if (secRes) success = true;
+        }
+      }
     } else if (activeTab === 'dist_sec') {
       if (!parentDirId) return showError('Selecione a Direção Distrital');
       if (editingId) success = await updateSection(editingId, name, parentDirId, 'districtId');
@@ -396,122 +425,82 @@ export default function OrgStructureManager({ t }) {
                 )}
 
                 {activeTab === 'dist_dir' && (
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>Direção Provincial *</label>
-                    <select 
-                      value={parentDirId} 
-                      onChange={(e) => setParentDirId(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      style={styles.input}
-                      required
-                    >
-                      <option value="">-- Selecione a Direção Provincial --</option>
-                      {(data.directorates || []).filter(d => d.isActive && d.province).map(d => (
-                        <option key={d.id} value={d.id}>{d.name} ({d.province})</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {activeTab === 'dist_sec' && (
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>Direção Distrital *</label>
-                    <select 
-                      value={parentDirId} 
-                      onChange={(e) => setParentDirId(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      style={styles.input}
-                      required
-                    >
-                      <option value="">-- Selecione a Direção Distrital --</option>
-                      {(data.districtDirectorates || []).filter(d => d.isActive).map(d => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {['rep', 'sec'].includes(activeTab) && (
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>{t('org_tab_dep')}</label>
-                    <select 
-                      value={parentDepId} 
-                      onChange={(e) => {
-                        setParentDepId(e.target.value);
-                        setParentRepId('');
-                      }}
-                      onKeyDown={handleKeyPress}
-                      style={styles.input}
-                      required
-                      disabled={!parentDirId}
-                    >
-                      <option value="">-- {t('org_select_dep')} --</option>
-                      {availableDepartments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
-                  </div>
-                )}
-
-                {activeTab === 'sec' && (
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>{t('org_tab_rep')} (Opcional)</label>
-                    <select 
-                      value={parentRepId} 
-                      onChange={(e) => setParentRepId(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      style={styles.input}
-                      disabled={!parentDepId}
-                    >
-                      <option value="">-- Nenhuma / Ligação Direta ao Departamento --</option>
-                      {availableDivisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
-                  </div>
-                )}
-
-                {activeTab === 'cat' && (
-                  <div style={styles.formGroup}>
-                    <label style={styles.label}>{t('org_tab_car')}</label>
-                    <select 
-                      value={parentCarId} 
-                      onChange={(e) => setParentCarId(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      style={styles.input}
-                      required
-                    >
-                      <option value="">-- Selecione a Carreira --</option>
-                      {(data.careers || []).filter(c => c.isActive).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                    </select>
-                  </div>
-                )}
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>
-                    {activeTab === 'dist_sec' ? 'Nome da Secção Distrital' : (activeTab === 'dist_dir' ? 'Nome da Direção Distrital' : t('org_name'))}
-                  </label>
-                  <input 
-                    type="text" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                    onKeyDown={handleKeyPress}
-                    style={styles.input} 
-                    required 
-                  />
-                </div>
-
-                {activeTab === 'dist_dir' && (
                   <>
                     <div style={styles.formGroup}>
-                      <label style={styles.label}>Código do Distrito *</label>
-                      <input 
-                        type="text" 
-                        value={code} 
-                        onChange={(e) => setCode(e.target.value)} 
+                      <label style={styles.label}>1. Direção Provincial *</label>
+                      <select 
+                        value={parentDirId} 
+                        onChange={(e) => {
+                          setParentDirId(e.target.value);
+                          setSelectedDistrictId('');
+                        }}
                         onKeyDown={handleKeyPress}
-                        style={styles.input} 
-                        placeholder="Ex: DIST-BOA-1001"
-                        required 
-                        disabled={!!editingId}
-                      />
+                        style={styles.input}
+                        required
+                      >
+                        <option value="">-- Selecione a Direção Provincial --</option>
+                        {(data.directorates || []).filter(d => d.isActive && d.province).map(d => (
+                          <option key={d.id} value={d.id}>{d.name} ({d.province})</option>
+                        ))}
+                      </select>
                     </div>
+
+                    <div style={styles.formGroup}>
+                      <label style={styles.label}>2. Seleccionar Direção Distrital *</label>
+                      <select
+                        value={selectedDistrictId}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedDistrictId(val);
+                          if (val !== 'NEW') {
+                            const distObj = (data.districtDirectorates || []).find(d => String(d.id) === String(val));
+                            if (distObj) setName(distObj.name);
+                          } else {
+                            setName('');
+                          }
+                        }}
+                        style={styles.input}
+                        disabled={!parentDirId}
+                      >
+                        <option value="">-- Selecione a Direção Distrital --</option>
+                        {(data.districtDirectorates || [])
+                          .filter(d => String(d.provincialDirectorateId) === String(parentDirId))
+                          .map(d => (
+                            <option key={d.id} value={d.id}>{formatDistrictName(d.name)}</option>
+                          ))}
+                        <option value="NEW">➕ Criar Nova Direção Distrital...</option>
+                      </select>
+                    </div>
+
+                    {(selectedDistrictId === 'NEW' || editingId) && (
+                      <div style={styles.formGroup}>
+                        <label style={styles.label}>Nome da Nova Direção Distrital *</label>
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          placeholder="Ex: Moatize"
+                          style={styles.input}
+                          required
+                        />
+                      </div>
+                    )}
+
+                    {!editingId && (
+                      <div style={styles.formGroup}>
+                        <label style={styles.label}>3. Adicionar Secção a este Distrito (Ex: Secção de Operações)</label>
+                        <input
+                          type="text"
+                          value={sectionName}
+                          onChange={(e) => setSectionName(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          style={styles.input}
+                          placeholder="Ex: Secção de Operações, Secção de RH..."
+                        />
+                      </div>
+                    )}
+
                     <div style={styles.formGroup}>
                       <label style={styles.label}>Observações</label>
                       <input 
@@ -575,9 +564,8 @@ export default function OrgStructureManager({ t }) {
                     <tr>
                       <th>{t('org_name')}</th>
                       {activeTab === 'dir' && <th>Província</th>}
-                      {activeTab === 'dist_dir' && <th>Código</th>}
                       {activeTab === 'dist_dir' && <th>Direção Provincial</th>}
-                      {activeTab === 'dist_dir' && <th>Observações</th>}
+                      {activeTab === 'dist_dir' && <th>Secções Registadas</th>}
                       {activeTab === 'dist_sec' && <th>Direção Distrital</th>}
                       {activeTab === 'dist_sec' && <th>Província Associada</th>}
                       {['dep', 'rep', 'sec'].includes(activeTab) && <th>{t('org_tab_dir')}</th>}
@@ -610,12 +598,20 @@ export default function OrgStructureManager({ t }) {
                     
                     {activeTab === 'dist_dir' && displayDistricts.map(item => {
                       const pDir = data.directorates.find(d => d.id === item.provincialDirectorateId);
+                      const distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(item.id));
                       return (
                         <tr key={item.id} {...getTrProps(item.id)}>
-                          <td>{item.name}</td>
-                          <td>{item.code}</td>
+                          <td><strong style={{ color: 'var(--color-primary)' }}>{formatDistrictName(item.name)}</strong></td>
                           <td>{pDir?.name || '-'}</td>
-                          <td>{item.notes || '-'}</td>
+                          <td>
+                            {distSecs.length > 0 ? (
+                              <span style={{ fontSize: '12px', fontWeight: '500' }}>
+                                {distSecs.map(s => s.name).join(', ')}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#a0aec0', fontStyle: 'italic', fontSize: '12px' }}>Sem secções</span>
+                            )}
+                          </td>
                           <td>
                             <span style={item.isActive ? styles.badgeActive : styles.badgeInactive}>
                               {item.isActive ? 'Ativo' : 'Inativo'}
