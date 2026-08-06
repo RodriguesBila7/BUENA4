@@ -99,6 +99,14 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         return 'Direcção da Cidade de Maputo';
       }
 
+      // Unificar "Direcção Provincial de Maputo Província" para "Direcção Provincial de Maputo"
+      if (
+        lower.includes('maputo província') ||
+        lower.includes('maputo provincia')
+      ) {
+        return 'Direcção Provincial de Maputo';
+      }
+
       if (lower === 'direcção provincial de zambézia' || lower === 'direção provincial de zambézia') {
         return 'Direcção Provincial da Zambézia';
       }
