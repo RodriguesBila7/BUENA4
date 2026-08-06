@@ -375,8 +375,31 @@ export default function OrgStructureManager({ t }) {
   const displaySections = parentRepId 
     ? data.sections.filter(s => s.divisionId === parentRepId) 
     : (parentDepId ? data.sections.filter(s => s.departmentId === parentDepId) : data.sections.filter(s => !s.districtDirectorateId));
-  const displayDistricts = parentDirId ? availableDistricts : (data.districtDirectorates || []);
-  const displayDistrictSections = parentDirId ? (data.sections || []).filter(s => s.districtDirectorateId === parentDirId) : (data.sections || []).filter(s => s.districtDirectorateId);
+  const rawDistrictSections = selectedDistrictId
+    ? (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(selectedDistrictId))
+    : (parentDirId
+        ? (data.sections || []).filter(s => {
+            const dist = (data.districtDirectorates || []).find(d => String(d.id) === String(s.districtDirectorateId || s.districtId));
+            return dist && String(dist.provincialDirectorateId) === String(parentDirId);
+          })
+        : (data.sections || []).filter(s => s.districtDirectorateId || s.districtId)
+      );
+
+  let displayDistrictSections = rawDistrictSections;
+  if (selectedDistrictId && displayDistrictSections.length === 0) {
+    const DEFAULT_SECS = [
+      "Piquete Operativo", "Secretaria", "Secção Técnica Criminalística",
+      "Secção de Apoio e Documentação", "Secção de Armamento e Segurança",
+      "Secção de Identificação e Registo Policial", "Secção de Investigação Operativa",
+      "Secção de Investigação e Instrução Criminal"
+    ];
+    displayDistrictSections = DEFAULT_SECS.map((name, idx) => ({
+      id: `virtual_sec_${selectedDistrictId}_${idx}`,
+      districtDirectorateId: selectedDistrictId,
+      name,
+      isActive: true
+    }));
+  }
   const displayCategories = parentCarId ? data.categories.filter(c => c.careerId === parentCarId) : data.categories;
 
   return (
@@ -630,8 +653,7 @@ export default function OrgStructureManager({ t }) {
                       {activeTab === 'dir' && <th>Província</th>}
                       {activeTab === 'dist_dir' && <th>Direcção Provincial</th>}
                       {activeTab === 'dist_dir' && <th>Secções Registadas</th>}
-                      {activeTab === 'dist_sec' && <th>Direcção Distrital</th>}
-                      {activeTab === 'dist_sec' && <th>Província Associada</th>}
+                      {activeTab === 'dist_sec' && <th>Direcções</th>}
                       {['dep', 'rep', 'sec'].includes(activeTab) && <th>{t('org_tab_dir')}</th>}
                       {['rep', 'sec'].includes(activeTab) && <th>{t('org_tab_dep')}</th>}
                       {activeTab === 'sec' && <th>{t('org_tab_rep')}</th>}
@@ -697,16 +719,17 @@ export default function OrgStructureManager({ t }) {
                     })}
 
                     {activeTab === 'dist_sec' && displayDistrictSections.map(item => {
-                      const dist = data.districtDirectorates.find(d => d.id === item.districtDirectorateId);
-                      const prov = dist ? data.directorates.find(d => d.id === dist.provincialDirectorateId) : null;
+                      const dist = (data.districtDirectorates || []).find(d => String(d.id) === String(item.districtDirectorateId || item.districtId));
+                      const selectedDistObj = (data.districtDirectorates || []).find(d => String(d.id) === String(selectedDistrictId));
+                      const distName = dist ? formatDistrictName(dist.name) : (selectedDistObj ? formatDistrictName(selectedDistObj.name) : '-');
+
                       return (
                         <tr key={item.id} {...getTrProps(item.id)}>
-                          <td>{item.name}</td>
-                          <td>{dist?.name || '-'}</td>
-                          <td>{prov?.name || '-'}</td>
+                          <td><strong style={{ color: 'var(--color-text-main)' }}>{item.name}</strong></td>
+                          <td>{distName}</td>
                           <td>
-                            <span style={item.isActive ? styles.badgeActive : styles.badgeInactive}>
-                              {item.isActive ? 'Ativo' : 'Inativo'}
+                            <span style={item.isActive !== false ? styles.badgeActive : styles.badgeInactive}>
+                              {item.isActive !== false ? 'Activo' : 'Inactivo'}
                             </span>
                           </td>
                           <td style={styles.tdActions}>

@@ -11,6 +11,8 @@ export default function DistrictDashboard({ data, t }) {
   const { logs } = useAuditLog();
   const [subTab, setSubTab] = useState('records');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const stats = useMemo(() => {
     // 1. Total Direções Provinciais (Direções com Província associada e ativas)
@@ -157,6 +159,10 @@ export default function DistrictDashboard({ data, t }) {
     });
   }, [data.districtDirectorates, searchTerm]);
 
+  const totalPages = Math.ceil(filteredDistricts.length / itemsPerPage) || 1;
+  const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
+  const paginatedDistricts = filteredDistricts.slice((safeCurrentPage - 1) * itemsPerPage, safeCurrentPage * itemsPerPage);
+
   return (
     <div style={styles.container}>
       {subTab === 'records' ? (
@@ -199,7 +205,7 @@ export default function DistrictDashboard({ data, t }) {
                 </tr>
               </thead>
               <tbody>
-                {filteredDistricts.map(item => {
+                {paginatedDistricts.map(item => {
                   const pDir = (data.directorates || []).find(d => d.id === item.provincialDirectorateId);
                   const distSecs = (data.sections || []).filter(s => String(s.districtDirectorateId || s.districtId) === String(item.id));
                   const DEFAULT_SECS = [
@@ -236,6 +242,124 @@ export default function DistrictDashboard({ data, t }) {
                 })}
               </tbody>
             </table>
+          </div>
+
+          {/* Barra de Controlo de Paginação */}
+          <div style={{
+            display: 'flex',
+            justify: 'space-between',
+            alignItems: 'center',
+            marginTop: '20px',
+            paddingTop: '14px',
+            borderTop: '1px solid var(--color-border)',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+              A mostrar <strong>{filteredDistricts.length === 0 ? 0 : (safeCurrentPage - 1) * itemsPerPage + 1}</strong> a <strong>{Math.min(safeCurrentPage * itemsPerPage, filteredDistricts.length)}</strong> de <strong>{filteredDistricts.length}</strong> distritos
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                disabled={safeCurrentPage === 1}
+                onClick={() => setCurrentPage(1)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                  opacity: safeCurrentPage === 1 ? 0.5 : 1,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'var(--color-text-main)'
+                }}
+              >
+                ⏮ Primeira
+              </button>
+              <button
+                type="button"
+                disabled={safeCurrentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  cursor: safeCurrentPage === 1 ? 'not-allowed' : 'pointer',
+                  opacity: safeCurrentPage === 1 ? 0.5 : 1,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'var(--color-text-main)'
+                }}
+              >
+                ◀ Anterior
+              </button>
+
+              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-primary)', padding: '0 8px' }}>
+                Página {safeCurrentPage} de {totalPages}
+              </span>
+
+              <button
+                type="button"
+                disabled={safeCurrentPage >= totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  cursor: safeCurrentPage >= totalPages ? 'not-allowed' : 'pointer',
+                  opacity: safeCurrentPage >= totalPages ? 0.5 : 1,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'var(--color-text-main)'
+                }}
+              >
+                Próxima ▶
+              </button>
+              <button
+                type="button"
+                disabled={safeCurrentPage >= totalPages}
+                onClick={() => setCurrentPage(totalPages)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  cursor: safeCurrentPage >= totalPages ? 'not-allowed' : 'pointer',
+                  opacity: safeCurrentPage >= totalPages ? 0.5 : 1,
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: 'var(--color-text-main)'
+                }}
+              >
+                Última ⏭
+              </button>
+
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--color-border)',
+                  backgroundColor: 'var(--color-bg-base)',
+                  color: 'var(--color-text-main)',
+                  fontSize: '12px',
+                  marginLeft: '8px'
+                }}
+              >
+                <option value={10}>10 por pág.</option>
+                <option value={20}>20 por pág.</option>
+                <option value={50}>50 por pág.</option>
+                <option value={100}>100 por pág.</option>
+              </select>
+            </div>
           </div>
         </div>
       ) : (
