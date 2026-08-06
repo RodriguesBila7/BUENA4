@@ -6,6 +6,7 @@ import AdminActsAnalytics from '../AdminActsAnalytics';
 import { exportToExcel } from '../../../utils/excelExport';
 import CrudActionButtons from '../../common/CrudActionButtons';
 import SystemModal from '../../common/SystemModal';
+import { showToast } from '../../common/Toast';
 
 export default function MudancaCarreiraHistory({ acts, onNewRequest }) {
   const { employees } = useEmployeeData();
@@ -73,7 +74,7 @@ export default function MudancaCarreiraHistory({ acts, onNewRequest }) {
 
   const handleSaveEdit = async () => {
     if (!editFormData.actDate || !editFormData.despacho) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
+      showToast('Por favor, preencha todos os campos obrigatórios.', 'warning');
       return;
     }
     await updateAct(editAct.id, {

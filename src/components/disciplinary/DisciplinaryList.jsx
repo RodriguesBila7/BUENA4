@@ -3,6 +3,7 @@ import useDisciplinaryData from '../../hooks/useDisciplinaryData';
 import DraggableModal from '../common/DraggableModal';
 import ConfirmModal from '../ConfirmModal';
 import * as XLSX from 'xlsx';
+import { showToast } from '../common/Toast';
 
 const initialFormState = {
   employeeId: '',
@@ -177,15 +178,15 @@ export default function DisciplinaryList({ orgData, employeesData }) {
   const handleSaveProcess = async (e) => {
     e.preventDefault();
     if (!formData.employeeId) {
-      alert('Por favor, seleccione o funcionário a quem se aplica o processo.');
+      showToast('Por favor, seleccione o funcionário a quem se aplica o processo.', 'warning');
       return;
     }
     if (!formData.processNumber.trim()) {
-      alert('Por favor, introduza o Número do Processo.');
+      showToast('Por favor, introduza o Número do Processo.', 'warning');
       return;
     }
     if (!formData.type) {
-      alert('Por favor, seleccione o Tipo de Sanção.');
+      showToast('Por favor, seleccione o Tipo de Sanção.', 'warning');
       return;
     }
 
@@ -200,7 +201,7 @@ export default function DisciplinaryList({ orgData, employeesData }) {
       setFormData(initialFormState);
       setEditingProcess(null);
     } catch (err) {
-      alert('Erro ao guardar processo: ' + err.message);
+      showToast('Erro ao guardar processo: ' + err.message, 'error');
     } finally {
       setSubmitting(false);
     }

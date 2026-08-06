@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { showToast } from '../components/common/Toast';
 
 /**
  * Exports an array of objects to an Excel file.
@@ -7,7 +8,7 @@ import * as XLSX from 'xlsx';
  */
 export const exportToExcel = (data, fileName = 'relatorio') => {
   if (!data || data.length === 0) {
-    alert('Não existem dados para exportar.');
+    showToast('Não existem dados para exportar.', 'warning');
     return;
   }
 

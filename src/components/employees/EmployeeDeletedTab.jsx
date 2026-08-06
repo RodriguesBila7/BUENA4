@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import ConfirmModal from '../ConfirmModal';
 import DraggableModal from '../common/DraggableModal';
 import useAdminActsData from '../../hooks/useAdminActsData';
+import { showToast } from '../common/Toast';
 
 export default function EmployeeDeletedTab({ employees = [], orgData, onRestore, onPermanentDelete }) {
   const deletedEmployees = (employees || []).filter(e => ['Apagado', 'Demitido', 'Expulso', 'Falecido'].includes(e.status));
@@ -70,7 +71,7 @@ export default function EmployeeDeletedTab({ employees = [], orgData, onRestore,
   const submitReintegration = async (e) => {
     e.preventDefault();
     if (!fileB64) {
-      alert("É obrigatório anexar o Despacho de Reintegração.");
+      showToast('É obrigatório anexar o Despacho de Reintegração.', 'warning');
       return;
     }
     
@@ -88,7 +89,7 @@ export default function EmployeeDeletedTab({ employees = [], orgData, onRestore,
     };
     
     await registerAct(actData);
-    alert('Despacho submetido! A reintegração ficará pendente até confirmação pelo Super Administrador.');
+    showToast('Despacho submetido! A reintegração ficará pendente até confirmação pelo Super Administrador.', 'success', 6000);
     setRestoreModal({ isOpen: false, employee: null });
     setFileB64(null);
   };

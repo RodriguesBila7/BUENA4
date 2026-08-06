@@ -3,12 +3,15 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './contexts/AuthContext.jsx'
+import { ToastProvider } from './components/common/Toast.jsx'
 import './utils/runMigration.js'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
-      <App />
+      <ToastProvider>
+        <App />
+      </ToastProvider>
     </AuthProvider>
   </StrictMode>,
 )

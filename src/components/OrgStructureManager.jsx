@@ -3,6 +3,7 @@ import useOrgData from '../hooks/useOrgData';
 import ConfirmModal from './ConfirmModal';
 import DistrictDashboard from './org/DistrictDashboard';
 import { formatDistrictName, getDistrictsByProvinceName } from '../utils/mozambiqueDistricts';
+import { showToast } from './common/Toast';
 
 export default function OrgStructureManager({ t }) {
   const {
@@ -131,8 +132,7 @@ export default function OrgStructureManager({ t }) {
   };
 
   const showError = (msgKey) => {
-    setErrorMsg(t(msgKey) || msgKey);
-    setTimeout(() => setErrorMsg(''), 4000);
+    showToast(t(msgKey) || msgKey, 'error');
   };
 
   const handleKeyPress = (e) => {
