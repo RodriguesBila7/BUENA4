@@ -221,9 +221,11 @@ export default function OrgStructureManager({ t }) {
         }
       }
     } else if (activeTab === 'dist_sec') {
-      if (!parentDirId) return showError('Selecione a Direção Distrital');
-      if (editingId) success = await updateSection(editingId, name, parentDirId, 'districtId');
-      else success = await addSection(parentDirId, name, 'districtId');
+      const targetDistId = selectedDistrictId;
+      if (!targetDistId) return showError('Selecione a Direcção Distrital');
+      if (!name.trim()) return showError('Digite o Nome da Secção Distrital');
+      if (editingId) success = await updateSection(editingId, name, targetDistId, 'districtDirectorateId');
+      else success = await addSection(targetDistId, name, 'districtDirectorateId');
     } else if (activeTab === 'car') {
       if (editingId) success = await updateCareer(editingId, name);
       else success = await addCareer(name);
@@ -272,7 +274,10 @@ export default function OrgStructureManager({ t }) {
       setCode(item.code);
       setNotes(item.notes || '');
     } else if (activeTab === 'dist_sec') {
-      setParentDirId(item.districtDirectorateId);
+      const distId = item.districtDirectorateId || item.districtId;
+      setSelectedDistrictId(distId || '');
+      const dist = (data.districtDirectorates || []).find(d => String(d.id) === String(distId));
+      if (dist) setParentDirId(dist.provincialDirectorateId);
     } else if (activeTab === 'cat') {
       setParentCarId(item.careerId);
     }
@@ -850,7 +855,7 @@ export default function OrgStructureManager({ t }) {
         title={confirmModal.title}
         message={confirmModal.message}
         isDestructive={confirmModal.isDestructive}
-        onConfirm={confirmModal.action}
+        onConfirm={confirmModal.onConfirm || confirmModal.action}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
     </div>
