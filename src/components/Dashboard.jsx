@@ -66,6 +66,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const canGoBack = navIndex > 0;
   const canGoForward = navIndex < navHistory.length - 1;
 
+  const [reportViewLevel, setReportViewLevel] = useState('directorates'); // 'directorates' | 'departments' | 'districts'
+  const [selectedReportDirectorate, setSelectedReportDirectorate] = useState('ALL');
+  const [selectedReportDepartment, setSelectedReportDepartment] = useState('ALL');
+  const [selectedReportDistrict, setSelectedReportDistrict] = useState('ALL');
+  const [searchReportText, setSearchReportText] = useState('');
+
   const { employees } = useEmployeeData();
   const { data: orgData } = useOrgData();
   const { actTypes } = useActTypesData();
@@ -77,21 +83,61 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     const men = employees.filter(e => e.gender === 'M' || e.gender === 'Masculino').length;
     const women = employees.filter(e => e.gender === 'F' || e.gender === 'Feminino').length;
 
-    // Distribution by Directorate
+    // 1. Distribution by Directorate
     const byDirectorate = {};
     if (orgData && orgData.directorates) {
-      orgData.directorates.forEach(d => byDirectorate[d.id] = { name: d.name, count: 0, M: 0, F: 0 });
+      orgData.directorates.forEach(d => {
+        const idStr = String(d.id);
+        byDirectorate[idStr] = { id: idStr, name: d.name, count: 0, M: 0, F: 0, employees: [] };
+      });
     }
-    let unassignedDir = { count: 0, M: 0, F: 0 };
+    let unassignedDir = { id: 'unassigned', name: 'Sem Afetação / Outros', count: 0, M: 0, F: 0, employees: [] };
 
-    // Distribution by Career
+    // 2. Distribution by Department
+    const byDepartment = {};
+    if (orgData && orgData.departments) {
+      orgData.departments.forEach(dep => {
+        const idStr = String(dep.id);
+        const parentDir = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(dep.directorateId)) : null;
+        byDepartment[idStr] = {
+          id: idStr,
+          name: dep.name,
+          directorateId: dep.directorateId ? String(dep.directorateId) : null,
+          directorateName: parentDir ? parentDir.name : 'Direcção Geral / Central',
+          count: 0, M: 0, F: 0, employees: []
+        };
+      });
+    }
+    let unassignedDep = { id: 'unassigned', name: 'Sem Departamento Especificado', count: 0, M: 0, F: 0, employees: [] };
+
+    // 3. Distribution by District (Direcções Distritais)
+    const byDistrict = {};
+    if (orgData && orgData.districtDirectorates) {
+      orgData.districtDirectorates.forEach(dist => {
+        const idStr = String(dist.id);
+        const parentProv = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(dist.provincialDirectorateId)) : null;
+        byDistrict[idStr] = {
+          id: idStr,
+          name: dist.name,
+          provincialDirectorateId: dist.provincialDirectorateId ? String(dist.provincialDirectorateId) : null,
+          provinceName: parentProv ? parentProv.name : 'Província N/A',
+          count: 0, M: 0, F: 0, employees: []
+        };
+      });
+    }
+    let unassignedDist = { id: 'unassigned', name: 'Sem Afetação Distrital', count: 0, M: 0, F: 0, employees: [] };
+
+    // 4. Distribution by Career
     const byCareer = {};
     if (orgData && orgData.careers) {
-      orgData.careers.forEach(c => byCareer[c.id] = { name: c.name, count: 0, M: 0, F: 0 });
+      orgData.careers.forEach(c => {
+        const idStr = String(c.id);
+        byCareer[idStr] = { id: idStr, name: c.name, count: 0, M: 0, F: 0, employees: [] };
+      });
     }
-    let unassignedCareer = { count: 0, M: 0, F: 0 };
+    let unassignedCareer = { id: 'unassigned', name: 'Sem Carreira', count: 0, M: 0, F: 0, employees: [] };
 
-    // Distribution by Academic Level
+    // 5. Distribution by Academic Level
     const academicLevels = {
       'Ensino Básico': 0,
       'Ensino Médio': 0,
@@ -106,23 +152,57 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       const isF = emp.gender === 'F' || emp.gender === 'Feminino';
 
       // Directorate
-      if (emp.directorateId && byDirectorate[emp.directorateId]) {
-        byDirectorate[emp.directorateId].count++;
-        if (isM) byDirectorate[emp.directorateId].M++;
-        if (isF) byDirectorate[emp.directorateId].F++;
+      const dId = emp.directorateId ? String(emp.directorateId) : null;
+      if (dId && byDirectorate[dId]) {
+        byDirectorate[dId].count++;
+        byDirectorate[dId].employees.push(emp);
+        if (isM) byDirectorate[dId].M++;
+        if (isF) byDirectorate[dId].F++;
       } else {
         unassignedDir.count++;
+        unassignedDir.employees.push(emp);
         if (isM) unassignedDir.M++;
         if (isF) unassignedDir.F++;
       }
 
+      // Department
+      const depId = emp.departmentId ? String(emp.departmentId) : null;
+      if (depId && byDepartment[depId]) {
+        byDepartment[depId].count++;
+        byDepartment[depId].employees.push(emp);
+        if (isM) byDepartment[depId].M++;
+        if (isF) byDepartment[depId].F++;
+      } else {
+        unassignedDep.count++;
+        unassignedDep.employees.push(emp);
+        if (isM) unassignedDep.M++;
+        if (isF) unassignedDep.F++;
+      }
+
+      // District
+      const distId = emp.districtDirectorateId ? String(emp.districtDirectorateId) : null;
+      if (distId && byDistrict[distId]) {
+        byDistrict[distId].count++;
+        byDistrict[distId].employees.push(emp);
+        if (isM) byDistrict[distId].M++;
+        if (isF) byDistrict[distId].F++;
+      } else {
+        unassignedDist.count++;
+        unassignedDist.employees.push(emp);
+        if (isM) unassignedDist.M++;
+        if (isF) unassignedDist.F++;
+      }
+
       // Career
-      if (emp.careerId && byCareer[emp.careerId]) {
-        byCareer[emp.careerId].count++;
-        if (isM) byCareer[emp.careerId].M++;
-        if (isF) byCareer[emp.careerId].F++;
+      const cId = emp.careerId ? String(emp.careerId) : null;
+      if (cId && byCareer[cId]) {
+        byCareer[cId].count++;
+        byCareer[cId].employees.push(emp);
+        if (isM) byCareer[cId].M++;
+        if (isF) byCareer[cId].F++;
       } else {
         unassignedCareer.count++;
+        unassignedCareer.employees.push(emp);
         if (isM) unassignedCareer.M++;
         if (isF) unassignedCareer.F++;
       }
@@ -137,6 +217,14 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     });
 
     const activeDirectorates = Object.values(byDirectorate).filter(d => d.count > 0).sort((a,b) => b.count - a.count);
+    const allDirectoratesList = Object.values(byDirectorate).sort((a,b) => b.count - a.count);
+
+    const activeDepartments = Object.values(byDepartment).filter(d => d.count > 0).sort((a,b) => b.count - a.count);
+    const allDepartmentsList = Object.values(byDepartment).sort((a,b) => b.count - a.count);
+
+    const activeDistricts = Object.values(byDistrict).filter(d => d.count > 0).sort((a,b) => b.count - a.count);
+    const allDistrictsList = Object.values(byDistrict).sort((a,b) => b.count - a.count);
+
     const activeCareers = Object.values(byCareer).filter(c => c.count > 0).sort((a,b) => b.count - a.count);
 
     return {
@@ -146,7 +234,14 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       men,
       women,
       directorates: activeDirectorates,
+      allDirectoratesList,
       unassignedDir,
+      departments: activeDepartments,
+      allDepartmentsList,
+      unassignedDep,
+      districts: activeDistricts,
+      allDistrictsList,
+      unassignedDist,
       careers: activeCareers,
       unassignedCareer,
       academicLevels
@@ -1456,41 +1551,804 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     </div>
                   </div>
 
-                  <h4 style={{ color: 'var(--color-primary)', marginBottom: '10px' }}>Por Onde Está Afecto (Direcção)</h4>
-                  <table className="premium-table">
-                    <thead>
-                      <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
-                        <th>Direcção / Local</th>
-                        <th>Homens</th>
-                        <th>Mulheres</th>
-                        <th>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportStats.directorates.map(dir => (
-                        <tr key={dir.name}>
-                          <td><strong>{dir.name}</strong></td>
-                          <td>{dir.M}</td>
-                          <td>{dir.F}</td>
-                          <td>{dir.count}</td>
-                        </tr>
-                      ))}
-                      {reportStats.unassignedDir.count > 0 && (
-                        <tr>
-                          <td><strong>Sem Afetação / Outros</strong></td>
-                          <td>{reportStats.unassignedDir.M}</td>
-                          <td>{reportStats.unassignedDir.F}</td>
-                          <td>{reportStats.unassignedDir.count}</td>
-                        </tr>
+                  {/* BARRA SELETORA DE NÍVEL DA ESTRUTURA ORGÂNICA (no-print) */}
+                  <div className="no-print" style={{ 
+                    display: 'flex', 
+                    gap: '10px', 
+                    marginTop: '24px', 
+                    marginBottom: '16px', 
+                    padding: '10px 14px', 
+                    borderRadius: '8px', 
+                    backgroundColor: 'var(--color-bg-base)', 
+                    border: '1px solid var(--color-border)',
+                    alignItems: 'center',
+                    flexWrap: 'wrap'
+                  }}>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-primary)', marginRight: '6px' }}>
+                      Filtrar Efetivo por Nível:
+                    </span>
+
+                    <button
+                      onClick={() => { setReportViewLevel('directorates'); setSelectedReportDirectorate('ALL'); setSelectedReportDepartment('ALL'); setSelectedReportDistrict('ALL'); setSearchReportText(''); }}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '6px',
+                        border: reportViewLevel === 'directorates' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        backgroundColor: reportViewLevel === 'directorates' ? 'var(--color-primary)' : 'var(--color-card-bg)',
+                        color: reportViewLevel === 'directorates' ? 'var(--color-accent)' : 'var(--color-text-main)',
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      🏢 Direcções ({reportStats.allDirectoratesList.length})
+                    </button>
+
+                    <button
+                      onClick={() => { setReportViewLevel('departments'); setSelectedReportDirectorate('ALL'); setSelectedReportDepartment('ALL'); setSelectedReportDistrict('ALL'); setSearchReportText(''); }}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '6px',
+                        border: reportViewLevel === 'departments' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        backgroundColor: reportViewLevel === 'departments' ? 'var(--color-primary)' : 'var(--color-card-bg)',
+                        color: reportViewLevel === 'departments' ? 'var(--color-accent)' : 'var(--color-text-main)',
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      🏬 Departamentos ({reportStats.allDepartmentsList.length})
+                    </button>
+
+                    <button
+                      onClick={() => { setReportViewLevel('districts'); setSelectedReportDirectorate('ALL'); setSelectedReportDepartment('ALL'); setSelectedReportDistrict('ALL'); setSearchReportText(''); }}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '6px',
+                        border: reportViewLevel === 'districts' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                        backgroundColor: reportViewLevel === 'districts' ? 'var(--color-primary)' : 'var(--color-card-bg)',
+                        color: reportViewLevel === 'districts' ? 'var(--color-accent)' : 'var(--color-text-main)',
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      📍 Distritos ({reportStats.allDistrictsList.length})
+                    </button>
+                  </div>
+
+                  {/* ──────────────────────────────────────────────────────────
+                      NÍVEL 1: DIRECÇÕES
+                  ────────────────────────────────────────────────────────── */}
+                  {reportViewLevel === 'directorates' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+                        <h4 style={{ color: 'var(--color-primary)', margin: 0, fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                          Por Onde Está Afecto (Direcção)
+                        </h4>
+
+                        <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                              Seleccionar Direcção:
+                            </label>
+                            <select
+                              value={selectedReportDirectorate}
+                              onChange={(e) => setSelectedReportDirectorate(e.target.value)}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--color-primary)',
+                                backgroundColor: 'var(--color-bg-base)',
+                                color: 'var(--color-text-main)',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                outline: 'none'
+                              }}
+                            >
+                              <option value="ALL">Todas as Direcções ({reportStats.total} funcionários)</option>
+                              {reportStats.allDirectoratesList.map(d => (
+                                <option key={d.id} value={d.id}>
+                                  {d.name} ({d.count} {d.count === 1 ? 'funcionário' : 'funcionários'})
+                                </option>
+                              ))}
+                              {reportStats.unassignedDir.count > 0 && (
+                                <option value="unassigned">
+                                  Sem Afetação / Outros ({reportStats.unassignedDir.count} funcionários)
+                                </option>
+                              )}
+                            </select>
+                          </div>
+
+                          {selectedReportDirectorate === 'ALL' && (
+                            <div style={{ position: 'relative' }}>
+                              <input
+                                type="text"
+                                placeholder="Pesquisar direcção..."
+                                value={searchReportText}
+                                onChange={(e) => setSearchReportText(e.target.value)}
+                                style={{
+                                  padding: '6px 10px 6px 30px',
+                                  borderRadius: '6px',
+                                  border: '1px solid var(--color-border)',
+                                  backgroundColor: 'var(--color-bg-base)',
+                                  color: 'var(--color-text-main)',
+                                  fontSize: '13px',
+                                  width: '200px'
+                                }}
+                              />
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                          )}
+
+                          {selectedReportDirectorate !== 'ALL' && (
+                            <button
+                              onClick={() => setSelectedReportDirectorate('ALL')}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                backgroundColor: 'var(--color-primary)',
+                                color: 'var(--color-accent)',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold'
+                              }}
+                            >
+                              ✕ Ver Todas
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedReportDirectorate === 'ALL' ? (
+                        <>
+                          <table className="premium-table">
+                            <thead>
+                              <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                <th>Direcção / Local</th>
+                                <th>Homens</th>
+                                <th>Mulheres</th>
+                                <th>Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {reportStats.directorates
+                                .filter(d => d.name.toLowerCase().includes(searchReportText.toLowerCase()))
+                                .map(dir => (
+                                  <tr 
+                                    key={dir.id}
+                                    onClick={() => setSelectedReportDirectorate(dir.id)}
+                                    title="Clique para ver os funcionários desta direcção"
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <td><strong style={{ color: 'var(--color-primary)' }}>{dir.name}</strong></td>
+                                    <td>{dir.M}</td>
+                                    <td>{dir.F}</td>
+                                    <td>
+                                      <span style={{ fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)' }}>
+                                        {dir.count}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              {reportStats.unassignedDir.count > 0 && 
+                               ('sem afetação / outros'.includes(searchReportText.toLowerCase()) || !searchReportText) && (
+                                <tr onClick={() => setSelectedReportDirectorate('unassigned')} style={{ cursor: 'pointer' }}>
+                                  <td><strong>Sem Afetação / Outros</strong></td>
+                                  <td>{reportStats.unassignedDir.M}</td>
+                                  <td>{reportStats.unassignedDir.F}</td>
+                                  <td>{reportStats.unassignedDir.count}</td>
+                                </tr>
+                              )}
+                              <tr style={{ fontWeight: 'bold', borderTop: '2px solid var(--color-primary)' }}>
+                                <td>Total Geral</td>
+                                <td>{reportStats.men}</td>
+                                <td>{reportStats.women}</td>
+                                <td>{reportStats.total}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
+                            💡 Dica: Clique em qualquer linha da tabela para ver a lista de funcionários afetos a essa Direcção.
+                          </p>
+                        </>
+                      ) : (
+                        (() => {
+                          const selectedObj = selectedReportDirectorate === 'unassigned'
+                            ? reportStats.unassignedDir
+                            : (reportStats.directorates.find(d => String(d.id) === String(selectedReportDirectorate)) ||
+                               reportStats.allDirectoratesList.find(d => String(d.id) === String(selectedReportDirectorate)));
+
+                          if (!selectedObj) return null;
+                          const pct = reportStats.total > 0 ? ((selectedObj.count / reportStats.total) * 100).toFixed(1) : 0;
+
+                          return (
+                            <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                                <div>
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
+                                    🏢 {selectedObj.name}
+                                  </h3>
+                                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                                    Detalhe do Efetivo Afeto a esta Direcção
+                                  </p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-primary)' }}>{selectedObj.count}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Total Afetos</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{selectedObj.M} H | {selectedObj.F} M</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Género</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-accent)' }}>{pct}%</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>do Efetivo Total</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <h5 style={{ color: 'var(--color-text-main)', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+                                Lista Nominal dos Funcionários Afetos ({selectedObj.count})
+                              </h5>
+
+                              {selectedObj.employees && selectedObj.employees.length > 0 ? (
+                                <table className="premium-table">
+                                  <thead>
+                                    <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                      <th>Nome Completo</th>
+                                      <th>NUIT</th>
+                                      <th>Cargo / Carreira</th>
+                                      <th>Patente</th>
+                                      <th>Género</th>
+                                      <th>Estado</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {selectedObj.employees.map(emp => {
+                                      const carObj = orgData?.careers?.find(c => String(c.id) === String(emp.careerId));
+                                      return (
+                                        <tr key={emp.id}>
+                                          <td><strong>{emp.name}</strong></td>
+                                          <td>{emp.nuit || '-'}</td>
+                                          <td>{carObj ? carObj.name : (emp.position || emp.career || '-')}</td>
+                                          <td>{emp.rank || emp.patente || '-'}</td>
+                                          <td>{emp.gender === 'M' || emp.gender === 'Masculino' ? 'Homem' : (emp.gender === 'F' || emp.gender === 'Feminino' ? 'Mulher' : '-')}</td>
+                                          <td>
+                                            <span style={{
+                                              padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
+                                              backgroundColor: emp.isActive !== false ? 'rgba(40, 167, 69, 0.15)' : 'rgba(220, 53, 69, 0.15)',
+                                              color: emp.isActive !== false ? '#28a745' : '#dc3545'
+                                            }}>
+                                              {emp.isActive !== false ? 'Ativo' : 'Inativo'}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p style={{ fontStyle: 'italic', color: 'var(--color-text-muted)', fontSize: '13px' }}>Nenhum funcionário cadastrado nesta direcção.</p>
+                              )}
+                            </div>
+                          );
+                        })()
                       )}
-                      <tr style={{ fontWeight: 'bold', borderTop: '2px solid var(--color-primary)' }}>
-                        <td>Total Geral</td>
-                        <td>{reportStats.men}</td>
-                        <td>{reportStats.women}</td>
-                        <td>{reportStats.total}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                    </>
+                  )}
+
+                  {/* ──────────────────────────────────────────────────────────
+                      NÍVEL 2: DEPARTAMENTOS
+                  ────────────────────────────────────────────────────────── */}
+                  {reportViewLevel === 'departments' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+                        <h4 style={{ color: 'var(--color-primary)', margin: 0, fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
+                          Distribuição por Departamentos Institucionais
+                        </h4>
+
+                        <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                              Direcção:
+                            </label>
+                            <select
+                              value={selectedReportDirectorate}
+                              onChange={(e) => { setSelectedReportDirectorate(e.target.value); setSelectedReportDepartment('ALL'); }}
+                              style={{
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--color-border)',
+                                backgroundColor: 'var(--color-bg-base)',
+                                color: 'var(--color-text-main)',
+                                fontSize: '12px'
+                              }}
+                            >
+                              <option value="ALL">Todas as Direcções</option>
+                              {reportStats.allDirectoratesList.map(d => (
+                                <option key={d.id} value={d.id}>{d.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                              Departamento:
+                            </label>
+                            <select
+                              value={selectedReportDepartment}
+                              onChange={(e) => setSelectedReportDepartment(e.target.value)}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--color-primary)',
+                                backgroundColor: 'var(--color-bg-base)',
+                                color: 'var(--color-text-main)',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                outline: 'none'
+                              }}
+                            >
+                              <option value="ALL">Todos os Departamentos ({reportStats.total} funcionários)</option>
+                              {reportStats.allDepartmentsList
+                                .filter(dep => selectedReportDirectorate === 'ALL' || String(dep.directorateId) === String(selectedReportDirectorate))
+                                .map(dep => (
+                                  <option key={dep.id} value={dep.id}>
+                                    {dep.name} ({dep.count} {dep.count === 1 ? 'funcionário' : 'funcionários'})
+                                  </option>
+                                ))}
+                              {reportStats.unassignedDep.count > 0 && (
+                                <option value="unassigned">Sem Departamento ({reportStats.unassignedDep.count})</option>
+                              )}
+                            </select>
+                          </div>
+
+                          {selectedReportDepartment === 'ALL' && (
+                            <div style={{ position: 'relative' }}>
+                              <input
+                                type="text"
+                                placeholder="Pesquisar departamento..."
+                                value={searchReportText}
+                                onChange={(e) => setSearchReportText(e.target.value)}
+                                style={{
+                                  padding: '6px 10px 6px 30px',
+                                  borderRadius: '6px',
+                                  border: '1px solid var(--color-border)',
+                                  backgroundColor: 'var(--color-bg-base)',
+                                  color: 'var(--color-text-main)',
+                                  fontSize: '13px',
+                                  width: '190px'
+                                }}
+                              />
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                          )}
+
+                          {selectedReportDepartment !== 'ALL' && (
+                            <button
+                              onClick={() => setSelectedReportDepartment('ALL')}
+                              style={{
+                                padding: '6px 12px', borderRadius: '6px', border: 'none',
+                                backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)',
+                                fontSize: '12px', cursor: 'pointer', fontWeight: 'bold'
+                              }}
+                            >
+                              ✕ Ver Todos
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedReportDepartment === 'ALL' ? (
+                        <>
+                          <table className="premium-table">
+                            <thead>
+                              <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                <th>Departamento</th>
+                                <th>Direcção de Origem</th>
+                                <th>Homens</th>
+                                <th>Mulheres</th>
+                                <th>Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {reportStats.departments
+                                .filter(dep => selectedReportDirectorate === 'ALL' || String(dep.directorateId) === String(selectedReportDirectorate))
+                                .filter(dep => dep.name.toLowerCase().includes(searchReportText.toLowerCase()) || dep.directorateName.toLowerCase().includes(searchReportText.toLowerCase()))
+                                .map(dep => (
+                                  <tr 
+                                    key={dep.id}
+                                    onClick={() => setSelectedReportDepartment(dep.id)}
+                                    title="Clique para ver os funcionários deste departamento"
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <td><strong style={{ color: 'var(--color-primary)' }}>{dep.name}</strong></td>
+                                    <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{dep.directorateName}</td>
+                                    <td>{dep.M}</td>
+                                    <td>{dep.F}</td>
+                                    <td>
+                                      <span style={{ fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)' }}>
+                                        {dep.count}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              {reportStats.unassignedDep.count > 0 && 
+                               (selectedReportDirectorate === 'ALL' || selectedReportDirectorate === 'unassigned') &&
+                               ('sem departamento'.includes(searchReportText.toLowerCase()) || !searchReportText) && (
+                                <tr onClick={() => setSelectedReportDepartment('unassigned')} style={{ cursor: 'pointer' }}>
+                                  <td><strong>Sem Departamento Especificado</strong></td>
+                                  <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>-</td>
+                                  <td>{reportStats.unassignedDep.M}</td>
+                                  <td>{reportStats.unassignedDep.F}</td>
+                                  <td>{reportStats.unassignedDep.count}</td>
+                                </tr>
+                              )}
+                              <tr style={{ fontWeight: 'bold', borderTop: '2px solid var(--color-primary)' }}>
+                                <td>Total Geral</td>
+                                <td>-</td>
+                                <td>{reportStats.men}</td>
+                                <td>{reportStats.women}</td>
+                                <td>{reportStats.total}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
+                            💡 Dica: Clique em qualquer linha para ver os funcionários afetos àquele departamento.
+                          </p>
+                        </>
+                      ) : (
+                        (() => {
+                          const selectedObj = selectedReportDepartment === 'unassigned'
+                            ? reportStats.unassignedDep
+                            : (reportStats.departments.find(dep => String(dep.id) === String(selectedReportDepartment)) ||
+                               reportStats.allDepartmentsList.find(dep => String(dep.id) === String(selectedReportDepartment)));
+
+                          if (!selectedObj) return null;
+                          const pct = reportStats.total > 0 ? ((selectedObj.count / reportStats.total) * 100).toFixed(1) : 0;
+
+                          return (
+                            <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                                <div>
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
+                                    🏬 {selectedObj.name}
+                                  </h3>
+                                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                                    Direcção de Origem: {selectedObj.directorateName || 'Central'}
+                                  </p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-primary)' }}>{selectedObj.count}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Total Afetos</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{selectedObj.M} H | {selectedObj.F} M</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Género</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-accent)' }}>{pct}%</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>do Efetivo Total</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <h5 style={{ color: 'var(--color-text-main)', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+                                Lista Nominal dos Funcionários deste Departamento ({selectedObj.count})
+                              </h5>
+
+                              {selectedObj.employees && selectedObj.employees.length > 0 ? (
+                                <table className="premium-table">
+                                  <thead>
+                                    <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                      <th>Nome Completo</th>
+                                      <th>NUIT</th>
+                                      <th>Cargo / Carreira</th>
+                                      <th>Patente</th>
+                                      <th>Género</th>
+                                      <th>Estado</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {selectedObj.employees.map(emp => {
+                                      const carObj = orgData?.careers?.find(c => String(c.id) === String(emp.careerId));
+                                      return (
+                                        <tr key={emp.id}>
+                                          <td><strong>{emp.name}</strong></td>
+                                          <td>{emp.nuit || '-'}</td>
+                                          <td>{carObj ? carObj.name : (emp.position || emp.career || '-')}</td>
+                                          <td>{emp.rank || emp.patente || '-'}</td>
+                                          <td>{emp.gender === 'M' || emp.gender === 'Masculino' ? 'Homem' : (emp.gender === 'F' || emp.gender === 'Feminino' ? 'Mulher' : '-')}</td>
+                                          <td>
+                                            <span style={{
+                                              padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
+                                              backgroundColor: emp.isActive !== false ? 'rgba(40, 167, 69, 0.15)' : 'rgba(220, 53, 69, 0.15)',
+                                              color: emp.isActive !== false ? '#28a745' : '#dc3545'
+                                            }}>
+                                              {emp.isActive !== false ? 'Ativo' : 'Inativo'}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p style={{ fontStyle: 'italic', color: 'var(--color-text-muted)', fontSize: '13px' }}>Nenhum funcionário cadastrado neste departamento.</p>
+                              )}
+                            </div>
+                          );
+                        })()
+                      )}
+                    </>
+                  )}
+
+                  {/* ──────────────────────────────────────────────────────────
+                      NÍVEL 3: DISTRITOS
+                  ────────────────────────────────────────────────────────── */}
+                  {reportViewLevel === 'districts' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+                        <h4 style={{ color: 'var(--color-primary)', margin: 0, fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                          Distribuição por Direcções Distritais / Distritos
+                        </h4>
+
+                        <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                              Província:
+                            </label>
+                            <select
+                              value={selectedReportDirectorate}
+                              onChange={(e) => { setSelectedReportDirectorate(e.target.value); setSelectedReportDistrict('ALL'); }}
+                              style={{
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--color-border)',
+                                backgroundColor: 'var(--color-bg-base)',
+                                color: 'var(--color-text-main)',
+                                fontSize: '12px'
+                              }}
+                            >
+                              <option value="ALL">Todas as Províncias</option>
+                              {reportStats.allDirectoratesList.map(d => (
+                                <option key={d.id} value={d.id}>{d.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                              Distrito:
+                            </label>
+                            <select
+                              value={selectedReportDistrict}
+                              onChange={(e) => setSelectedReportDistrict(e.target.value)}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                border: '1px solid var(--color-primary)',
+                                backgroundColor: 'var(--color-bg-base)',
+                                color: 'var(--color-text-main)',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                cursor: 'pointer',
+                                outline: 'none'
+                              }}
+                            >
+                              <option value="ALL">Todos os Distritos ({reportStats.total} funcionários)</option>
+                              {reportStats.allDistrictsList
+                                .filter(dist => selectedReportDirectorate === 'ALL' || String(dist.provincialDirectorateId) === String(selectedReportDirectorate))
+                                .map(dist => (
+                                  <option key={dist.id} value={dist.id}>
+                                    {dist.name} ({dist.count} {dist.count === 1 ? 'funcionário' : 'funcionários'})
+                                  </option>
+                                ))}
+                              {reportStats.unassignedDist.count > 0 && (
+                                <option value="unassigned">Sem Distrito ({reportStats.unassignedDist.count})</option>
+                              )}
+                            </select>
+                          </div>
+
+                          {selectedReportDistrict === 'ALL' && (
+                            <div style={{ position: 'relative' }}>
+                              <input
+                                type="text"
+                                placeholder="Pesquisar distrito..."
+                                value={searchReportText}
+                                onChange={(e) => setSearchReportText(e.target.value)}
+                                style={{
+                                  padding: '6px 10px 6px 30px',
+                                  borderRadius: '6px',
+                                  border: '1px solid var(--color-border)',
+                                  backgroundColor: 'var(--color-bg-base)',
+                                  color: 'var(--color-text-main)',
+                                  fontSize: '13px',
+                                  width: '190px'
+                                }}
+                              />
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                          )}
+
+                          {selectedReportDistrict !== 'ALL' && (
+                            <button
+                              onClick={() => setSelectedReportDistrict('ALL')}
+                              style={{
+                                padding: '6px 12px', borderRadius: '6px', border: 'none',
+                                backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)',
+                                fontSize: '12px', cursor: 'pointer', fontWeight: 'bold'
+                              }}
+                            >
+                              ✕ Ver Todos
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {selectedReportDistrict === 'ALL' ? (
+                        <>
+                          <table className="premium-table">
+                            <thead>
+                              <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                <th>Direcção Distrital / Distrito</th>
+                                <th>Província</th>
+                                <th>Homens</th>
+                                <th>Mulheres</th>
+                                <th>Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {reportStats.districts
+                                .filter(dist => selectedReportDirectorate === 'ALL' || String(dist.provincialDirectorateId) === String(selectedReportDirectorate))
+                                .filter(dist => dist.name.toLowerCase().includes(searchReportText.toLowerCase()) || dist.provinceName.toLowerCase().includes(searchReportText.toLowerCase()))
+                                .map(dist => (
+                                  <tr 
+                                    key={dist.id}
+                                    onClick={() => setSelectedReportDistrict(dist.id)}
+                                    title="Clique para ver os funcionários deste distrito"
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <td><strong style={{ color: 'var(--color-primary)' }}>{dist.name}</strong></td>
+                                    <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{dist.provinceName}</td>
+                                    <td>{dist.M}</td>
+                                    <td>{dist.F}</td>
+                                    <td>
+                                      <span style={{ fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)' }}>
+                                        {dist.count}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              {reportStats.unassignedDist.count > 0 && 
+                               (selectedReportDirectorate === 'ALL' || selectedReportDirectorate === 'unassigned') &&
+                               ('sem afetação distrital'.includes(searchReportText.toLowerCase()) || !searchReportText) && (
+                                <tr onClick={() => setSelectedReportDistrict('unassigned')} style={{ cursor: 'pointer' }}>
+                                  <td><strong>Sem Afetação Distrital</strong></td>
+                                  <td style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>-</td>
+                                  <td>{reportStats.unassignedDist.M}</td>
+                                  <td>{reportStats.unassignedDist.F}</td>
+                                  <td>{reportStats.unassignedDist.count}</td>
+                                </tr>
+                              )}
+                              <tr style={{ fontWeight: 'bold', borderTop: '2px solid var(--color-primary)' }}>
+                                <td>Total Geral</td>
+                                <td>-</td>
+                                <td>{reportStats.men}</td>
+                                <td>{reportStats.women}</td>
+                                <td>{reportStats.total}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                          <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
+                            💡 Dica: Clique em qualquer linha para ver os funcionários afetos àquela unidade distrital.
+                          </p>
+                        </>
+                      ) : (
+                        (() => {
+                          const selectedObj = selectedReportDistrict === 'unassigned'
+                            ? reportStats.unassignedDist
+                            : (reportStats.districts.find(dist => String(dist.id) === String(selectedReportDistrict)) ||
+                               reportStats.allDistrictsList.find(dist => String(dist.id) === String(selectedReportDistrict)));
+
+                          if (!selectedObj) return null;
+                          const pct = reportStats.total > 0 ? ((selectedObj.count / reportStats.total) * 100).toFixed(1) : 0;
+
+                          return (
+                            <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+                                <div>
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
+                                    📍 {selectedObj.name}
+                                  </h3>
+                                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                                    Província de Afetação: {selectedObj.provinceName || 'N/A'}
+                                  </p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'var(--color-primary)' }}>{selectedObj.count}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Total Afetos</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{selectedObj.M} H | {selectedObj.F} M</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Género</div>
+                                  </div>
+                                  <div style={{ textAlign: 'center', padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--color-accent)' }}>{pct}%</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>do Efetivo Total</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <h5 style={{ color: 'var(--color-text-main)', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
+                                Lista Nominal dos Funcionários deste Distrito ({selectedObj.count})
+                              </h5>
+
+                              {selectedObj.employees && selectedObj.employees.length > 0 ? (
+                                <table className="premium-table">
+                                  <thead>
+                                    <tr style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                                      <th>Nome Completo</th>
+                                      <th>NUIT</th>
+                                      <th>Cargo / Carreira</th>
+                                      <th>Patente</th>
+                                      <th>Género</th>
+                                      <th>Estado</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {selectedObj.employees.map(emp => {
+                                      const carObj = orgData?.careers?.find(c => String(c.id) === String(emp.careerId));
+                                      return (
+                                        <tr key={emp.id}>
+                                          <td><strong>{emp.name}</strong></td>
+                                          <td>{emp.nuit || '-'}</td>
+                                          <td>{carObj ? carObj.name : (emp.position || emp.career || '-')}</td>
+                                          <td>{emp.rank || emp.patente || '-'}</td>
+                                          <td>{emp.gender === 'M' || emp.gender === 'Masculino' ? 'Homem' : (emp.gender === 'F' || emp.gender === 'Feminino' ? 'Mulher' : '-')}</td>
+                                          <td>
+                                            <span style={{
+                                              padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
+                                              backgroundColor: emp.isActive !== false ? 'rgba(40, 167, 69, 0.15)' : 'rgba(220, 53, 69, 0.15)',
+                                              color: emp.isActive !== false ? '#28a745' : '#dc3545'
+                                            }}>
+                                              {emp.isActive !== false ? 'Ativo' : 'Inativo'}
+                                            </span>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              ) : (
+                                <p style={{ fontStyle: 'italic', color: 'var(--color-text-muted)', fontSize: '13px' }}>Nenhum funcionário cadastrado neste distrito.</p>
+                              )}
+                            </div>
+                          );
+                        })()
+                      )}
+                    </>
+                  )}
+
 
                   <h4 style={{ color: 'var(--color-primary)', marginBottom: '10px' }}>Por Categorias / Carreiras</h4>
                   <table className="premium-table">
