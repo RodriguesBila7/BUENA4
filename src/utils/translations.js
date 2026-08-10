@@ -189,7 +189,7 @@ const translations = {
     org_edit_title: 'Editar Registo',
 
     /* ── Dashboard Analítico ── */
-    dash_overview: 'Visão Geral',
+    dash_overview: 'Visão Geral do SERNIC',
     dash_audit: 'Auditoria Estrutural',
     dash_tree: 'Hierarquia Completa',
     dash_orphan: 'Registos Órfãos',

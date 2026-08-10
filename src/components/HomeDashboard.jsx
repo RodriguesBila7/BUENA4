@@ -187,7 +187,7 @@ export default function HomeDashboard({ t, onTabChange }) {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>{t('dash_overview') || 'Visão Geral'}</h2>
+        <h2 style={styles.title}>{t('dash_overview') || 'Visão Geral do SERNIC'}</h2>
       </div>
 
       {pendingObitosCount > 0 && (
