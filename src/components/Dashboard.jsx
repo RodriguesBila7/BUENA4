@@ -15,7 +15,6 @@ import useOrgData from '../hooks/useOrgData';
 import useActTypesData from '../hooks/useActTypesData';
 import SettingsLanguages from './settings/SettingsLanguages';
 import SettingsSystem from './settings/SettingsSystem';
-import AccountManager from './settings/accounts/AccountManager';
 import BackupCenter from './settings/BackupCenter';
 import ActTypesManager from './settings/ActTypesManager';
 import CareerManager from './career/CareerManager';
@@ -950,28 +949,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     </div>
                   )}
 
-                  {/* Gerir Contas */}
-                  <button 
-                    onClick={() => handleTabChange('settings_accounts')}
-                    style={{ 
-                      ...styles.navItem, 
-                      padding: '10px 16px 10px 48px', 
-                      justifyContent: 'flex-start', 
-                      opacity: activeTab === 'settings_accounts' ? 1 : 0.85, 
-                      borderLeft: 'none', 
-                      fontSize: '13px',
-                      position: 'relative',
-                      backgroundColor: activeTab === 'settings_accounts' ? 'rgba(0,0,0,0.02)' : 'transparent',
-                      color: activeTab === 'settings_accounts' ? 'var(--color-primary)' : 'var(--color-text-base)'
-                    }}
-                  >
-                    <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_accounts' ? 'var(--color-primary)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                      <span style={{ fontWeight: activeTab === 'settings_accounts' ? '600' : '400' }}>{t('menu_settings_accounts') || 'Gerir Contas'}</span>
-                    </div>
-                  </button>
-
                   {/* Idiomas */}
                   <button 
                     onClick={() => handleTabChange('settings_languages')}
@@ -1632,13 +1609,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           {activeTab === 'settings_system' && (
             <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
               <SettingsSystem t={t} />
-            </div>
-          )}
-
-          {/* TAB 2.7: GERIR CONTAS */}
-          {activeTab === 'settings_accounts' && (
-            <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
-              <AccountManager t={t} />
             </div>
           )}
 
