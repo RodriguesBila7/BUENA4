@@ -30,6 +30,26 @@ export const PROVINCE_CODES = {
 };
 
 /**
+ * Identifica se o utilizador está a operar sob um Perfil Secundário / Delegado (Substituição)
+ */
+export function isSecondaryUser(user) {
+  if (!user) return false;
+  if (user.delegatedRoleId || user.delegated_role_id) {
+    if (user.isSecondaryActive || user.activeRole === (user.delegatedRoleId || user.delegated_role_id)) {
+      return true;
+    }
+    if (user.delegationStatus === 'Aprovado' && user.primaryRoleId && user.roleId !== user.primaryRoleId) {
+      return true;
+    }
+    // Qualquer conta que possua perfil secundário/delegado ativado
+    if (user.delegatedRoleId && user.delegationStatus === 'Aprovado') {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Formata o nome do perfil com a sigla oficial SERNIC da direcção provincial atribuída:
  * Exemplo: Administrador-SNC/NPL (Nampula), Administrador-SNC/CM (Cidade de Maputo), Usuário-SNC/ZBZ (Zambézia)
  */

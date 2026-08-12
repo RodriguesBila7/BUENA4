@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import useActTypesData from '../../hooks/useActTypesData';
+import { useAuth } from '../../contexts/AuthContext';
+import { isSecondaryUser } from '../../utils/scopeUtils';
 import ConfirmModal from '../ConfirmModal';
 import DraggableModal from '../common/DraggableModal';
 
 export default function ActTypesManager() {
   const { actTypes, loading, addActType, updateActType, deleteActType } = useActTypesData();
+  const { user: currentUser } = useAuth();
+  const userIsSecondary = isSecondaryUser(currentUser);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingType, setEditingType] = useState(null);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, idToDelete: null });
@@ -66,12 +71,48 @@ export default function ActTypesManager() {
 
   return (
     <div style={styles.container}>
+      {userIsSecondary && (
+        <div style={{
+          backgroundColor: 'rgba(239, 68, 68, 0.08)',
+          border: '1.5px solid #ef4444',
+          borderRadius: '8px',
+          padding: '14px 18px',
+          marginBottom: '20px',
+          color: '#991b1b',
+          fontSize: '13px',
+          fontWeight: 'bold',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <span style={{ fontSize: '22px' }}>⛔</span>
+          <div>
+            <div>Acesso Restrito (Perfil Secundário / Delegado em Substituição):</div>
+            <div style={{ fontWeight: 'normal', fontSize: '12px', marginTop: '2px', opacity: 0.9 }}>
+              A criação, alteração e eliminação de Tipos de Actos Administrativos estão <u>bloqueadas</u> para utilizadores que operam sob perfil secundário. Apenas o Administrador titular possui competência para gerir Tipos de Actos.
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}>Gestão de Tipos de Actos</h2>
           <p style={styles.subtitle}>Crie e agrupe os tipos de actos administrativos usados no sistema e mostrados no menu lateral.</p>
         </div>
-        <button style={styles.btnAdd} onClick={handleOpenNew}>+ Novo Tipo de Acto</button>
+        <button
+          style={{
+            ...styles.btnAdd,
+            opacity: userIsSecondary ? 0.4 : 1,
+            cursor: userIsSecondary ? 'not-allowed' : 'pointer',
+            backgroundColor: userIsSecondary ? '#94a3b8' : '#2563eb'
+          }}
+          onClick={userIsSecondary ? undefined : handleOpenNew}
+          disabled={userIsSecondary}
+          title={userIsSecondary ? 'Bloqueado para utilizadores operando sob perfil secundário' : ''}
+        >
+          + Novo Tipo de Acto
+        </button>
       </div>
 
       <div style={styles.groupsContainer}>
@@ -93,11 +134,30 @@ export default function ActTypesManager() {
                       </span>
                     </td>
                     <td style={{ ...styles.td, textAlign: 'right', width: '150px' }}>
-                      <button style={styles.btnAction} onClick={() => handleToggleActive(act)}>
+                      <button
+                        style={{ ...styles.btnAction, opacity: userIsSecondary ? 0.3 : 1, cursor: userIsSecondary ? 'not-allowed' : 'pointer' }}
+                        onClick={userIsSecondary ? undefined : () => handleToggleActive(act)}
+                        disabled={userIsSecondary}
+                        title={userIsSecondary ? 'Bloqueado para perfil secundário' : ''}
+                      >
                         {act.is_active === 1 ? 'Desativar' : 'Ativar'}
                       </button>
-                      <button style={styles.btnAction} onClick={() => handleOpenEdit(act)}>✏️</button>
-                      <button style={{ ...styles.btnAction, color: '#dc2626' }} onClick={() => handleDelete(act.id)}>🗑️</button>
+                      <button
+                        style={{ ...styles.btnAction, opacity: userIsSecondary ? 0.3 : 1, cursor: userIsSecondary ? 'not-allowed' : 'pointer' }}
+                        onClick={userIsSecondary ? undefined : () => handleOpenEdit(act)}
+                        disabled={userIsSecondary}
+                        title={userIsSecondary ? 'Bloqueado para perfil secundário' : ''}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        style={{ ...styles.btnAction, color: '#dc2626', opacity: userIsSecondary ? 0.3 : 1, cursor: userIsSecondary ? 'not-allowed' : 'pointer' }}
+                        onClick={userIsSecondary ? undefined : () => handleDelete(act.id)}
+                        disabled={userIsSecondary}
+                        title={userIsSecondary ? 'Bloqueado para perfil secundário' : ''}
+                      >
+                        🗑️
+                      </button>
                     </td>
                   </tr>
                 ))}

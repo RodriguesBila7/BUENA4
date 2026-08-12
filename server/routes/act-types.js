@@ -4,6 +4,19 @@ import { requireSystemSettingsPermission } from '../middleware/auth.js';
 
 const router = Router();
 
+function denySecondaryUsers(req, res, next) {
+  const isSecondaryHeader = req.headers['x-is-secondary'] === 'true' || req.headers['x-secondary'] === 'true';
+  const hasDelegatedRole = req.user && req.user.delegatedRole;
+
+  if (isSecondaryHeader || (hasDelegatedRole && (req.headers['x-user-role'] === req.user.delegatedRole || req.user.isSecondaryActive))) {
+    return res.status(403).json({
+      error: 'Acesso Negado (403 Forbidden)',
+      message: 'Utilizadores a operar sob perfil secundário / delegado não possuem permissão para criar, alterar ou eliminar Tipos de Actos Administrativos.'
+    });
+  }
+  next();
+}
+
 // GET all act types
 router.get('/', (req, res) => {
   try {
@@ -16,7 +29,7 @@ router.get('/', (req, res) => {
 });
 
 // POST new act type
-router.post('/', requireSystemSettingsPermission, (req, res) => {
+router.post('/', requireSystemSettingsPermission, denySecondaryUsers, (req, res) => {
   try {
     const db = getDb();
     const { group_name, act_name, is_active } = req.body;
@@ -32,7 +45,7 @@ router.post('/', requireSystemSettingsPermission, (req, res) => {
 });
 
 // PUT update act type
-router.put('/:id', requireSystemSettingsPermission, (req, res) => {
+router.put('/:id', requireSystemSettingsPermission, denySecondaryUsers, (req, res) => {
   try {
     const db = getDb();
     const { group_name, act_name, is_active } = req.body;
@@ -47,7 +60,7 @@ router.put('/:id', requireSystemSettingsPermission, (req, res) => {
 });
 
 // DELETE act type
-router.delete('/:id', requireSystemSettingsPermission, (req, res) => {
+router.delete('/:id', requireSystemSettingsPermission, denySecondaryUsers, (req, res) => {
   try {
     const db = getDb();
     db.prepare('DELETE FROM act_types WHERE id = ?').run(req.params.id);
