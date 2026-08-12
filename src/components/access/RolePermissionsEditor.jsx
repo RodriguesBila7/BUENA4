@@ -178,10 +178,23 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
                 setRole(prev => ({ ...prev, name: '' }));
               } else {
                 const matched = OFFICIAL_ROLES.find(r => r.name === val);
+                
+                // Se for um perfil provincial (Administrador ou Usuário), predefinir a matriz com os 10 módulos autorizados do SERNIC
+                let newPerms = { ...role.permissions };
+                if (val === 'Administrador' || val === 'Usuário') {
+                  const ALLOWED = ['Dashboard', 'Funcionários', 'Processos Disciplinares', 'Efetividade (Faltas)', 'Avaliação de Desempenho', 'Férias e Licenças', 'Saúde e Óbitos', 'Transferências e Mobilidade', 'Relatórios e Impressão', 'Configurações'];
+                  MODULES.forEach(m => {
+                    newPerms[m] = ALLOWED.includes(m) ? [...ACTIONS] : [];
+                  });
+                } else if (val.includes('Super')) {
+                  MODULES.forEach(m => { newPerms[m] = [...ACTIONS]; });
+                }
+
                 setRole(prev => ({
                   ...prev,
                   name: val,
-                  description: matched ? matched.description : prev.description
+                  description: matched ? matched.description : prev.description,
+                  permissions: newPerms
                 }));
               }
             }}

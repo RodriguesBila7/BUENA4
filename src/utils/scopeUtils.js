@@ -11,6 +11,79 @@
  *    - As Direcções Distritais NÃO possuem Recursos Humanos próprios; todos os actos funcionais distritais são geridos e visíveis pela Direcção Provincial correspondente.
  */
 
+export const PROVINCE_CODES = {
+  'nampula': 'NPL',
+  'gaza': 'GZ',
+  'inhambane': 'IBN',
+  'cidade de maputo': 'CM',
+  'maputo cidade': 'CM',
+  'maputo provincia': 'MP',
+  'maputo província': 'MP',
+  'maputo': 'MP',
+  'sofala': 'SFL',
+  'manica': 'MN',
+  'tete': 'TT',
+  'zambezia': 'ZBZ',
+  'zambézia': 'ZBZ',
+  'niassa': 'NS',
+  'cabo delgado': 'CD'
+};
+
+/**
+ * Formata o nome do perfil com a sigla oficial SERNIC da direcção provincial atribuída:
+ * Exemplo: Administrador-SNC/NPL (Nampula), Administrador-SNC/CM (Cidade de Maputo), Usuário-SNC/ZBZ (Zambézia)
+ */
+export function formatProvincialRoleName(roleName, directorateId, orgData) {
+  if (!roleName) return '';
+  
+  const isProvincialRole = (
+    roleName.includes('Administrador') || 
+    roleName.includes('Usuário') || 
+    roleName.includes('Usuario')
+  ) && !roleName.includes('Super') && !roleName.includes('Principal');
+
+  if (!isProvincialRole || !directorateId) return roleName;
+
+  const dir = (orgData?.directorates || []).find(d => String(d.id) === String(directorateId));
+  const provText = (dir?.province || dir?.name || '').toLowerCase();
+
+  let code = null;
+  if (provText.includes('cidade de maputo') || provText.includes('maputo cidade')) code = 'CM';
+  else if (provText.includes('maputo')) code = 'MP';
+  else if (provText.includes('nampula')) code = 'NPL';
+  else if (provText.includes('gaza')) code = 'GZ';
+  else if (provText.includes('inhambane')) code = 'IBN';
+  else if (provText.includes('sofala')) code = 'SFL';
+  else if (provText.includes('manica')) code = 'MN';
+  else if (provText.includes('tete')) code = 'TT';
+  else if (provText.includes('zamb')) code = 'ZBZ';
+  else if (provText.includes('niassa')) code = 'NS';
+  else if (provText.includes('cabo delgado') || provText.includes('pemba')) code = 'CD';
+
+  if (!code) return roleName;
+
+  const baseRole = roleName.includes('Usuário') || roleName.includes('Usuario') ? 'Usuário' : 'Administrador';
+  return `${baseRole}-SNC/${code}`;
+}
+
+/**
+ * Módulos Padrão Autorizados para Perfis Provinciais (4º Nível Administrador e 5º Nível Usuário)
+ * Conforme matriz oficial SERNIC:
+ * Autorizados: Dashboard, Funcionários, Processos Disciplinares, Efectividade (Faltas), Avaliação de Desempenho, Férias e Licenças, Saúde e Óbitos, Transferências e Mobilidade, Relatórios e Impressão, Configurações
+ */
+export const PROVINCIAL_DEFAULT_MODULES = [
+  'Dashboard',
+  'Funcionários',
+  'Processos Disciplinares',
+  'Efetividade (Faltas)',
+  'Avaliação de Desempenho',
+  'Férias e Licenças',
+  'Saúde e Óbitos',
+  'Transferências e Mobilidade',
+  'Relatórios e Impressão',
+  'Configurações'
+];
+
 export function isCentralUser(user) {
   if (!user) return true;
   

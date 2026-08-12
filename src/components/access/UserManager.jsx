@@ -3,7 +3,7 @@ import useAuthData from '../../hooks/useAuthData';
 import useAuditLog from '../../hooks/useAuditLog';
 import useOrgData from '../../hooks/useOrgData';
 import { useAuth } from '../../contexts/AuthContext';
-import { filterByProvincialScope, isCentralUser } from '../../utils/scopeUtils';
+import { filterByProvincialScope, isCentralUser, formatProvincialRoleName } from '../../utils/scopeUtils';
 import UserForm from './UserForm';
 import ConfirmModal from '../ConfirmModal';
 
@@ -183,7 +183,7 @@ export default function UserManager() {
                 <div style={{fontSize: '11px', color: 'var(--color-text-muted)'}}>{u.contact}</div>
               </td>
               <td>
-                <div style={{ fontWeight: 'bold' }}>{getRoleName(u.roleId)}</div>
+                <div style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>{formatProvincialRoleName(getRoleName(u.roleId), u.directorateId, orgData)}</div>
                 {u.delegatedRoleId && (
                   <div style={{
                     marginTop: '4px', fontSize: '11px', padding: '4px 8px', borderRadius: '6px',
@@ -192,7 +192,7 @@ export default function UserManager() {
                     border: `1px solid ${u.delegationStatus === 'Pendente' ? 'rgba(234, 179, 8, 0.3)' : u.delegationStatus === 'Rejeitado' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
                     display: 'inline-block'
                   }}>
-                    🔄 Secundário: <strong>{getRoleName(u.delegatedRoleId)}</strong>
+                    🔄 Secundário: <strong>{formatProvincialRoleName(getRoleName(u.delegatedRoleId), u.directorateId, orgData)}</strong>
                     <div style={{ fontSize: '10px', marginTop: '2px', fontWeight: 'bold' }}>
                       {u.delegationStatus === 'Pendente' && `⏳ Pendente de Confirmação Superior (${u.delegationRequestedBy || 'Solicitado por Admin'})`}
                       {u.delegationStatus === 'Aprovado' && `✅ Confirmado por Perfil Superior (${u.delegationApprovedBy || 'Central'})`}
