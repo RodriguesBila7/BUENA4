@@ -320,35 +320,58 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         )}
 
         {/* Delegação de Poderes / Perfil Secundário */}
-        <h4 style={styles.sectionTitle}>Delegação de Poderes e Perfil Secundário (Substituição de Adjuntos / Apoio Administrativo)</h4>
-        <p style={{ gridColumn: '1 / -1', fontSize: '12px', color: 'var(--color-text-muted)', margin: '-5px 0 10px 0' }}>
-          ℹ️ Permite atribuir um Perfil Secundário a adjuntos ou técnicos de apoio administrativo para assumirem temporariamente as competências do perfil superior (ex: Administrador Provincial) durante licenças, ausências ou impedimentos operacionais, sem alterar o seu escopo local.
-        </p>
-        <div style={styles.formGroup}>
-          <label style={styles.label}>Perfil Secundário / Delegado (Substituição)</label>
-          <select style={styles.select} name="delegatedRoleId" value={formData.delegatedRoleId} onChange={handleChange}>
-            <option value="">Nenhum Perfil Secundário</option>
-            {availableDelegatedRoles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
-        </div>
-        <div style={styles.formGroup}></div> {/* Espaçador */}
-        {formData.delegatedRoleId && (
+        <h4 style={styles.sectionTitle}>Delegação de Poderes e Perfil Secundário (Substituição Temporária de Adjuntos)</h4>
+        
+        {isPrimaryRoleAdmin ? (
+          <div style={{
+            gridColumn: '1 / -1',
+            backgroundColor: 'rgba(239, 68, 68, 0.05)',
+            border: '1px dashed rgba(239, 68, 68, 0.4)',
+            borderRadius: '8px',
+            padding: '14px',
+            fontSize: '12px',
+            color: '#991b1b',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span style={{ fontSize: '20px' }}>⛔</span>
+            <div>
+              <strong>Regra Institucional Imutável SERNIC:</strong> O perfil de <strong>Administrador Provincial</strong> é o titular efetivo da direcção e <u>não pode receber perfil delegado</u>. Apenas contas com perfil principal de <strong>Usuário (5º Nível - Adjunto)</strong> podem ter perfil delegado (substituição temporária) atribuído pelo Administrador e sujeito à conformidade dos perfis superiores.
+            </div>
+          </div>
+        ) : (
           <>
+            <p style={{ gridColumn: '1 / -1', fontSize: '12px', color: 'var(--color-text-muted)', margin: '-5px 0 10px 0' }}>
+              ℹ️ Permite ao Administrador Provincial atribuir um Perfil Secundário a um Usuário (5º Nível - Adjunto) para assumir temporariamente as competências de Administrador durante licenças ou ausências operacionais, sujeito à conformidade dos Perfis Superiores.
+            </p>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Data de Início da Delegação <span style={{ color: '#e53e3e' }}>*</span></label>
-              <input required type="date" style={styles.input} name="delegationStartDate" value={formData.delegationStartDate} onChange={(e) => {
-                handleChange(e);
-                if (e.target.value && !formData.delegationEndDate) {
-                   const start = new Date(e.target.value);
-                   start.setDate(start.getDate() + 35);
-                   setFormData(prev => ({ ...prev, delegationStartDate: e.target.value, delegationEndDate: start.toISOString().split('T')[0] }));
-                }
-              }} />
+              <label style={styles.label}>Perfil Secundário / Delegado (Substituição)</label>
+              <select style={styles.select} name="delegatedRoleId" value={formData.delegatedRoleId} onChange={handleChange}>
+                <option value="">Nenhum Perfil Secundário</option>
+                {availableDelegatedRoles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
             </div>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Data de Fim da Delegação <span style={{ color: '#e53e3e' }}>*</span></label>
-              <input required type="date" style={styles.input} name="delegationEndDate" value={formData.delegationEndDate} onChange={handleChange} />
-            </div>
+            <div style={styles.formGroup}></div> {/* Espaçador */}
+            {formData.delegatedRoleId && (
+              <>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Data de Início da Delegação <span style={{ color: '#e53e3e' }}>*</span></label>
+                  <input required type="date" style={styles.input} name="delegationStartDate" value={formData.delegationStartDate} onChange={(e) => {
+                    handleChange(e);
+                    if (e.target.value && !formData.delegationEndDate) {
+                       const start = new Date(e.target.value);
+                       start.setDate(start.getDate() + 35);
+                       setFormData(prev => ({ ...prev, delegationStartDate: e.target.value, delegationEndDate: start.toISOString().split('T')[0] }));
+                    }
+                  }} />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Data de Fim da Delegação <span style={{ color: '#e53e3e' }}>*</span></label>
+                  <input required type="date" style={styles.input} name="delegationEndDate" value={formData.delegationEndDate} onChange={handleChange} />
+                </div>
+              </>
+            )}
           </>
         )}
 

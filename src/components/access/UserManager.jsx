@@ -194,9 +194,9 @@ export default function UserManager() {
                   }}>
                     🔄 Secundário: <strong>{formatProvincialRoleName(getRoleName(u.delegatedRoleId), u.directorateId, orgData)}</strong>
                     <div style={{ fontSize: '10px', marginTop: '2px', fontWeight: 'bold' }}>
-                      {u.delegationStatus === 'Pendente' && `⏳ Pendente de Confirmação Superior (${u.delegationRequestedBy || 'Solicitado por Admin'})`}
-                      {u.delegationStatus === 'Aprovado' && `✅ Confirmado por Perfil Superior (${u.delegationApprovedBy || 'Central'})`}
-                      {u.delegationStatus === 'Rejeitado' && `❌ Delegação Rejeitada`}
+                      {u.delegationStatus === 'Pendente' && `⏳ Aguarda Conformidade dos Perfis Superiores (${u.delegationRequestedBy || 'Solicitado pelo Admin Provincial'})`}
+                      {u.delegationStatus === 'Aprovado' && `✅ Conformidade Concedida por Perfil Superior (${u.delegationApprovedBy || 'Central'})`}
+                      {u.delegationStatus === 'Rejeitado' && `❌ Conformidade Recusada`}
                     </div>
                     {u.delegationStartDate && u.delegationEndDate && (
                       <div style={{ fontSize: '10px', marginTop: '2px' }}>
@@ -216,8 +216,8 @@ export default function UserManager() {
                   <button style={styles.btnAction} onClick={() => { setEditingUser(u); setView('edit'); }}>Editar</button>
                   {isCentralUser(currentUser) && u.delegatedRoleId && u.delegationStatus === 'Pendente' && (
                     <>
-                      <button style={{...styles.btnAction, backgroundColor: '#047857', color: '#fff', fontWeight: 'bold'}} onClick={() => handleConfirmDelegation(u.id, u.name)}>✅ Confirmar Delegação</button>
-                      <button style={{...styles.btnAction, color: '#b91c1c', borderColor: '#b91c1c'}} onClick={() => handleRejectDelegation(u.id, u.name)}>❌ Rejeitar</button>
+                      <button style={{...styles.btnAction, backgroundColor: '#047857', color: '#fff', fontWeight: 'bold'}} onClick={() => handleConfirmDelegation(u.id, u.name)}>✍️ Dar Conformidade</button>
+                      <button style={{...styles.btnAction, color: '#b91c1c', borderColor: '#b91c1c'}} onClick={() => handleRejectDelegation(u.id, u.name)}>❌ Recusar</button>
                     </>
                   )}
                   {u.status === 'Ativo' && <button style={styles.btnAction} onClick={() => updateUser(u.id, {status: 'Bloqueada'})}>Bloquear</button>}
