@@ -20,6 +20,10 @@ export const fetchEmployees = async (employees, orgData, filters = {}, paginatio
   if (filters.departmentId) result = result.filter(e => e.departmentId === filters.departmentId);
   if (filters.divisionId) result = result.filter(e => e.divisionId === filters.divisionId);
   if (filters.sectionId) result = result.filter(e => e.sectionId === filters.sectionId);
+  if (filters.districtDirectorateId || filters.districtId) {
+    const targetDistId = String(filters.districtDirectorateId || filters.districtId);
+    result = result.filter(e => String(e.districtDirectorateId || e.districtId || e.district) === targetDistId);
+  }
 
   // Filtros Profissionais
   if (filters.careerId) result = result.filter(e => e.careerId === filters.careerId);

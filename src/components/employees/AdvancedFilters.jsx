@@ -1,18 +1,15 @@
 import React from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AdvancedFilters({ filters, setFilters, orgData }) {
-  const { data } = orgData;
+  const { user } = useAuth();
+  const { data } = orgData || { data: {} };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => {
       const updates = { [name]: value };
-      // Resets on hierarchy change
-      if (name === 'directorateId') {
-        updates.departmentId = '';
-        updates.divisionId = '';
-        updates.sectionId = '';
-      } else if (name === 'departmentId') {
+      if (name === 'departmentId') {
         updates.divisionId = '';
         updates.sectionId = '';
       } else if (name === 'divisionId') {
@@ -27,21 +24,45 @@ export default function AdvancedFilters({ filters, setFilters, orgData }) {
   const handleReset = () => {
     setFilters({
       searchTerm: '',
-      directorateId: '', departmentId: '', divisionId: '', sectionId: '',
+      directorateId: '', departmentId: '', divisionId: '', sectionId: '', districtDirectorateId: '',
       careerId: '', categoryId: '', role: '', class: '', step: '',
       academicLevel: '', employmentStatus: '',
       gender: '', ageRange: '', isActive: ''
     });
   };
 
-  const activeDepartments = data.departments.filter(d => d.directorateId === filters.directorateId);
-  const activeDivisions = data.divisions.filter(d => d.departmentId === filters.departmentId);
-  const activeSections = data.sections.filter(s => {
-    if (filters.divisionId) return s.divisionId === filters.divisionId;
-    if (filters.departmentId) return s.departmentId === filters.departmentId;
+  // Escopo de Direcção provincial do utilizador ou selecionada
+  const effectiveDirectorateId = user?.directorateId || filters.directorateId;
+
+  // Departamentos
+  const activeDepartments = effectiveDirectorateId
+    ? (data?.departments || []).filter(d => String(d.directorateId) === String(effectiveDirectorateId))
+    : (data?.departments || []);
+
+  // Repartições
+  const activeDivisions = filters.departmentId
+    ? (data?.divisions || []).filter(d => String(d.departmentId) === String(filters.departmentId))
+    : (data?.divisions || []);
+
+  // Secções
+  const activeSections = (data?.sections || []).filter(s => {
+    if (filters.divisionId) return String(s.divisionId) === String(filters.divisionId);
+    if (filters.departmentId) return String(s.departmentId) === String(filters.departmentId);
     return false;
   });
-  const activeCategories = data.categories.filter(c => c.careerId === filters.careerId);
+
+  // Categorias (operativas e selecionáveis mesmo sem carreira previamente escolhida)
+  const activeCategories = filters.careerId
+    ? (data?.categories || []).filter(c => String(c.careerId) === String(filters.careerId))
+    : (data?.categories || []);
+
+  // Distritos (apenas os distritos pertencentes à Direcção Provincial do utilizador)
+  const activeDistricts = (data?.districtDirectorates || []).filter(dist => {
+    if (effectiveDirectorateId) {
+      return String(dist.provincialDirectorateId || dist.directorateId || '') === String(effectiveDirectorateId);
+    }
+    return true;
+  });
 
   return (
     <div style={styles.container}>
@@ -51,7 +72,7 @@ export default function AdvancedFilters({ filters, setFilters, orgData }) {
       </div>
 
       <div style={styles.grid}>
-        {/* Pessoais / Demográficos */}
+        {/* Linha 1: Demográficos & Profissionais */}
         <div style={styles.group}>
           <label style={styles.label}>Género</label>
           <select name="gender" value={filters.gender || ''} onChange={handleChange} style={styles.input}>
@@ -82,23 +103,23 @@ export default function AdvancedFilters({ filters, setFilters, orgData }) {
           </select>
         </div>
 
-        {/* Profissionais */}
         <div style={styles.group}>
           <label style={styles.label}>Carreira</label>
           <select name="careerId" value={filters.careerId || ''} onChange={handleChange} style={styles.input}>
             <option value="">Todas</option>
-            {(data.careers || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {(data?.careers || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
 
         <div style={styles.group}>
           <label style={styles.label}>Categoria</label>
-          <select name="categoryId" value={filters.categoryId || ''} onChange={handleChange} style={styles.input} disabled={!filters.careerId}>
+          <select name="categoryId" value={filters.categoryId || ''} onChange={handleChange} style={styles.input}>
             <option value="">Todas</option>
             {activeCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
 
+        {/* Linha 2: Académico & Estrutura Organizacional */}
         <div style={styles.group}>
           <label style={styles.label}>Nível Académico</label>
           <select name="academicLevel" value={filters.academicLevel || ''} onChange={handleChange} style={styles.input}>
@@ -111,18 +132,9 @@ export default function AdvancedFilters({ filters, setFilters, orgData }) {
           </select>
         </div>
 
-        {/* Organizacionais */}
         <div style={styles.group}>
-          <label style={styles.label}>Direcção</label>
-          <select name="directorateId" value={filters.directorateId || ''} onChange={handleChange} style={styles.input}>
-            <option value="">Todas</option>
-            {data.directorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-        </div>
-
-        <div style={styles.group}>
-          <label style={styles.label}>Departamento / Distrital</label>
-          <select name="departmentId" value={filters.departmentId || ''} onChange={handleChange} style={styles.input} disabled={!filters.directorateId}>
+          <label style={styles.label}>Departamento</label>
+          <select name="departmentId" value={filters.departmentId || ''} onChange={handleChange} style={styles.input}>
             <option value="">Todos</option>
             {activeDepartments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
@@ -138,9 +150,17 @@ export default function AdvancedFilters({ filters, setFilters, orgData }) {
 
         <div style={styles.group}>
           <label style={styles.label}>Secção</label>
-          <select name="sectionId" value={filters.sectionId || ''} onChange={handleChange} style={styles.input} disabled={(!filters.divisionId && !filters.departmentId)}>
+          <select name="sectionId" value={filters.sectionId || ''} onChange={handleChange} style={styles.input} disabled={!filters.divisionId && !filters.departmentId}>
             <option value="">Todas</option>
             {activeSections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
+
+        <div style={styles.group}>
+          <label style={styles.label}>Distrito</label>
+          <select name="districtDirectorateId" value={filters.districtDirectorateId || filters.districtId || ''} onChange={handleChange} style={styles.input}>
+            <option value="">Todos os Distritos</option>
+            {activeDistricts.map(dist => <option key={dist.id} value={dist.id}>{dist.name}</option>)}
           </select>
         </div>
 
