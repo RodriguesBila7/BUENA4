@@ -39,22 +39,22 @@ const getLevelInfo = (roleName) => {
 };
 
 const styles = {
-  container: { padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' },
-  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' },
-  statCard: { backgroundColor: 'var(--color-bg-card)', padding: '16px', borderRadius: '10px', border: '1px solid var(--color-border)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
-  statTitle: { fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '4px' },
-  statValue: { fontSize: '24px', fontWeight: 'bold', color: 'var(--color-primary)' },
-  controlsRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px', flexWrap: 'wrap' },
-  searchBar: { padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13px', width: '280px' },
-  btnPrimary: { backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', padding: '10px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' },
-  btnAction: { backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', padding: '4px 8px', borderRadius: '5px', cursor: 'pointer', color: 'var(--color-text-base)', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '3px' },
+  container: { padding: '24px', backgroundColor: 'var(--color-bg-base)', borderRadius: '10px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' },
+  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' },
+  statCard: { backgroundColor: 'var(--color-bg-card)', padding: '18px 20px', borderRadius: '10px', border: '1px solid var(--color-border)', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' },
+  statTitle: { fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.5px' },
+  statValue: { fontSize: '26px', fontWeight: 'bold', color: 'var(--color-primary)' },
+  controlsRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' },
+  searchBar: { padding: '9px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13px', width: '300px' },
+  btnPrimary: { backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' },
+  btnAction: { backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: 'var(--color-text-base)', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '5px' },
   badge: (info) => ({
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '4px',
-    padding: '4px 8px',
-    borderRadius: '12px',
-    fontSize: '11px',
+    gap: '6px',
+    padding: '5px 12px',
+    borderRadius: '14px',
+    fontSize: '12px',
     fontWeight: 'bold',
     whiteSpace: 'nowrap',
     color: info.color,
@@ -284,15 +284,29 @@ export default function RoleManager() {
                 </thead>
                 <tbody>
                   {Object.keys(previewRole.permissions || {}).map(mod => {
-                    const actions = previewRole.permissions[mod];
-                    if (!actions || actions.length === 0) return null;
+                    const rawActions = previewRole.permissions[mod];
+                    if (!rawActions) return null;
+
+                    let actionsList = [];
+                    if (Array.isArray(rawActions)) {
+                      actionsList = rawActions;
+                    } else if (typeof rawActions === 'boolean' && rawActions) {
+                      actionsList = ['Acesso Total / Ativo'];
+                    } else if (typeof rawActions === 'string') {
+                      actionsList = [rawActions];
+                    } else if (typeof rawActions === 'object') {
+                      actionsList = Object.keys(rawActions).filter(k => rawActions[k]);
+                    }
+
+                    if (actionsList.length === 0) return null;
+
                     return (
                       <tr key={mod}>
-                        <td><strong>{mod}</strong></td>
-                        <td>
+                        <td style={{ padding: '8px 12px' }}><strong>{mod}</strong></td>
+                        <td style={{ padding: '8px 12px' }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                            {actions.map(act => (
-                              <span key={act} style={{ padding: '2px 6px', borderRadius: '4px', backgroundColor: 'rgba(27,54,93,0.1)', color: 'var(--color-primary)', fontSize: '11px', fontWeight: 'bold' }}>
+                            {actionsList.map((act, idx) => (
+                              <span key={idx} style={{ padding: '3px 8px', borderRadius: '4px', backgroundColor: 'rgba(27,54,93,0.1)', color: 'var(--color-primary)', fontSize: '11px', fontWeight: 'bold' }}>
                                 {act}
                               </span>
                             ))}
