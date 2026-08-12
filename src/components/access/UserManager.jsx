@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import useAuthData from '../../hooks/useAuthData';
 import useAuditLog from '../../hooks/useAuditLog';
 import useOrgData from '../../hooks/useOrgData';
 import { useAuth } from '../../contexts/AuthContext';
-import { filterByProvincialScope } from '../../utils/scopeUtils';
+import { filterByProvincialScope, isCentralUser } from '../../utils/scopeUtils';
 import UserForm from './UserForm';
 import ConfirmModal from '../ConfirmModal';
 
@@ -19,7 +19,7 @@ const styles = {
 };
 
 export default function UserManager() {
-  const { users, roles, addUser, updateUser, deleteUser } = useAuthData();
+  const { users = [], roles = [], addUser, updateUser, deleteUser } = useAuthData();
   const { logAction } = useAuditLog();
   const { data: orgData } = useOrgData();
   const { user: currentUser } = useAuth();
@@ -28,20 +28,37 @@ export default function UserManager() {
   const [editingUser, setEditingUser] = useState(null);
   
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'alert', action: null });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterRole, setFilterRole] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+
+  // 1. Filtrar utilizadores com base no escopo provincial/central
+  const scopedUsers = useMemo(() => {
+    return filterByProvincialScope(users || [], currentUser, orgData);
+  }, [users, currentUser, orgData]);
+
+  // 2. Aplicar pesquisa e filtros de tabela
+  const filteredUsers = useMemo(() => {
+    const list = Array.isArray(scopedUsers) ? scopedUsers : [];
+    return list.filter(u => {
+      if (!u) return false;
+      if (u.status === 'Inativo' && filterStatus !== 'Inativo') return false;
+      const q = (searchTerm || '').toLowerCase();
+      const mSearch = (u.nuit && u.nuit.toLowerCase().includes(q)) || (u.name && u.name.toLowerCase().includes(q)) || (u.username && u.username.toLowerCase().includes(q));
+      const mRole = filterRole ? u.roleId === filterRole : true;
+      const mStatus = filterStatus ? u.status === filterStatus : true;
+      return mSearch && mRole && mStatus;
+    });
+  }, [scopedUsers, filterStatus, searchTerm, filterRole]);
 
   const showModal = (title, message, type, action = null) => {
     setModalConfig({ isOpen: true, title, message, type, action });
   };
 
   const closeModal = () => setModalConfig({ ...modalConfig, isOpen: false });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
-
-  const scopedUsers = filterByProvincialScope(users, currentUser, orgData);
 
   const getRoleName = (roleId) => {
-    const role = roles.find(r => r.id === roleId);
+    const role = (roles || []).find(r => r.id === roleId);
     return role ? role.name : roleId;
   };
 
@@ -78,10 +95,6 @@ export default function UserManager() {
     logAction(currentUser, 'Utilizadores', 'Exportar', 'Exportou lista de utilizadores');
   };
 
-  if (view === 'create' || view === 'edit') {
-    return <UserForm initialData={view === 'edit' ? editingUser : null} onSave={handleSave} onCancel={() => setView('list')} />;
-  }
-
   const handleConfirmDelegation = async (userId, userName) => {
     try {
       const res = await fetch(`/api/auth/users/${userId}/confirm-delegation`, {
@@ -113,14 +126,9 @@ export default function UserManager() {
     }
   };
 
-  const filteredUsers = scopedUsers.filter(u => {
-    if(u.status === 'Inativo' && filterStatus !== 'Inativo') return false; // Hide inactive by default unless specifically filtered
-    const q = searchTerm.toLowerCase();
-    const mSearch = (u.nuit && u.nuit.toLowerCase().includes(q)) || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
-    const mRole = filterRole ? u.roleId === filterRole : true;
-    const mStatus = filterStatus ? u.status === filterStatus : true;
-    return mSearch && mRole && mStatus;
-  });
+  if (view === 'create' || view === 'edit') {
+    return <UserForm initialData={view === 'edit' ? editingUser : null} onSave={handleSave} onCancel={() => setView('list')} />;
+  }
 
   return (
     <div style={styles.container}>
@@ -136,7 +144,7 @@ export default function UserManager() {
         <input style={{...styles.input, flex: 1}} placeholder="Pesquisar por NUIT, Nome ou Username..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
         <select style={styles.input} value={filterRole} onChange={e => setFilterRole(e.target.value)}>
           <option value="">Todos os Perfis</option>
-          {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+          {(roles || []).map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
         <select style={styles.input} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
           <option value="">Todos os Estados (Exceto Inativo)</option>
