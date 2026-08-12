@@ -8,8 +8,13 @@ import useDisciplinaryData from '../../../hooks/useDisciplinaryData';
 import useTransferData from '../../../hooks/useTransferData';
 import useVacationData from '../../../hooks/useVacationData';
 import ConfirmModal from '../../ConfirmModal';
+import { useAuth } from '../../../contexts/AuthContext';
+import { isSecondaryUser } from '../../../utils/scopeUtils';
 
 export default function AdminActWizard({ emp, orgData, onClose, onActRegistered, allowedActTypes }) {
+  const { user: currentUser } = useAuth();
+  const userIsSecondary = isSecondaryUser(currentUser);
+
   const { registerAct } = useAdminActsData();
   const { actTypes } = useActTypesData();
   const { updateEmployee } = useEmployeeData();
@@ -182,7 +187,8 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
       despacho: formData.despacho,
       br: formData.br,
       details: formData.details,
-      userResponsible: 'Admin (Simulado)' // Ideally from AuthContext
+      isSecondary: userIsSecondary,
+      userResponsible: currentUser?.name || currentUser?.username || 'Utilizador'
     };
 
     const res = await registerAct(payload);
@@ -205,6 +211,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
               subType: 'Compulsiva (Doença/Inaptidão)',
               ataMedica: formData.details.ata || 'Desconhecido'
             },
+            isSecondary: userIsSecondary,
             userResponsible: 'Sistema (Automático)'
           });
         }
@@ -218,7 +225,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
             year: new Date(formData.actDate).getFullYear().toString(),
             type: type, startDate: formData.actDate, endDate: formData.actDate, daysCount: type === 'Férias' ? 30 : 0,
             notes: `Despacho: ${formData.despacho || 'N/A'}. Criado via Registo de Acto.`,
-            createdBy: 'Sistema'
+            createdBy: currentUser?.username || 'Sistema'
           });
         }
 
@@ -235,32 +242,32 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
         if (['Advertência', 'Repreensão', 'Multa', 'Suspensão', 'Demissão', 'Expulsão'].includes(type)) {
           await addProcess({
             employeeId: emp.id, employeeNip: emp.nip, employeeName: emp.name,
-            type: type, status: 'Concluído',
+            type: type, status: userIsSecondary ? 'Pendente' : 'Concluído',
             date: formData.actDate,
             description: `Sanção aplicada via Despacho: ${formData.despacho || 'N/A'}.`
           });
         }
 
-        if (isPendingAct) {
-        setConfirmModal({
-          isOpen: true,
-          title: 'Sucesso',
-          message: 'O acto foi registado como Pendente e aguarda aprovação de um Super Administrador.',
-          hideCancel: true,
-          onConfirm: () => {
-            setConfirmModal(prev => ({ ...prev, isOpen: false }));
-            if (onActRegistered) onActRegistered();
-            onClose();
-          }
-        });
+        if (userIsSecondary || isPendingAct) {
+          setConfirmModal({
+            isOpen: true,
+            title: '✍️ Acto Submetido para Conformidade',
+            message: 'O acto administrativo foi registado com sucesso em estado PENDENTE. Ficará a aguardar aprovação / conformidade formal do Administrador titular ou central.',
+            hideCancel: true,
+            onConfirm: () => {
+              setConfirmModal(prev => ({ ...prev, isOpen: false }));
+              if (onActRegistered) onActRegistered();
+              onClose();
+            }
+          });
+        } else {
+          if (onActRegistered) onActRegistered();
+          onClose();
+        }
       } else {
-        if (onActRegistered) onActRegistered();
-        onClose();
+        setError(res.error || 'Erro ao registar acto.');
       }
-    } else {
-      setError(res.error || 'Erro ao registar acto.');
-    }
-  };
+    };
 
   const renderDetailsFields = () => {
     const { actType } = formData;

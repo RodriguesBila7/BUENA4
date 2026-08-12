@@ -1,9 +1,31 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 
 async function api(method, path, body) {
+  let isSecondary = false;
+  let userRole = '';
+  try {
+    const savedUser = localStorage.getItem('sernic_logged_user');
+    if (savedUser) {
+      const parsed = JSON.parse(savedUser);
+      userRole = parsed?.roleId || parsed?.role || '';
+      if (parsed?.delegatedRoleId) {
+        if (parsed.isSecondaryActive || parsed.activeRole === parsed.delegatedRoleId || parsed.roleId === parsed.delegatedRoleId) {
+          isSecondary = true;
+        }
+      }
+      if (userRole === 'usuario_normal' || userRole === 'usuario') {
+        isSecondary = true;
+      }
+    }
+  } catch (e) {}
+
   const res = await fetch(`/api/admin-acts${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Is-Secondary': isSecondary ? 'true' : 'false',
+      'X-User-Role': userRole
+    },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {

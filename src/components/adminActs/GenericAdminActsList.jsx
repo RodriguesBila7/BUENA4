@@ -12,7 +12,7 @@ import { exportToExcel } from '../../utils/excelExport';
 export default function GenericAdminActsList({ title, actTypes, emptyMessage }) {
   const { user } = useAuth();
   const isSuperAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(user?.roleId || user?.role) || user?.username === 'admin';
-  const { acts, deleteAct, fetchData } = useAdminActsData();
+  const { acts, deleteAct, confirmAct, fetchData } = useAdminActsData();
   const { employees, updateEmployee } = useEmployeeData();
   const { data: orgData } = useOrgData();
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,6 +31,39 @@ export default function GenericAdminActsList({ title, actTypes, emptyMessage }) 
   const handleCloseWizard = () => {
     setSelectedEmp(null);
     fetchData();
+  };
+
+  const handleGiveConformity = (act, emp) => {
+    setConfirmModal({
+      isOpen: true,
+      title: '✍️ Dar Conformidade ao Acto Administrativo',
+      message: `Tem a certeza que pretende DAR CONFORMIDADE e aprovar formalmente o acto de "${act.actType}" para o funcionário ${emp?.name || 'selecionado'}? O estado passará a Confirmado e o registo será efetivado no histórico.`,
+      isDestructive: false,
+      confirmText: '✍️ Dar Conformidade',
+      onConfirm: async () => {
+        const res = await confirmAct(act.id);
+        if (res.success) {
+          setConfirmModal({
+            isOpen: true,
+            title: 'Sucesso',
+            message: 'Conformidade atribuída com sucesso! O acto foi efetivado.',
+            onConfirm: () => { setConfirmModal({ isOpen: false }); fetchData(); },
+            hideCancel: true,
+            confirmText: 'OK'
+          });
+        } else {
+          setConfirmModal({
+            isOpen: true,
+            title: 'Erro',
+            message: 'Erro ao atribuir conformidade: ' + (res.error || 'Falha na operação.'),
+            onConfirm: () => setConfirmModal({ isOpen: false }),
+            hideCancel: true,
+            confirmText: 'OK',
+            isDestructive: true
+          });
+        }
+      }
+    });
   };
 
   // Filter acts by type and search term
@@ -118,14 +151,16 @@ export default function GenericAdminActsList({ title, actTypes, emptyMessage }) 
                 <th>Funcionário</th>
                 <th>Tipo de Acto</th>
                 <th>Nº Despacho</th>
-                <th>Boletim da República</th>
-                {isSuperAdmin && <th>Ações</th>}
+                <th>Boletim (BR)</th>
+                <th>Estado</th>
+                <th style={{ textAlign: 'right' }}>Ações</th>
               </tr>
             </thead>
             <tbody>
               {filteredActs.length > 0 ? (
                 filteredActs.map(act => {
                   const emp = employees.find(e => e.id === act.employeeId);
+                  const isPending = act.status === 'Pendente' || act.details?.status === 'Pendente';
                   return (
                     <tr key={act.id} style={styles.tr}>
                       <td>{new Date(act.actDate).toLocaleDateString('pt-PT')}</td>
@@ -138,9 +173,38 @@ export default function GenericAdminActsList({ title, actTypes, emptyMessage }) 
                       </td>
                       <td>{act.despacho || '-'}</td>
                       <td>{act.br || '-'}</td>
-                      {isSuperAdmin && (
-                        <td style={{...styles.td, textAlign: 'right'}}>
-                          {['Expulsão', 'Demissão'].includes(act.actType) && ['Expulso', 'Demitido'].includes(emp?.status) && (
+                      <td>
+                        {isPending ? (
+                          <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                            🟡 Pendente
+                          </span>
+                        ) : (
+                          <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                            ✅ Confirmado
+                          </span>
+                        )}
+                      </td>
+                      <td style={{...styles.td, textAlign: 'right'}}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                          {isPending && isSuperAdmin && (
+                            <button
+                              onClick={() => handleGiveConformity(act, emp)}
+                              style={{
+                                padding: '5px 12px',
+                                backgroundColor: '#059669',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                cursor: 'pointer'
+                              }}
+                              title="Aprovar e Dar Conformidade ao Acto"
+                            >
+                              ✍️ Dar Conformidade
+                            </button>
+                          )}
+                          {['Expulsão', 'Demissão'].includes(act.actType) && ['Expulso', 'Demitido'].includes(emp?.status) && isSuperAdmin && (
                             <button 
                               onClick={() => {
                                 setConfirmModal({
@@ -180,14 +244,14 @@ export default function GenericAdminActsList({ title, actTypes, emptyMessage }) 
                               Reativar
                             </button>
                           )}
-                        </td>
-                      )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan="6" style={styles.emptyState}>
+                  <td colSpan="7" style={styles.emptyState}>
                     {searchTerm ? 'Nenhum registo encontrado para a pesquisa.' : emptyMessage}
                   </td>
                 </tr>

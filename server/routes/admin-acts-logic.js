@@ -81,7 +81,16 @@ router.post('/register', (req, res) => {
     const updateValues = [];
 
     // LÓGICA DE NEGÓCIO POR TIPO DE ACTO
-    let isPending = false;
+    const isSecondaryRequest = (
+      req.headers['x-is-secondary'] === 'true' || 
+      req.headers['x-secondary'] === 'true' || 
+      req.body.isSecondary === true ||
+      req.body.isSecondaryUser === true ||
+      req.headers['x-user-role'] === 'usuario_normal' ||
+      req.headers['x-user-role'] === 'usuario'
+    );
+
+    let isPending = isSecondaryRequest;
 
     if (actType === 'Promoção') {
       if (!details.newCategoryId) return res.status(400).json({ error: 'Categoria destino não informada.' });
@@ -95,14 +104,13 @@ router.post('/register', (req, res) => {
       newState.categoryId = newCat.id;
       updateFields.push('category_id = ?');
       updateValues.push(newCat.id);
-      isPending = true; // Promoções ficam pendentes de confirmação
+      isPending = true; // Promoções ficam sempre pendentes de confirmação
       
     } else if (actType === 'Progressão') {
       if (!details.newEscalao) return res.status(400).json({ error: 'Novo escalão não informado.' });
       newState.step = details.newEscalao;
       if (details.newClasse) newState.class = details.newClasse;
-      // In SQLite, JSON functions are used or we can update step in extra_data below
-      isPending = true; // Progressões ficam pendentes de confirmação
+      isPending = true; // Progressões ficam sempre pendentes de confirmação
 
     } else if (actType === 'Mudança de Carreira' || actType === 'Promoção por Mudança de Carreira') {
       if (!details.newCareerId || !details.newCategoryId) {
