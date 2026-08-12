@@ -12,6 +12,7 @@
 
 import { Router } from 'express';
 import { getDb } from '../db.js';
+import { requireSystemSettingsPermission } from '../middleware/auth.js';
 
 /**
  * Cria um router CRUD simples para uma tabela que guarda registos como JSON.
@@ -102,7 +103,7 @@ settingsRouter.get('/', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-settingsRouter.put('/', (req, res) => {
+settingsRouter.put('/', requireSystemSettingsPermission, (req, res) => {
   const settings = req.body;
   const db = getDb();
   const upsert = db.transaction((obj) => {
@@ -114,7 +115,7 @@ settingsRouter.put('/', (req, res) => {
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-settingsRouter.post('/migrate', (req, res) => {
+settingsRouter.post('/migrate', requireSystemSettingsPermission, (req, res) => {
   const settings = req.body;
   const db = getDb();
   try {
@@ -163,7 +164,7 @@ securityRouter.get('/', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-securityRouter.put('/', (req, res) => {
+securityRouter.put('/', requireSystemSettingsPermission, (req, res) => {
   try {
     const db = getDb();
     db.prepare("INSERT INTO security_settings (id, data) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET data = excluded.data").run(JSON.stringify(req.body));

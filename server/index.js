@@ -28,9 +28,12 @@ getDb();
 const app = express();
 const PORT = 3001;
 
+import { authenticateUser } from './middleware/auth.js';
+
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json({ limit: '50mb' }));  // Permite fotos e documentos grandes
+app.use('/api', authenticateUser);
 
 // ─── Rotas API ────────────────────────────────────────────────────────────────
 app.use('/api/org',           orgRouter);

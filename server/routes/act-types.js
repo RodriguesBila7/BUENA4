@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getDb } from '../db.js';
+import { requireSystemSettingsPermission } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.get('/', (req, res) => {
 });
 
 // POST new act type
-router.post('/', (req, res) => {
+router.post('/', requireSystemSettingsPermission, (req, res) => {
   try {
     const db = getDb();
     const { group_name, act_name, is_active } = req.body;
@@ -31,7 +32,7 @@ router.post('/', (req, res) => {
 });
 
 // PUT update act type
-router.put('/:id', (req, res) => {
+router.put('/:id', requireSystemSettingsPermission, (req, res) => {
   try {
     const db = getDb();
     const { group_name, act_name, is_active } = req.body;
@@ -46,7 +47,7 @@ router.put('/:id', (req, res) => {
 });
 
 // DELETE act type
-router.delete('/:id', (req, res) => {
+router.delete('/:id', requireSystemSettingsPermission, (req, res) => {
   try {
     const db = getDb();
     db.prepare('DELETE FROM act_types WHERE id = ?').run(req.params.id);
