@@ -121,14 +121,7 @@ export default function RoleManager() {
     }
   };
 
-  const handleDuplicate = (r) => {
-    setEditingRole({
-      name: `${r.name} (Cópia)`,
-      description: `Cópia baseada no perfil ${r.name}`,
-      permissions: { ...r.permissions }
-    });
-    setView('create');
-  };
+
 
   if (view === 'create' || view === 'edit') {
     return <RolePermissionsEditor initialData={view === 'edit' ? editingRole : (editingRole || null)} onSave={handleSave} onCancel={() => { setEditingRole(null); setView('list'); }} />;
@@ -225,15 +218,12 @@ export default function RoleManager() {
                     </span>
                   </td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
                       <button style={styles.btnAction} onClick={() => setPreviewRole(r)} title="Visualizar Matriz de Permissões">
                         👁️ Matriz
                       </button>
                       <button style={styles.btnAction} onClick={() => { setEditingRole(r); setView('edit'); }} title="Editar Permissões">
                         ✏️ Editar
-                      </button>
-                      <button style={styles.btnAction} onClick={() => handleDuplicate(r)} title="Duplicar Perfil">
-                        📋 Duplicar
                       </button>
                       {r.id !== 'super_admin' && r.id !== 'super_admin_1' && (
                         <button
