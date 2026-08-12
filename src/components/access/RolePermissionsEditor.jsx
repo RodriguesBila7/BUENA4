@@ -1,10 +1,26 @@
 import React, { useState, useEffect } from 'react';
 
 const MODULES = [
-  'Dashboard', 'Funcionarios', 'Estrutura Organizacional', 'Processo Disciplinar',
-  'Formacao', 'Avaliacao de Desempenho', 'Ferias', 'Licencas', 'Transferencias',
-  'Promocoes', 'Carreiras', 'Categorias', 'Relatorios', 'Configuracoes',
-  'Utilizadores', 'Auditoria', 'Acessos'
+  'Dashboard',
+  'Funcionários',
+  'Estrutura Organizacional',
+  'Processos Disciplinares',
+  'Efetividade (Faltas)',
+  'Avaliação de Desempenho',
+  'Promoção e Progressão',
+  'Férias e Licenças',
+  'Mudança de Carreira',
+  'Provimento e Cessação',
+  'Reserva e Reforma',
+  'Saúde e Óbitos',
+  'Transferências e Mobilidade',
+  'Carreiras',
+  'Categorias Funcionais',
+  'Relatórios e Impressão',
+  'Configurações',
+  'Utilizadores',
+  'Auditoria',
+  'Acessos e Perfis'
 ];
 
 const ACTIONS = ['Visualizar', 'Criar', 'Editar', 'Eliminar', 'Validar', 'Exportar', 'Importar', 'Imprimir', 'Administrar'];
@@ -29,7 +45,12 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
 
   useEffect(() => {
     if (initialData) {
-      setRole(initialData);
+      const existingPerms = initialData.permissions || {};
+      const mergedPerms = { ...existingPerms };
+      MODULES.forEach(m => {
+        if (!mergedPerms[m]) mergedPerms[m] = [];
+      });
+      setRole({ ...initialData, permissions: mergedPerms });
     } else {
       const defaultPerms = {};
       MODULES.forEach(m => defaultPerms[m] = []);

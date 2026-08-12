@@ -11,10 +11,26 @@ export const AuthProvider = ({ children }) => {
         // Migration patch for missing permissions in the currently logged user
         if (parsed && parsed.roleDetails && parsed.roleDetails.permissions) {
           const ALL_MODULES = [
-            'Dashboard', 'Funcionarios', 'Estrutura Organizacional', 'Processo Disciplinar',
-            'Formacao', 'Avaliacao de Desempenho', 'Ferias', 'Licencas', 'Transferencias',
-            'Promocoes', 'Carreiras', 'Categorias', 'Relatorios', 'Configuracoes',
-            'Utilizadores', 'Auditoria', 'Efetividade'
+            'Dashboard',
+            'Funcionários',
+            'Estrutura Organizacional',
+            'Processos Disciplinares',
+            'Efetividade (Faltas)',
+            'Avaliação de Desempenho',
+            'Promoção e Progressão',
+            'Férias e Licenças',
+            'Mudança de Carreira',
+            'Provimento e Cessação',
+            'Reserva e Reforma',
+            'Saúde e Óbitos',
+            'Transferências e Mobilidade',
+            'Carreiras',
+            'Categorias Funcionais',
+            'Relatórios e Impressão',
+            'Configurações',
+            'Utilizadores',
+            'Auditoria',
+            'Acessos e Perfis'
           ];
           let updated = false;
           ALL_MODULES.forEach(mod => {
