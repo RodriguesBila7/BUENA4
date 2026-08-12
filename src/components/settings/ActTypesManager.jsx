@@ -61,6 +61,42 @@ export default function ActTypesManager() {
     }
   };
 
+  if (userIsSecondary) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '60px 20px',
+        backgroundColor: 'var(--color-bg-card)',
+        borderRadius: '12px',
+        border: '1px solid var(--color-border)',
+        textAlign: 'center',
+        margin: '24px'
+      }}>
+        <div style={{ fontSize: '56px', marginBottom: '16px' }}>🚫</div>
+        <h2 style={{ color: '#991b1b', margin: '0 0 8px 0', fontSize: '22px', fontWeight: 'bold' }}>
+          Acesso Não Autorizado (403 Forbidden)
+        </h2>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: '14px', maxWidth: '540px', lineHeight: '1.6', margin: '0 0 20px 0' }}>
+          O módulo de <strong>Gestão de Tipos de Actos Administrativos</strong> está restrito exclusivamente ao titular efetivo do perfil administrativo. Utilizadores a operar sob perfil secundário / delegado em substituição temporária não possuem autorização para aceder ou modificar este módulo.
+        </p>
+        <div style={{
+          padding: '10px 18px',
+          backgroundColor: 'rgba(239, 68, 68, 0.08)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          borderRadius: '8px',
+          color: '#b91c1c',
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }}>
+          🔒 Restrição Institucional SERNIC — Acesso Bloqueado para Contas Secundárias
+        </div>
+      </div>
+    );
+  }
+
   if (loading) return <div style={styles.loading}>A carregar Tipos de Acto...</div>;
 
   const groupedActs = actTypes.reduce((acc, act) => {
