@@ -74,15 +74,37 @@ router.put('/users/:id', (req, res) => {
   const u = req.body;
   try {
     const db = getDb();
-    const dup = db.prepare('SELECT id FROM users WHERE username = ? AND id != ?').get(u.username, req.params.id);
-    if (dup) return res.status(409).json({ error: 'duplicate_username' });
+    const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'user_not_found' });
+
+    const name = u.name !== undefined ? u.name : existing.name;
+    const username = u.username !== undefined ? u.username : existing.username;
+    const email = u.email !== undefined ? u.email : existing.email;
+    const contact = u.contact !== undefined ? u.contact : existing.contact;
+    const roleId = u.roleId !== undefined ? u.roleId : existing.role_id;
+    const delegatedRoleId = u.delegatedRoleId !== undefined ? u.delegatedRoleId : existing.delegated_role_id;
+    const delegationStartDate = u.delegationStartDate !== undefined ? u.delegationStartDate : existing.delegation_start_date;
+    const delegationEndDate = u.delegationEndDate !== undefined ? u.delegationEndDate : existing.delegation_end_date;
+    const status = u.status !== undefined ? u.status : existing.status;
+    const directorateId = u.directorateId !== undefined ? u.directorateId : existing.directorate_id;
+    const departmentId = u.departmentId !== undefined ? u.departmentId : existing.department_id;
+    const divisionId = u.divisionId !== undefined ? u.divisionId : existing.division_id;
+    const sectionId = u.sectionId !== undefined ? u.sectionId : existing.section_id;
+    const avatar = u.avatar !== undefined ? u.avatar : existing.avatar;
+
+    if (username && username !== existing.username) {
+      const dup = db.prepare('SELECT id FROM users WHERE username = ? AND id != ?').get(username, req.params.id);
+      if (dup) return res.status(409).json({ error: 'duplicate_username' });
+    }
+
     const fields = `name = ?, username = ?, email = ?, contact = ?, role_id = ?, delegated_role_id = ?, delegation_start_date = ?, delegation_end_date = ?, status = ?, directorate_id = ?, department_id = ?, division_id = ?, section_id = ?, avatar = ?, updated_at = datetime('now')`;
-    const params = [u.name, u.username, u.email||null, u.contact||null, u.roleId||null, u.delegatedRoleId||null, u.delegationStartDate||null, u.delegationEndDate||null, u.status||'Ativo', u.directorateId||null, u.departmentId||null, u.divisionId||null, u.sectionId||null, u.avatar||null, req.params.id];
-    if (u.password) {
+    const params = [name, username, email||null, contact||null, roleId||null, delegatedRoleId||null, delegationStartDate||null, delegationEndDate||null, status||'Ativo', directorateId||null, departmentId||null, divisionId||null, sectionId||null, avatar||null];
+
+    if (u.password && u.password.trim() !== '') {
       const hashedPassword = bcrypt.hashSync(u.password, 10);
-      db.prepare(`UPDATE users SET ${fields}, password = ? WHERE id = ?`).run(...params.slice(0,-1), hashedPassword, req.params.id);
+      db.prepare(`UPDATE users SET ${fields}, password = ? WHERE id = ?`).run(...params, hashedPassword, req.params.id);
     } else {
-      db.prepare(`UPDATE users SET ${fields} WHERE id = ?`).run(...params);
+      db.prepare(`UPDATE users SET ${fields} WHERE id = ?`).run(...params, req.params.id);
     }
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

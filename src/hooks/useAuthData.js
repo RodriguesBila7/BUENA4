@@ -79,8 +79,7 @@ export default function useAuthData() {
 
   const deleteUser = useCallback(async (id) => {
     try {
-      // Para manter a logica antiga de soft delete, actualizamos o estado em vez de apagar
-      await api('PUT', `/users/${id}`, { status: 'Inativo' });
+      await api('DELETE', `/users/${id}`);
       await fetchData();
       return { success: true };
     } catch (e) {
