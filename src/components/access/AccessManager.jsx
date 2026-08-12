@@ -9,11 +9,11 @@ import AccountRecovery from '../settings/accounts/AccountRecovery';
 import DraggableTabs from '../common/DraggableTabs';
 
 const styles = {
-  container: { padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', boxSizing: 'border-box' },
+  container: { padding: '16px 24px 24px 24px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', maxWidth: '100%', boxSizing: 'border-box' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   title: { margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--color-primary)' },
   subtitle: { margin: '4px 0 0 0', fontSize: '14px', color: 'var(--color-text-muted)' },
-  contentArea: { flex: 1, backgroundColor: 'var(--color-bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--color-border)', overflowY: 'auto' }
+  contentArea: { flex: 1, width: '100%', backgroundColor: 'var(--color-bg-card)', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)', boxSizing: 'border-box', overflowX: 'auto' }
 };
 
 export default function AccessManager({ currentView, onViewChange, t = (k) => k }) {

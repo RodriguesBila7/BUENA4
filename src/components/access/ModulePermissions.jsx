@@ -11,11 +11,11 @@ const MODULES = [
 ];
 
 const styles = {
-  container: { padding: '24px', backgroundColor: 'var(--color-bg-base)', borderRadius: '10px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '20px' },
+  container: { padding: '0', backgroundColor: 'transparent', width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   title: { margin: 0, fontSize: '20px', color: 'var(--color-primary)' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' },
-  card: { padding: '16px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px', width: '100%' },
+  card: { padding: '18px', borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' },
   cardTitle: { margin: '0 0 12px 0', fontSize: '15px', color: 'var(--color-primary)', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px', fontWeight: 'bold' },
   roleList: { listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' },
   roleItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: 'var(--color-text-base)' },

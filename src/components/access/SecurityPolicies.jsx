@@ -5,13 +5,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import ConfirmModal from '../ConfirmModal';
 
 const styles = {
-  container: { padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' },
-  section: { padding: '15px', border: '1px solid var(--color-border)', borderRadius: '6px', backgroundColor: 'rgba(0,0,0,0.02)' },
-  formGroup: { display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '10px' },
+  container: { padding: '0', backgroundColor: 'transparent', width: '100%' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px', width: '100%' },
+  section: { padding: '18px', border: '1px solid var(--color-border)', borderRadius: '10px', backgroundColor: 'var(--color-bg-base)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' },
+  formGroup: { display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' },
   label: { fontSize: '13px', fontWeight: 'bold', color: 'var(--color-text-main)' },
-  input: { padding: '8px', border: '1px solid var(--color-border)', borderRadius: '4px', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)' },
-  btnSave: { backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '20px' }
+  input: { padding: '9px 12px', border: '1px solid var(--color-border)', borderRadius: '6px', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-base)', fontSize: '13px' },
+  btnSave: { backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', padding: '10px 24px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginTop: '20px', fontSize: '14px' }
 };
 
 export default function SecurityPolicies() {

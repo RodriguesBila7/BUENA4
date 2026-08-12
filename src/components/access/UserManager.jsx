@@ -8,14 +8,14 @@ import UserForm from './UserForm';
 import ConfirmModal from '../ConfirmModal';
 
 const styles = {
-  container: { padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)' },
-  filterRow: { display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'center' },
-  input: { padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)' },
-  btnPrimary: { backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
-  btnAction: { backgroundColor: 'transparent', border: '1px solid var(--color-border)', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', color: 'var(--color-text-main)' },
+  container: { padding: '0', backgroundColor: 'transparent', width: '100%', boxSizing: 'border-box' },
+  filterRow: { display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap', width: '100%' },
+  input: { padding: '9px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13px' },
+  btnPrimary: { backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', padding: '9px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+  btnAction: { backgroundColor: 'transparent', border: '1px solid var(--color-border)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: 'var(--color-text-main)', fontSize: '12px' },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' },
-  th: { padding: '10px', textAlign: 'left', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)' },
-  td: { padding: '10px', borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-main)' }
+  th: { padding: '12px 10px', textAlign: 'left', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', fontWeight: '600' },
+  td: { padding: '12px 10px', borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-main)' }
 };
 
 export default function UserManager() {
