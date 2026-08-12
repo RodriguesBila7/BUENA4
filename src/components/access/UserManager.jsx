@@ -40,19 +40,19 @@ export default function UserManager() {
     return role ? role.name : roleId;
   };
 
-  const handleSave = (userData) => {
+  const handleSave = async (userData) => {
     if (view === 'create') {
-      const res = addUser(userData);
-      if(res.success) {
+      const res = await addUser(userData);
+      if (res && res.success) {
         logAction(currentUser, 'Utilizadores', 'Criar', `Criou o utilizador ${userData.username}`);
         setView('list');
-      } else showModal('Erro', res.error, 'alert');
+      } else showModal('Erro', res?.error || 'Erro ao criar utilizador', 'alert');
     } else {
-      const res = updateUser(editingUser.id, userData);
-      if(res.success) {
+      const res = await updateUser(editingUser.id, userData);
+      if (res && res.success) {
         logAction(currentUser, 'Utilizadores', 'Editar', `Atualizou o utilizador ${userData.username}`);
         setView('list');
-      } else showModal('Erro', res.error, 'alert');
+      } else showModal('Erro', res?.error || 'Erro ao atualizar utilizador', 'alert');
     }
   };
 

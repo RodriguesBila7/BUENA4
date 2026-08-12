@@ -5,9 +5,10 @@ import useOrgData from '../../../hooks/useOrgData';
 import ConfirmModal from '../../ConfirmModal';
 import DraggableModal from '../../common/DraggableModal';
 import useDraggable from '../../../hooks/useDraggable';
+import { showToast } from '../../common/Toast';
 
 export default function AccountList({ t }) {
-  const { users, roles, addUser, updateUser } = useAuthData();
+  const { users, roles, addUser, updateUser, deleteUser } = useAuthData();
   const { employees } = useEmployeeData();
   const { data: orgData } = useOrgData();
 
@@ -135,14 +136,37 @@ export default function AccountList({ t }) {
       title: `${newStatus === 'Bloqueada' ? 'Bloquear' : 'Desbloquear'} Conta`,
       message: `Tem a certeza que deseja ${actionName} o acesso da conta pertencente a ${user.name}?`,
       isDestructive: newStatus === 'Bloqueada',
-      onConfirm: () => {
-        updateUser(user.id, { status: newStatus, lockedUntil: null, failedAttempts: 0 });
-        setConfirmModal({ ...confirmModal, isOpen: false });
+      onConfirm: async () => {
+        const res = await updateUser(user.id, { status: newStatus, lockedUntil: null, failedAttempts: 0 });
+        if (res && res.success) {
+          showToast(`Conta ${newStatus === 'Bloqueada' ? 'bloqueada' : 'desbloqueada'} com sucesso!`, 'success');
+        } else {
+          showToast(res?.error || 'Erro ao alterar estado da conta', 'error');
+        }
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
       }
     });
   };
 
-  const handleSaveUser = (e) => {
+  const handleDeleteUser = (user) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Eliminar Conta',
+      message: `Tem a certeza que deseja ELIMINAR a conta de ${user.name}? Esta ação não pode ser desfeita.`,
+      isDestructive: true,
+      onConfirm: async () => {
+        const res = await deleteUser(user.id);
+        if (res && res.success) {
+          showToast('Conta eliminada com sucesso!', 'success');
+        } else {
+          showToast(res?.error || 'Erro ao eliminar conta', 'error');
+        }
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  };
+
+  const handleSaveUser = async (e) => {
     e.preventDefault();
     setFormError('');
 
@@ -156,48 +180,54 @@ export default function AccountList({ t }) {
       return;
     }
 
-    if (modalMode === 'create') {
-      const result = addUser({
-        name: formData.name,
-        username: formData.username,
-        email: formData.email,
-        contact: formData.contact,
-        password: formData.password,
-        roleId: formData.roleId,
-        delegatedRoleId: formData.delegatedRoleId || null,
-        delegationStartDate: formData.delegationStartDate || null,
-        delegationEndDate: formData.delegationEndDate || null,
-        status: formData.status
-      });
+    try {
+      if (modalMode === 'create') {
+        const result = await addUser({
+          name: formData.name,
+          username: formData.username,
+          email: formData.email,
+          contact: formData.contact,
+          password: formData.password,
+          roleId: formData.roleId,
+          delegatedRoleId: formData.delegatedRoleId || null,
+          delegationStartDate: formData.delegationStartDate || null,
+          delegationEndDate: formData.delegationEndDate || null,
+          status: formData.status
+        });
 
-      if (!result.success) {
-        setFormError(result.error);
-        return;
-      }
-    } else {
-      const updatePayload = {
-        name: formData.name,
-        username: formData.username,
-        email: formData.email,
-        contact: formData.contact,
-        roleId: formData.roleId,
-        delegatedRoleId: formData.delegatedRoleId || null,
-        delegationStartDate: formData.delegationStartDate || null,
-        delegationEndDate: formData.delegationEndDate || null,
-        status: formData.status
-      };
-      if (formData.password.trim() !== '') {
-        updatePayload.password = formData.password;
+        if (!result || !result.success) {
+          setFormError(result?.error || 'Erro ao criar conta.');
+          return;
+        }
+        showToast('Nova conta criada com sucesso!', 'success');
+      } else {
+        const updatePayload = {
+          name: formData.name,
+          username: formData.username,
+          email: formData.email,
+          contact: formData.contact,
+          roleId: formData.roleId,
+          delegatedRoleId: formData.delegatedRoleId || null,
+          delegationStartDate: formData.delegationStartDate || null,
+          delegationEndDate: formData.delegationEndDate || null,
+          status: formData.status
+        };
+        if (formData.password && formData.password.trim() !== '') {
+          updatePayload.password = formData.password;
+        }
+
+        const result = await updateUser(formData.id, updatePayload);
+        if (!result || !result.success) {
+          setFormError(result?.error || 'Erro ao atualizar conta.');
+          return;
+        }
+        showToast('Conta atualizada com sucesso!', 'success');
       }
 
-      const result = updateUser(formData.id, updatePayload);
-      if (!result.success) {
-        setFormError(result.error);
-        return;
-      }
+      setIsModalOpen(false);
+    } catch (err) {
+      setFormError(err.message || 'Erro ao guardar dados da conta.');
     }
-
-    setIsModalOpen(false);
   };
 
   return (
@@ -287,13 +317,22 @@ export default function AccountList({ t }) {
                       ✏️ Editar
                     </button>
                     {acc.id !== 'usr_admin' && (
-                      <button 
-                        onClick={() => handleToggleStatus(acc)} 
-                        style={{ ...styles.actionBtn, color: acc.status === 'Ativo' ? 'var(--color-danger)' : 'var(--color-success)' }}
-                        title={acc.status === 'Ativo' ? 'Bloquear Acesso' : 'Desbloquear Acesso'}
-                      >
-                        {acc.status === 'Ativo' ? '🔒 Bloquear' : '🔓 Desbloq.'}
-                      </button>
+                      <>
+                        <button 
+                          onClick={() => handleToggleStatus(acc)} 
+                          style={{ ...styles.actionBtn, color: acc.status === 'Ativo' ? 'var(--color-danger)' : 'var(--color-success)' }}
+                          title={acc.status === 'Ativo' ? 'Bloquear Acesso' : 'Desbloquear Acesso'}
+                        >
+                          {acc.status === 'Ativo' ? '🔒 Bloquear' : '🔓 Desbloq.'}
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteUser(acc)} 
+                          style={{ ...styles.actionBtn, color: '#e53e3e', borderColor: '#feb2b2' }}
+                          title="Eliminar Conta"
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </>
                     )}
                   </div>
                 </td>
