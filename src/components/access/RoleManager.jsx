@@ -39,7 +39,7 @@ const getLevelInfo = (roleName) => {
 };
 
 const styles = {
-  container: { padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '20px' },
+  container: { padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' },
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' },
   statCard: { backgroundColor: 'var(--color-bg-card)', padding: '16px', borderRadius: '10px', border: '1px solid var(--color-border)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
   statTitle: { fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '4px' },
@@ -47,15 +47,16 @@ const styles = {
   controlsRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px', flexWrap: 'wrap' },
   searchBar: { padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13px', width: '280px' },
   btnPrimary: { backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', padding: '10px 18px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' },
-  btnAction: { backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', color: 'var(--color-text-base)', fontSize: '12px', fontWeight: '500', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '4px' },
+  btnAction: { backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', padding: '4px 8px', borderRadius: '5px', cursor: 'pointer', color: 'var(--color-text-base)', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '3px' },
   badge: (info) => ({
     display: 'inline-flex',
     alignItems: 'center',
     gap: '4px',
-    padding: '4px 10px',
+    padding: '4px 8px',
     borderRadius: '12px',
     fontSize: '11px',
     fontWeight: 'bold',
+    whiteSpace: 'nowrap',
     color: info.color,
     backgroundColor: info.bg,
     border: `1px solid ${info.border}`
@@ -223,8 +224,8 @@ export default function RoleManager() {
                       👤 {assignedUsersCount} {assignedUsersCount === 1 ? 'Utilizador' : 'Utilizadores'}
                     </span>
                   </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end', alignItems: 'center' }}>
                       <button style={styles.btnAction} onClick={() => setPreviewRole(r)} title="Visualizar Matriz de Permissões">
                         👁️ Matriz
                       </button>
