@@ -242,12 +242,15 @@ export default function UserForm({ initialData, onSave, onCancel }) {
           </>
         )}
 
-        {/* Delegação de Poderes */}
-        <h4 style={styles.sectionTitle}>Delegação de Poderes (Substituição Temporária)</h4>
+        {/* Delegação de Poderes / Perfil Secundário */}
+        <h4 style={styles.sectionTitle}>Delegação de Poderes e Perfil Secundário (Substituição de Adjuntos / Apoio Administrativo)</h4>
+        <p style={{ gridColumn: '1 / -1', fontSize: '12px', color: 'var(--color-text-muted)', margin: '-5px 0 10px 0' }}>
+          ℹ️ Permite atribuir um Perfil Secundário a adjuntos ou técnicos de apoio administrativo para assumirem temporariamente as competências do perfil superior (ex: Administrador Provincial) durante licenças, ausências ou impedimentos operacionais, sem alterar o seu escopo local.
+        </p>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Perfil Delegado (Substituição)</label>
+          <label style={styles.label}>Perfil Secundário / Delegado (Substituição)</label>
           <select style={styles.select} name="delegatedRoleId" value={formData.delegatedRoleId} onChange={handleChange}>
-            <option value="">Nenhuma Delegação</option>
+            <option value="">Nenhum Perfil Secundário</option>
             {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>

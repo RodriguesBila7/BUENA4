@@ -141,7 +141,19 @@ export default function UserManager() {
                 <div>{u.email}</div>
                 <div style={{fontSize: '11px', color: 'var(--color-text-muted)'}}>{u.contact}</div>
               </td>
-              <td>{getRoleName(u.roleId)}</td>
+              <td>
+                <div style={{ fontWeight: 'bold' }}>{getRoleName(u.roleId)}</div>
+                {u.delegatedRoleId && (
+                  <div style={{ marginTop: '4px', fontSize: '11px', padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(234, 179, 8, 0.15)', color: '#b45309', border: '1px solid rgba(234, 179, 8, 0.3)', display: 'inline-block' }}>
+                    🔄 Perfil Secundário: <strong>{getRoleName(u.delegatedRoleId)}</strong>
+                    {u.delegationStartDate && u.delegationEndDate && (
+                      <div style={{ fontSize: '10px', color: '#78350f', marginTop: '2px' }}>
+                        📅 {u.delegationStartDate} a {u.delegationEndDate}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </td>
               <td>
                 <span style={{ color: u.status === 'Ativo' ? 'green' : u.status === 'Bloqueada' ? 'orange' : 'red', fontWeight: 'bold' }}>
                   {u.status}
