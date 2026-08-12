@@ -1,21 +1,11 @@
 import { Router } from 'express';
 import { getDb } from '../db.js';
-import { requireSystemSettingsPermission } from '../middleware/auth.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = Router();
 
-function denySecondaryUsers(req, res, next) {
-  const isSecondaryHeader = req.headers['x-is-secondary'] === 'true' || req.headers['x-secondary'] === 'true';
-  const hasDelegatedRole = req.user && req.user.delegatedRole;
-
-  if (isSecondaryHeader || (hasDelegatedRole && (req.headers['x-user-role'] === req.user.delegatedRole || req.user.isSecondaryActive))) {
-    return res.status(403).json({
-      error: 'Acesso Negado (403 Forbidden)',
-      message: 'Utilizadores a operar sob perfil secundário / delegado não possuem permissão para criar, alterar ou eliminar Tipos de Actos Administrativos.'
-    });
-  }
-  next();
-}
+// Guarda exclusivo para Administradores Primários Centrais (1º, 2º e 3º Níveis DRH)
+const requirePrimaryCentralAdmin = requireRole(['super_admin_1', 'admin_1', 'admin_2']);
 
 // GET all act types
 router.get('/', (req, res) => {
@@ -29,7 +19,7 @@ router.get('/', (req, res) => {
 });
 
 // POST new act type
-router.post('/', requireSystemSettingsPermission, denySecondaryUsers, (req, res) => {
+router.post('/', requirePrimaryCentralAdmin, (req, res) => {
   try {
     const db = getDb();
     const { group_name, act_name, is_active } = req.body;
@@ -45,7 +35,7 @@ router.post('/', requireSystemSettingsPermission, denySecondaryUsers, (req, res)
 });
 
 // PUT update act type
-router.put('/:id', requireSystemSettingsPermission, denySecondaryUsers, (req, res) => {
+router.put('/:id', requirePrimaryCentralAdmin, (req, res) => {
   try {
     const db = getDb();
     const { group_name, act_name, is_active } = req.body;
@@ -60,7 +50,7 @@ router.put('/:id', requireSystemSettingsPermission, denySecondaryUsers, (req, re
 });
 
 // DELETE act type
-router.delete('/:id', requireSystemSettingsPermission, denySecondaryUsers, (req, res) => {
+router.delete('/:id', requirePrimaryCentralAdmin, (req, res) => {
   try {
     const db = getDb();
     db.prepare('DELETE FROM act_types WHERE id = ?').run(req.params.id);

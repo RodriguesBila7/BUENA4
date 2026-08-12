@@ -30,19 +30,49 @@ export const PROVINCE_CODES = {
 };
 
 /**
+ * Identifica se o utilizador é um dos 3 Administradores Primários Centrais do SERNIC:
+ * 1. Super Administrador Principal (1º Nível DRH)
+ * 2. Super Administrador (2º Nível Gestão Pessoal)
+ * 3. Administrador Principal (3º Nível Central RH)
+ * 
+ * Todos os restantes (4º Nível Administrador Provincial, 5º Nível Usuário, ou qualquer perfil secundário/delegado)
+ * são considerados perfis secundários/locais.
+ */
+export function isPrimaryCentralAdmin(user) {
+  if (!user) return false;
+  
+  if (user.username === 'admin' && !user.directorateId) return true;
+
+  const roleId = String(user.roleId || user.role || '').toLowerCase();
+  const roleName = String(user.roleName || user.roleDetails?.name || '').toLowerCase();
+
+  const isPrimaryRole = (
+    roleId === 'super_admin_1' || 
+    roleId === 'admin_1' || 
+    roleId === 'admin_2' ||
+    roleName.includes('super administrador principal') ||
+    roleName.includes('chefe da direcção de recursos humanos') ||
+    roleName.includes('chefe do departamento de gestão de pessoal') ||
+    roleName.includes('administrador principal')
+  );
+
+  // Se a conta está a operar sob perfil secundário/delegado em substituição temporária, NÃO é primário
+  if (user.delegatedRoleId && user.isSecondaryActive) return false;
+
+  return isPrimaryRole;
+}
+
+/**
  * Identifica se o utilizador está a operar sob um Perfil Secundário / Delegado (Substituição)
  */
 export function isSecondaryUser(user) {
   if (!user) return false;
+  
+  // Se não for um dos 3 Administradores Primários Centrais, é considerado secundário/local
+  if (!isPrimaryCentralAdmin(user)) return true;
+
   if (user.delegatedRoleId || user.delegated_role_id) {
     if (user.isSecondaryActive || user.activeRole === (user.delegatedRoleId || user.delegated_role_id)) {
-      return true;
-    }
-    if (user.delegationStatus === 'Aprovado' && user.primaryRoleId && user.roleId !== user.primaryRoleId) {
-      return true;
-    }
-    // Qualquer conta que possua perfil secundário/delegado ativado
-    if (user.delegatedRoleId && user.delegationStatus === 'Aprovado') {
       return true;
     }
   }
