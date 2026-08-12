@@ -358,6 +358,34 @@ function initSchema(db) {
   try { db.exec("ALTER TABLE users ADD COLUMN nuit TEXT DEFAULT NULL"); } catch (e) {}
   try { db.exec("UPDATE users SET nuit = username WHERE nuit IS NULL OR nuit = ''"); } catch (e) {}
 
+  // Auto-seeding do Utilizador de Teste do Departamento de Recursos Humanos da Cidade de Maputo
+  try {
+    const hash55555 = bcrypt.hashSync('55555', 10);
+    let maputoDir = db.prepare("SELECT id FROM directorates WHERE province = 'Cidade de Maputo' OR lower(name) LIKE '%cidade de maputo%'").get();
+    const maputoDirId = maputoDir ? maputoDir.id : 'dir_maputo_cidade';
+    let adminRole = db.prepare("SELECT id FROM roles WHERE id = 'admin' OR id = 'admin_1' OR lower(name) LIKE '%administrador%'").get();
+    const adminRoleId = adminRole ? adminRole.id : 'admin';
+
+    const existingUser = db.prepare("SELECT id FROM users WHERE username = 'Administrador' OR nuit = 'Administrador'").get();
+    if (existingUser) {
+      db.prepare("UPDATE users SET name = 'Administrador RH (Cidade de Maputo)', password = ?, role_id = ?, directorate_id = ?, status = 'Ativo' WHERE id = ?")
+        .run(hash55555, adminRoleId, maputoDirId, existingUser.id);
+    } else {
+      db.prepare("INSERT INTO users (id, name, username, nuit, password, role_id, directorate_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(
+        'usr_admin_maputo_cidade',
+        'Administrador RH (Cidade de Maputo)',
+        'Administrador',
+        'Administrador',
+        hash55555,
+        adminRoleId,
+        maputoDirId,
+        'Ativo'
+      );
+    }
+  } catch (e) {
+    console.error('[db.js] Erro ao semear Administrador Cidade de Maputo:', e.message);
+  }
+
   // Rectificação profunda e deduplicação de TODAS as Direcções Provinciais
   try {
     const PROVINCES_LIST = [
