@@ -68,9 +68,73 @@ export default function UserForm({ initialData, onSave, onCancel }) {
     }
   };
 
+  // Filtrar perfis principais disponíveis
+  const availablePrimaryRoles = roles.filter(r => {
+    if (!isCentralUser(currentUser)) {
+      // Administradores provinciais não podem criar Super Admins Centrais
+      const isCentralRole = ['super_admin_1', 'admin_1', 'admin_2'].includes(r.id);
+      if (isCentralRole) return false;
+    }
+    return true;
+  });
+
+  // Identificar se o perfil principal selecionado é "Administrador" (4º Nível)
+  const selectedPrimaryRole = roles.find(r => r.id === formData.roleId);
+  const isPrimaryRoleAdmin = selectedPrimaryRole && (
+    formData.roleId === 'usuario_admin' || 
+    formData.roleId === 'admin_3' || 
+    formData.roleId === 'admin' ||
+    (selectedPrimaryRole.name.toLowerCase().includes('administrador') && !selectedPrimaryRole.name.toLowerCase().includes('super') && !selectedPrimaryRole.name.toLowerCase().includes('principal'))
+  );
+
+  // Filtrar perfis secundários/delegados disponíveis
+  const availableDelegatedRoles = availablePrimaryRoles.filter(r => {
+    // 1. Não permitir selecionar o próprio perfil principal como secundário
+    if (r.id === formData.roleId) return false;
+
+    // 2. Se o perfil principal for Administrador, NÃO permitir selecionar o perfil 'Usuário' (5º Nível) como secundário
+    if (isPrimaryRoleAdmin) {
+      const isUsuarioRole = (
+        r.id === 'usuario_normal' || 
+        r.id === 'usuario' || 
+        r.name.toLowerCase().includes('usuário') || 
+        r.name.toLowerCase().includes('usuario')
+      );
+      if (isUsuarioRole) return false;
+    }
+
+    return true;
+  });
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    setFormData(prev => {
+      const nextData = { ...prev, [name]: type === 'checkbox' ? checked : value };
+      
+      // Se alterar o perfil principal para Administrador e o perfil secundário for Usuário, limpar o perfil secundário
+      if (name === 'roleId') {
+        const nextRole = roles.find(r => r.id === value);
+        const nextIsAdmin = nextRole && (
+          value === 'usuario_admin' || value === 'admin_3' || value === 'admin' ||
+          (nextRole.name.toLowerCase().includes('administrador') && !nextRole.name.toLowerCase().includes('super') && !nextRole.name.toLowerCase().includes('principal'))
+        );
+        if (nextIsAdmin && prev.delegatedRoleId) {
+          const delegatedRole = roles.find(r => r.id === prev.delegatedRoleId);
+          const isDelegatedUsuario = delegatedRole && (
+            prev.delegatedRoleId === 'usuario_normal' || 
+            prev.delegatedRoleId === 'usuario' || 
+            delegatedRole.name.toLowerCase().includes('usuário') || 
+            delegatedRole.name.toLowerCase().includes('usuario')
+          );
+          if (isDelegatedUsuario) {
+            nextData.delegatedRoleId = '';
+            nextData.delegationStartDate = '';
+            nextData.delegationEndDate = '';
+          }
+        }
+      }
+      return nextData;
+    });
   };
 
   const handlePhotoUpload = (e) => {
@@ -214,7 +278,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
           <label style={styles.label}>Perfil de Acesso (Role) <span style={{ color: '#e53e3e' }}>*</span></label>
           <select required style={styles.select} name="roleId" value={formData.roleId} onChange={handleChange}>
             <option value="">Selecione um perfil...</option>
-            {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            {availablePrimaryRoles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         <div style={styles.formGroup}>
@@ -251,7 +315,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
           <label style={styles.label}>Perfil Secundário / Delegado (Substituição)</label>
           <select style={styles.select} name="delegatedRoleId" value={formData.delegatedRoleId} onChange={handleChange}>
             <option value="">Nenhum Perfil Secundário</option>
-            {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            {availableDelegatedRoles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         <div style={styles.formGroup}></div> {/* Espaçador */}
