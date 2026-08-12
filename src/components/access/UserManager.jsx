@@ -38,6 +38,8 @@ export default function UserManager() {
   const [filterRole, setFilterRole] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
+  const scopedUsers = filterByProvincialScope(users, currentUser, orgData);
+
   const getRoleName = (roleId) => {
     const role = roles.find(r => r.id === roleId);
     return role ? role.name : roleId;
