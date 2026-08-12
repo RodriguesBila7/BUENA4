@@ -6,7 +6,7 @@ const translations = {
   pt: {
     /* ── Login ── */
     login_title: 'Entrar',
-    login_username_placeholder: 'NUIT (ou Nome de Utilizador)',
+    login_username_placeholder: 'NUIT ou Nome do Perfil',
     login_password_placeholder: 'Senha',
     login_submit: 'ENTRAR',
     login_submit_loading: 'A ENTRAR...',
