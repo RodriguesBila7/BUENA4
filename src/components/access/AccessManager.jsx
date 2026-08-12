@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import SecurityDashboard from './SecurityDashboard';
+import React from 'react';
 import UserManager from './UserManager';
 import RoleManager from './RoleManager';
 import SecurityPolicies from './SecurityPolicies';
@@ -26,19 +25,18 @@ const styles = {
 export default function AccessManager({ currentView, onViewChange }) {
   const mapTab = (id) => {
     switch(id) {
-      case 'users_manage': return 'users';
       case 'users_roles': return 'roles';
       case 'users_permissions': return 'permissions';
       case 'users_policies': return 'policies';
       case 'users_audit': return 'audit';
-      default: return 'dashboard';
+      case 'users_manage':
+      default: return 'users';
     }
   };
   const activeTab = mapTab(currentView);
 
   const handleTab = (tab) => {
     let id = 'users_manage'; // default
-    if(tab === 'dashboard') id = 'users_manage'; // could create 'users_dashboard' if needed, mapping 'dashboard' to 'users_manage' for now
     if(tab === 'users') id = 'users_manage';
     if(tab === 'roles') id = 'users_roles';
     if(tab === 'permissions') id = 'users_permissions';
@@ -54,9 +52,6 @@ export default function AccessManager({ currentView, onViewChange }) {
       </div>
 
       <div style={styles.tabsContainer}>
-        <div style={styles.tab(activeTab === 'dashboard')} onClick={() => handleTab('dashboard')}>
-          Dashboard
-        </div>
         <div style={styles.tab(activeTab === 'users')} onClick={() => handleTab('users')}>
           Utilizadores
         </div>
@@ -75,7 +70,6 @@ export default function AccessManager({ currentView, onViewChange }) {
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        {activeTab === 'dashboard' && <SecurityDashboard />}
         {activeTab === 'users' && <UserManager />}
         {activeTab === 'roles' && <RoleManager />}
         {activeTab === 'permissions' && <ModulePermissions />}
