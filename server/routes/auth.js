@@ -123,57 +123,64 @@ router.delete('/users/:id', (req, res) => {
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'username e password obrigatorios' });
-    try {
-      const db = getDb();
-      const user = db.prepare(`
-        SELECT 
-          u.id, u.name, u.username, u.nuit, u.email, u.contact, u.password, u.status, u.avatar,
-          u.role_id, u.delegated_role_id, u.delegation_start_date, u.delegation_end_date,
-          u.directorate_id as directorateId, u.department_id as departmentId, 
-          u.division_id as divisionId, u.section_id as sectionId,
-          r.name as roleName, r.permissions as rolePermissions,
-          dr.name as delegatedRoleName, dr.permissions as delegatedRolePermissions
-        FROM users u 
-        LEFT JOIN roles r ON u.role_id = r.id 
-        LEFT JOIN roles dr ON u.delegated_role_id = dr.id
-        WHERE (u.username = ? OR u.nuit = ?) AND u.status = 'Ativo'
-      `).get(username, username);
-      
-      if (!user) return res.status(401).json({ error: 'invalid_credentials' });
-      
-      const isValid = user.password.startsWith('$2a$') || user.password.startsWith('$2b$') 
+  try {
+    const db = getDb();
+    const candidateUsers = db.prepare(`
+      SELECT 
+        u.id, u.name, u.username, u.nuit, u.email, u.contact, u.password, u.status, u.avatar,
+        u.role_id, u.delegated_role_id, u.delegation_start_date, u.delegation_end_date,
+        u.directorate_id as directorateId, u.department_id as departmentId, 
+        u.division_id as divisionId, u.section_id as sectionId,
+        r.name as roleName, r.permissions as rolePermissions,
+        dr.name as delegatedRoleName, dr.permissions as delegatedRolePermissions
+      FROM users u 
+      LEFT JOIN roles r ON u.role_id = r.id 
+      LEFT JOIN roles dr ON u.delegated_role_id = dr.id
+      WHERE (LOWER(u.username) = LOWER(?) OR LOWER(u.nuit) = LOWER(?) OR LOWER(r.name) = LOWER(?) OR LOWER(r.id) = LOWER(?))
+        AND u.status = 'Ativo'
+    `).all(username, username, username, username);
+    
+    if (!candidateUsers || candidateUsers.length === 0) {
+      return res.status(401).json({ error: 'invalid_credentials' });
+    }
+    
+    // Encontrar o utilizador cuja palavra-passe coincide com a palavra-passe fornecida
+    const matchingUser = candidateUsers.find(user => {
+      return user.password.startsWith('$2a$') || user.password.startsWith('$2b$') 
         ? bcrypt.compareSync(password, user.password)
         : password === user.password;
-  
-      if (!isValid) return res.status(401).json({ error: 'invalid_credentials' });
-      
-      if (password === user.password && isValid) {
-          db.prepare('UPDATE users SET password = ? WHERE id = ?').run(bcrypt.hashSync(password, 10), user.id);
-      }
-      
-      const today = new Date().toISOString().split('T')[0];
-      let activeRoleId = user.role_id;
-      let activeRoleName = user.roleName;
-      let activePermissions = user.rolePermissions;
-      let isDelegated = false;
+    });
 
-      if (user.delegated_role_id && user.delegation_start_date && user.delegation_end_date) {
-        if (today >= user.delegation_start_date && today <= user.delegation_end_date) {
-          activeRoleId = user.delegated_role_id;
-          activeRoleName = user.delegatedRoleName;
-          activePermissions = user.delegatedRolePermissions;
-          isDelegated = true;
-        }
+    if (!matchingUser) return res.status(401).json({ error: 'invalid_credentials' });
+    
+    // Atualizar hash se a senha na BD estava em texto simples
+    if (matchingUser.password === password) {
+      db.prepare('UPDATE users SET password = ? WHERE id = ?').run(bcrypt.hashSync(password, 10), matchingUser.id);
+    }
+    
+    const today = new Date().toISOString().split('T')[0];
+    let activeRoleId = matchingUser.role_id;
+    let activeRoleName = matchingUser.roleName;
+    let activePermissions = matchingUser.rolePermissions;
+    let isDelegated = false;
+
+    if (matchingUser.delegated_role_id && matchingUser.delegation_start_date && matchingUser.delegation_end_date) {
+      if (today >= matchingUser.delegation_start_date && today <= matchingUser.delegation_end_date) {
+        activeRoleId = matchingUser.delegated_role_id;
+        activeRoleName = matchingUser.delegatedRoleName;
+        activePermissions = matchingUser.delegatedRolePermissions;
+        isDelegated = true;
       }
-      
-      const { password: _, ...safeUser } = user;
-      safeUser.roleId = activeRoleId;
-      safeUser.role = activeRoleId; 
-      safeUser.roleName = activeRoleName;
-      safeUser.isDelegated = isDelegated;
-      
-      res.json({ success: true, user: { ...safeUser, permissions: activePermissions ? JSON.parse(activePermissions) : {} } });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    }
+    
+    const { password: _, ...safeUser } = matchingUser;
+    safeUser.roleId = activeRoleId;
+    safeUser.role = activeRoleId; 
+    safeUser.roleName = activeRoleName;
+    safeUser.isDelegated = isDelegated;
+    
+    res.json({ success: true, user: { ...safeUser, permissions: activePermissions ? JSON.parse(activePermissions) : {} } });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ─── MIGRATE — importar do localStorage ────────────────────────────────────────
