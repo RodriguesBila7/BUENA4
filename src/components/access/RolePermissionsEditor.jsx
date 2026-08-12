@@ -40,6 +40,44 @@ const styles = {
   btnSecondary: { backgroundColor: 'transparent', color: 'var(--color-text-main)', border: '1px solid var(--color-border)', padding: '10px 20px', borderRadius: '4px', cursor: 'pointer' },
 };
 
+const OFFICIAL_ROLES = [
+  {
+    level: '1º Nível',
+    name: 'Super Administrador Principal',
+    description: 'Chefe da Direcção de Recursos Humanos (Acesso Total e Confirmação Final de Actos)'
+  },
+  {
+    level: '2º Nível',
+    name: 'Super Administrador',
+    description: 'Chefe do Departamento de Gestão de Pessoal'
+  },
+  {
+    level: '3º Nível',
+    name: 'Administrador Principal',
+    description: 'Técnico Central de Recursos Humanos'
+  },
+  {
+    level: '4º Nível',
+    name: 'Administrador',
+    description: 'Chefes dos Departamentos Provinciais de Recursos Humanos e Apoio Administrativo'
+  },
+  {
+    level: 'Específico',
+    name: 'Técnico de Pensões e Reserva',
+    description: 'RH Central - Específico para Reserva e Reforma'
+  },
+  {
+    level: 'Específico',
+    name: 'Técnico de Saúde e Óbitos',
+    description: 'RH Central - Específico para Saúde e Óbitos'
+  },
+  {
+    level: '5º Nível',
+    name: 'Usuário',
+    description: 'Adjuntos dos Administradores (Podem substituir Usuários Administrativos)'
+  }
+];
+
 export default function RolePermissionsEditor({ initialData, onSave, onCancel }) {
   const [role, setRole] = useState({ name: '', description: '', permissions: {} });
 
@@ -94,12 +132,48 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
       <h3>{initialData ? 'Editar Perfil' : 'Novo Perfil'}</h3>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Nome do Perfil *</label>
-          <input required style={styles.input} value={role.name} onChange={e => setRole({...role, name: e.target.value})} />
+          <label style={styles.label}>Nome do Perfil (Nível & Cargo Oficial) *</label>
+          <select
+            required
+            style={{ ...styles.input, fontWeight: 'bold', cursor: 'pointer' }}
+            value={OFFICIAL_ROLES.some(r => r.name === role.name) ? role.name : (role.name ? 'custom' : '')}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === 'custom') {
+                setRole(prev => ({ ...prev, name: '' }));
+              } else {
+                const matched = OFFICIAL_ROLES.find(r => r.name === val);
+                setRole(prev => ({
+                  ...prev,
+                  name: val,
+                  description: matched ? matched.description : prev.description
+                }));
+              }
+            }}
+          >
+            <option value="">-- Seleccionar Perfil Oficial --</option>
+            {OFFICIAL_ROLES.map(r => (
+              <option key={r.name} value={r.name}>
+                [{r.level}] {r.name}
+              </option>
+            ))}
+            <option value="custom">✍️ Outro / Perfil Personalizado...</option>
+          </select>
+
+          {(!OFFICIAL_ROLES.some(r => r.name === role.name) || role.name === '') && (
+            <input
+              type="text"
+              placeholder="Escreva o nome do perfil..."
+              required
+              style={{ ...styles.input, marginTop: '8px' }}
+              value={role.name}
+              onChange={e => setRole({ ...role, name: e.target.value })}
+            />
+          )}
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Descrição</label>
-          <input style={styles.input} value={role.description} onChange={e => setRole({...role, description: e.target.value})} />
+          <label style={styles.label}>Descrição Institucional</label>
+          <input style={styles.input} value={role.description} onChange={e => setRole({...role, description: e.target.value})} placeholder="Descrição do perfil e atribuições..." />
         </div>
       </div>
 
