@@ -80,7 +80,38 @@ export default function UserManager() {
     return <UserForm initialData={view === 'edit' ? editingUser : null} onSave={handleSave} onCancel={() => setView('list')} />;
   }
 
-  const filteredUsers = users.filter(u => {
+  const handleConfirmDelegation = async (userId, userName) => {
+    try {
+      const res = await fetch(`/api/auth/users/${userId}/confirm-delegation`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approvedBy: currentUser?.name || 'Perfil Superior Central' })
+      });
+      if (res.ok) {
+        logAction(currentUser, 'Acessos', 'Confirmar Delegação', `Confirmou o perfil secundário do utilizador ${userName}`);
+        window.location.reload();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRejectDelegation = async (userId, userName) => {
+    try {
+      const res = await fetch(`/api/auth/users/${userId}/reject-delegation`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (res.ok) {
+        logAction(currentUser, 'Acessos', 'Rejeitar Delegação', `Rejeitou a delegação de poderes do utilizador ${userName}`);
+        window.location.reload();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const filteredUsers = scopedUsers.filter(u => {
     if(u.status === 'Inativo' && filterStatus !== 'Inativo') return false; // Hide inactive by default unless specifically filtered
     const q = searchTerm.toLowerCase();
     const mSearch = (u.nuit && u.nuit.toLowerCase().includes(q)) || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
@@ -118,7 +149,7 @@ export default function UserManager() {
           <tr>
             <th>Utilizador (Identificação & NUIT)</th>
             <th>Contactos</th>
-            <th>Perfil de Acesso</th>
+            <th>Perfil de Acesso & Delegação</th>
             <th>Estado</th>
             <th>Ações</th>
           </tr>
@@ -144,10 +175,21 @@ export default function UserManager() {
               <td>
                 <div style={{ fontWeight: 'bold' }}>{getRoleName(u.roleId)}</div>
                 {u.delegatedRoleId && (
-                  <div style={{ marginTop: '4px', fontSize: '11px', padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(234, 179, 8, 0.15)', color: '#b45309', border: '1px solid rgba(234, 179, 8, 0.3)', display: 'inline-block' }}>
-                    🔄 Perfil Secundário: <strong>{getRoleName(u.delegatedRoleId)}</strong>
+                  <div style={{
+                    marginTop: '4px', fontSize: '11px', padding: '4px 8px', borderRadius: '6px',
+                    backgroundColor: u.delegationStatus === 'Pendente' ? 'rgba(234, 179, 8, 0.15)' : u.delegationStatus === 'Rejeitado' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                    color: u.delegationStatus === 'Pendente' ? '#b45309' : u.delegationStatus === 'Rejeitado' ? '#b91c1c' : '#047857',
+                    border: `1px solid ${u.delegationStatus === 'Pendente' ? 'rgba(234, 179, 8, 0.3)' : u.delegationStatus === 'Rejeitado' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                    display: 'inline-block'
+                  }}>
+                    🔄 Secundário: <strong>{getRoleName(u.delegatedRoleId)}</strong>
+                    <div style={{ fontSize: '10px', marginTop: '2px', fontWeight: 'bold' }}>
+                      {u.delegationStatus === 'Pendente' && `⏳ Pendente de Confirmação Superior (${u.delegationRequestedBy || 'Solicitado por Admin'})`}
+                      {u.delegationStatus === 'Aprovado' && `✅ Confirmado por Perfil Superior (${u.delegationApprovedBy || 'Central'})`}
+                      {u.delegationStatus === 'Rejeitado' && `❌ Delegação Rejeitada`}
+                    </div>
                     {u.delegationStartDate && u.delegationEndDate && (
-                      <div style={{ fontSize: '10px', color: '#78350f', marginTop: '2px' }}>
+                      <div style={{ fontSize: '10px', marginTop: '2px' }}>
                         📅 {u.delegationStartDate} a {u.delegationEndDate}
                       </div>
                     )}
@@ -160,8 +202,14 @@ export default function UserManager() {
                 </span>
               </td>
               <td>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <button style={styles.btnAction} onClick={() => { setEditingUser(u); setView('edit'); }}>Editar</button>
+                  {isCentralUser(currentUser) && u.delegatedRoleId && u.delegationStatus === 'Pendente' && (
+                    <>
+                      <button style={{...styles.btnAction, backgroundColor: '#047857', color: '#fff', fontWeight: 'bold'}} onClick={() => handleConfirmDelegation(u.id, u.name)}>✅ Confirmar Delegação</button>
+                      <button style={{...styles.btnAction, color: '#b91c1c', borderColor: '#b91c1c'}} onClick={() => handleRejectDelegation(u.id, u.name)}>❌ Rejeitar</button>
+                    </>
+                  )}
                   {u.status === 'Ativo' && <button style={styles.btnAction} onClick={() => updateUser(u.id, {status: 'Bloqueada'})}>Bloquear</button>}
                   {u.status === 'Bloqueada' && <button style={styles.btnAction} onClick={() => updateUser(u.id, {status: 'Ativo', failedAttempts: 0, lockedUntil: null})}>Desbloquear</button>}
                   {u.status !== 'Inativo' && (

@@ -357,6 +357,9 @@ function initSchema(db) {
   try { db.exec("ALTER TABLE district_directorates ADD COLUMN sort_order INTEGER DEFAULT 0"); } catch (e) {}
   try { db.exec("ALTER TABLE users ADD COLUMN nuit TEXT DEFAULT NULL"); } catch (e) {}
   try { db.exec("UPDATE users SET nuit = username WHERE nuit IS NULL OR nuit = ''"); } catch (e) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN delegation_status TEXT DEFAULT 'Aprovado'"); } catch (e) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN delegation_requested_by TEXT DEFAULT NULL"); } catch (e) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN delegation_approved_by TEXT DEFAULT NULL"); } catch (e) {}
 
   // Auto-seeding do Utilizador de Teste do Departamento de Recursos Humanos da Cidade de Maputo
   try {

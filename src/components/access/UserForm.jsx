@@ -191,6 +191,19 @@ export default function UserForm({ initialData, onSave, onCancel }) {
     }
     // Remove confirmPassword before saving
     const { confirmPassword, ...saveData } = formData;
+
+    if (saveData.delegatedRoleId) {
+      if (!isCentralUser(currentUser)) {
+        saveData.delegationStatus = 'Pendente';
+        saveData.delegationRequestedBy = currentUser?.name || 'Administrador Provincial';
+      } else {
+        saveData.delegationStatus = 'Aprovado';
+        saveData.delegationApprovedBy = currentUser?.name || 'Perfil Superior Central';
+      }
+    } else {
+      saveData.delegationStatus = 'Aprovado';
+    }
+
     onSave(saveData);
   };
 
