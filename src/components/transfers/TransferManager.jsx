@@ -50,7 +50,8 @@ export default function TransferManager() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('list');
+  const [statusFilter, setStatusFilter] = useState('');
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [editingTransfer, setEditingTransfer] = useState(null);
 
@@ -58,12 +59,16 @@ export default function TransferManager() {
     if (!transfers) return { total: 0, pending: 0, approved: 0, completed: 0, rejected: 0 };
     return {
       total: transfers.length,
-      pending: transfers.filter(t => t.status === 'Pendente').length,
-      approved: transfers.filter(t => t.status === 'Aprovada').length,
-      completed: transfers.filter(t => t.status === 'Concluída').length,
-      rejected: transfers.filter(t => t.status === 'Rejeitada' || t.status === 'Cancelada').length,
+      pending: transfers.filter(t => ['Pendente', 'Em elaboração', 'Submetida', 'Em análise'].includes(t.status)).length,
+      approved: transfers.filter(t => ['Aprovada', 'Concluída'].includes(t.status)).length,
+      rejected: transfers.filter(t => ['Rejeitada', 'Cancelada'].includes(t.status)).length,
     };
   }, [transfers]);
+
+  const handleStatCardClick = (filterVal) => {
+    setStatusFilter(filterVal);
+    setActiveTab('list');
+  };
 
   const handleCreateTransfer = () => {
     setEditingTransfer(null);
@@ -83,33 +88,68 @@ export default function TransferManager() {
   return (
     <div style={styles.container}>
       
-      {/* STATS CARDS */}
+      {/* STATS CARDS INTERATIVOS */}
       <div style={styles.cardsContainer}>
-        <div style={styles.card}>
+        <div 
+          onClick={() => handleStatCardClick('')}
+          style={{
+            ...styles.card,
+            cursor: 'pointer',
+            borderColor: statusFilter === '' ? 'var(--color-primary)' : 'var(--color-border)',
+            backgroundColor: statusFilter === '' ? 'rgba(37, 99, 235, 0.04)' : 'var(--color-bg-card)'
+          }}
+        >
           <div style={styles.cardIconBox}><span style={{fontSize: '24px'}}>🔄</span></div>
           <div>
             <div style={styles.cardValue}>{stats.total}</div>
             <div style={styles.cardTitle}>Total Processos</div>
           </div>
         </div>
-        <div style={styles.card}>
+
+        <div 
+          onClick={() => handleStatCardClick('Pendente')}
+          style={{
+            ...styles.card,
+            cursor: 'pointer',
+            borderColor: statusFilter === 'Pendente' ? '#f59e0b' : 'var(--color-border)',
+            backgroundColor: statusFilter === 'Pendente' ? 'rgba(245, 158, 11, 0.06)' : 'var(--color-bg-card)'
+          }}
+        >
           <div style={styles.cardIconBoxOrange}><span style={{fontSize: '24px'}}>⏳</span></div>
           <div>
-            <div style={styles.cardValue}>{stats.pending}</div>
+            <div style={{ ...styles.cardValue, color: '#d97706' }}>{stats.pending}</div>
             <div style={styles.cardTitle}>Pendentes</div>
           </div>
         </div>
-        <div style={styles.card}>
+
+        <div 
+          onClick={() => handleStatCardClick('Aprovada')}
+          style={{
+            ...styles.card,
+            cursor: 'pointer',
+            borderColor: statusFilter === 'Aprovada' ? '#10b981' : 'var(--color-border)',
+            backgroundColor: statusFilter === 'Aprovada' ? 'rgba(16, 185, 129, 0.06)' : 'var(--color-bg-card)'
+          }}
+        >
           <div style={styles.cardIconBoxGreen}><span style={{fontSize: '24px'}}>✅</span></div>
           <div>
-            <div style={styles.cardValue}>{stats.completed + stats.approved}</div>
-            <div style={styles.cardTitle}>Aprovados/Concluídos</div>
+            <div style={{ ...styles.cardValue, color: '#059669' }}>{stats.approved}</div>
+            <div style={styles.cardTitle}>Aprovados / Concluídos</div>
           </div>
         </div>
-        <div style={styles.card}>
+
+        <div 
+          onClick={() => handleStatCardClick('Rejeitada')}
+          style={{
+            ...styles.card,
+            cursor: 'pointer',
+            borderColor: statusFilter === 'Rejeitada' ? '#ef4444' : 'var(--color-border)',
+            backgroundColor: statusFilter === 'Rejeitada' ? 'rgba(239, 68, 68, 0.06)' : 'var(--color-bg-card)'
+          }}
+        >
           <div style={styles.cardIconBoxRed}><span style={{fontSize: '24px'}}>❌</span></div>
           <div>
-            <div style={styles.cardValue}>{stats.rejected}</div>
+            <div style={{ ...styles.cardValue, color: '#dc2626' }}>{stats.rejected}</div>
             <div style={styles.cardTitle}>Rejeitados</div>
           </div>
         </div>
@@ -123,8 +163,8 @@ export default function TransferManager() {
 
       <DraggableTabs 
         tabs={[
-          { id: 'dashboard', label: 'Dashboard' },
           { id: 'list', label: 'Lista de Processos' },
+          { id: 'dashboard', label: 'Dashboard Estatístico' },
           { id: 'history', label: 'Histórico de Colaborador' },
           ...(activeTab === 'form' ? [{ id: 'form', label: editingTransfer ? 'Editar Movimentação' : 'Nova Movimentação' }] : [])
         ]} 
@@ -150,6 +190,8 @@ export default function TransferManager() {
             onEdit={handleEditTransfer}
             updateEmployeeFn={updateEmployee}
             onViewHistory={handleViewHistory}
+            activeStatusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
           />
         )}
 
