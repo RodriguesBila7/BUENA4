@@ -192,10 +192,6 @@ export default function UserForm({ initialData, onSave, onCancel }) {
       showModal('Campo Obrigatório', 'Por favor, selecione a Direcção.');
       return;
     }
-    if (!formData.departmentId) {
-      showModal('Campo Obrigatório', 'Por favor, selecione o Departamento.');
-      return;
-    }
 
     if (!initialData) {
       if (formData.password !== formData.confirmPassword) {
@@ -483,9 +479,9 @@ export default function UserForm({ initialData, onSave, onCancel }) {
           </select>
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Departamento <span style={{ color: '#e53e3e' }}>*</span></label>
-          <select required style={styles.select} name="departmentId" value={formData.departmentId} onChange={handleChange}>
-            <option value="">Selecione o Departamento...</option>
+          <label style={styles.label}>Departamento (Opcional)</label>
+          <select style={styles.select} name="departmentId" value={formData.departmentId} onChange={handleChange}>
+            <option value="">Selecione o Departamento (Opcional)...</option>
             {orgData?.departments?.filter(d => !formData.directorateId || d.directorateId === formData.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
