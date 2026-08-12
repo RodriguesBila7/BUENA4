@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useAuthData from '../../hooks/useAuthData';
+import useEmployeeData from '../../hooks/useEmployeeData';
 import useOrgData from '../../hooks/useOrgData';
 import useSecuritySettings from '../../hooks/useSecuritySettings';
 import ConfirmModal from '../ConfirmModal';
@@ -20,11 +21,13 @@ const styles = {
 
 export default function UserForm({ initialData, onSave, onCancel }) {
   const { roles } = useAuthData();
+  const { employees } = useEmployeeData();
   const { data: orgData } = useOrgData();
   const { validatePassword } = useSecuritySettings();
 
+  const [selectedEmpId, setSelectedEmpId] = useState('');
   const [formData, setFormData] = useState({
-    name: '', username: '', email: '', contact: '',
+    name: '', username: '', nuit: '', email: '', contact: '',
     password: '', confirmPassword: '',
     roleId: '', delegatedRoleId: '', delegationStartDate: '', delegationEndDate: '', status: 'Ativo', forcePasswordChange: true,
     directorateId: '', departmentId: '', divisionId: '', sectionId: '', photo: ''
@@ -39,6 +42,26 @@ export default function UserForm({ initialData, onSave, onCancel }) {
       setFormData({ ...formData, ...initialData, confirmPassword: initialData.password || '' });
     }
   }, [initialData]);
+
+  const handleSelectEmployee = (empId) => {
+    setSelectedEmpId(empId);
+    if (!empId) return;
+    const emp = (employees || []).find(e => String(e.id) === String(empId));
+    if (emp) {
+      const nuitVal = emp.nuit || emp.nip || '';
+      setFormData(prev => ({
+        ...prev,
+        name: emp.name || prev.name,
+        nuit: nuitVal || prev.nuit,
+        username: nuitVal || prev.username,
+        email: emp.email || prev.email || (nuitVal ? `${nuitVal}@sernic.gov.mz` : prev.email),
+        contact: emp.phone || emp.contacto || prev.contact,
+        directorateId: emp.directorateId || prev.directorateId,
+        departmentId: emp.departmentId || prev.departmentId,
+        photo: emp.photo || prev.photo
+      }));
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -114,6 +137,27 @@ export default function UserForm({ initialData, onSave, onCancel }) {
       <h3 style={{ marginTop: 0 }}>{initialData ? 'Editar Utilizador' : 'Novo Utilizador'}</h3>
       
       <div style={styles.formGrid}>
+        {/* Vínculo de Funcionário */}
+        {!initialData && (
+          <div style={{ gridColumn: '1 / -1', backgroundColor: 'var(--color-bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '10px' }}>
+            <label style={{ ...styles.label, color: 'var(--color-primary)', display: 'block', marginBottom: '8px', fontSize: '13px' }}>
+              💡 Seleccionar Funcionário Cadastrado (Preenchimento Automático por NUIT)
+            </label>
+            <select
+              style={{ ...styles.select, width: '100%', fontWeight: 'bold', cursor: 'pointer' }}
+              value={selectedEmpId}
+              onChange={(e) => handleSelectEmployee(e.target.value)}
+            >
+              <option value="">-- Seleccionar Funcionário Cadastrado (Opcional) --</option>
+              {(employees || []).map(emp => (
+                <option key={emp.id} value={emp.id}>
+                  [NUIT: {emp.nuit || emp.nip || 'N/A'}] {emp.name} ({emp.cargo || 'Funcionário'})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Identificação */}
         <h4 style={styles.sectionTitle}>Identificação por NUIT</h4>
         
