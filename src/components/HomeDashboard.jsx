@@ -8,6 +8,8 @@ import useEvaluationData from '../hooks/useEvaluationData';
 import useDisciplinaryData from '../hooks/useDisciplinaryData';
 import useEffectivenessData from '../hooks/useEffectivenessData';
 import useObitosData from '../hooks/useObitosData';
+import { useAuth } from '../contexts/AuthContext';
+import { isCentralUser, filterByProvincialScope, formatProvincialRoleName } from '../utils/scopeUtils';
 import { getKPIs, getChartData, getHierarchyTree, getAuditIssues } from '../services/orgAnalyticsService';
 
 const COLORS = ['#1B365D', '#4A5568', '#718096', '#A0AEC0', '#E2E8F0'];
@@ -49,6 +51,7 @@ const TreeNode = ({ node, forceExpand }) => {
 };
 
 export default function HomeDashboard({ t, onTabChange }) {
+  const { user: currentUser } = useAuth();
   const { data } = useOrgData();
   const { employees } = useEmployeeData();
   const { acts } = useAdminActsData();
@@ -60,14 +63,59 @@ export default function HomeDashboard({ t, onTabChange }) {
 
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Escopo de estrutura organizacional para utilizadores provinciais
+  const scopedData = useMemo(() => {
+    if (!data) return { directorates: [], departments: [], divisions: [], sections: [], districtDirectorates: [], categories: [], careers: [] };
+    if (isCentralUser(currentUser)) return data;
+
+    const userDirId = String(currentUser?.directorateId || '');
+    if (!userDirId) return data;
+
+    const userDir = (data.directorates || []).find(d => String(d.id) === userDirId);
+    const userProvince = (userDir?.province || userDir?.name || '').toLowerCase();
+
+    const filteredDirectorates = (data.directorates || []).filter(d => String(d.id) === userDirId);
+    
+    const filteredDistrictDirectorates = (data.districtDirectorates || []).filter(dist => {
+      const provIdMatch = String(dist.provincialDirectorateId || dist.directorateId || '') === userDirId;
+      const provNameMatch = userProvince && dist.province && userProvince.includes(dist.province.toLowerCase());
+      return provIdMatch || provNameMatch;
+    });
+
+    const filteredDepartments = (data.departments || []).filter(dep => String(dep.directorateId) === userDirId);
+    const departmentIds = new Set(filteredDepartments.map(dep => String(dep.id)));
+
+    const filteredDivisions = (data.divisions || []).filter(div => departmentIds.has(String(div.departmentId)) || String(div.directorateId) === userDirId);
+    const divisionIds = new Set(filteredDivisions.map(div => String(div.id)));
+
+    const filteredSections = (data.sections || []).filter(sec => divisionIds.has(String(sec.divisionId)) || departmentIds.has(String(sec.departmentId)) || String(sec.directorateId) === userDirId);
+
+    return {
+      ...data,
+      directorates: filteredDirectorates,
+      districtDirectorates: filteredDistrictDirectorates,
+      departments: filteredDepartments,
+      divisions: filteredDivisions,
+      sections: filteredSections
+    };
+  }, [data, currentUser]);
+
+  // Escopo provincial dos registos funcionais
+  const scopedActs = useMemo(() => filterByProvincialScope(acts, currentUser, data), [acts, currentUser, data]);
+  const scopedTransfers = useMemo(() => filterByProvincialScope(transfers, currentUser, data), [transfers, currentUser, data]);
+  const scopedEvaluations = useMemo(() => filterByProvincialScope(evaluations, currentUser, data), [evaluations, currentUser, data]);
+  const scopedProcesses = useMemo(() => filterByProvincialScope(processes, currentUser, data), [processes, currentUser, data]);
+  const scopedRecords = useMemo(() => filterByProvincialScope(records, currentUser, data), [records, currentUser, data]);
+  const scopedWorkflows = useMemo(() => filterByProvincialScope(workflows, currentUser, data), [workflows, currentUser, data]);
+
   const pendingObitosActs = useMemo(() => {
-    if (!acts) return [];
-    const obitosActs = acts.filter(act => act.actType === 'Óbito');
+    if (!scopedActs) return [];
+    const obitosActs = scopedActs.filter(act => act.actType === 'Óbito');
     return obitosActs.filter(act => {
-      const workflow = workflows?.find(w => w.employeeId === act.employeeId);
+      const workflow = scopedWorkflows?.find(w => w.employeeId === act.employeeId);
       return !workflow || !workflow.isCompleted;
     });
-  }, [acts, workflows]);
+  }, [scopedActs, scopedWorkflows]);
 
   const pendingObitosCount = pendingObitosActs.length;
 
@@ -93,7 +141,7 @@ export default function HomeDashboard({ t, onTabChange }) {
         }
       }
 
-      // 2. Por Idade (Homens 60, Mulheres 55) - se já foi selecionado por serviço, não duplicamos o alerta
+      // 2. Por Idade (Homens 60, Mulheres 55)
       if (!eligibleForService && emp.dob) {
         const age = currentYear - new Date(emp.dob).getFullYear();
         const ageLimit = emp.gender === 'Feminino' ? 55 : 60;
@@ -103,9 +151,9 @@ export default function HomeDashboard({ t, onTabChange }) {
         }
       }
 
-      // 3. Por Junta de Saúde (Permanente) - Compulsiva
-      if (acts) {
-        const empActs = acts.filter(a => a.employeeId === emp.id);
+      // 3. Por Junta de Saúde (Permanente)
+      if (scopedActs) {
+        const empActs = scopedActs.filter(a => a.employeeId === emp.id);
         const hasPermanentInaptitude = empActs.some(a => a.actType === 'Junta de Saúde' && a.details?.tipoCondicao === 'Permanente');
         const hasRetirement = empActs.some(a => a.actType === 'Reserva' || a.actType === 'Reforma');
 
@@ -116,12 +164,12 @@ export default function HomeDashboard({ t, onTabChange }) {
     });
     
     return { byAge, byService, byMedical };
-  }, [employees, acts]);
+  }, [employees, scopedActs]);
 
-  const kpis = useMemo(() => getKPIs(data), [data]);
-  const charts = useMemo(() => getChartData(data), [data]);
-  const tree = useMemo(() => getHierarchyTree(data), [data]);
-  const issues = useMemo(() => getAuditIssues(data), [data]);
+  const kpis = useMemo(() => getKPIs(scopedData), [scopedData]);
+  const charts = useMemo(() => getChartData(scopedData), [scopedData]);
+  const tree = useMemo(() => getHierarchyTree(scopedData), [scopedData]);
+  const issues = useMemo(() => getAuditIssues(scopedData), [scopedData]);
 
   const sysStats = useMemo(() => {
     return {
@@ -130,27 +178,27 @@ export default function HomeDashboard({ t, onTabChange }) {
         active: employees?.filter(e => e.isActive !== false).length || 0,
       },
       acts: {
-        total: acts?.length || 0,
-        recent: acts?.filter(a => new Date(a.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length || 0
+        total: scopedActs?.length || 0,
+        recent: scopedActs?.filter(a => new Date(a.date) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length || 0
       },
       transfers: {
-        total: transfers?.length || 0,
-        pending: transfers?.filter(t => t.status === 'Pendente').length || 0
+        total: scopedTransfers?.length || 0,
+        pending: scopedTransfers?.filter(t => t.status === 'Pendente').length || 0
       },
       evaluations: {
-        total: evaluations?.length || 0,
-        avg: evaluations?.length > 0 ? (evaluations.reduce((acc, ev) => acc + parseFloat(ev.score || 0), 0) / evaluations.length).toFixed(1) : 0
+        total: scopedEvaluations?.length || 0,
+        avg: scopedEvaluations?.length > 0 ? (scopedEvaluations.reduce((acc, ev) => acc + parseFloat(ev.score || 0), 0) / scopedEvaluations.length).toFixed(1) : 0
       },
       disciplinary: {
-        total: processes?.length || 0,
-        active: processes?.filter(p => p.isActive !== false && p.status !== 'Concluído').length || 0
+        total: scopedProcesses?.length || 0,
+        active: scopedProcesses?.filter(p => p.isActive !== false && p.status !== 'Concluído').length || 0
       },
       effectiveness: {
-        total: records?.length || 0,
-        unjustified: records?.filter(r => r.absenceType === 'Falta Injustificada').length || 0
+        total: scopedRecords?.length || 0,
+        unjustified: scopedRecords?.filter(r => r.absenceType === 'Falta Injustificada').length || 0
       }
     };
-  }, [employees, acts, transfers, evaluations, processes, records]);
+  }, [employees, scopedActs, scopedTransfers, scopedEvaluations, scopedProcesses, scopedRecords]);
 
   const filteredTree = useMemo(() => {
     if (!searchQuery.trim()) return tree;
@@ -184,10 +232,28 @@ export default function HomeDashboard({ t, onTabChange }) {
     }
   };
 
+  const userDirectorateObj = (data?.directorates || []).find(d => String(d.id) === String(currentUser?.directorateId));
+  const provincialRoleTag = formatProvincialRoleName(
+    currentUser?.roleName || currentUser?.roleDetails?.name || 'Administrador',
+    currentUser?.directorateId,
+    data
+  );
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>{t('dash_overview') || 'Visão Geral do SERNIC'}</h2>
+        <div>
+          <h2 style={styles.title}>
+            {!isCentralUser(currentUser) && userDirectorateObj
+              ? `Visão Geral — ${userDirectorateObj.name}`
+              : (t('dash_overview') || 'Visão Geral do SERNIC')}
+          </h2>
+          {!isCentralUser(currentUser) && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 10px', backgroundColor: 'rgba(37, 99, 235, 0.08)', borderRadius: '20px', border: '1px solid rgba(37, 99, 235, 0.2)', color: '#2563eb', fontSize: '12px', fontWeight: 'bold' }}>
+              📍 Escopo Territorial Ativo: {provincialRoleTag || userDirectorateObj?.name}
+            </div>
+          )}
+        </div>
       </div>
 
       {pendingObitosCount > 0 && (
@@ -241,6 +307,7 @@ export default function HomeDashboard({ t, onTabChange }) {
           </div>
         </div>
       )}
+
       {/* Relatório Completo dos Módulos */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '30px' }}>
         
@@ -272,7 +339,7 @@ export default function HomeDashboard({ t, onTabChange }) {
           <h3 style={styles.kpiTitle}>Avaliação de Desempenho</h3>
           <div style={styles.kpiTotal}>{sysStats.evaluations.total}</div>
           <div style={styles.kpiDetails}>
-            <span style={styles.kpiActive}>● Média Global: {sysStats.evaluations.avg}</span>
+            <span style={styles.kpiActive}>● Média: {sysStats.evaluations.avg}</span>
           </div>
         </div>
 
@@ -311,7 +378,7 @@ export default function HomeDashboard({ t, onTabChange }) {
         </div>
 
         <div style={styles.chartCard}>
-          <h3 style={styles.cardTitle}>Distribuição (Departamentos por Direcção)</h3>
+          <h3 style={styles.cardTitle}>Distribuição por Unidade</h3>
           <div style={styles.chartWrapper}>
             {charts.depsPerDir.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -343,7 +410,7 @@ export default function HomeDashboard({ t, onTabChange }) {
       <div style={styles.bottomRow}>
         <div style={styles.treeCard}>
           <div style={styles.cardHeaderWithSearch}>
-            <h3 style={{...styles.cardTitle, margin: 0}}>{t('dash_tree') || 'Hierarquia Completa'}</h3>
+            <h3 style={{...styles.cardTitle, margin: 0}}>{t('dash_tree') || 'Hierarquia Local da Direcção'}</h3>
             <div style={styles.searchContainerCompact}>
               <svg style={styles.searchIconCompact} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               <input 
@@ -413,7 +480,7 @@ const styles = {
     fontSize: '24px',
     fontWeight: '700',
     color: 'var(--color-primary)',
-    marginBottom: '8px',
+    marginBottom: '4px',
   },
   kpiGrid: {
     display: 'grid',
