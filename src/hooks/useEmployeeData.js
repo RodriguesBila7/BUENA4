@@ -5,6 +5,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import useOrgData from './useOrgData';
+import { filterByProvincialScope } from '../utils/scopeUtils';
 
 let _cache = null;
 const _listeners = new Set();
@@ -42,6 +44,7 @@ const _id = () => `emp-${Date.now().toString(36)}-${Math.random().toString(36).s
 
 export default function useEmployeeData() {
   const { user: currentUser } = useAuth();
+  const { data: orgData } = useOrgData();
   const [employeesRaw, setLocalEmployees] = useState(_cache || []);
 
   useEffect(() => {
@@ -51,21 +54,11 @@ export default function useEmployeeData() {
     return () => _listeners.delete(listener);
   }, []);
 
-  // Filtrar por utilizador (Chefes de Departamento so veem os seus)
+  // Filtrar por utilizador segundo escopo Central vs Provincial (inclui Direcções Distritais)
   const employees = useMemo(() => {
     if (!currentUser) return employeesRaw;
-    const isSuperAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(currentUser.roleId || currentUser.role) || currentUser.username === 'admin';
-    if (isSuperAdmin || currentUser.roleId === 'hr_manager') return employeesRaw;
-    return employeesRaw.filter(emp => {
-      if (!emp) return false;
-      let keep = true;
-      if (currentUser.directorateId && emp.directorateId !== currentUser.directorateId) keep = false;
-      if (currentUser.departmentId  && emp.departmentId  !== currentUser.departmentId)  keep = false;
-      if (currentUser.divisionId    && emp.divisionId    !== currentUser.divisionId)    keep = false;
-      if (currentUser.sectionId     && emp.sectionId     !== currentUser.sectionId)     keep = false;
-      return keep;
-    });
-  }, [employeesRaw, currentUser]);
+    return filterByProvincialScope(employeesRaw, currentUser, orgData);
+  }, [employeesRaw, currentUser, orgData]);
 
   const addEmployee = useCallback(async (empData) => {
     try {

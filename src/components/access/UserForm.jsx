@@ -3,6 +3,8 @@ import useAuthData from '../../hooks/useAuthData';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useOrgData from '../../hooks/useOrgData';
 import useSecuritySettings from '../../hooks/useSecuritySettings';
+import { useAuth } from '../../contexts/AuthContext';
+import { isCentralUser } from '../../utils/scopeUtils';
 import ConfirmModal from '../ConfirmModal';
 
 const styles = {
@@ -23,6 +25,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
   const { roles } = useAuthData();
   const { employees } = useEmployeeData();
   const { data: orgData } = useOrgData();
+  const { user: currentUser } = useAuth();
   const { validatePassword } = useSecuritySettings();
 
   const [selectedEmpId, setSelectedEmpId] = useState('');
@@ -30,7 +33,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
     name: '', username: '', nuit: '', email: '', contact: '',
     password: '', confirmPassword: '',
     roleId: '', delegatedRoleId: '', delegationStartDate: '', delegationEndDate: '', status: 'Ativo', forcePasswordChange: true,
-    directorateId: '', departmentId: '', divisionId: '', sectionId: '', photo: ''
+    directorateId: (!isCentralUser(currentUser) && currentUser?.directorateId) ? currentUser.directorateId : '', departmentId: '', divisionId: '', sectionId: '', photo: ''
   });
 
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '' });
@@ -40,8 +43,10 @@ export default function UserForm({ initialData, onSave, onCancel }) {
   useEffect(() => {
     if (initialData) {
       setFormData({ ...formData, ...initialData, confirmPassword: initialData.password || '' });
+    } else if (!isCentralUser(currentUser) && currentUser?.directorateId) {
+      setFormData(prev => ({ ...prev, directorateId: currentUser.directorateId }));
     }
-  }, [initialData]);
+  }, [initialData, currentUser]);
 
   const handleSelectEmployee = (empId) => {
     setSelectedEmpId(empId);

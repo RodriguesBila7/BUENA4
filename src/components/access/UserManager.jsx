@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import useAuthData from '../../hooks/useAuthData';
 import useAuditLog from '../../hooks/useAuditLog';
+import useOrgData from '../../hooks/useOrgData';
 import { useAuth } from '../../contexts/AuthContext';
+import { filterByProvincialScope } from '../../utils/scopeUtils';
 import UserForm from './UserForm';
 import ConfirmModal from '../ConfirmModal';
 
@@ -19,6 +21,7 @@ const styles = {
 export default function UserManager() {
   const { users, roles, addUser, updateUser, deleteUser } = useAuthData();
   const { logAction } = useAuditLog();
+  const { data: orgData } = useOrgData();
   const { user: currentUser } = useAuth();
 
   const [view, setView] = useState('list'); // 'list', 'create', 'edit'
