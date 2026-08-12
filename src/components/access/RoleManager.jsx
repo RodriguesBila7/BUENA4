@@ -29,19 +29,19 @@ export default function RoleManager() {
 
   const closeModal = () => setModalConfig({ ...modalConfig, isOpen: false });
 
-  const handleSave = (roleData) => {
+  const handleSave = async (roleData) => {
     if (view === 'create') {
-      const res = addRole(roleData);
-      if(res.success) {
+      const res = await addRole(roleData);
+      if (res && res.success) {
         logAction(currentUser, 'Acessos', 'Criar Perfil', `Criou o perfil ${roleData.name}`);
         setView('list');
-      } else showModal('Erro', res.error, 'alert');
+      } else showModal('Erro', res?.error || 'Erro ao criar perfil', 'alert');
     } else {
-      const res = updateRole(editingRole.id, roleData);
-      if(res.success) {
+      const res = await updateRole(editingRole.id, roleData);
+      if (res && res.success) {
         logAction(currentUser, 'Acessos', 'Editar Perfil', `Atualizou o perfil ${roleData.name}`);
         setView('list');
-      } else showModal('Erro', res.error, 'alert');
+      } else showModal('Erro', res?.error || 'Erro ao atualizar perfil', 'alert');
     }
   };
 
@@ -67,7 +67,7 @@ export default function RoleManager() {
         </thead>
         <tbody>
           {roles.map(r => {
-            const modulesCount = Object.keys(r.permissions).filter(k => r.permissions[k] && r.permissions[k].length > 0).length;
+            const modulesCount = Object.keys(r.permissions || {}).filter(k => r.permissions[k] && r.permissions[k].length > 0).length;
             return (
               <tr key={r.id}>
                 <td><strong>{r.name}</strong></td>
@@ -76,13 +76,13 @@ export default function RoleManager() {
                 <td>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button style={styles.btnAction} onClick={() => { setEditingRole(r); setView('edit'); }}>Editar Permissões</button>
-                    {r.id !== 'super_admin' && (
+                    {r.id !== 'super_admin' && r.id !== 'super_admin_1' && (
                       <button style={{...styles.btnAction, color: 'red', borderColor: 'red'}} onClick={() => {
-                        showModal('Atenção', 'Eliminar este perfil?', 'confirm', () => {
-                          const res = deleteRole(r.id);
-                          if(res.success) {
+                        showModal('Atenção', 'Eliminar este perfil?', 'confirm', async () => {
+                          const res = await deleteRole(r.id);
+                          if (res && res.success) {
                             logAction(currentUser, 'Acessos', 'Eliminar Perfil', `Eliminou o perfil ${r.name}`);
-                          } else showModal('Erro', res.error, 'alert');
+                          } else showModal('Erro', res?.error || 'Erro ao eliminar perfil', 'alert');
                         });
                       }}>Eliminar</button>
                     )}

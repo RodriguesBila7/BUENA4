@@ -33,11 +33,13 @@ export const AuthProvider = ({ children }) => {
             'Acessos e Perfis'
           ];
           let updated = false;
+          const isAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(parsed.roleId || parsed.role) || parsed.username === 'admin' || parsed.roleDetails.permissions?.all === true;
+
           ALL_MODULES.forEach(mod => {
-            if (!parsed.roleDetails.permissions[mod]) {
-              parsed.roleDetails.permissions[mod] = parsed.roleId === 'super_admin' 
+            if (!parsed.roleDetails.permissions[mod] || (isAdmin && parsed.roleDetails.permissions[mod].length < 9)) {
+              parsed.roleDetails.permissions[mod] = isAdmin
                 ? ['Visualizar', 'Criar', 'Editar', 'Eliminar', 'Validar', 'Exportar', 'Importar', 'Imprimir', 'Administrar'] 
-                : ['Visualizar'];
+                : (parsed.roleDetails.permissions[mod] || ['Visualizar']);
               updated = true;
             }
           });
