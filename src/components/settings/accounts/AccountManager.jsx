@@ -1,53 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import UserManager from '../../access/UserManager';
+import RoleManager from '../../access/RoleManager';
+import ModulePermissions from '../../access/ModulePermissions';
+import SecurityPolicies from '../../access/SecurityPolicies';
+import AuditViewer from '../../access/AuditViewer';
 import AccountDashboard from './AccountDashboard';
-import AccountList from './AccountList';
-import AccountSecurity from './AccountSecurity';
 import AccountSessions from './AccountSessions';
 import AccountRecovery from './AccountRecovery';
-import AccountHistory from './AccountHistory';
-import AccountPolicies from './AccountPolicies';
 import DraggableTabs from '../../common/DraggableTabs';
 
 const styles = {
-  container: { padding: '30px', animation: 'fadeIn 0.4s ease-out' },
-  header: { marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: '24px', fontWeight: '700', color: 'var(--color-primary)', marginBottom: '8px' },
-  description: { color: 'var(--color-text-muted)', fontSize: '15px' },
-  contentArea: { backgroundColor: 'var(--color-bg-card)', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', minHeight: '500px' }
+  container: { padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', boxSizing: 'border-box' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  title: { margin: 0, fontSize: '24px', fontWeight: '700', color: 'var(--color-primary)' },
+  subtitle: { margin: '4px 0 0 0', fontSize: '14px', color: 'var(--color-text-muted)' },
+  contentArea: { flex: 1, backgroundColor: 'var(--color-bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--color-border)', overflowY: 'auto' }
 };
 
-export default function AccountManager({ t }) {
-  const [activeTab, setActiveTab] = useState('dashboard');
+export default function AccountManager({ currentView, onViewChange, t = (k) => k }) {
+  const getInitialTab = () => {
+    if (!currentView) return 'users';
+    switch (currentView) {
+      case 'users_roles': return 'roles';
+      case 'users_permissions': return 'permissions';
+      case 'users_policies': return 'policies';
+      case 'users_audit': return 'audit';
+      case 'settings_accounts': return 'users';
+      default: return currentView.replace('users_', '');
+    }
+  };
+
+  const [activeTab, setActiveTab] = useState(getInitialTab());
+
+  useEffect(() => {
+    if (currentView) {
+      setActiveTab(getInitialTab());
+    }
+  }, [currentView]);
 
   const tabs = [
-    { id: 'dashboard', label: t('acc_tab_dashboard') || 'Dashboard' },
-    { id: 'list', label: t('acc_tab_list') || 'Contas' },
-    { id: 'security', label: t('acc_tab_security') || 'Segurança' },
-    { id: 'sessions', label: t('acc_tab_sessions') || 'Sessões' },
-    { id: 'recovery', label: t('acc_tab_recovery') || 'Recuperação' },
-    { id: 'history', label: t('acc_tab_history') || 'Histórico' },
-    { id: 'policies', label: t('acc_tab_policies') || 'Políticas' }
+    { id: 'users', label: '👥 Utilizadores e Contas' },
+    { id: 'roles', label: '🛡️ Perfis de Acesso' },
+    { id: 'permissions', label: '📌 Permissões por Módulo' },
+    { id: 'dashboard', label: '📊 Dashboard' },
+    { id: 'policies', label: '🔐 Políticas de Segurança' },
+    { id: 'sessions', label: '🌐 Sessões Ativas' },
+    { id: 'recovery', label: '🔑 Recuperação' },
+    { id: 'audit', label: '📜 Auditoria' }
   ];
 
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (onViewChange) {
+      const viewMap = {
+        users: 'users_manage',
+        roles: 'users_roles',
+        permissions: 'users_permissions',
+        policies: 'users_policies',
+        audit: 'users_audit',
+        dashboard: 'settings_accounts',
+        sessions: 'settings_accounts',
+        recovery: 'settings_accounts'
+      };
+      onViewChange(viewMap[tabId] || 'users_manage');
+    }
+  };
+
   return (
-    <div style={styles.container}>
+    <div style={styles.container} className="animate-fade-in">
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>{t('acc_title') || 'Gestão de Contas'}</h2>
-          <p style={styles.description}>{t('acc_desc') || 'Central de administração do ciclo de vida das contas do sistema.'}</p>
+          <h2 style={styles.title}>Gerir Contas e Acessos</h2>
+          <p style={styles.subtitle}>
+            Central unificada de administração de utilizadores, perfis institucionais, permissões matriciais, sessões e auditoria do SERNIC.
+          </p>
         </div>
       </div>
 
-      <DraggableTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+      <DraggableTabs tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
       <div style={styles.contentArea}>
+        {activeTab === 'users' && <UserManager />}
+        {activeTab === 'roles' && <RoleManager />}
+        {activeTab === 'permissions' && <ModulePermissions />}
         {activeTab === 'dashboard' && <AccountDashboard t={t} />}
-        {activeTab === 'list' && <AccountList t={t} />}
-        {activeTab === 'security' && <AccountSecurity t={t} />}
+        {activeTab === 'policies' && <SecurityPolicies />}
         {activeTab === 'sessions' && <AccountSessions t={t} />}
         {activeTab === 'recovery' && <AccountRecovery t={t} />}
-        {activeTab === 'history' && <AccountHistory t={t} />}
-        {activeTab === 'policies' && <AccountPolicies t={t} />}
+        {activeTab === 'audit' && <AuditViewer />}
       </div>
     </div>
   );
