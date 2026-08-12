@@ -4,7 +4,7 @@ import useEmployeeData from '../../hooks/useEmployeeData';
 import useOrgData from '../../hooks/useOrgData';
 import useSecuritySettings from '../../hooks/useSecuritySettings';
 import { useAuth } from '../../contexts/AuthContext';
-import { isCentralUser } from '../../utils/scopeUtils';
+import { isCentralUser, formatProvincialRoleName } from '../../utils/scopeUtils';
 import ConfirmModal from '../ConfirmModal';
 
 const styles = {
@@ -368,6 +368,50 @@ export default function UserForm({ initialData, onSave, onCancel }) {
             {orgData?.departments?.filter(d => !formData.directorateId || d.directorateId === formData.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
+        {formData.roleId && formData.directorateId && (
+          <div style={{
+            gridColumn: '1 / -1',
+            backgroundColor: 'rgba(27, 54, 93, 0.04)',
+            border: '1.5px solid var(--color-primary)',
+            borderRadius: '8px',
+            padding: '16px',
+            marginTop: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🏛️ Designação Oficial do Perfil a Gerar (Distribuição por Província):
+              </div>
+              <div style={{
+                fontSize: '13px',
+                fontWeight: 'bold',
+                padding: '4px 14px',
+                borderRadius: '20px',
+                backgroundColor: 'var(--color-primary)',
+                color: '#fff',
+                letterSpacing: '0.5px'
+              }}>
+                {formatProvincialRoleName((roles.find(r => r.id === formData.roleId)?.name || ''), formData.directorateId, orgData)}
+              </div>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px', color: 'var(--color-text-main)', marginTop: '4px' }}>
+              <div>
+                <strong>📍 Direcção Atribuída:</strong> {(orgData?.directorates || []).find(d => String(d.id) === String(formData.directorateId))?.name || 'N/A'}
+              </div>
+              <div>
+                <strong>🔐 Escopo de Acesso:</strong> {!isCentralUser({ roleId: formData.roleId, directorateId: formData.directorateId }) ? 'Visibilidade Local Provincial (10 Módulos Autorizados)' : 'Acesso Global Nacional (Central)'}
+              </div>
+            </div>
+
+            {/* Guia Rápido de Siglas SERNIC */}
+            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', borderTop: '1px dashed var(--color-border)', paddingTop: '8px', marginTop: '4px' }}>
+              <strong>💡 Distribuição Oficial de Siglas SERNIC:</strong> NPL (Nampula) | GZ (Gaza) | IBN (Inhambane) | CM (Cidade de Maputo) | MP (Maputo Província) | SFL (Sofala) | MN (Manica) | TT (Tete) | ZBZ (Zambézia) | NS (Niassa) | CD (Cabo Delgado)
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={styles.btnRow}>
