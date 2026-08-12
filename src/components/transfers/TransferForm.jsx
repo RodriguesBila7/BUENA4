@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { mozambiqueStructure } from '../../utils/mozambiqueDistricts';
 import ConfirmModal from '../ConfirmModal';
+import { useAuth } from '../../contexts/AuthContext';
+import { isCentralUser, filterByProvincialScope } from '../../utils/scopeUtils';
 
-export default function TransferForm({ employees, orgData, initialData, onSubmit, onCancel }) {
+export default function TransferForm({ employees = [], orgData, initialData, onSubmit, onCancel }) {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showAll, setShowAll] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, hideCancel: false });
   
+  const { data } = orgData || {};
+
+  // Escopo de funcionários permitidos (Provincial ou Central)
+  const scopedEmployees = useMemo(() => {
+    return filterByProvincialScope(employees || [], user, orgData);
+  }, [employees, user, orgData]);
+
+  const isCentral = isCentralUser(user);
+
   // If we are editing, we already know the employee
   const [selectedEmployee, setSelectedEmployee] = useState(() => {
     if (initialData) {
-      return employees.find(e => e.id === initialData.employeeId) || null;
+      return scopedEmployees.find(e => e.id === initialData.employeeId) || null;
     }
     return null;
   });
@@ -62,8 +75,6 @@ export default function TransferForm({ employees, orgData, initialData, onSubmit
     return [];
   });
 
-  const { data } = orgData;
-
   const calculateServiceTime = (admissionDate) => {
     if (!admissionDate) return '-';
     const admission = new Date(admissionDate);
@@ -83,19 +94,20 @@ export default function TransferForm({ employees, orgData, initialData, onSubmit
 
   const getName = (list, id) => list?.find(item => item.id === id)?.name || '-';
 
-  const searchResults = searchTerm.length > 2 
-    ? employees.filter(e => {
-        if (!e.isActive || e.healthStatus === 'Baixa Médica') return false;
-        const term = searchTerm.toLowerCase();
-        return (
-          (e.name || '').toLowerCase().includes(term) ||
-          (e.nip || '').toLowerCase().includes(term) ||
-          (e.idNumber || '').toLowerCase().includes(term) ||
-          (getName(data.careers, e.careerId) || '').toLowerCase().includes(term) ||
-          (getName(data.categories, e.categoryId) || '').toLowerCase().includes(term)
-        );
-      })
-    : [];
+  const searchResults = useMemo(() => {
+    const list = scopedEmployees.filter(e => e.isActive !== false && e.healthStatus !== 'Baixa Médica' && e.status !== 'Apagado');
+    if (!searchTerm.trim()) {
+      return showAll ? list : [];
+    }
+    const term = searchTerm.toLowerCase();
+    return list.filter(e => 
+      (e.name || '').toLowerCase().includes(term) ||
+      (e.nip || '').toLowerCase().includes(term) ||
+      (e.nuit || '').toLowerCase().includes(term) ||
+      (getName(data?.careers, e.careerId) || '').toLowerCase().includes(term) ||
+      (getName(data?.categories, e.categoryId) || '').toLowerCase().includes(term)
+    );
+  }, [scopedEmployees, searchTerm, showAll, data]);
 
   const handleSelectEmployee = (emp) => {
     setSelectedEmployee(emp);
@@ -209,19 +221,45 @@ export default function TransferForm({ employees, orgData, initialData, onSubmit
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </div>
             <h3 style={styles.searchTitle}>Identificação do Funcionário</h3>
-            <p style={styles.searchSubtitle}>Pesquise pelo Nome, NUIT, BI ou Cargo para iniciar o processo.</p>
+            <p style={styles.searchSubtitle}>Pesquise pelo Nome, NUIT, NIP ou Cargo para iniciar o processo.</p>
+            <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#2563eb', marginTop: '6px' }}>
+              {!isCentral ? (
+                `📍 Escopo Provincial (${scopedEmployees.length} funcionários disponíveis)`
+              ) : (
+                `🌐 Escopo Nacional (${scopedEmployees.length} funcionários disponíveis)`
+              )}
+            </div>
           </div>
           
-          <div style={styles.searchWrapper}>
-            <svg style={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input 
-              type="text" 
-              value={searchTerm} 
-              onChange={(e) => setSearchTerm(e.target.value)} 
-              placeholder="Digite aqui para procurar..."
-              style={styles.searchInput}
-              autoFocus
-            />
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div style={{ ...styles.searchWrapper, flex: 1 }}>
+              <svg style={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input 
+                type="text" 
+                value={searchTerm} 
+                onChange={(e) => { setSearchTerm(e.target.value); setShowAll(false); }} 
+                placeholder="Digite o Nome, NUIT ou NIP..."
+                style={styles.searchInput}
+                autoFocus
+              />
+            </div>
+            <button 
+              type="button" 
+              onClick={() => { setSearchTerm(''); setShowAll(!showAll); }} 
+              style={{
+                padding: '14px 18px',
+                borderRadius: '12px',
+                border: '1px solid var(--color-border)',
+                backgroundColor: showAll ? 'var(--color-primary)' : 'var(--color-bg-base)',
+                color: showAll ? '#fff' : 'var(--color-text-base)',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              👥 {showAll ? 'Ocultar' : 'Visualizar Todos'}
+            </button>
           </div>
           
           {searchResults.length > 0 && (
