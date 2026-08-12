@@ -30,8 +30,8 @@ const styles = {
   formGroup: { display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '15px' },
   label: { fontSize: '13px', fontWeight: 'bold', color: 'var(--color-text-main)' },
   input: { padding: '8px 12px', borderRadius: '4px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginTop: '20px' },
-  th: { padding: '8px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', textAlign: 'center' },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: '12px', marginTop: '10px' },
+  th: { padding: '8px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', textAlign: 'center', cursor: 'pointer', userSelect: 'none' },
   thLeft: { padding: '8px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-main)', textAlign: 'left', minWidth: '150px' },
   td: { padding: '8px', borderBottom: '1px solid var(--color-border)', textAlign: 'center' },
   tdLeft: { padding: '8px', borderBottom: '1px solid var(--color-border)', fontWeight: 'bold' },
@@ -114,12 +114,47 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
       const modPerms = prev.permissions[moduleName] || [];
       const newPerms = { ...prev.permissions };
       if (modPerms.length === ACTIONS.length) {
-        newPerms[moduleName] = []; // Deselect all
+        newPerms[moduleName] = []; // Desmarcar linha
       } else {
-        newPerms[moduleName] = [...ACTIONS]; // Select all
+        newPerms[moduleName] = [...ACTIONS]; // Selecionar linha
       }
       return { ...prev, permissions: newPerms };
     });
+  };
+
+  const handleToggleColumn = (actionName) => {
+    setRole(prev => {
+      const newPerms = { ...prev.permissions };
+      const allHaveAction = MODULES.every(m => (newPerms[m] || []).includes(actionName));
+      
+      MODULES.forEach(m => {
+        const modPerms = newPerms[m] || [];
+        if (allHaveAction) {
+          newPerms[m] = modPerms.filter(a => a !== actionName);
+        } else {
+          if (!modPerms.includes(actionName)) {
+            newPerms[m] = [...modPerms, actionName];
+          }
+        }
+      });
+      return { ...prev, permissions: newPerms };
+    });
+  };
+
+  const handleSelectAll = () => {
+    const allPerms = {};
+    MODULES.forEach(m => {
+      allPerms[m] = [...ACTIONS];
+    });
+    setRole(prev => ({ ...prev, permissions: allPerms }));
+  };
+
+  const handleDeselectAll = () => {
+    const emptyPerms = {};
+    MODULES.forEach(m => {
+      emptyPerms[m] = [];
+    });
+    setRole(prev => ({ ...prev, permissions: emptyPerms }));
   };
 
   const handleSubmit = (e) => {
@@ -129,7 +164,7 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
 
   return (
     <form style={styles.container} onSubmit={handleSubmit}>
-      <h3>{initialData ? 'Editar Perfil' : 'Novo Perfil'}</h3>
+      <h3 style={{ marginTop: 0 }}>{initialData ? 'Editar Perfil' : 'Novo Perfil'}</h3>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
         <div style={styles.formGroup}>
           <label style={styles.label}>Nome do Perfil (Nível & Cargo Oficial) *</label>
@@ -177,12 +212,72 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
         </div>
       </div>
 
+      {/* Barra Profissional de Ações Globais: Selecionar Todos / Desmarcar Todos */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
+        <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          🛡️ Matriz Institucional de Permissões por Módulo
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={handleSelectAll}
+            style={{
+              backgroundColor: 'rgba(16, 185, 129, 0.12)',
+              color: '#047857',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease'
+            }}
+            title="Marcar todas as permissões de todos os módulos"
+          >
+            ✅ Selecionar Todos
+          </button>
+          <button
+            type="button"
+            onClick={handleDeselectAll}
+            style={{
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              color: '#b91c1c',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.2s ease'
+            }}
+            title="Desmarcar todas as permissões da matriz"
+          >
+            ❌ Desmarcar Todos
+          </button>
+        </div>
+      </div>
+
       <div style={{ overflowX: 'auto' }}>
-        <table className="premium-table">
+        <table className="premium-table" style={styles.table}>
           <thead>
             <tr>
               <th style={styles.thLeft}>Módulo</th>
-              {ACTIONS.map(a => <th key={a} style={styles.th}>{a}</th>)}
+              {ACTIONS.map(action => (
+                <th
+                  key={action}
+                  style={styles.th}
+                  onClick={() => handleToggleColumn(action)}
+                  title={`Clique para marcar/desmarcar a coluna "${action}" em todos os módulos`}
+                >
+                  {action} ⇅
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
