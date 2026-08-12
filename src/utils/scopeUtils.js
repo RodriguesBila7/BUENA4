@@ -4,7 +4,7 @@
  * 
  * Regras Institucionais:
  * 1. Nível Central (1º Nível DRH, 2º Nível DGP, 3º Nível Técnico Central, Técnicos Específicos RH Central):
- *    - Visibilidade GLOBAL NACIONALE COMPLETA de todos os funcionários e actos administrativos.
+ *    - Visibilidade GLOBAL NACIONAL E COMPLETA de todos os funcionários e actos administrativos.
  * 
  * 2. Nível Provincial / Apoio Administrativo (4º Nível Administrador, 5º Nível Usuário):
  *    - Visibilidade ESTRITAMENTE LOCAL da sua Direcção Provincial e de todas as Direcções Distritais subordinadas àquela Província.
@@ -13,57 +13,67 @@
 
 export function isCentralUser(user) {
   if (!user) return true;
-  if (user.username === 'admin') return true;
   
+  // O utilizador admin de sistema genérico sem direcção atribuída é central por defeito
+  if (user.username === 'admin' && !user.directorateId) return true;
+
   const roleId = String(user.roleId || user.role || '').toLowerCase();
   const roleName = String(user.roleName || user.roleDetails?.name || '').toLowerCase();
 
-  // Perfis com escopo central global
-  const centralRoles = [
-    'super_admin_1', 
-    'admin_1', 
-    'admin_2', 
-    'tecnico_reserva', 
-    'tecnico_saude', 
-    'super_admin',
-    'hr_manager'
-  ];
-
-  if (centralRoles.includes(roleId)) return true;
-
+  // Perfis provinciais/locais (4º Nível Administrador e 5º Nível Usuário) -> ESTRITAMENTE LOCAL PROVINCIAL
   if (
-    roleName.includes('principal') || 
-    roleName.includes('chefe da direcção') || 
-    roleName.includes('chefe do departamento de gestão de pessoal') || 
-    roleName.includes('técnico central') ||
-    roleName.includes('super administrador')
+    roleId === 'usuario_admin' || 
+    roleId === 'usuario_normal' || 
+    roleId === 'admin_provincial' || 
+    roleId === 'admin_3' || 
+    roleId === 'usuario'
   ) {
-    return true;
+    return false;
   }
 
-  // Se não tiver direcção provincial associada, assume escopo central por defeito
-  if (!user.directorateId) return true;
+  // Se o utilizador possui uma direcção vinculada (ex: Cidade de Maputo, Sofala, Nampula) -> Escopo Provincial Local
+  if (user.directorateId) {
+    // A menos que seja explicitamente um dos 3 níveis centrais
+    const isExplicitCentral = (
+      roleId === 'super_admin_1' || 
+      roleId === 'admin_1' || 
+      roleId === 'admin_2' ||
+      roleName.includes('super administrador principal') ||
+      roleName.includes('chefe da direcção de recursos humanos') ||
+      roleName.includes('chefe do departamento de gestão de pessoal') ||
+      roleName.includes('técnico central')
+    );
+    if (!isExplicitCentral) return false;
+  }
 
-  return false;
+  return true;
 }
 
 export function filterByProvincialScope(items, user, orgData) {
   if (!Array.isArray(items) || items.length === 0) return items || [];
   if (isCentralUser(user)) return items;
 
-  const userDirId = String(user.directorateId);
-  
+  const userDirId = String(user.directorateId || '');
+  if (!userDirId) return items;
+
+  const userDir = (orgData?.directorates || []).find(d => String(d.id) === userDirId);
+  const userProvince = (userDir?.province || userDir?.name || '').toLowerCase();
+
   // Mapear IDs de todas as Direcções Distritais que pertencem a esta Direcção Provincial
   const districtDirIds = new Set(
     (orgData?.districtDirectorates || [])
-      .filter(d => String(d.provincialDirectorateId || d.directorateId) === userDirId)
+      .filter(d => {
+        const provIdMatch = String(d.provincialDirectorateId || d.directorateId || '') === userDirId;
+        const provNameMatch = userProvince && d.province && userProvince.includes(d.province.toLowerCase());
+        return provIdMatch || provNameMatch;
+      })
       .map(d => String(d.id))
   );
 
   return items.filter(item => {
     if (!item) return false;
 
-    // Verificar campos diretos de direcção no item
+    // Campos diretos de direcção no item
     const itemDirId = item.directorateId ? String(item.directorateId) : null;
     const itemProvDirId = item.provincialDirectorateId ? String(item.provincialDirectorateId) : null;
     const itemDistDirId = (item.districtDirectorateId || item.districtId) ? String(item.districtDirectorateId || item.districtId) : null;
@@ -74,7 +84,10 @@ export function filterByProvincialScope(items, user, orgData) {
     // 2. Pertence a uma Direcção Distrital desta Província
     if (itemDistDirId && districtDirIds.has(itemDistDirId)) return true;
 
-    // 3. Se for um registo vinculado a um objeto funcionário
+    // 3. Se o item tiver indicação textual de província idêntica à do utilizador
+    if (userProvince && item.province && userProvince.includes(item.province.toLowerCase())) return true;
+
+    // 4. Se for um registo vinculado a um objeto funcionário
     if (item.employee) {
       const empDirId = item.employee.directorateId ? String(item.employee.directorateId) : null;
       const empProvDirId = item.employee.provincialDirectorateId ? String(item.employee.provincialDirectorateId) : null;

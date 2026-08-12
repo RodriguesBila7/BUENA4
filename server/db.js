@@ -363,8 +363,8 @@ function initSchema(db) {
     const hash55555 = bcrypt.hashSync('55555', 10);
     let maputoDir = db.prepare("SELECT id FROM directorates WHERE province = 'Cidade de Maputo' OR lower(name) LIKE '%cidade de maputo%'").get();
     const maputoDirId = maputoDir ? maputoDir.id : 'dir_maputo_cidade';
-    let adminRole = db.prepare("SELECT id FROM roles WHERE id = 'admin' OR id = 'admin_1' OR lower(name) LIKE '%administrador%'").get();
-    const adminRoleId = adminRole ? adminRole.id : 'admin';
+    let adminRole = db.prepare("SELECT id FROM roles WHERE id = 'usuario_admin' OR name LIKE '%Chefes dos Departamentos Provinciais%'").get();
+    const adminRoleId = adminRole ? adminRole.id : 'usuario_admin';
 
     const existingUser = db.prepare("SELECT id FROM users WHERE username = 'Administrador' OR nuit = 'Administrador'").get();
     if (existingUser) {
