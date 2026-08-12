@@ -21,6 +21,7 @@ import CareerManager from './career/CareerManager';
 import TransferManager from './transfers/TransferManager';
 import VacationManager from './vacations/VacationManager';
 import ErrorBoundary from './common/ErrorBoundary';
+import { isPrimaryCentralAdmin } from '../utils/scopeUtils';
 
 const getDynamicGroupIcon = (groupName) => {
   switch(groupName) {
@@ -1015,27 +1016,29 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     </div>
                   </button>
 
-                  {/* Tipos de Acto */}
-                  <button 
-                    onClick={() => handleTabChange('settings_act_types')}
-                    style={{ 
-                      ...styles.navItem, 
-                      padding: '10px 16px 10px 48px', 
-                      justifyContent: 'flex-start', 
-                      opacity: activeTab === 'settings_act_types' ? 1 : 0.85, 
-                      borderLeft: activeTab === 'settings_act_types' ? '3px solid var(--color-primary)' : 'none', 
-                      fontSize: '13px',
-                      position: 'relative',
-                      backgroundColor: activeTab === 'settings_act_types' ? 'rgba(0,0,0,0.04)' : 'transparent',
-                      color: activeTab === 'settings_act_types' ? 'var(--color-primary)' : 'var(--color-text-base)'
-                    }}
-                  >
-                    <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_act_types' ? 'var(--color-primary)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-                      <span style={{ fontWeight: activeTab === 'settings_act_types' ? '600' : '400' }}>Tipos de Actos</span>
-                    </div>
-                  </button>
+                  {/* Tipos de Acto — Visível APENAS para os 3 Administradores Primários Centrais */}
+                  {isPrimaryCentralAdmin(user) && (
+                    <button 
+                      onClick={() => handleTabChange('settings_act_types')}
+                      style={{ 
+                        ...styles.navItem, 
+                        padding: '10px 16px 10px 48px', 
+                        justifyContent: 'flex-start', 
+                        opacity: activeTab === 'settings_act_types' ? 1 : 0.85, 
+                        borderLeft: activeTab === 'settings_act_types' ? '3px solid var(--color-primary)' : 'none', 
+                        fontSize: '13px',
+                        position: 'relative',
+                        backgroundColor: activeTab === 'settings_act_types' ? 'rgba(0,0,0,0.04)' : 'transparent',
+                        color: activeTab === 'settings_act_types' ? 'var(--color-primary)' : 'var(--color-text-base)'
+                      }}
+                    >
+                      <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_act_types' ? 'var(--color-primary)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                        <span style={{ fontWeight: activeTab === 'settings_act_types' ? '600' : '400' }}>Tipos de Actos</span>
+                      </div>
+                    </button>
+                  )}
               </div>
             )}
           </div>
