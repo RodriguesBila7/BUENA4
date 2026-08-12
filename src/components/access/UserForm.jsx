@@ -28,6 +28,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
   const { user: currentUser } = useAuth();
   const { validatePassword } = useSecuritySettings();
 
+  const [accountCategory, setAccountCategory] = useState('administrador'); // 'administrador', 'usuario', 'central'
   const [selectedEmpId, setSelectedEmpId] = useState('');
   const [formData, setFormData] = useState({
     name: '', username: '', nuit: '', email: '', contact: '',
@@ -43,10 +44,28 @@ export default function UserForm({ initialData, onSave, onCancel }) {
   useEffect(() => {
     if (initialData) {
       setFormData({ ...formData, ...initialData, confirmPassword: initialData.password || '' });
+      if (initialData.roleId === 'usuario_admin' || initialData.roleId === 'admin_3' || initialData.roleId === 'admin') {
+        setAccountCategory('administrador');
+      } else if (initialData.roleId === 'usuario_normal' || initialData.roleId === 'usuario') {
+        setAccountCategory('usuario');
+      } else {
+        setAccountCategory('central');
+      }
     } else if (!isCentralUser(currentUser) && currentUser?.directorateId) {
-      setFormData(prev => ({ ...prev, directorateId: currentUser.directorateId }));
+      setFormData(prev => ({ 
+        ...prev, 
+        directorateId: currentUser.directorateId,
+        roleId: 'usuario_normal' // Se for admin provincial a cadastrar, por padrão cadastra Usuário
+      }));
+      setAccountCategory('usuario');
+    } else {
+      // Admin central criando por defeito Administrador Provincial
+      const adminRole = roles.find(r => r.id === 'usuario_admin' || r.name.toLowerCase().includes('administrador'));
+      if (adminRole) {
+        setFormData(prev => ({ ...prev, roleId: adminRole.id }));
+      }
     }
-  }, [initialData, currentUser]);
+  }, [initialData, currentUser, roles]);
 
   const handleSelectEmployee = (empId) => {
     setSelectedEmpId(empId);
@@ -78,7 +97,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
     return true;
   });
 
-  // Identificar se o perfil principal selecionado é "Administrador" (4º Nível)
+  // Identificar se o perfil selecionado é "Administrador" (4º Nível)
   const selectedPrimaryRole = roles.find(r => r.id === formData.roleId);
   const isPrimaryRoleAdmin = selectedPrimaryRole && (
     formData.roleId === 'usuario_admin' || 
@@ -87,50 +106,50 @@ export default function UserForm({ initialData, onSave, onCancel }) {
     (selectedPrimaryRole.name.toLowerCase().includes('administrador') && !selectedPrimaryRole.name.toLowerCase().includes('super') && !selectedPrimaryRole.name.toLowerCase().includes('principal'))
   );
 
-  // Filtrar perfis secundários/delegados disponíveis
+  // Filtrar perfis secundários/delegados disponíveis (Apenas para perfil Usuário!)
   const availableDelegatedRoles = availablePrimaryRoles.filter(r => {
-    // 1. Não permitir selecionar o próprio perfil principal como secundário
     if (r.id === formData.roleId) return false;
-
-    // 2. Se o perfil principal for Administrador, NÃO permitir selecionar o perfil 'Usuário' (5º Nível) como secundário
-    if (isPrimaryRoleAdmin) {
-      const isUsuarioRole = (
-        r.id === 'usuario_normal' || 
-        r.id === 'usuario' || 
-        r.name.toLowerCase().includes('usuário') || 
-        r.name.toLowerCase().includes('usuario')
-      );
-      if (isUsuarioRole) return false;
-    }
-
     return true;
   });
+
+  const handleAccountCategoryChange = (category) => {
+    setAccountCategory(category);
+    setFormData(prev => {
+      let newRoleId = prev.roleId;
+      if (category === 'administrador') {
+        const found = roles.find(r => r.id === 'usuario_admin' || (r.name.toLowerCase().includes('administrador') && !r.name.toLowerCase().includes('super') && !r.name.toLowerCase().includes('principal')));
+        if (found) newRoleId = found.id;
+      } else if (category === 'usuario') {
+        const found = roles.find(r => r.id === 'usuario_normal' || r.id === 'usuario' || r.name.toLowerCase().includes('usuário'));
+        if (found) newRoleId = found.id;
+      }
+      return {
+        ...prev,
+        roleId: newRoleId,
+        // Limpar qualquer delegação ao mudar de categoria
+        delegatedRoleId: '',
+        delegationStartDate: '',
+        delegationEndDate: ''
+      };
+    });
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => {
       const nextData = { ...prev, [name]: type === 'checkbox' ? checked : value };
       
-      // Se alterar o perfil principal para Administrador e o perfil secundário for Usuário, limpar o perfil secundário
+      // Se alterar o perfil principal para Administrador, limpa obrigatoriamente qualquer delegação
       if (name === 'roleId') {
         const nextRole = roles.find(r => r.id === value);
         const nextIsAdmin = nextRole && (
           value === 'usuario_admin' || value === 'admin_3' || value === 'admin' ||
           (nextRole.name.toLowerCase().includes('administrador') && !nextRole.name.toLowerCase().includes('super') && !nextRole.name.toLowerCase().includes('principal'))
         );
-        if (nextIsAdmin && prev.delegatedRoleId) {
-          const delegatedRole = roles.find(r => r.id === prev.delegatedRoleId);
-          const isDelegatedUsuario = delegatedRole && (
-            prev.delegatedRoleId === 'usuario_normal' || 
-            prev.delegatedRoleId === 'usuario' || 
-            delegatedRole.name.toLowerCase().includes('usuário') || 
-            delegatedRole.name.toLowerCase().includes('usuario')
-          );
-          if (isDelegatedUsuario) {
-            nextData.delegatedRoleId = '';
-            nextData.delegationStartDate = '';
-            nextData.delegationEndDate = '';
-          }
+        if (nextIsAdmin) {
+          nextData.delegatedRoleId = '';
+          nextData.delegationStartDate = '';
+          nextData.delegationEndDate = '';
         }
       }
       return nextData;
@@ -189,10 +208,17 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         return;
       }
     }
-    // Remove confirmPassword before saving
-    const { confirmPassword, ...saveData } = formData;
+    
+    // Assegurar que se for Administrador, não leva qualquer delegação
+    const saveData = { ...formData };
+    delete saveData.confirmPassword;
 
-    if (saveData.delegatedRoleId) {
+    if (isPrimaryRoleAdmin) {
+      saveData.delegatedRoleId = null;
+      saveData.delegationStartDate = null;
+      saveData.delegationEndDate = null;
+      saveData.delegationStatus = 'Aprovado';
+    } else if (saveData.delegatedRoleId) {
       if (!isCentralUser(currentUser)) {
         saveData.delegationStatus = 'Pendente';
         saveData.delegationRequestedBy = currentUser?.name || 'Administrador Provincial';
@@ -217,11 +243,103 @@ export default function UserForm({ initialData, onSave, onCancel }) {
   return (
     <form onSubmit={handleSubmit} style={styles.container}>
       <h3 style={{ marginTop: 0 }}>{initialData ? 'Editar Utilizador' : 'Novo Utilizador'}</h3>
+
+      {/* Seletor Profissional de Categoria do Perfil (Apenas ao Cadastrar Nova Conta) */}
+      {!initialData && (
+        <div style={{ backgroundColor: 'var(--color-bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '20px' }}>
+          <label style={{ ...styles.label, color: 'var(--color-primary)', display: 'block', marginBottom: '10px', fontSize: '13px' }}>
+            🎯 Seleccione o Tipo de Perfil a Cadastrar:
+          </label>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {isCentralUser(currentUser) && (
+              <button
+                type="button"
+                onClick={() => handleAccountCategoryChange('administrador')}
+                style={{
+                  flex: '1',
+                  minWidth: '200px',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: accountCategory === 'administrador' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  backgroundColor: accountCategory === 'administrador' ? 'rgba(27, 54, 93, 0.08)' : 'var(--color-bg-base)',
+                  color: accountCategory === 'administrador' ? 'var(--color-primary)' : 'var(--color-text-main)',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+              >
+                <span style={{ fontSize: '20px' }}>🏛️</span>
+                <div>
+                  <div>Administrador Provincial</div>
+                  <div style={{ fontSize: '11px', fontWeight: 'normal', opacity: 0.8 }}>4º Nível (Chefe de RH Provincial & Apoio)</div>
+                </div>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => handleAccountCategoryChange('usuario')}
+              style={{
+                flex: '1',
+                minWidth: '200px',
+                padding: '12px',
+                borderRadius: '6px',
+                border: accountCategory === 'usuario' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                backgroundColor: accountCategory === 'usuario' ? 'rgba(27, 54, 93, 0.08)' : 'var(--color-bg-base)',
+                color: accountCategory === 'usuario' ? 'var(--color-primary)' : 'var(--color-text-main)',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
+              <span style={{ fontSize: '20px' }}>👤</span>
+              <div>
+                <div>Usuário / Adjunto</div>
+                <div style={{ fontSize: '11px', fontWeight: 'normal', opacity: 0.8 }}>5º Nível (Adicionado pelo Admin Provincial)</div>
+              </div>
+            </button>
+
+            {isCentralUser(currentUser) && (
+              <button
+                type="button"
+                onClick={() => handleAccountCategoryChange('central')}
+                style={{
+                  flex: '1',
+                  minWidth: '200px',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: accountCategory === 'central' ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  backgroundColor: accountCategory === 'central' ? 'rgba(27, 54, 93, 0.08)' : 'var(--color-bg-base)',
+                  color: accountCategory === 'central' ? 'var(--color-primary)' : 'var(--color-text-main)',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+              >
+                <span style={{ fontSize: '20px' }}>👑</span>
+                <div>
+                  <div>Perfil Central / Específico</div>
+                  <div style={{ fontSize: '11px', fontWeight: 'normal', opacity: 0.8 }}>1º, 2º, 3º Níveis ou Técnicos Específicos</div>
+                </div>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       
       <div style={styles.formGrid}>
         {/* Vínculo de Funcionário */}
         {!initialData && (
-          <div style={{ gridColumn: '1 / -1', backgroundColor: 'var(--color-bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '10px' }}>
+          <div style={{ gridColumn: '1 / -1', backgroundColor: 'var(--color-bg-card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '10px' }}>
             <label style={{ ...styles.label, color: 'var(--color-primary)', display: 'block', marginBottom: '8px', fontSize: '13px' }}>
               💡 Seleccionar Funcionário Cadastrado (Preenchimento Automático por NUIT)
             </label>
@@ -260,7 +378,6 @@ export default function UserForm({ initialData, onSave, onCancel }) {
             value={formData.nuit || ''}
             onChange={(e) => {
               handleChange(e);
-              // Auto-preencher username com NUIT se for uma nova conta e username estiver igual ao NUIT antigo
               if (!initialData && (!formData.username || formData.username === formData.nuit)) {
                 setFormData(prev => ({ ...prev, nuit: e.target.value, username: e.target.value }));
               }
@@ -319,31 +436,12 @@ export default function UserForm({ initialData, onSave, onCancel }) {
           </>
         )}
 
-        {/* Delegação de Poderes / Perfil Secundário */}
-        <h4 style={styles.sectionTitle}>Delegação de Poderes e Perfil Secundário (Substituição Temporária de Adjuntos)</h4>
-        
-        {isPrimaryRoleAdmin ? (
-          <div style={{
-            gridColumn: '1 / -1',
-            backgroundColor: 'rgba(239, 68, 68, 0.05)',
-            border: '1px dashed rgba(239, 68, 68, 0.4)',
-            borderRadius: '8px',
-            padding: '14px',
-            fontSize: '12px',
-            color: '#991b1b',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <span style={{ fontSize: '20px' }}>⛔</span>
-            <div>
-              <strong>Regra Institucional Imutável SERNIC:</strong> O perfil de <strong>Administrador Provincial</strong> é o titular efetivo da direcção e <u>não pode receber perfil delegado</u>. Apenas contas com perfil principal de <strong>Usuário (5º Nível - Adjunto)</strong> podem ter perfil delegado (substituição temporária) atribuído pelo Administrador e sujeito à conformidade dos perfis superiores.
-            </div>
-          </div>
-        ) : (
+        {/* Delegação de Poderes (APENAS EXIBIDO SE NÃO FOR ADMINISTRADOR) */}
+        {!isPrimaryRoleAdmin && (
           <>
+            <h4 style={styles.sectionTitle}>Delegação de Poderes e Perfil Secundário (Substituição Temporária de Adjuntos)</h4>
             <p style={{ gridColumn: '1 / -1', fontSize: '12px', color: 'var(--color-text-muted)', margin: '-5px 0 10px 0' }}>
-              ℹ️ Permite ao Administrador Provincial atribuir um Perfil Secundário a um Usuário (5º Nível - Adjunto) para assumir temporariamente as competências de Administrador durante licenças ou ausências operacionais, sujeito à conformidade dos Perfis Superiores.
+              ℹ️ Permite ao Administrador Provincial atribuir um Perfil Secundário ao Usuário (5º Nível - Adjunto) para assumir temporariamente as competências de Administrador durante licenças ou ausências operacionais, sujeito à conformidade dos Perfis Superiores.
             </p>
             <div style={styles.formGroup}>
               <label style={styles.label}>Perfil Secundário / Delegado (Substituição)</label>
@@ -391,6 +489,8 @@ export default function UserForm({ initialData, onSave, onCancel }) {
             {orgData?.departments?.filter(d => !formData.directorateId || d.directorateId === formData.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
+
+        {/* Painel Profissional de Pré-visualização Institucional da Sigla SERNIC */}
         {formData.roleId && formData.directorateId && (
           <div style={{
             gridColumn: '1 / -1',
@@ -428,6 +528,12 @@ export default function UserForm({ initialData, onSave, onCancel }) {
                 <strong>🔐 Escopo de Acesso:</strong> {!isCentralUser({ roleId: formData.roleId, directorateId: formData.directorateId }) ? 'Visibilidade Local Provincial (10 Módulos Autorizados)' : 'Acesso Global Nacional (Central)'}
               </div>
             </div>
+
+            {isPrimaryRoleAdmin && (
+              <div style={{ fontSize: '12px', color: '#047857', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold' }}>
+                🔑 Perfil Titular Provincial: O Administrador Provincial tem competência exclusiva para cadastrar Usuários (5º Nível) e delegar substituições temporárias.
+              </div>
+            )}
 
             {/* Guia Rápido de Siglas SERNIC */}
             <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', borderTop: '1px dashed var(--color-border)', paddingTop: '8px', marginTop: '4px' }}>
