@@ -355,6 +355,7 @@ function initSchema(db) {
   try { db.exec("ALTER TABLE employees ADD COLUMN district_directorate_id TEXT DEFAULT NULL REFERENCES district_directorates(id)"); } catch (e) {}
   try { db.exec("ALTER TABLE employees ADD COLUMN provincial_directorate_id TEXT DEFAULT NULL REFERENCES directorates(id)"); } catch (e) {}
   try { db.exec("ALTER TABLE district_directorates ADD COLUMN sort_order INTEGER DEFAULT 0"); } catch (e) {}
+  try { db.exec("ALTER TABLE users ADD COLUMN nuit TEXT DEFAULT NULL"); } catch (e) {}
 
   // Rectificação profunda e deduplicação de TODAS as Direcções Provinciais
   try {

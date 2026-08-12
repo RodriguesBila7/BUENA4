@@ -85,12 +85,6 @@ export default function UserForm({ initialData, onSave, onCancel }) {
       showModal('Campo Obrigatório', 'Por favor, selecione o Departamento.');
       return;
     }
-    if (formData.delegatedRoleId) {
-      if (!formData.delegationStartDate || !formData.delegationEndDate) {
-        showModal('Campo Obrigatório', 'Ao definir um Perfil Delegado, as Datas de Início e Fim da Delegação são obrigatórias.');
-        return;
-      }
-    }
 
     if (!initialData) {
       if (formData.password !== formData.confirmPassword) {
@@ -121,7 +115,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
       
       <div style={styles.formGrid}>
         {/* Identificação */}
-        <h4 style={styles.sectionTitle}>Identificação</h4>
+        <h4 style={styles.sectionTitle}>Identificação por NUIT</h4>
         
         <div style={{...styles.formGroup, gridRow: 'span 2'}}>
           <label style={styles.label}>Fotografia</label>
@@ -132,7 +126,24 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>Nome Completo <span style={{ color: '#e53e3e' }}>*</span></label>
+          <label style={styles.label}>NUIT (Identificação Única) <span style={{ color: '#e53e3e' }}>*</span></label>
+          <input
+            required
+            style={styles.input}
+            name="nuit"
+            value={formData.nuit || ''}
+            onChange={(e) => {
+              handleChange(e);
+              // Auto-preencher username com NUIT se for uma nova conta e username estiver igual ao NUIT antigo
+              if (!initialData && (!formData.username || formData.username === formData.nuit)) {
+                setFormData(prev => ({ ...prev, nuit: e.target.value, username: e.target.value }));
+              }
+            }}
+            placeholder="Digite o NUIT (ex: 102938475)..."
+          />
+        </div>
+        <div style={styles.formGroup}>
+          <label style={styles.label}>Nome Completo (Localizador) <span style={{ color: '#e53e3e' }}>*</span></label>
           <input required style={styles.input} name="name" value={formData.name} onChange={handleChange} placeholder="Digite o nome completo..." />
         </div>
         <div style={styles.formGroup}>
@@ -145,10 +156,10 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         </div>
 
         {/* Credenciais e Acesso */}
-        <h4 style={styles.sectionTitle}>Credenciais e Acesso</h4>
+        <h4 style={styles.sectionTitle}>Credenciais e Acesso (Login por NUIT)</h4>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Username <span style={{ color: '#e53e3e' }}>*</span></label>
-          <input required style={styles.input} name="username" value={formData.username} onChange={handleChange} disabled={!!initialData} placeholder="username..." />
+          <label style={styles.label}>Username / NUIT de Login <span style={{ color: '#e53e3e' }}>*</span></label>
+          <input required style={styles.input} name="username" value={formData.username} onChange={handleChange} disabled={!!initialData} placeholder="NUIT ou Username de acesso..." />
         </div>
         <div style={styles.formGroup}>
           <label style={styles.label}>Perfil de Acesso (Role) <span style={{ color: '#e53e3e' }}>*</span></label>

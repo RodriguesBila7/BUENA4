@@ -79,7 +79,8 @@ export default function UserManager() {
 
   const filteredUsers = users.filter(u => {
     if(u.status === 'Inativo' && filterStatus !== 'Inativo') return false; // Hide inactive by default unless specifically filtered
-    const mSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.username.toLowerCase().includes(searchTerm.toLowerCase());
+    const q = searchTerm.toLowerCase();
+    const mSearch = (u.nuit && u.nuit.toLowerCase().includes(q)) || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q);
     const mRole = filterRole ? u.roleId === filterRole : true;
     const mStatus = filterStatus ? u.status === filterStatus : true;
     return mSearch && mRole && mStatus;
@@ -96,7 +97,7 @@ export default function UserManager() {
       </div>
 
       <div style={styles.filterRow}>
-        <input style={{...styles.input, flex: 1}} placeholder="Pesquisar por nome ou username..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+        <input style={{...styles.input, flex: 1}} placeholder="Pesquisar por NUIT, Nome ou Username..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
         <select style={styles.input} value={filterRole} onChange={e => setFilterRole(e.target.value)}>
           <option value="">Todos os Perfis</option>
           {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -112,7 +113,7 @@ export default function UserManager() {
       <table className="premium-table">
         <thead>
           <tr>
-            <th>Utilizador</th>
+            <th>Utilizador (Identificação & NUIT)</th>
             <th>Contactos</th>
             <th>Perfil de Acesso</th>
             <th>Estado</th>
@@ -124,10 +125,12 @@ export default function UserManager() {
             <tr key={u.id}>
               <td>
                 <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                  {u.photo ? <img src={u.photo} style={{width:'30px',height:'30px',borderRadius:'50%',objectFit:'cover'}} alt=""/> : <div style={{width:'30px',height:'30px',borderRadius:'50%',backgroundColor:'#ccc'}}></div>}
+                  {u.photo ? <img src={u.photo} style={{width:'34px',height:'34px',borderRadius:'50%',objectFit:'cover'}} alt=""/> : <div style={{width:'34px',height:'34px',borderRadius:'50%',backgroundColor:'#ccc', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'12px', fontWeight:'bold'}}>👤</div>}
                   <div>
-                    <div style={{fontWeight: 'bold'}}>{u.name}</div>
-                    <div style={{fontSize: '11px', color: 'var(--color-text-muted)'}}>@{u.username}</div>
+                    <div style={{fontWeight: 'bold', fontSize: '13px'}}>{u.name}</div>
+                    <div style={{fontSize: '11px', color: 'var(--color-primary)', fontWeight: 'bold'}}>
+                      💳 NUIT: {u.nuit || u.username} {u.username && u.username !== u.nuit ? `(@${u.username})` : ''}
+                    </div>
                   </div>
                 </div>
               </td>

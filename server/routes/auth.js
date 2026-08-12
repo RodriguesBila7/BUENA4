@@ -51,7 +51,7 @@ router.delete('/roles/:id', (req, res) => {
 router.get('/users', (req, res) => {
   try {
     const db = getDb();
-    const rows = db.prepare('SELECT id, name, username, email, contact, role_id as roleId, delegated_role_id as delegatedRoleId, delegation_start_date as delegationStartDate, delegation_end_date as delegationEndDate, status, directorate_id as directorateId, department_id as departmentId, division_id as divisionId, section_id as sectionId, avatar, created_at as createdAt FROM users ORDER BY name').all();
+    const rows = db.prepare('SELECT id, name, username, nuit, email, contact, role_id as roleId, delegated_role_id as delegatedRoleId, delegation_start_date as delegationStartDate, delegation_end_date as delegationEndDate, status, directorate_id as directorateId, department_id as departmentId, division_id as divisionId, section_id as sectionId, avatar, created_at as createdAt FROM users ORDER BY name').all();
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -61,11 +61,11 @@ router.post('/users', (req, res) => {
   if (!u.id || !u.username || !u.password) return res.status(400).json({ error: 'id, username, password obrigatorios' });
   try {
     const db = getDb();
-    const dup = db.prepare('SELECT id FROM users WHERE username = ?').get(u.username);
+    const dup = db.prepare('SELECT id FROM users WHERE username = ? OR (nuit IS NOT NULL AND nuit = ? AND nuit != \'\')').get(u.username, u.nuit || '');
     if (dup) return res.status(409).json({ error: 'duplicate_username' });
     const hashedPassword = bcrypt.hashSync(u.password, 10);
-    db.prepare(`INSERT INTO users (id, name, username, email, contact, password, role_id, delegated_role_id, delegation_start_date, delegation_end_date, status, directorate_id, department_id, division_id, section_id, avatar)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(u.id, u.name, u.username, u.email||null, u.contact||null, hashedPassword, u.roleId||null, u.delegatedRoleId||null, u.delegationStartDate||null, u.delegationEndDate||null, u.status||'Ativo', u.directorateId||null, u.departmentId||null, u.divisionId||null, u.sectionId||null, u.avatar||null);
+    db.prepare(`INSERT INTO users (id, name, username, nuit, email, contact, password, role_id, delegated_role_id, delegation_start_date, delegation_end_date, status, directorate_id, department_id, division_id, section_id, avatar)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(u.id, u.name, u.username, u.nuit||null, u.email||null, u.contact||null, hashedPassword, u.roleId||null, u.delegatedRoleId||null, u.delegationStartDate||null, u.delegationEndDate||null, u.status||'Ativo', u.directorateId||null, u.departmentId||null, u.divisionId||null, u.sectionId||null, u.avatar||null);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -79,6 +79,7 @@ router.put('/users/:id', (req, res) => {
 
     const name = u.name !== undefined ? u.name : existing.name;
     const username = u.username !== undefined ? u.username : existing.username;
+    const nuit = u.nuit !== undefined ? u.nuit : existing.nuit;
     const email = u.email !== undefined ? u.email : existing.email;
     const contact = u.contact !== undefined ? u.contact : existing.contact;
     const roleId = u.roleId !== undefined ? u.roleId : existing.role_id;
@@ -97,8 +98,8 @@ router.put('/users/:id', (req, res) => {
       if (dup) return res.status(409).json({ error: 'duplicate_username' });
     }
 
-    const fields = `name = ?, username = ?, email = ?, contact = ?, role_id = ?, delegated_role_id = ?, delegation_start_date = ?, delegation_end_date = ?, status = ?, directorate_id = ?, department_id = ?, division_id = ?, section_id = ?, avatar = ?, updated_at = datetime('now')`;
-    const params = [name, username, email||null, contact||null, roleId||null, delegatedRoleId||null, delegationStartDate||null, delegationEndDate||null, status||'Ativo', directorateId||null, departmentId||null, divisionId||null, sectionId||null, avatar||null];
+    const fields = `name = ?, username = ?, nuit = ?, email = ?, contact = ?, role_id = ?, delegated_role_id = ?, delegation_start_date = ?, delegation_end_date = ?, status = ?, directorate_id = ?, department_id = ?, division_id = ?, section_id = ?, avatar = ?, updated_at = datetime('now')`;
+    const params = [name, username, nuit||null, email||null, contact||null, roleId||null, delegatedRoleId||null, delegationStartDate||null, delegationEndDate||null, status||'Ativo', directorateId||null, departmentId||null, divisionId||null, sectionId||null, avatar||null];
 
     if (u.password && u.password.trim() !== '') {
       const hashedPassword = bcrypt.hashSync(u.password, 10);
@@ -126,7 +127,7 @@ router.post('/login', (req, res) => {
       const db = getDb();
       const user = db.prepare(`
         SELECT 
-          u.id, u.name, u.username, u.email, u.contact, u.password, u.status, u.avatar,
+          u.id, u.name, u.username, u.nuit, u.email, u.contact, u.password, u.status, u.avatar,
           u.role_id, u.delegated_role_id, u.delegation_start_date, u.delegation_end_date,
           u.directorate_id as directorateId, u.department_id as departmentId, 
           u.division_id as divisionId, u.section_id as sectionId,
@@ -135,8 +136,8 @@ router.post('/login', (req, res) => {
         FROM users u 
         LEFT JOIN roles r ON u.role_id = r.id 
         LEFT JOIN roles dr ON u.delegated_role_id = dr.id
-        WHERE u.username = ? AND u.status = 'Ativo'
-      `).get(username);
+        WHERE (u.username = ? OR u.nuit = ?) AND u.status = 'Ativo'
+      `).get(username, username);
       
       if (!user) return res.status(401).json({ error: 'invalid_credentials' });
       
