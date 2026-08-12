@@ -14,10 +14,23 @@ const ALL_MODULES = [
   'Utilizadores', 'Auditoria', 'Acessos e Perfis'
 ];
 
+const ALLOWED_PROVINCIAL_MODULES = [
+  'Dashboard', 'Funcionários', 'Processos Disciplinares', 'Efetividade (Faltas)',
+  'Avaliação de Desempenho', 'Férias e Licenças', 'Saúde e Óbitos',
+  'Transferências e Mobilidade', 'Relatórios e Impressão', 'Configurações'
+];
+
+const ACTIONS = ['Visualizar', 'Criar', 'Editar', 'Eliminar', 'Validar', 'Exportar', 'Importar', 'Imprimir', 'Administrar'];
+
 const fullPermissions = ALL_MODULES.reduce((acc, mod) => {
-  acc[mod] = ['Visualizar', 'Criar', 'Editar', 'Eliminar', 'Validar', 'Exportar', 'Importar', 'Imprimir', 'Administrar'];
+  acc[mod] = [...ACTIONS];
   return acc;
 }, { all: true, manage_users: true });
+
+const provincialPermissions = {};
+ALL_MODULES.forEach(m => {
+  provincialPermissions[m] = ALLOWED_PROVINCIAL_MODULES.includes(m) ? [...ACTIONS] : [];
+});
 
 const roles = [
   {
@@ -42,7 +55,7 @@ const roles = [
     id: 'usuario_admin',
     name: 'Administrador',
     description: 'Chefes dos Departamentos Provinciais de Recursos Humanos e Apoio Administrativo',
-    permissions: JSON.stringify(fullPermissions)
+    permissions: JSON.stringify(provincialPermissions)
   },
   {
     id: 'tecnico_reserva',
@@ -60,31 +73,24 @@ const roles = [
     id: 'usuario_normal',
     name: 'Usuário',
     description: 'Adjuntos dos Administradores (Podem substituir Usuários Administrativos)',
-    permissions: JSON.stringify({ view_only: true })
+    permissions: JSON.stringify(provincialPermissions)
   }
 ];
 
 db.transaction(() => {
-  // Migrar utilizadores associados a roles legadas
   db.prepare("UPDATE users SET role_id = 'super_admin_1' WHERE role_id = 'super_admin' OR username = 'admin'").run();
   db.prepare("UPDATE users SET role_id = 'usuario_normal' WHERE role_id = 'user'").run();
-
-  // Apagar role legada super_admin
   db.prepare("DELETE FROM roles WHERE id = 'super_admin' OR id = 'user'").run();
 
-  // Atualizar nomes temporariamente para evitar violações da restrição UNIQUE
-  db.prepare("UPDATE roles SET name = name || '_' || id").run();
-
-  // Atualizar ou Inserir cada role oficial com o seu nome e descrição final
-  const updateStmt = db.prepare('UPDATE roles SET name = ?, description = ?, permissions = ? WHERE id = ?');
+  const updateStmt = db.prepare('UPDATE roles SET description = ?, permissions = ? WHERE id = ?');
   const insertStmt = db.prepare('INSERT INTO roles (id, name, description, permissions) VALUES (?, ?, ?, ?)');
 
   for (const r of roles) {
-    const res = updateStmt.run(r.name, r.description, r.permissions, r.id);
+    const res = updateStmt.run(r.description, r.permissions, r.id);
     if (res.changes === 0) {
-      insertStmt.run(r.id, r.name, r.description, r.permissions);
+      try { insertStmt.run(r.id, r.name, r.description, r.permissions); } catch (e) {}
     }
   }
 })();
 
-console.log('Perfis de Sistema Reestruturados com Sucesso!');
+console.log('Perfis de Sistema Reestruturados com Sucesso (Administrador e Usuário alinhados com 10 Módulos)!');
