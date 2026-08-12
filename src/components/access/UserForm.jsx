@@ -56,6 +56,42 @@ export default function UserForm({ initialData, onSave, onCancel }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (!formData.name || !formData.name.trim()) {
+      showModal('Campo Obrigatório', 'Por favor, preencha o Nome Completo.');
+      return;
+    }
+    if (!formData.email || !formData.email.trim()) {
+      showModal('Campo Obrigatório', 'Por favor, preencha o Email Institucional.');
+      return;
+    }
+    if (!formData.contact || !formData.contact.trim()) {
+      showModal('Campo Obrigatório', 'Por favor, preencha o Contacto.');
+      return;
+    }
+    if (!formData.username || !formData.username.trim()) {
+      showModal('Campo Obrigatório', 'Por favor, preencha o Username.');
+      return;
+    }
+    if (!formData.roleId) {
+      showModal('Campo Obrigatório', 'Por favor, selecione o Perfil de Acesso (Role).');
+      return;
+    }
+    if (!formData.directorateId) {
+      showModal('Campo Obrigatório', 'Por favor, selecione a Direcção.');
+      return;
+    }
+    if (!formData.departmentId) {
+      showModal('Campo Obrigatório', 'Por favor, selecione o Departamento.');
+      return;
+    }
+    if (formData.delegatedRoleId) {
+      if (!formData.delegationStartDate || !formData.delegationEndDate) {
+        showModal('Campo Obrigatório', 'Ao definir um Perfil Delegado, as Datas de Início e Fim da Delegação são obrigatórias.');
+        return;
+      }
+    }
+
     if (!initialData) {
       if (formData.password !== formData.confirmPassword) {
         showModal('Erro', 'As senhas não coincidem!');
@@ -96,34 +132,34 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>Nome Completo *</label>
-          <input required style={styles.input} name="name" value={formData.name} onChange={handleChange} />
+          <label style={styles.label}>Nome Completo <span style={{ color: '#e53e3e' }}>*</span></label>
+          <input required style={styles.input} name="name" value={formData.name} onChange={handleChange} placeholder="Digite o nome completo..." />
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Email Institucional *</label>
-          <input required type="email" style={styles.input} name="email" value={formData.email} onChange={handleChange} />
+          <label style={styles.label}>Email Institucional <span style={{ color: '#e53e3e' }}>*</span></label>
+          <input required type="email" style={styles.input} name="email" value={formData.email} onChange={handleChange} placeholder="exemplo@sernic.gov.mz..." />
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Contacto</label>
-          <input style={styles.input} name="contact" value={formData.contact} onChange={handleChange} />
+          <label style={styles.label}>Contacto <span style={{ color: '#e53e3e' }}>*</span></label>
+          <input required style={styles.input} name="contact" value={formData.contact} onChange={handleChange} placeholder="+258 8X XXX XXXX..." />
         </div>
 
         {/* Credenciais e Acesso */}
         <h4 style={styles.sectionTitle}>Credenciais e Acesso</h4>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Username *</label>
-          <input required style={styles.input} name="username" value={formData.username} onChange={handleChange} disabled={!!initialData} />
+          <label style={styles.label}>Username <span style={{ color: '#e53e3e' }}>*</span></label>
+          <input required style={styles.input} name="username" value={formData.username} onChange={handleChange} disabled={!!initialData} placeholder="username..." />
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Perfil de Acesso (Role) *</label>
+          <label style={styles.label}>Perfil de Acesso (Role) <span style={{ color: '#e53e3e' }}>*</span></label>
           <select required style={styles.select} name="roleId" value={formData.roleId} onChange={handleChange}>
             <option value="">Selecione um perfil...</option>
             {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Estado da Conta</label>
-          <select style={styles.select} name="status" value={formData.status} onChange={handleChange}>
+          <label style={styles.label}>Estado da Conta <span style={{ color: '#e53e3e' }}>*</span></label>
+          <select required style={styles.select} name="status" value={formData.status} onChange={handleChange}>
             <option value="Ativo">Ativo</option>
             <option value="Inativo">Inativo</option>
             <option value="Bloqueada">Bloqueada</option>
@@ -136,11 +172,11 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         {!initialData && (
           <>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Palavra-passe * <button type="button" onClick={generatePassword} style={{marginLeft: '10px', fontSize: '11px', cursor: 'pointer'}}>Gerar Aleatória</button></label>
+              <label style={styles.label}>Palavra-passe <span style={{ color: '#e53e3e' }}>*</span> <button type="button" onClick={generatePassword} style={{marginLeft: '10px', fontSize: '11px', cursor: 'pointer'}}>Gerar Aleatória</button></label>
               <input required type="text" style={styles.input} name="password" value={formData.password} onChange={handleChange} />
             </div>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Confirmar Palavra-passe *</label>
+              <label style={styles.label}>Confirmar Palavra-passe <span style={{ color: '#e53e3e' }}>*</span></label>
               <input required type="text" style={styles.input} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
             </div>
           </>
@@ -159,10 +195,9 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         {formData.delegatedRoleId && (
           <>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Data de Início da Delegação</label>
-              <input type="date" style={styles.input} name="delegationStartDate" value={formData.delegationStartDate} onChange={(e) => {
+              <label style={styles.label}>Data de Início da Delegação <span style={{ color: '#e53e3e' }}>*</span></label>
+              <input required type="date" style={styles.input} name="delegationStartDate" value={formData.delegationStartDate} onChange={(e) => {
                 handleChange(e);
-                // Auto-calcular 35 dias se end_date estiver vazio
                 if (e.target.value && !formData.delegationEndDate) {
                    const start = new Date(e.target.value);
                    start.setDate(start.getDate() + 35);
@@ -171,25 +206,25 @@ export default function UserForm({ initialData, onSave, onCancel }) {
               }} />
             </div>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Data de Fim da Delegação</label>
-              <input type="date" style={styles.input} name="delegationEndDate" value={formData.delegationEndDate} onChange={handleChange} />
+              <label style={styles.label}>Data de Fim da Delegação <span style={{ color: '#e53e3e' }}>*</span></label>
+              <input required type="date" style={styles.input} name="delegationEndDate" value={formData.delegationEndDate} onChange={handleChange} />
             </div>
           </>
         )}
 
         {/* Estrutura Organizacional */}
-        <h4 style={styles.sectionTitle}>Estrutura Organizacional (Opcional - para Restrições de Visibilidade)</h4>
+        <h4 style={styles.sectionTitle}>Estrutura Organizacional <span style={{ color: '#e53e3e' }}>*</span></h4>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Direcção</label>
-          <select style={styles.select} name="directorateId" value={formData.directorateId} onChange={handleChange}>
-            <option value="">(Nenhuma)</option>
+          <label style={styles.label}>Direcção <span style={{ color: '#e53e3e' }}>*</span></label>
+          <select required style={styles.select} name="directorateId" value={formData.directorateId} onChange={handleChange}>
+            <option value="">Selecione a Direcção...</option>
             {orgData?.directorates?.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Departamento</label>
-          <select style={styles.select} name="departmentId" value={formData.departmentId} onChange={handleChange}>
-            <option value="">(Nenhum)</option>
+          <label style={styles.label}>Departamento <span style={{ color: '#e53e3e' }}>*</span></label>
+          <select required style={styles.select} name="departmentId" value={formData.departmentId} onChange={handleChange}>
+            <option value="">Selecione o Departamento...</option>
             {orgData?.departments?.filter(d => !formData.directorateId || d.directorateId === formData.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
