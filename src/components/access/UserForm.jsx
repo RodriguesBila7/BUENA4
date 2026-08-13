@@ -31,6 +31,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
 
   const [accountCategory, setAccountCategory] = useState('administrador'); // 'administrador', 'usuario', 'central'
   const [selectedEmpId, setSelectedEmpId] = useState('');
+  const [loginType, setLoginType] = useState('nuit'); // 'nuit' ou 'custom'
   const [formData, setFormData] = useState({
     name: '', username: '', nuit: '', email: '', contact: '',
     password: '', confirmPassword: '',
@@ -45,6 +46,12 @@ export default function UserForm({ initialData, onSave, onCancel }) {
   useEffect(() => {
     if (initialData) {
       setFormData({ ...formData, ...initialData, confirmPassword: initialData.password || '' });
+      if (initialData.username && initialData.nuit && initialData.username !== initialData.nuit) {
+        setLoginType('custom');
+      } else {
+        setLoginType('nuit');
+      }
+
       if (initialData.roleId === 'usuario_admin' || initialData.roleId === 'admin_3' || initialData.roleId === 'admin') {
         setAccountCategory('administrador');
       } else if (initialData.roleId === 'usuario_normal' || initialData.roleId === 'usuario') {
@@ -135,18 +142,34 @@ export default function UserForm({ initialData, onSave, onCancel }) {
     });
   };
 
+  const handleLoginTypeChange = (type) => {
+    setLoginType(type);
+    if (type === 'nuit') {
+      setFormData(prev => ({ ...prev, username: prev.nuit }));
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     let finalVal = type === 'checkbox' ? checked : value;
 
-    if (name === 'nuit' || name === 'username') {
+    if (name === 'nuit') {
       finalVal = sanitizeNuit(value);
+    } else if (name === 'username') {
+      if (loginType === 'nuit') {
+        finalVal = sanitizeNuit(value);
+      } else {
+        finalVal = value.replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 30);
+      }
     } else if (name === 'contact') {
       finalVal = formatMozPhone(value);
     }
 
     setFormData(prev => {
       const nextData = { ...prev, [name]: finalVal };
+      if (name === 'nuit' && loginType === 'nuit' && !initialData) {
+        nextData.username = finalVal;
+      }
       
       // Se alterar o perfil principal para Administrador, limpa obrigatoriamente qualquer delegação
       if (name === 'roleId') {
@@ -423,10 +446,58 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         </div>
 
         {/* Credenciais e Acesso */}
-        <h4 style={styles.sectionTitle}>Credenciais e Acesso (Login por NUIT)</h4>
+        <h4 style={styles.sectionTitle}>Credenciais e Acesso (Login Principal)</h4>
+        
+        <div style={{ gridColumn: '1 / -1', backgroundColor: 'var(--color-bg-card)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '10px' }}>
+          <label style={{ ...styles.label, color: 'var(--color-primary)', display: 'block', marginBottom: '8px', fontSize: '13px' }}>
+            ⚙️ Escolha do Utilizador para o Login Principal:
+          </label>
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: 'var(--color-text-base)' }}>
+              <input 
+                type="radio" 
+                name="loginTypeSelect" 
+                checked={loginType === 'nuit'} 
+                onChange={() => handleLoginTypeChange('nuit')} 
+              />
+              🔢 Usar NUIT (12 dígitos numéricos)
+            </label>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: 'var(--color-text-base)' }}>
+              <input 
+                type="radio" 
+                name="loginTypeSelect" 
+                checked={loginType === 'custom'} 
+                onChange={() => handleLoginTypeChange('custom')} 
+              />
+              ✍️ Username Personalizado (Nome ao seu gosto)
+            </label>
+          </div>
+        </div>
+
         <div style={styles.formGroup}>
-          <label style={styles.label}>Username / NUIT de Login <span style={{ color: '#e53e3e' }}>*</span></label>
-          <input required style={styles.input} name="username" value={formData.username} onChange={handleChange} maxLength={12} disabled={!!initialData} placeholder="12 dígitos NUIT ou Username..." />
+          <label style={styles.label}>
+            {loginType === 'nuit' ? 'Username de Login (Sincronizado com NUIT)' : 'Username Personalizado de Login'} <span style={{ color: '#e53e3e' }}>*</span>
+          </label>
+          <input 
+            required 
+            style={{
+              ...styles.input,
+              backgroundColor: (loginType === 'nuit' || !!initialData) ? 'var(--color-bg-card)' : 'var(--color-bg-base)',
+              borderColor: loginType === 'custom' ? 'var(--color-primary)' : 'var(--color-border)'
+            }} 
+            name="username" 
+            value={formData.username} 
+            onChange={handleChange} 
+            maxLength={loginType === 'nuit' ? 12 : 30} 
+            disabled={loginType === 'nuit' || !!initialData} 
+            placeholder={loginType === 'nuit' ? "Igual ao NUIT (ex: 123456789012)..." : "Digite um nome ao seu gosto (ex: rodrigo.admin)..."} 
+          />
+          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+            {loginType === 'nuit' 
+              ? 'ℹ️ O login será feito digitando os 12 dígitos do NUIT.' 
+              : '💡 O utilizador poderá fazer login usando este Nome Personalizado, o seu NUIT ou Email.'}
+          </div>
         </div>
         <div style={styles.formGroup}>
           <label style={styles.label}>Perfil de Acesso (Role) <span style={{ color: '#e53e3e' }}>*</span></label>

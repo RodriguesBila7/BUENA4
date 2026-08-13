@@ -158,9 +158,9 @@ router.post('/login', (req, res) => {
       FROM users u 
       LEFT JOIN roles r ON u.role_id = r.id 
       LEFT JOIN roles dr ON u.delegated_role_id = dr.id
-      WHERE (LOWER(u.nuit) = LOWER(?) OR LOWER(r.name) = LOWER(?) OR LOWER(r.id) = LOWER(?))
+      WHERE (LOWER(u.username) = LOWER(?) OR LOWER(u.nuit) = LOWER(?) OR LOWER(u.email) = LOWER(?) OR LOWER(r.name) = LOWER(?) OR LOWER(r.id) = LOWER(?))
         AND u.status = 'Ativo'
-    `).all(username, username, username);
+    `).all(username, username, username, username, username);
     
     if (!candidateUsers || candidateUsers.length === 0) {
       return res.status(401).json({ error: 'invalid_credentials' });
