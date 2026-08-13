@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import DisciplinarySubForm from '../disciplinary/DisciplinarySubForm';
 import useDisciplinaryData from '../../hooks/useDisciplinaryData';
+import { sanitizeNuit, validateNuit, formatMozPhone, validateMozPhone } from '../../utils/formatters';
 
 export default function EmployeeForm({ employees, orgData, editingEmpId, onSave, onCancel, onSaved }) {
   const { data } = orgData;
@@ -8,6 +9,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
 
   const [formData, setFormData] = useState({
     name: '', nip: '', bi: '', nim: '', nimDistintivo: '', dob: '', gender: '', maritalStatus: '', nationality: '', photo: '',
+    phone: '', altPhone: '',
     rank: '', role: '', class: '', step: '', academicLevel: '', formationArea: '',
     employmentStatus: '', contractType: '', admissionDate: '',
     unitType: 'normal',
@@ -38,8 +40,16 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    let finalVal = type === 'checkbox' ? checked : value;
+
+    if (name === 'nip') {
+      finalVal = sanitizeNuit(value);
+    } else if (name === 'phone' || name === 'altPhone') {
+      finalVal = formatMozPhone(value);
+    }
+
     setFormData(prev => {
-      const updates = { [name]: type === 'checkbox' ? checked : value };
+      const updates = { [name]: finalVal };
       
       // Cascading resets
       if (name === 'directorateId') {
@@ -80,7 +90,6 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
   const handlePhotoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Opcional: Validar tamanho (ex: max 50MB)
       if (file.size > 50 * 1024 * 1024) {
         setErrorMsg('A foto deve ter no máximo 50MB.');
         return;
@@ -149,10 +158,26 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
       return;
     }
 
-    const nibPattern = /^\d{1,9}$/;
-    if (!nibPattern.test(formData.nip)) {
-      setErrorMsg('O NUIT deve conter apenas números (máximo de 9 dígitos).');
+    const nuitCheck = validateNuit(formData.nip, true);
+    if (!nuitCheck.isValid) {
+      setErrorMsg(nuitCheck.message || 'O NUIT deve conter apenas números, até ao máximo de 12 dígitos.');
       return;
+    }
+
+    if (formData.phone) {
+      const phoneCheck = validateMozPhone(formData.phone, false);
+      if (!phoneCheck.isValid) {
+        setErrorMsg(phoneCheck.message);
+        return;
+      }
+    }
+
+    if (formData.altPhone) {
+      const altPhoneCheck = validateMozPhone(formData.altPhone, false);
+      if (!altPhoneCheck.isValid) {
+        setErrorMsg(altPhoneCheck.message);
+        return;
+      }
     }
 
     const biPattern = /^\d{1,14}[A-Za-z]$/;
@@ -290,8 +315,16 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
               <input type="text" name="name" value={formData.name} onChange={handleChange} style={styles.input} required />
             </div>
             <div style={styles.formGroup}>
-              <label style={styles.label}>NUIT *</label>
-              <input type="text" name="nip" value={formData.nip} onChange={handleChange} style={styles.input} required maxLength={9} pattern="\d{1,9}" title="Apenas números, máximo de 9 dígitos" placeholder="Ex: 123456789" />
+              <label style={styles.label}>NUIT * (Máx. 12 dígitos)</label>
+              <input type="text" name="nip" value={formData.nip} onChange={handleChange} style={styles.input} required maxLength={12} pattern="\d{1,12}" title="Apenas números, máximo de 12 dígitos" placeholder="Ex: 123456789012" />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Contacto Principal (+258)</label>
+              <input type="text" name="phone" value={formData.phone || ''} onChange={handleChange} style={styles.input} maxLength={16} placeholder="+258 84 123 4567" title="Padrão moçambicano (+258) com 9 dígitos" />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Contacto Alternativo (+258)</label>
+              <input type="text" name="altPhone" value={formData.altPhone || ''} onChange={handleChange} style={styles.input} maxLength={16} placeholder="+258 82 123 4567" title="Padrão moçambicano (+258) com 9 dígitos" />
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Nº de BI</label>

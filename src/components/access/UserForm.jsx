@@ -5,6 +5,7 @@ import useOrgData from '../../hooks/useOrgData';
 import useSecuritySettings from '../../hooks/useSecuritySettings';
 import { useAuth } from '../../contexts/AuthContext';
 import { isCentralUser, formatProvincialRoleName } from '../../utils/scopeUtils';
+import { sanitizeNuit, validateNuit, formatMozPhone, validateMozPhone } from '../../utils/formatters';
 import ConfirmModal from '../ConfirmModal';
 
 const styles = {
@@ -136,8 +137,16 @@ export default function UserForm({ initialData, onSave, onCancel }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    let finalVal = type === 'checkbox' ? checked : value;
+
+    if (name === 'nuit' || name === 'username') {
+      finalVal = sanitizeNuit(value);
+    } else if (name === 'contact') {
+      finalVal = formatMozPhone(value);
+    }
+
     setFormData(prev => {
-      const nextData = { ...prev, [name]: type === 'checkbox' ? checked : value };
+      const nextData = { ...prev, [name]: finalVal };
       
       // Se alterar o perfil principal para Administrador, limpa obrigatoriamente qualquer delegação
       if (name === 'roleId') {
@@ -172,12 +181,30 @@ export default function UserForm({ initialData, onSave, onCancel }) {
       showModal('Campo Obrigatório', 'Por favor, preencha o Nome Completo.');
       return;
     }
+    if (!formData.nuit || !formData.nuit.trim()) {
+      showModal('Campo Obrigatório', 'Por favor, preencha o NUIT.');
+      return;
+    }
+
+    const nuitCheck = validateNuit(formData.nuit, true);
+    if (!nuitCheck.isValid) {
+      showModal('NUIT Inválido', nuitCheck.message || 'O NUIT deve conter apenas números, até ao limite máximo de 12 dígitos.');
+      return;
+    }
+
     if (!formData.email || !formData.email.trim()) {
       showModal('Campo Obrigatório', 'Por favor, preencha o Email Institucional.');
       return;
     }
+
     if (!formData.contact || !formData.contact.trim()) {
       showModal('Campo Obrigatório', 'Por favor, preencha o Contacto.');
+      return;
+    }
+
+    const phoneCheck = validateMozPhone(formData.contact, true);
+    if (!phoneCheck.isValid) {
+      showModal('Contacto Inválido', phoneCheck.message);
       return;
     }
     if (!formData.username || !formData.username.trim()) {
@@ -366,19 +393,20 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>NUIT (Identificação Única) <span style={{ color: '#e53e3e' }}>*</span></label>
+          <label style={styles.label}>NUIT (Identificação Única - Máx 12 dígitos) <span style={{ color: '#e53e3e' }}>*</span></label>
           <input
             required
             style={styles.input}
             name="nuit"
             value={formData.nuit || ''}
+            maxLength={12}
             onChange={(e) => {
               handleChange(e);
               if (!initialData && (!formData.username || formData.username === formData.nuit)) {
                 setFormData(prev => ({ ...prev, nuit: e.target.value, username: e.target.value }));
               }
             }}
-            placeholder="Digite o NUIT (ex: 102938475)..."
+            placeholder="Ex: 123456789012"
           />
         </div>
         <div style={styles.formGroup}>
@@ -390,15 +418,15 @@ export default function UserForm({ initialData, onSave, onCancel }) {
           <input required type="email" style={styles.input} name="email" value={formData.email} onChange={handleChange} placeholder="exemplo@sernic.gov.mz..." />
         </div>
         <div style={styles.formGroup}>
-          <label style={styles.label}>Contacto <span style={{ color: '#e53e3e' }}>*</span></label>
-          <input required style={styles.input} name="contact" value={formData.contact} onChange={handleChange} placeholder="+258 8X XXX XXXX..." />
+          <label style={styles.label}>Contacto (+258 com 9 dígitos) <span style={{ color: '#e53e3e' }}>*</span></label>
+          <input required style={styles.input} name="contact" value={formData.contact} onChange={handleChange} maxLength={16} placeholder="+258 84 123 4567" title="Padrão moçambicano (+258) com 9 dígitos" />
         </div>
 
         {/* Credenciais e Acesso */}
         <h4 style={styles.sectionTitle}>Credenciais e Acesso (Login por NUIT)</h4>
         <div style={styles.formGroup}>
           <label style={styles.label}>Username / NUIT de Login <span style={{ color: '#e53e3e' }}>*</span></label>
-          <input required style={styles.input} name="username" value={formData.username} onChange={handleChange} disabled={!!initialData} placeholder="NUIT ou Username de acesso..." />
+          <input required style={styles.input} name="username" value={formData.username} onChange={handleChange} maxLength={12} disabled={!!initialData} placeholder="12 dígitos NUIT ou Username..." />
         </div>
         <div style={styles.formGroup}>
           <label style={styles.label}>Perfil de Acesso (Role) <span style={{ color: '#e53e3e' }}>*</span></label>
