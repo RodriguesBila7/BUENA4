@@ -1117,16 +1117,26 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
               {settings.logotipo ? (
                 <img src={settings.logotipo} alt="Logo" style={styles.headerLogo} />
               ) : (
-                <img src={SERNIC_LOGO_B64} alt="Logo Padrão" style={{ ...styles.headerLogo, width: '32px', height: '32px' }} />
+                <img src={SERNIC_LOGO_B64} alt="Logo Padrão" style={{ ...styles.headerLogo, width: '34px', height: '34px' }} />
               )}
-              <h2 style={styles.institutionTitle}>
-                {settings.nome_instituicao} ({settings.sigla})
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                <h2 style={{ ...styles.institutionTitle, margin: 0, lineHeight: '1.2' }}>
+                  {settings.nome_instituicao} ({settings.sigla})
+                </h2>
                 {userDirectorate && (
-                  <span style={{ fontWeight: '700', color: 'var(--color-primary, #1B365D)', marginLeft: '8px' }}>
-                    — {userDirectorate.name}
+                  <span style={{ 
+                    fontSize: '11px', 
+                    fontWeight: '700', 
+                    color: 'var(--color-primary, #1B365D)', 
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.4px',
+                    marginTop: '2px',
+                    lineHeight: '1.2'
+                  }}>
+                    {userDirectorate.name.toUpperCase()}
                   </span>
                 )}
-              </h2>
+              </div>
             </div>
           </div>
 
