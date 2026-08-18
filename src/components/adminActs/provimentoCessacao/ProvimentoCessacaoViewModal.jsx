@@ -1,9 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import useDraggable from '../../../hooks/useDraggable';
+import useResizableModal from '../../../hooks/useResizableModal';
 
 export default function ProvimentoCessacaoViewModal({ act, employee, onClose, onOpenDespacho, onOpenApproval, currentUser, isPrimary }) {
-  const { position, onPointerDown } = useDraggable();
+  const {
+    modalRef,
+    position,
+    onPointerDown,
+    isMaximized,
+    toggleMaximize,
+    handleResizePointerDown,
+    handleHeaderDoubleClick,
+    getOverlayProps,
+    modalStyle
+  } = useResizableModal({ defaultWidth: '850px', minWidth: 480, minHeight: 350 });
 
   if (!act) return null;
 
@@ -36,18 +46,29 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
   };
 
   const statusBadge = getStatusBadge(act.status);
+  const overlayProps = getOverlayProps(onClose);
 
   return ReactDOM.createPortal(
-    <div style={styles.overlay} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div 
+      style={styles.overlay}
+      onMouseDown={overlayProps.onMouseDown}
+      onClick={overlayProps.onClick}
+    >
       <div 
+        ref={modalRef}
         style={{ 
           ...styles.modal, 
-          transform: `translate(${position.x}px, ${position.y}px)` 
+          ...modalStyle
         }} 
-        onClick={e => e.stopPropagation()}
       >
-        {/* Header com Drag Handle */}
-        <div style={styles.header} onPointerDown={onPointerDown} className="drag-handle">
+        {/* Header com Drag Handle, Duplo Clique e Botão Maximizar/Reduzir */}
+        <div 
+          style={styles.header} 
+          onPointerDown={isMaximized ? undefined : onPointerDown} 
+          onDoubleClick={handleHeaderDoubleClick}
+          className={isMaximized ? '' : 'drag-handle'}
+          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '18px' }}>
               {act.actType === 'Nomeação' ? '👔' : act.actType === 'Cessação de Funções' ? '🛑' : '🔄'}
@@ -66,7 +87,15 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
             }}>
               {statusBadge.label}
             </span>
-            <button onClick={onClose} style={styles.closeBtn}>✕</button>
+            <button
+              type="button"
+              onClick={toggleMaximize}
+              style={styles.expandBtn}
+              title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
+            >
+              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+            </button>
+            <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
           </div>
         </div>
 
@@ -321,6 +350,21 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
             Fechar
           </button>
         </div>
+
+        {/* Handle de redimensionamento por mouse no canto inferior direito */}
+        {!isMaximized && (
+          <div 
+            onPointerDown={handleResizePointerDown}
+            style={styles.resizeHandle}
+            title="Arraste com o rato para expandir ou reduzir livremente"
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="14" y1="3" x2="3" y2="14" />
+              <line x1="14" y1="8" x2="8" y2="14" />
+              <line x1="14" y1="13" x2="13" y2="14" />
+            </svg>
+          </div>
+        )}
       </div>
     </div>,
     document.body
@@ -334,27 +378,26 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
     zIndex: 9999,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: '20px',
-    backdropFilter: 'blur(3px)',
+    backdropFilter: 'blur(4px)',
+    boxSizing: 'border-box'
   },
   modal: {
     backgroundColor: '#FFFFFF',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '850px',
-    maxHeight: '90vh',
+    borderRadius: '14px',
     display: 'flex',
     flexDirection: 'column',
     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
     overflow: 'hidden',
+    boxSizing: 'border-box'
   },
   header: {
-    padding: '16px 20px',
+    padding: '16px 22px',
     borderBottom: '1px solid #E5E7EB',
     display: 'flex',
     justifyContent: 'space-between',
@@ -362,6 +405,7 @@ const styles = {
     backgroundColor: '#F8FAFC',
     cursor: 'move',
     userSelect: 'none',
+    flexShrink: 0
   },
   title: {
     margin: 0,
@@ -373,6 +417,20 @@ const styles = {
     margin: 0,
     fontSize: '12px',
     color: '#64748B',
+  },
+  expandBtn: {
+    background: 'rgba(37, 99, 235, 0.08)',
+    border: '1px solid rgba(37, 99, 235, 0.25)',
+    color: '#2563eb',
+    borderRadius: '6px',
+    padding: '4px 8px',
+    fontSize: '11px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3px',
+    transition: 'all 0.15s ease'
   },
   closeBtn: {
     background: 'none',
@@ -396,6 +454,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
+    flex: 1,
+    boxSizing: 'border-box'
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
@@ -627,6 +687,7 @@ const styles = {
     backgroundColor: '#F8FAFC',
     display: 'flex',
     justifyContent: 'flex-end',
+    flexShrink: 0
   },
   closeModalBtn: {
     padding: '8px 18px',
@@ -638,4 +699,18 @@ const styles = {
     fontSize: '13px',
     cursor: 'pointer',
   },
+  resizeHandle: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: '18px',
+    height: '18px',
+    cursor: 'se-resize',
+    color: '#94a3b8',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    userSelect: 'none',
+    zIndex: 10
+  }
 };

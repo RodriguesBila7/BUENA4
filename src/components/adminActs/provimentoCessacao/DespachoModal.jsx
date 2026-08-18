@@ -1,10 +1,21 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
-import useDraggable from '../../../hooks/useDraggable';
+import useResizableModal from '../../../hooks/useResizableModal';
 import { showToast } from '../../common/Toast';
 
 export default function DespachoModal({ act, onClose, onSaveDespacho, currentUser }) {
-  const { position, onPointerDown } = useDraggable();
+  const {
+    modalRef,
+    position,
+    onPointerDown,
+    isMaximized,
+    toggleMaximize,
+    handleResizePointerDown,
+    handleHeaderDoubleClick,
+    getOverlayProps,
+    modalStyle
+  } = useResizableModal({ defaultWidth: '640px', minWidth: 420, minHeight: 300 });
+
   const [despacho, setDespacho] = useState(act?.despacho || '');
   const [brNumber, setBrNumber] = useState(act?.details?.brNumber || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,22 +51,44 @@ export default function DespachoModal({ act, onClose, onSaveDespacho, currentUse
     }
   };
 
+  const overlayProps = getOverlayProps(onClose);
+
   return ReactDOM.createPortal(
-    <div style={styles.overlay} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div 
+      style={styles.overlay}
+      onMouseDown={overlayProps.onMouseDown}
+      onClick={overlayProps.onClick}
+    >
       <div 
+        ref={modalRef}
         style={{ 
           ...styles.modal, 
-          transform: `translate(${position.x}px, ${position.y}px)` 
+          ...modalStyle
         }} 
-        onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={styles.header} onPointerDown={onPointerDown} className="drag-handle">
+        {/* Header com Drag Handle, Duplo Clique e Maximizar */}
+        <div 
+          style={styles.header} 
+          onPointerDown={isMaximized ? undefined : onPointerDown} 
+          onDoubleClick={handleHeaderDoubleClick}
+          className={isMaximized ? '' : 'drag-handle'}
+          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+        >
           <div>
             <h3 style={styles.title}>📜 Inserir Despacho da DRH</h3>
             <p style={styles.subtitle}>Processo: {act.actType} • {act.employeeName}</p>
           </div>
-          <button onClick={onClose} style={styles.closeBtn}>✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={toggleMaximize}
+              style={styles.expandBtn}
+              title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
+            >
+              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+            </button>
+            <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
+          </div>
         </div>
 
         {/* Form */}
@@ -99,6 +132,21 @@ export default function DespachoModal({ act, onClose, onSaveDespacho, currentUse
             </button>
           </div>
         </form>
+
+        {/* Handle de redimensionamento por mouse no canto inferior direito */}
+        {!isMaximized && (
+          <div 
+            onPointerDown={handleResizePointerDown}
+            style={styles.resizeHandle}
+            title="Arraste com o rato para expandir ou reduzir livremente"
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="14" y1="3" x2="3" y2="14" />
+              <line x1="14" y1="8" x2="8" y2="14" />
+              <line x1="14" y1="13" x2="13" y2="14" />
+            </svg>
+          </div>
+        )}
       </div>
     </div>,
     document.body
@@ -112,24 +160,26 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
     zIndex: 9999,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: '20px',
-    backdropFilter: 'blur(3px)',
+    backdropFilter: 'blur(4px)',
+    boxSizing: 'border-box'
   },
   modal: {
     backgroundColor: '#FFFFFF',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '620px',
+    borderRadius: '14px',
+    display: 'flex',
+    flexDirection: 'column',
     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
     overflow: 'hidden',
+    boxSizing: 'border-box'
   },
   header: {
-    padding: '16px 20px',
+    padding: '16px 22px',
     borderBottom: '1px solid #E5E7EB',
     display: 'flex',
     justifyContent: 'space-between',
@@ -137,6 +187,7 @@ const styles = {
     backgroundColor: '#F8FAFC',
     cursor: 'move',
     userSelect: 'none',
+    flexShrink: 0
   },
   title: {
     margin: 0,
@@ -149,6 +200,20 @@ const styles = {
     fontSize: '12px',
     color: '#64748B',
   },
+  expandBtn: {
+    background: 'rgba(37, 99, 235, 0.08)',
+    border: '1px solid rgba(37, 99, 235, 0.25)',
+    color: '#2563eb',
+    borderRadius: '6px',
+    padding: '4px 8px',
+    fontSize: '11px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3px',
+    transition: 'all 0.15s ease'
+  },
   closeBtn: {
     background: 'none',
     border: 'none',
@@ -159,10 +224,13 @@ const styles = {
     borderRadius: '6px',
   },
   form: {
-    padding: '20px',
+    padding: '20px 22px',
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
+    flex: 1,
+    overflowY: 'auto',
+    boxSizing: 'border-box'
   },
   infoBanner: {
     display: 'flex',
@@ -209,6 +277,7 @@ const styles = {
     gap: '10px',
     paddingTop: '10px',
     borderTop: '1px solid #E5E7EB',
+    flexShrink: 0
   },
   cancelBtn: {
     padding: '8px 16px',
@@ -231,4 +300,18 @@ const styles = {
     cursor: 'pointer',
     boxShadow: '0 2px 4px rgba(27, 54, 93, 0.2)',
   },
+  resizeHandle: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: '18px',
+    height: '18px',
+    cursor: 'se-resize',
+    color: '#94a3b8',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    userSelect: 'none',
+    zIndex: 10
+  }
 };
