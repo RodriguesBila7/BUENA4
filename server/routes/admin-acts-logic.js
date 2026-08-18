@@ -325,4 +325,349 @@ router.post('/confirm/:id', (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════════════════════════════════════════
+// FLUXO DE PROVIMENTO E CESSAÇÃO (Nomeação, Cessação de Funções, Reintegração)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// POST criar processo de Provimento / Cessação
+router.post('/provimento/create', (req, res) => {
+  const db = getDb();
+  const { 
+    employeeId, 
+    employeeName, 
+    employeeNuit, 
+    actType, 
+    actDate, 
+    despacho, 
+    details = {}, 
+    userResponsible, 
+    userRole, 
+    isSecondary 
+  } = req.body;
+
+  if (!employeeId || !actType || !actDate) {
+    return res.status(400).json({ error: 'Campos obrigatórios em falta (employeeId, actType, actDate).' });
+  }
+
+  try {
+    const employeeRow = db.prepare('SELECT * FROM employees WHERE id = ?').get(employeeId);
+    if (!employeeRow) return res.status(404).json({ error: 'Funcionário não encontrado.' });
+
+    const isSec = Boolean(
+      isSecondary || 
+      req.headers['x-is-secondary'] === 'true' || 
+      userRole === 'usuario_normal' || 
+      userRole === 'usuario'
+    );
+
+    // Se for secundário, ou se não houver despacho, entra como Pendente de Despacho
+    let status = 'Pendente de Despacho';
+    let despachoInfo = null;
+
+    if (!isSec && despacho && despacho.trim()) {
+      status = 'Pendente de Aprovação';
+      despachoInfo = {
+        texto: despacho.trim(),
+        data: new Date().toISOString(),
+        user: userResponsible || 'Super Administrador',
+        cargo: 'Direcção de Recursos Humanos'
+      };
+    }
+
+    const actId = 'act_' + Date.now();
+    const history = [
+      {
+        id: 'h_' + Date.now() + '_1',
+        action: 'Processo Iniciado',
+        user: userResponsible || 'Utilizador',
+        role: userRole || (isSec ? 'Usuário Secundário' : 'Administrador Primário'),
+        date: new Date().toISOString(),
+        description: `Processo de ${actType} registado no sistema com estado "${status}".`
+      }
+    ];
+
+    if (despachoInfo) {
+      history.push({
+        id: 'h_' + Date.now() + '_2',
+        action: 'Despacho Inserido',
+        user: despachoInfo.user,
+        role: despachoInfo.cargo,
+        date: despachoInfo.data,
+        description: `Despacho emitido pela DRH: "${despachoInfo.texto}". Processo encaminhado para Tripla Aprovação.`
+      });
+    }
+
+    const newAct = {
+      id: actId,
+      group: 'Provimento e Cessação',
+      actType,
+      employeeId,
+      employeeName: employeeName || employeeRow.name,
+      employeeNuit: employeeNuit || employeeRow.nuit || employeeRow.id,
+      actDate,
+      status,
+      despacho: despachoInfo ? despachoInfo.texto : '',
+      despachoDate: despachoInfo ? despachoInfo.data : null,
+      despachoUser: despachoInfo ? despachoInfo.user : null,
+      details: {
+        ...details,
+        brNumber: details.brNumber || '',
+        effectiveDate: details.effectiveDate || actDate,
+        reason: details.reason || '',
+        observations: details.observations || ''
+      },
+      approvals: {
+        super_admin_1: { approved: false, user: null, name: null, roleTitle: 'Super Administrador Principal (Chefe da Direcção de Recursos Humanos)', date: null, observation: null },
+        admin_1: { approved: false, user: null, name: null, roleTitle: 'Super Administrador (Chefe do Departamento Central de Administração de Pessoal)', date: null, observation: null },
+        admin_2: { approved: false, user: null, name: null, roleTitle: 'Administrador Principal (Técnico Central de RH)', date: null, observation: null }
+      },
+      rejection: null,
+      history,
+      createdAt: new Date().toISOString(),
+      createdBy: userResponsible || 'Utilizador'
+    };
+
+    db.prepare('INSERT INTO admin_acts (id, data) VALUES (?, ?)').run(actId, JSON.stringify(newAct));
+    res.json({ success: true, act: newAct, message: `Processo de ${actType} criado com sucesso!` });
+  } catch (error) {
+    console.error('Erro ao criar processo de provimento:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST adicionar despacho ao processo (Apenas Usuário Primário Central)
+router.post('/provimento/:id/despacho', (req, res) => {
+  const db = getDb();
+  const actId = req.params.id;
+  const { despacho, userResponsible, userRole, brNumber } = req.body;
+
+  if (!despacho || !despacho.trim()) {
+    return res.status(400).json({ error: 'O texto do despacho é obrigatório.' });
+  }
+
+  try {
+    const actRow = db.prepare('SELECT * FROM admin_acts WHERE id = ?').get(actId);
+    if (!actRow) return res.status(404).json({ error: 'Processo não encontrado.' });
+
+    let actData = JSON.parse(actRow.data);
+
+    if (actData.status === 'Finalizado' || actData.status === 'Rejeitado') {
+      return res.status(400).json({ error: `Não é possível adicionar despacho a um processo no estado "${actData.status}".` });
+    }
+
+    actData.despacho = despacho.trim();
+    actData.despachoDate = new Date().toISOString();
+    actData.despachoUser = userResponsible || 'Super Administrador Principal';
+    actData.status = 'Pendente de Aprovação';
+
+    if (brNumber) {
+      actData.details = { ...actData.details, brNumber };
+    }
+
+    if (!Array.isArray(actData.history)) actData.history = [];
+    actData.history.push({
+      id: 'h_' + Date.now(),
+      action: 'Despacho Inserido',
+      user: userResponsible || 'Chefe da DRH',
+      role: userRole || 'Direcção de Recursos Humanos',
+      date: new Date().toISOString(),
+      description: `Despacho inserido pela DRH: "${despacho.trim()}". Processo avançado para fase de Tripla Aprovação.`
+    });
+
+    db.prepare('UPDATE admin_acts SET data = ? WHERE id = ?').run(JSON.stringify(actData), actId);
+    res.json({ success: true, act: actData, message: 'Despacho registado com sucesso. Processo em fase de aprovação!' });
+  } catch (error) {
+    console.error('Erro ao adicionar despacho:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST aprovação de um dos 3 níveis obrigatórios
+router.post('/provimento/:id/approve', (req, res) => {
+  const db = getDb();
+  const actId = req.params.id;
+  const { roleKey, userResponsible, userName, roleTitle, observation } = req.body;
+
+  const validKeys = ['super_admin_1', 'admin_1', 'admin_2'];
+  if (!validKeys.includes(roleKey)) {
+    return res.status(400).json({ error: 'Perfil de aprovação inválido. Deve ser um dos 3 Administradores Primários Centrais.' });
+  }
+
+  try {
+    const actRow = db.prepare('SELECT * FROM admin_acts WHERE id = ?').get(actId);
+    if (!actRow) return res.status(404).json({ error: 'Processo não encontrado.' });
+
+    let actData = JSON.parse(actRow.data);
+
+    if (actData.status !== 'Pendente de Aprovação') {
+      return res.status(400).json({ error: `O processo deve estar no estado "Pendente de Aprovação" (Estado atual: ${actData.status}). Certifique-se de que o despacho foi emitido.` });
+    }
+
+    if (!actData.approvals) {
+      actData.approvals = {
+        super_admin_1: { approved: false },
+        admin_1: { approved: false },
+        admin_2: { approved: false }
+      };
+    }
+
+    // Regista a aprovação no slot correspondente
+    actData.approvals[roleKey] = {
+      approved: true,
+      user: userResponsible || 'Admin',
+      name: userName || userResponsible || 'Administrador Primário',
+      roleTitle: roleTitle || (
+        roleKey === 'super_admin_1' ? 'Super Administrador Principal (Chefe da Direcção de Recursos Humanos)' :
+        roleKey === 'admin_1' ? 'Super Administrador (Chefe do Departamento Central de Administração de Pessoal)' :
+        'Administrador Principal (Técnico Central de RH)'
+      ),
+      date: new Date().toISOString(),
+      observation: (observation || '').trim()
+    };
+
+    // Contagem de aprovações
+    const approvedList = validKeys.filter(k => actData.approvals[k]?.approved);
+    const isAllApproved = approvedList.length === 3;
+
+    if (!Array.isArray(actData.history)) actData.history = [];
+
+    actData.history.push({
+      id: 'h_' + Date.now(),
+      action: `Aprovação (${approvedList.length}/3)`,
+      user: userName || userResponsible || 'Administrador',
+      role: actData.approvals[roleKey].roleTitle,
+      date: new Date().toISOString(),
+      description: `Aprovação confirmada por ${actData.approvals[roleKey].roleTitle}.${observation ? ' Nota: ' + observation : ''}`
+    });
+
+    const tx = db.transaction(() => {
+      // Se todos os 3 perfis aprovaram, FINALIZA O PROCESSO e aplica alterações na base de dados
+      if (isAllApproved) {
+        actData.status = 'Finalizado';
+        actData.history.push({
+          id: 'h_' + Date.now() + '_final',
+          action: 'Processo Finalizado',
+          user: 'Sistema SERNIC',
+          role: 'Tripla Aprovação Completa (3/3)',
+          date: new Date().toISOString(),
+          description: 'Todas as 3 aprovações obrigatórias foram concluídas. O acto foi homologado e os dados funcionais do funcionário foram actualizados com sucesso.'
+        });
+
+        // Actualiza o funcionário se existir
+        const employeeRow = db.prepare('SELECT * FROM employees WHERE id = ?').get(actData.employeeId);
+        if (employeeRow) {
+          const extraData = employeeRow.extra_data ? JSON.parse(employeeRow.extra_data) : {};
+          const updateFields = [];
+          const updateValues = [];
+
+          if (actData.actType === 'Nomeação') {
+            extraData.role = actData.details?.newRole || actData.details?.newCargo || extraData.role;
+            if (actData.details?.newDirectorateId) {
+              updateFields.push('directorate_id = ?');
+              updateValues.push(actData.details.newDirectorateId);
+            }
+            if (actData.details?.newDepartmentId) {
+              updateFields.push('department_id = ?');
+              updateValues.push(actData.details.newDepartmentId);
+            }
+            if (actData.details?.newSectionId) {
+              updateFields.push('section_id = ?');
+              updateValues.push(actData.details.newSectionId);
+            }
+          } else if (actData.actType === 'Cessação de Funções') {
+            extraData.previousRole = extraData.role || actData.details?.previousRole || '';
+            extraData.role = actData.details?.posteriorRole || 'Técnico de Investigação';
+          } else if (actData.actType === 'Reintegração') {
+            updateFields.push('status = ?', 'is_active = ?');
+            updateValues.push('Ativo', 1);
+            if (actData.details?.newRole) extraData.role = actData.details.newRole;
+          }
+
+          updateFields.push('extra_data = ?', "updated_at = datetime('now')");
+          updateValues.push(JSON.stringify(extraData));
+          updateValues.push(actData.employeeId);
+
+          db.prepare(`UPDATE employees SET ${updateFields.join(', ')} WHERE id = ?`).run(...updateValues);
+
+          // Regista no histórico funcional oficial
+          db.prepare(`
+            INSERT INTO functional_history (id, employee_id, act_type, act_date, old_state_json, new_state_json, details_json, user_responsible)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(
+            'hist_' + Date.now(),
+            actData.employeeId,
+            actData.actType,
+            actData.actDate,
+            JSON.stringify({ status: employeeRow.status, role: extraData.previousRole || '' }),
+            JSON.stringify({ status: 'Ativo', role: extraData.role || '' }),
+            JSON.stringify({ despacho: actData.despacho, status: 'Finalizado', approvals: actData.approvals }),
+            userName || userResponsible || 'Super Administrador'
+          );
+        }
+      }
+
+      db.prepare('UPDATE admin_acts SET data = ? WHERE id = ?').run(JSON.stringify(actData), actId);
+    });
+
+    tx();
+
+    res.json({ 
+      success: true, 
+      act: actData, 
+      isFinalized: isAllApproved, 
+      approvedCount: approvedList.length,
+      message: isAllApproved ? 'Processo Aprovado por todos os 3 perfis e Finalizado com sucesso!' : `Aprovação registada com sucesso (${approvedList.length}/3)!` 
+    });
+  } catch (error) {
+    console.error('Erro ao aprovar processo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST rejeição do processo
+router.post('/provimento/:id/reject', (req, res) => {
+  const db = getDb();
+  const actId = req.params.id;
+  const { reason, userResponsible, userName, roleTitle } = req.body;
+
+  if (!reason || !reason.trim()) {
+    return res.status(400).json({ error: 'O motivo da rejeição é obrigatório.' });
+  }
+
+  try {
+    const actRow = db.prepare('SELECT * FROM admin_acts WHERE id = ?').get(actId);
+    if (!actRow) return res.status(404).json({ error: 'Processo não encontrado.' });
+
+    let actData = JSON.parse(actRow.data);
+
+    if (actData.status === 'Finalizado') {
+      return res.status(400).json({ error: 'Não é possível rejeitar um processo já finalizado.' });
+    }
+
+    actData.status = 'Rejeitado';
+    actData.rejection = {
+      rejectedBy: userName || userResponsible || 'Super Administrador',
+      roleTitle: roleTitle || 'Administrador Primário',
+      date: new Date().toISOString(),
+      reason: reason.trim()
+    };
+
+    if (!Array.isArray(actData.history)) actData.history = [];
+    actData.history.push({
+      id: 'h_' + Date.now(),
+      action: 'Processo Rejeitado',
+      user: userName || userResponsible,
+      role: roleTitle || 'Administrador Primário',
+      date: new Date().toISOString(),
+      description: `Processo rejeitado por ${roleTitle || 'Administrador'}. Motivo: "${reason.trim()}".`
+    });
+
+    db.prepare('UPDATE admin_acts SET data = ? WHERE id = ?').run(JSON.stringify(actData), actId);
+    res.json({ success: true, act: actData, message: 'Processo rejeitado com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao rejeitar processo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;

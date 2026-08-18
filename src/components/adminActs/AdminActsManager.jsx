@@ -8,6 +8,7 @@ import VacationManager from '../vacations/VacationManager';
 import TransferManager from '../transfers/TransferManager';
 import MudancaCarreiraManager from './mudancaCarreira/MudancaCarreiraManager';
 import ReservaReformaManager from './reservaReforma/ReservaReformaManager';
+import ProvimentoCessacaoManager from './provimentoCessacao/ProvimentoCessacaoManager';
 
 export default function AdminActsManager({ activeTab, onTabChange, actTypesDb }) {
   
@@ -37,6 +38,10 @@ export default function AdminActsManager({ activeTab, onTabChange, actTypesDb })
       }
 
       // Special overrides for modules that have specific components
+      if (groupName === 'Provimento e Cessação') {
+        return <ProvimentoCessacaoManager actsInGroup={actsInGroup} />;
+      }
+
       if (groupName === 'Mudança de Carreira') {
         return <MudancaCarreiraManager actsInGroup={actsInGroup} />;
       }
