@@ -3289,7 +3289,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 const styles = {
   appContainer: {
     display: 'flex',
-    minHeight: '100vh',
+    height: '100vh',
+    maxHeight: '100vh',
+    overflow: 'hidden',
     backgroundColor: 'var(--color-bg-base)',
     color: 'var(--color-text-base)',
     transition: 'background-color var(--transition-normal), color var(--transition-normal)',
@@ -3301,7 +3303,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     flexShrink: 0,
-    height: '100%',
+    height: '100vh',
+    maxHeight: '100vh',
     position: 'relative',
     transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     zIndex: 40,
@@ -3314,6 +3317,7 @@ const styles = {
     gap: '12px',
     borderBottom: '1px solid var(--color-border)',
     background: 'linear-gradient(180deg, rgba(27, 54, 93, 0.04) 0%, transparent 100%)',
+    flexShrink: 0,
   },
   sidebarLogo: {
     width: '42px',
@@ -3371,7 +3375,9 @@ const styles = {
     transition: 'transform 0.2s ease',
   },
   sidebarFooter: {
-    padding: '16px',
+    marginTop: 'auto',
+    flexShrink: 0,
+    padding: '16px 14px 20px 14px',
     borderTop: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
