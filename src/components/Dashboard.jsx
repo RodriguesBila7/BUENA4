@@ -1204,11 +1204,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             {/* Seletor Rápido de Tema (Claro / Escuro) */}
             <button 
               onClick={() => {
-                if (isSuperAdmin) {
-                  updateSettings({ ...settings, modo_tema: settings.modo_tema === 'light' ? 'dark' : 'light', usuario_responsavel: user.username });
-                } else {
-                  setConfirmModal({ isOpen: true, title: 'Atenção', message: t('msg_admin_only_theme'), action: () => setConfirmModal(prev => ({ ...prev, isOpen: false })) });
-                }
+                updateSettings({ ...settings, modo_tema: settings.modo_tema === 'light' ? 'dark' : 'light', usuario_responsavel: user?.username || 'Utilizador' });
               }}
               style={styles.themeToggleBtn}
               title={t('theme_toggle_title')}

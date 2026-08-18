@@ -43,10 +43,20 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const [hoveredTema, setHoveredTema] = useState(null);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  // 'theme' = cor do tema | 'noite' = fundo preto | 'claro' = fundo branco
-  const [bwMode, setBwMode] = useState('theme');
+  // Sincronizar com settings globais
+  const [bwMode, setBwMode] = useState(() => {
+    return settings.modo_tema === 'dark' ? 'noite' : 'theme';
+  });
   const themeMenuRef = React.useRef(null);
   const langMenuRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (settings.modo_tema === 'dark' && bwMode !== 'noite') {
+      setBwMode('noite');
+    } else if (settings.modo_tema === 'light' && bwMode === 'noite') {
+      setBwMode('theme');
+    }
+  }, [settings.modo_tema]);
 
   React.useEffect(() => {
     const handleClickOutside = (event) => {
@@ -74,14 +84,23 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const bgColor =
     bwMode === 'noite' ? '#111111' :
     bwMode === 'claro' ? '#F5F5F5' :
-    settings.cor_principal;
+    (settings.cor_principal || '#1B365D');
 
   /* ciclo: theme → noite → claro → theme */
   const toggleBwMode = () => {
-    setBwMode(prev =>
-      prev === 'theme' ? 'noite' :
-      prev === 'noite' ? 'claro' : 'theme'
-    );
+    const nextMode =
+      bwMode === 'theme' ? 'noite' :
+      bwMode === 'noite' ? 'claro' : 'theme';
+    
+    setBwMode(nextMode);
+
+    if (updateSettings) {
+      if (nextMode === 'noite') {
+        updateSettings({ ...settings, modo_tema: 'dark', usuario_responsavel: 'Tema Login (Noite)' });
+      } else if (nextMode === 'claro') {
+        updateSettings({ ...settings, modo_tema: 'light', usuario_responsavel: 'Tema Login (Claro)' });
+      }
+    }
   };
 
   /* ── Autenticação e Registo ── */
@@ -176,22 +195,46 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <div style={{ position: 'relative' }} ref={langMenuRef}>
           <button
             onClick={() => setShowLangMenu(!showLangMenu)}
-            style={{ ...s.langBtn, display: 'flex', alignItems: 'center', gap: '4px', opacity: 1, fontWeight: '700' }}
+            style={{
+              ...s.langBtn,
+              backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.18)',
+              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+              border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              opacity: 1,
+              fontWeight: '700'
+            }}
             title={t('language')}
           >
             {language.toUpperCase()}
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </button>
           
           {showLangMenu && (
-            <div style={s.langDropdown}>
+            <div style={{
+              ...s.langDropdown,
+              backgroundColor: bwMode === 'claro' ? '#FFFFFF' : 'rgba(15, 23, 42, 0.95)',
+              border: bwMode === 'claro' ? '1px solid #E2E8F0' : '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.25)'
+            }}>
               {['pt', 'en'].filter(l => l !== language).map(lang => (
                 <button
                   key={lang}
                   onClick={() => { setLanguage(lang); setShowLangMenu(false); }}
-                  style={{ ...s.langBtn, opacity: 0.7, width: '100%', textAlign: 'left', marginTop: '4px' }}
+                  style={{
+                    ...s.langBtn,
+                    backgroundColor: 'transparent',
+                    color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+                    opacity: 0.95,
+                    width: '100%',
+                    textAlign: 'left',
+                    marginTop: '2px',
+                    fontWeight: '700'
+                  }}
                 >
                   {lang.toUpperCase()}
                 </button>
@@ -210,11 +253,12 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
           style={{
             ...s.iconBtn,
             backgroundColor:
-              bwMode === 'noite' ? 'rgba(255,255,255,0.15)' :
-              bwMode === 'claro' ? 'rgba(0,0,0,0.12)' :
+              bwMode === 'noite' ? 'rgba(255,255,255,0.18)' :
+              bwMode === 'claro' ? 'rgba(0,0,0,0.08)' :
               'rgba(255,255,255,0.2)',
             color:
-              bwMode === 'claro' ? '#333333' : '#FFFFFF',
+              bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+            border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
           }}
         >
           {bwMode === 'noite' ? (
@@ -224,7 +268,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             </svg>
           ) : bwMode === 'claro' ? (
             /* ícone sol */
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="5"/>
               <line x1="12" y1="1" x2="12" y2="3"/>
               <line x1="12" y1="21" x2="12" y2="23"/>
@@ -237,7 +281,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             </svg>
           ) : (
             /* ícone meio círculo (tema padrão) */
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 2v20"/>
             </svg>
@@ -249,7 +293,12 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
           <button 
             onClick={() => setShowThemeMenu(!showThemeMenu)}
             title={t('themes_title')}
-            style={s.iconBtn}
+            style={{
+              ...s.iconBtn,
+              backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.2)',
+              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+              border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
+            }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
