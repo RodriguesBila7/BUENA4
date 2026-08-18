@@ -573,6 +573,16 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     window.print();
   };
 
+  const getNavItemStyle = (isActive, isSub = false) => ({
+    ...styles.navItem,
+    backgroundColor: isActive ? 'rgba(27, 54, 93, 0.08)' : 'transparent',
+    color: isActive ? 'var(--color-primary, #1B365D)' : 'var(--color-text-base)',
+    fontWeight: isActive ? '700' : '500',
+    borderLeft: isActive ? '3.5px solid var(--color-primary, #1B365D)' : '3.5px solid transparent',
+    paddingLeft: isSub ? '36px' : '14px',
+    boxShadow: isActive ? '0 2px 6px rgba(0,0,0,0.03)' : 'none',
+  });
+
   return (
     <div style={styles.appContainer}>
       {/* SIDEBAR LATERAL (Oculta na impressão) */}
@@ -581,7 +591,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           {settings.logotipo ? (
             <img src={settings.logotipo} alt="Logo SERNIC" style={styles.sidebarLogo} />
           ) : (
-            <img src={SERNIC_LOGO_B64} alt="Logo SERNIC Padrão" style={{ ...styles.sidebarLogo, width: '40px', height: '40px' }} />
+            <img src={SERNIC_LOGO_B64} alt="Logo SERNIC Padrão" style={{ ...styles.sidebarLogo, width: '42px', height: '42px' }} />
           )}
           <div style={styles.sidebarHeaderText}>
             <span style={styles.sidebarSigla}>{settings.sigla}</span>
@@ -592,53 +602,35 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         <nav style={styles.sidebarNav}>
           <button 
             onClick={() => handleTabChange('home')}
-            style={{ 
-              ...styles.navItem, 
-              backgroundColor: activeTab === 'home' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-              borderLeft: activeTab === 'home' ? '4px solid var(--color-primary)' : '4px solid transparent'
-            }}
+            style={getNavItemStyle(activeTab === 'home')}
           >
-            <svg style={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <svg style={{ ...styles.navIcon, color: activeTab === 'home' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             {t('menu_home')}
           </button>
           
           <button 
             onClick={() => handleTabChange('reports')}
-            style={{ 
-              ...styles.navItem, 
-              backgroundColor: activeTab === 'reports' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-              borderLeft: activeTab === 'reports' ? '4px solid var(--color-primary)' : '4px solid transparent'
-            }}
+            style={getNavItemStyle(activeTab === 'reports')}
           >
-            <svg style={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <svg style={{ ...styles.navIcon, color: activeTab === 'reports' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             {t('menu_reports')}
           </button>
 
           {/* Menu Processos Disciplinares */}
           <button 
             onClick={() => handleTabChange('disciplinary')}
-            style={{ 
-              ...styles.navItem, 
-              backgroundColor: activeTab === 'disciplinary' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-              borderLeft: activeTab === 'disciplinary' ? '4px solid var(--color-primary)' : '4px solid transparent'
-            }}
+            style={getNavItemStyle(activeTab === 'disciplinary')}
           >
-            <svg style={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <svg style={{ ...styles.navIcon, color: activeTab === 'disciplinary' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             Processos Disciplinares
           </button>
-
-
 
           {/* Menu Efetividade */}
           <button 
             onClick={() => handleTabChange('effectiveness')}
-            style={{ 
-              ...styles.navItem, 
-              backgroundColor: activeTab === 'effectiveness' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-              borderLeft: activeTab === 'effectiveness' ? '4px solid var(--color-primary)' : '4px solid transparent'
-            }}
+            style={getNavItemStyle(activeTab === 'effectiveness')}
           >
-            <svg style={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ ...styles.navIcon, color: activeTab === 'effectiveness' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -650,13 +642,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           {/* Menu Avaliação Desempenho */}
           <button 
             onClick={() => handleTabChange('evaluations')}
-            style={{ 
-              ...styles.navItem, 
-              backgroundColor: activeTab === 'evaluations' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-              borderLeft: activeTab === 'evaluations' ? '4px solid var(--color-primary)' : '4px solid transparent'
-            }}
+            style={getNavItemStyle(activeTab === 'evaluations')}
           >
-            <svg style={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6M6 20V10M18 20V4" /><circle cx="12" cy="10" r="2" /><circle cx="6" cy="6" r="2" /><circle cx="18" cy="16" r="2" /></svg>
+            <svg style={{ ...styles.navIcon, color: activeTab === 'evaluations' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6M6 20V10M18 20V4" /><circle cx="12" cy="10" r="2" /><circle cx="6" cy="6" r="2" /><circle cx="18" cy="16" r="2" /></svg>
             Avaliação Desempenho
           </button>
 
@@ -704,19 +692,14 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                      key={item.id}
                      onClick={() => handleTabChange(item.id)}
                      style={{ 
-                       ...styles.navItem, 
-                       padding: '10px 16px 10px 48px', 
-                       opacity: activeTab === item.id ? 1 : 0.85, 
-                       borderLeft: 'none', 
+                       ...getNavItemStyle(activeTab === item.id, true),
                        fontSize: '13px',
-                       position: 'relative',
-                       backgroundColor: activeTab === item.id ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                       color: activeTab === item.id ? 'var(--color-primary)' : 'inherit'
+                       position: 'relative'
                      }}
                    >
                      <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)' }}></div>
-                     <span style={{ fontWeight: activeTab === item.id ? '600' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       <svg style={{ width: '14px', height: '14px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                     <span style={{ fontWeight: activeTab === item.id ? '700' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                          {item.icon}
                        </svg>
                        {item.label}
@@ -750,70 +733,30 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
               <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
                  <div style={{ position: 'absolute', left: '32px', top: '0', bottom: '16px', width: '1px', backgroundColor: 'var(--color-border)' }}></div>
 
-                 <button 
-                    onClick={() => handleTabChange('emp_list')}
-                    style={{ 
-                      ...styles.navItem, 
-                      padding: '10px 16px 10px 48px', 
-                      opacity: 0.85, 
-                      borderLeft: 'none', 
-                      fontSize: '13px',
-                      position: 'relative',
-                      backgroundColor: activeTab === 'emp_list' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                      color: activeTab === 'emp_list' ? 'var(--color-primary)' : 'inherit'
-                    }}
-                  >
-                    Visualizar Funcionários
-                  </button>
-
-                  <button 
-                    onClick={() => handleTabChange('emp_form')}
-                    style={{ 
-                      ...styles.navItem, 
-                      padding: '10px 16px 10px 48px', 
-                      opacity: 0.85, 
-                      borderLeft: 'none', 
-                      fontSize: '13px',
-                      position: 'relative',
-                      backgroundColor: activeTab === 'emp_form' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                      color: activeTab === 'emp_form' ? 'var(--color-primary)' : 'inherit'
-                    }}
-                  >
-                    Cadastrar Funcionário
-                  </button>
-
-                  <button 
-                    onClick={() => handleTabChange('emp_import')}
-                    style={{ 
-                      ...styles.navItem, 
-                      padding: '10px 16px 10px 48px', 
-                      opacity: 0.85, 
-                      borderLeft: 'none', 
-                      fontSize: '13px',
-                      position: 'relative',
-                      backgroundColor: activeTab === 'emp_import' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                      color: activeTab === 'emp_import' ? 'var(--color-primary)' : 'inherit'
-                    }}
-                  >
-                    Carregar e Importar
-                  </button>
-
-                  <button 
-                    onClick={() => handleTabChange('emp_deleted')}
-                    style={{ 
-                      ...styles.navItem, 
-                      padding: '10px 16px 10px 48px', 
-                      opacity: 0.85, 
-                      borderLeft: 'none', 
-                      fontSize: '13px',
-                      position: 'relative',
-                      backgroundColor: activeTab === 'emp_deleted' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                      color: activeTab === 'emp_deleted' ? 'var(--color-primary)' : 'inherit'
-                    }}
-                  >
-                    Funcionários Eliminados
-                  </button>
-
+                 {[
+                   { id: 'emp_list', label: 'Visualizar Funcionários', icon: <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path> },
+                   { id: 'emp_form', label: 'Cadastrar Funcionário', icon: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path> },
+                   { id: 'emp_import', label: 'Carregar e Importar', icon: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path> },
+                   { id: 'emp_deleted', label: 'Funcionários Eliminados', icon: <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path> }
+                 ].map(item => (
+                   <button 
+                     key={item.id}
+                     onClick={() => handleTabChange(item.id)}
+                     style={{
+                       ...getNavItemStyle(activeTab === item.id, true),
+                       fontSize: '13px',
+                       position: 'relative'
+                     }}
+                   >
+                     <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)' }}></div>
+                     <span style={{ fontWeight: activeTab === item.id ? '700' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                         {item.icon}
+                       </svg>
+                       {item.label}
+                     </span>
+                   </button>
+                 ))}
               </div>
             )}
           </div>
@@ -915,70 +858,60 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
                   {/* Utilizadores e Acessos - Protegido por RBAC */}
                   <PermissionGuard module="Acessos" action="Visualizar">
-                    <button onClick={() => toggleSubMenu('acessos')} style={{ ...styles.navItem, padding: '10px 16px 10px 48px', justifyContent: 'space-between', opacity: 0.85, borderLeft: 'none', fontSize: '13px', position: 'relative', backgroundColor: expandedSubMenu === 'acessos' ? 'rgba(0,0,0,0.02)' : 'transparent' }}>
-                      <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <svg style={{ width: '15px', height: '15px', color: 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                        <span>{t('menu_users_access') || 'Utilizadores e Acessos'}</span>
-                      </div>
-                      <svg style={{ width: '14px', height: '14px', color: 'var(--color-text-muted)', transition: 'transform 0.3s ease', transform: expandedSubMenu === 'acessos' ? 'rotate(180deg)' : 'rotate(0)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </button>
+                     <button onClick={() => toggleSubMenu('acessos')} style={{ ...styles.navItem, padding: '10px 16px 10px 36px', justifyContent: 'space-between', opacity: 0.9, borderLeft: 'none', fontSize: '13px', position: 'relative', backgroundColor: expandedSubMenu === 'acessos' ? 'rgba(0,0,0,0.02)' : 'transparent' }}>
+                       <div style={{ position: 'absolute', left: '26px', top: '50%', width: '6px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                         <svg style={{ width: '15px', height: '15px', color: 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                         <span style={{ fontWeight: '600' }}>{t('menu_users_access') || 'Utilizadores e Acessos'}</span>
+                       </div>
+                       <svg style={{ width: '14px', height: '14px', color: 'var(--color-text-muted)', transition: 'transform 0.3s ease', transform: expandedSubMenu === 'acessos' ? 'rotate(180deg)' : 'rotate(0)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                     </button>
                   </PermissionGuard>
 
                   {expandedSubMenu === 'acessos' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                      <div style={{ position: 'absolute', left: '56px', top: '0', bottom: '20px', width: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
+                     <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                       <div style={{ position: 'absolute', left: '46px', top: '0', bottom: '20px', width: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
 
-                      {[
-                        { id: 'users_manage', label: 'Gestão de utilizadores' },
-                        { id: 'users_roles', label: 'Perfis / roles' },
-                        { id: 'users_permissions', label: 'Permissões por módulo' },
-                        { id: 'users_policies', label: 'Políticas de acesso' },
-                        { id: 'users_audit', label: 'Auditoria de acessos' }
-                      ].map((item) => (
-                        <button 
-                          key={item.id}
-                          onClick={() => handleTabChange(item.id)}
-                          style={{ 
-                            ...styles.navItem, 
-                            padding: '10px 16px 10px 72px',
-                            opacity: activeTab === item.id ? 1 : 0.7,
-                            color: item.id === 'users_permissions' ? '#e53e3e' : (activeTab === item.id ? 'var(--color-primary)' : 'var(--color-text-base)'),
-                            backgroundColor: item.id === 'users_permissions' ? 'rgba(229, 62, 62, 0.1)' : (activeTab === item.id ? 'rgba(255, 255, 255, 0.08)' : 'transparent'),
-                            borderLeft: item.id === 'users_permissions' ? '3px solid #e53e3e' : 'none',
-                            fontSize: '13px',
-                            position: 'relative'
-                          }}
-                        >
-                          <div style={{ position: 'absolute', left: '56px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
-                          <span style={{ fontWeight: activeTab === item.id ? '600' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <svg style={{ width: '14px', height: '14px' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle></svg>
-                            {t(`menu_${item.id}`) || item.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                       {[
+                         { id: 'users_manage', label: 'Gestão de utilizadores' },
+                         { id: 'users_roles', label: 'Perfis / roles' },
+                         { id: 'users_permissions', label: 'Permissões por módulo' },
+                         { id: 'users_policies', label: 'Políticas de acesso' },
+                         { id: 'users_audit', label: 'Auditoria de acessos' }
+                       ].map((item) => (
+                         <button 
+                           key={item.id}
+                           onClick={() => handleTabChange(item.id)}
+                           style={{ 
+                             ...getNavItemStyle(activeTab === item.id, true),
+                             paddingLeft: '56px',
+                             fontSize: '13px',
+                             position: 'relative'
+                           }}
+                         >
+                           <div style={{ position: 'absolute', left: '46px', top: '50%', width: '6px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
+                           <span style={{ fontWeight: activeTab === item.id ? '700' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                             <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle></svg>
+                             {t(`menu_${item.id}`) || item.label}
+                           </span>
+                         </button>
+                       ))}
+                     </div>
+                   )}
 
                   {/* Idiomas */}
                   <button 
                     onClick={() => handleTabChange('settings_languages')}
                     style={{ 
-                      ...styles.navItem, 
-                      padding: '10px 16px 10px 48px', 
-                      justifyContent: 'flex-start', 
-                      opacity: activeTab === 'settings_languages' ? 1 : 0.85, 
-                      borderLeft: 'none', 
+                      ...getNavItemStyle(activeTab === 'settings_languages', true),
                       fontSize: '13px',
                       position: 'relative',
-                      backgroundColor: activeTab === 'settings_languages' ? 'rgba(0,0,0,0.02)' : 'transparent',
-                      color: activeTab === 'settings_languages' ? 'var(--color-primary)' : 'var(--color-text-base)'
                     }}
                   >
-                    <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
+                    <div style={{ position: 'absolute', left: '26px', top: '50%', width: '6px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_languages' ? 'var(--color-primary)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                      <span style={{ fontWeight: activeTab === 'settings_languages' ? '600' : '400' }}>{t('menu_settings_languages') || 'Idiomas e Região'}</span>
+                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_languages' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                      <span style={{ fontWeight: activeTab === 'settings_languages' ? '700' : '400' }}>{t('menu_settings_languages') || 'Idiomas e Região'}</span>
                     </div>
                   </button>
 
@@ -986,21 +919,15 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   <button 
                     onClick={() => handleTabChange('settings_system')}
                     style={{ 
-                      ...styles.navItem, 
-                      padding: '10px 16px 10px 48px', 
-                      justifyContent: 'flex-start', 
-                      opacity: activeTab === 'settings_system' ? 1 : 0.85, 
-                      borderLeft: 'none', 
+                      ...getNavItemStyle(activeTab === 'settings_system', true),
                       fontSize: '13px',
                       position: 'relative',
-                      backgroundColor: activeTab === 'settings_system' ? 'rgba(0,0,0,0.02)' : 'transparent',
-                      color: activeTab === 'settings_system' ? 'var(--color-primary)' : 'var(--color-text-base)'
                     }}
                   >
-                    <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
+                    <div style={{ position: 'absolute', left: '26px', top: '50%', width: '6px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_system' ? 'var(--color-primary)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-                      <span style={{ fontWeight: activeTab === 'settings_system' ? '600' : '400' }}>{t('menu_settings_system') || 'Sistema'}</span>
+                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_system' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                      <span style={{ fontWeight: activeTab === 'settings_system' ? '700' : '400' }}>{t('menu_settings_system') || 'Sistema'}</span>
                     </div>
                   </button>
 
@@ -1008,21 +935,15 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   <button 
                     onClick={() => handleTabChange('settings_backup')}
                     style={{ 
-                      ...styles.navItem, 
-                      padding: '10px 16px 10px 48px', 
-                      justifyContent: 'flex-start', 
-                      opacity: activeTab === 'settings_backup' ? 1 : 0.85, 
-                      borderLeft: activeTab === 'settings_backup' ? '3px solid var(--color-primary)' : 'none', 
+                      ...getNavItemStyle(activeTab === 'settings_backup', true),
                       fontSize: '13px',
                       position: 'relative',
-                      backgroundColor: activeTab === 'settings_backup' ? 'rgba(0,0,0,0.04)' : 'transparent',
-                      color: activeTab === 'settings_backup' ? 'var(--color-primary)' : 'var(--color-text-base)'
                     }}
                   >
-                    <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
+                    <div style={{ position: 'absolute', left: '26px', top: '50%', width: '6px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_backup' ? 'var(--color-primary)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                      <span style={{ fontWeight: activeTab === 'settings_backup' ? '600' : '400' }}>Central de Backup</span>
+                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_backup' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                      <span style={{ fontWeight: activeTab === 'settings_backup' ? '700' : '400' }}>Central de Backup</span>
                     </div>
                   </button>
 
@@ -1031,15 +952,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     <button 
                       onClick={() => handleTabChange('settings_act_types')}
                       style={{ 
-                        ...styles.navItem, 
-                        padding: '10px 16px 10px 48px', 
-                        justifyContent: 'flex-start', 
-                        opacity: activeTab === 'settings_act_types' ? 1 : 0.85, 
-                        borderLeft: activeTab === 'settings_act_types' ? '3px solid var(--color-primary)' : 'none', 
+                        ...getNavItemStyle(activeTab === 'settings_act_types', true),
                         fontSize: '13px',
                         position: 'relative',
-                        backgroundColor: activeTab === 'settings_act_types' ? 'rgba(0,0,0,0.04)' : 'transparent',
-                        color: activeTab === 'settings_act_types' ? 'var(--color-primary)' : 'var(--color-text-base)'
                       }}
                     >
                       <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
@@ -3382,27 +3297,30 @@ const styles = {
   sidebar: {
     width: '260px',
     backgroundColor: 'var(--color-bg-card)',
-    color: 'var(--color-text-base)',
+    borderRight: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
     flexShrink: 0,
-    borderRight: '1px solid var(--color-border)',
+    height: '100%',
     position: 'relative',
     transition: 'margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     zIndex: 40,
+    boxShadow: '4px 0 16px rgba(0, 0, 0, 0.02)',
   },
   sidebarHeader: {
-    padding: '24px',
+    padding: '20px 18px',
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
     borderBottom: '1px solid var(--color-border)',
+    background: 'linear-gradient(180deg, rgba(27, 54, 93, 0.04) 0%, transparent 100%)',
   },
   sidebarLogo: {
-    width: '40px',
-    height: '40px',
+    width: '42px',
+    height: '42px',
     objectFit: 'contain',
-    borderRadius: '4px',
+    borderRadius: '8px',
+    filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.1))',
   },
   sidebarHeaderText: {
     display: 'flex',
@@ -3411,46 +3329,54 @@ const styles = {
   sidebarSigla: {
     fontSize: '18px',
     fontWeight: '800',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.6px',
+    color: 'var(--color-text-main, #0f172a)',
   },
   sidebarDRH: {
-    fontSize: '10px',
-    color: 'var(--color-text-muted)',
-    fontWeight: '600',
+    fontSize: '10.5px',
+    color: 'var(--color-primary, #1B365D)',
+    fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: '0.5px',
   },
   sidebarNav: {
     flex: 1,
-    padding: '20px 0',
+    padding: '14px 10px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '4px',
+    gap: '3px',
+    overflowY: 'auto',
   },
   navItem: {
     display: 'flex',
     alignItems: 'center',
-    padding: '12px 24px',
+    padding: '10px 14px',
+    borderRadius: '10px',
     border: 'none',
     color: 'var(--color-text-base)',
-    fontSize: '14px',
+    fontSize: '13.5px',
     fontWeight: '500',
     textAlign: 'left',
     cursor: 'pointer',
     width: '100%',
-    transition: 'all var(--transition-fast)',
-    opacity: 0.85,
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    opacity: 0.9,
     gap: '12px',
+    boxSizing: 'border-box',
   },
   navIcon: {
     width: '18px',
     height: '18px',
+    flexShrink: 0,
+    transition: 'transform 0.2s ease',
   },
   sidebarFooter: {
-    padding: '20px',
+    padding: '16px',
     borderTop: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '10px',
+    backgroundColor: 'var(--color-bg-base)',
   },
   sidebarUser: {
     display: 'flex',
