@@ -21,7 +21,7 @@ import CareerManager from './career/CareerManager';
 import TransferManager from './transfers/TransferManager';
 import VacationManager from './vacations/VacationManager';
 import ErrorBoundary from './common/ErrorBoundary';
-import { isPrimaryCentralAdmin, isCentralUser } from '../utils/scopeUtils';
+import { isPrimaryCentralAdmin, isCentralUser, filterByProvincialScope } from '../utils/scopeUtils';
 
 const getDynamicGroupIcon = (groupName) => {
   switch(groupName) {
@@ -84,11 +84,16 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   }, [user, orgData]);
 
   const reportStats = React.useMemo(() => {
-    const total = employees.length;
-    const active = employees.filter(e => e.isActive !== false).length;
+    const isCentral = isCentralUser(user);
+    const effectiveEmployees = !isCentral
+      ? filterByProvincialScope(employees, user, orgData)
+      : employees;
+
+    const total = effectiveEmployees.length;
+    const active = effectiveEmployees.filter(e => e.isActive !== false).length;
     const inactive = total - active;
-    const men = employees.filter(e => e.gender === 'M' || e.gender === 'Masculino').length;
-    const women = employees.filter(e => e.gender === 'F' || e.gender === 'Feminino').length;
+    const men = effectiveEmployees.filter(e => e.gender === 'M' || e.gender === 'Masculino').length;
+    const women = effectiveEmployees.filter(e => e.gender === 'F' || e.gender === 'Feminino').length;
 
     // Helper para normalizar o nome da direcção e eliminar duplicados de ortografia/nomenclatura
     const getCanonicalDirName = (rawName) => {
@@ -96,7 +101,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       let norm = rawName.trim().replace(/^Direção\b/i, 'Direcção');
       const lower = norm.toLowerCase();
 
-      // Unificar variações da Cidade de Maputo para a nomenclatura oficial: "Direcção da Cidade de Maputo"
       if (
         lower.includes('cidade de maputo') ||
         lower.includes('maputo cidade')
@@ -104,7 +108,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         return 'Direcção da Cidade de Maputo';
       }
 
-      // Unificar "Direcção Provincial de Maputo Província" para "Direcção Provincial de Maputo"
       if (
         lower.includes('maputo província') ||
         lower.includes('maputo provincia')
@@ -119,13 +122,20 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       return norm;
     };
 
-    // Mapeamento de id de direcção para chave canónica
     const dirIdToCanonicalKey = {};
 
-    // 1. Distribution by Directorate (com deduplicação ortográfica)
+    const userDirId = user?.directorateId ? String(user.directorateId) : null;
+    const userDir = userDirId ? (orgData?.directorates || []).find(d => String(d.id) === userDirId) : null;
+    const userProvince = (userDir?.province || userDir?.name || '').toLowerCase();
+
+    // 1. Distribution by Directorate (Filtrado por Província se secundário)
     const byDirectorate = {};
-    if (orgData && orgData.directorates) {
-      orgData.directorates.forEach(d => {
+    const filteredDirectorates = (!isCentral && userDirId)
+      ? (orgData?.directorates || []).filter(d => String(d.id) === userDirId)
+      : (orgData?.directorates || []);
+
+    if (filteredDirectorates) {
+      filteredDirectorates.forEach(d => {
         const canonicalName = getCanonicalDirName(d.name);
         const key = canonicalName.toLowerCase();
         dirIdToCanonicalKey[String(d.id)] = key;
@@ -155,10 +165,14 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     }
     let unassignedDir = { id: 'unassigned', ids: ['unassigned'], name: 'Sem Afetação / Outros', count: 0, M: 0, F: 0, employees: [], districtDirectorates: [] };
 
-    // 2. Distribution by Department
+    // 2. Distribution by Department (Filtrado por Província se secundário)
     const byDepartment = {};
-    if (orgData && orgData.departments) {
-      orgData.departments.forEach(dep => {
+    const filteredDepartments = (!isCentral && userDirId)
+      ? (orgData?.departments || []).filter(dep => String(dep.directorateId) === userDirId)
+      : (orgData?.departments || []);
+
+    if (filteredDepartments) {
+      filteredDepartments.forEach(dep => {
         const idStr = String(dep.id);
         const parentDir = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(dep.directorateId)) : null;
         byDepartment[idStr] = {
@@ -172,10 +186,15 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     }
     let unassignedDep = { id: 'unassigned', name: 'Sem Departamento Especificado', count: 0, M: 0, F: 0, employees: [] };
 
-    // 3. Distribution by Division (Repartição)
+    // 3. Distribution by Division (Repartição) (Filtrado por Província se secundário)
     const byDivision = {};
-    if (orgData && orgData.divisions) {
-      orgData.divisions.forEach(div => {
+    const allowedDeptIds = new Set(filteredDepartments.map(d => String(d.id)));
+    const filteredDivisions = (!isCentral && userDirId)
+      ? (orgData?.divisions || []).filter(div => String(div.directorateId) === userDirId || allowedDeptIds.has(String(div.departmentId)))
+      : (orgData?.divisions || []);
+
+    if (filteredDivisions) {
+      filteredDivisions.forEach(div => {
         const idStr = String(div.id);
         const parentDep = orgData.departments ? orgData.departments.find(d => String(d.id) === String(div.departmentId)) : null;
         const parentDir = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(div.directorateId || (parentDep ? parentDep.directorateId : null))) : null;
@@ -192,10 +211,62 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     }
     let unassignedDiv = { id: 'unassigned', name: 'Sem Repartição Especificada', count: 0, M: 0, F: 0, employees: [] };
 
-    // 4. Distribution by Section (Secção)
+    // Helper para padronizar nomes das Direcções Distritais
+    const formatDistrictName = (rawName) => {
+      if (!rawName) return '';
+      const trimmed = rawName.trim();
+      if (/^Direcçã?o\s+Distrital/i.test(trimmed)) {
+        return trimmed.replace(/^Direção\b/i, 'Direcção');
+      }
+      const lower = trimmed.toLowerCase();
+      if (['matola', 'beira', 'manhiça', 'namaacha', 'mavia', 'maganja da costa'].includes(lower) || lower.startsWith('ilha ') || lower.startsWith('cidade ')) {
+        return `Direcção Distrital da ${trimmed}`;
+      }
+      return `Direcção Distrital de ${trimmed}`;
+    };
+
+    // 5. Distribution by District (Direcções Distritais) (Filtrado por Província se secundário)
+    const byDistrict = {};
+    const filteredDistricts = (!isCentral && userDirId)
+      ? (orgData?.districtDirectorates || []).filter(dist => {
+          const provMatch = String(dist.provincialDirectorateId || dist.directorateId || '') === userDirId;
+          const provNameMatch = userProvince && dist.province && userProvince.includes(dist.province.toLowerCase());
+          return provMatch || provNameMatch;
+        })
+      : (orgData?.districtDirectorates || []);
+
+    if (filteredDistricts) {
+      filteredDistricts.forEach(dist => {
+        const idStr = String(dist.id);
+        const parentProv = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(dist.provincialDirectorateId)) : null;
+        const districtSecs = orgData.sections ? orgData.sections.filter(sec => String(sec.districtDirectorateId || sec.districtId) === idStr) : [];
+        byDistrict[idStr] = {
+          id: idStr,
+          name: formatDistrictName(dist.name),
+          provincialDirectorateId: dist.provincialDirectorateId ? String(dist.provincialDirectorateId) : null,
+          provinceName: parentProv ? parentProv.name : 'Província N/A',
+          sections: districtSecs,
+          count: 0, M: 0, F: 0, employees: []
+        };
+      });
+    }
+    let unassignedDist = { id: 'unassigned', name: 'Sem Afetação Distrital', count: 0, M: 0, F: 0, employees: [] };
+
+    // 4. Distribution by Section (Secção) (Filtrado por Província se secundário)
     const bySection = {};
-    if (orgData && orgData.sections) {
-      orgData.sections.forEach(sec => {
+    const allowedDivIds = new Set(filteredDivisions.map(d => String(d.id)));
+    const allowedDistIds = new Set(filteredDistricts.map(d => String(d.id)));
+    const filteredSections = (!isCentral && userDirId)
+      ? (orgData?.sections || []).filter(sec => 
+          String(sec.directorateId) === userDirId || 
+          allowedDeptIds.has(String(sec.departmentId)) || 
+          allowedDivIds.has(String(sec.divisionId)) ||
+          allowedDistIds.has(String(sec.districtDirectorateId || sec.districtId))
+        )
+      : (orgData?.sections || []);
+
+    if (filteredSections) {
+      filteredSections.forEach(sec => {
         const idStr = String(sec.id);
         const parentDiv = orgData.divisions ? orgData.divisions.find(d => String(d.id) === String(sec.divisionId)) : null;
         const parentDep = orgData.departments ? orgData.departments.find(d => String(d.id) === String(sec.departmentId || (parentDiv ? parentDiv.departmentId : null))) : null;
@@ -218,39 +289,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     }
     let unassignedSec = { id: 'unassigned', name: 'Sem Secção Especificada', count: 0, M: 0, F: 0, employees: [] };
 
-    // Helper para padronizar nomes das Direcções Distritais (ex: Direcção Distrital de Moatize)
-    const formatDistrictName = (rawName) => {
-      if (!rawName) return '';
-      const trimmed = rawName.trim();
-      if (/^Direcçã?o\s+Distrital/i.test(trimmed)) {
-        return trimmed.replace(/^Direção\b/i, 'Direcção');
-      }
-      const lower = trimmed.toLowerCase();
-      if (['matola', 'beira', 'manhiça', 'namaacha', 'mavia', 'maganja da costa'].includes(lower) || lower.startsWith('ilha ') || lower.startsWith('cidade ')) {
-        return `Direcção Distrital da ${trimmed}`;
-      }
-      return `Direcção Distrital de ${trimmed}`;
-    };
-
-    // 5. Distribution by District (Direcções Distritais)
-    const byDistrict = {};
-    if (orgData && orgData.districtDirectorates) {
-      orgData.districtDirectorates.forEach(dist => {
-        const idStr = String(dist.id);
-        const parentProv = orgData.directorates ? orgData.directorates.find(d => String(d.id) === String(dist.provincialDirectorateId)) : null;
-        const districtSecs = orgData.sections ? orgData.sections.filter(sec => String(sec.districtDirectorateId || sec.districtId) === idStr) : [];
-        byDistrict[idStr] = {
-          id: idStr,
-          name: formatDistrictName(dist.name),
-          provincialDirectorateId: dist.provincialDirectorateId ? String(dist.provincialDirectorateId) : null,
-          provinceName: parentProv ? parentProv.name : 'Província N/A',
-          sections: districtSecs,
-          count: 0, M: 0, F: 0, employees: []
-        };
-      });
-    }
-    let unassignedDist = { id: 'unassigned', name: 'Sem Afetação Distrital', count: 0, M: 0, F: 0, employees: [] };
-
     // 6. Distribution by Career
     const byCareer = {};
     if (orgData && orgData.careers) {
@@ -271,7 +309,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       'Outro': 0
     };
 
-    employees.forEach(emp => {
+    effectiveEmployees.forEach(emp => {
       const isM = emp.gender === 'M' || emp.gender === 'Masculino';
       const isF = emp.gender === 'F' || emp.gender === 'Feminino';
 
@@ -421,9 +459,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       unassignedDist,
       careers: activeCareers,
       unassignedCareer,
-      academicLevels
+      academicLevels,
+      isScopedToProvince: !isCentral,
+      userDirectorateName: userDir?.name || 'Direcção Local'
     };
-  }, [employees, orgData]);
+  }, [employees, orgData, user]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -1619,22 +1659,66 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     {t('report_doc_body')} {settings.nome_instituicao} ({settings.sigla}){t('report_doc_body2')}
                   </p>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px', marginTop: '20px' }}>
-                    <div style={{ border: '1px solid var(--color-border)', padding: '15px', borderRadius: '8px', backgroundColor: 'var(--color-bg-base)' }}>
-                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary)' }}>Resumo Geral</h4>
-                      <p style={{ margin: '5px 0' }}><strong>Total de Funcionários:</strong> {reportStats.total}</p>
-                      <p style={{ margin: '5px 0' }}><strong>Ativos:</strong> {reportStats.active} | <strong>Inativos:</strong> {reportStats.inactive}</p>
+                  {/* RESUMO GERAL E GÉNERO SIMPLIFICADOS */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px', marginTop: '16px' }}>
+                    <div style={{ border: '1px solid var(--color-border)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--color-bg-base)', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary, #1B365D)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        📊 Resumo Geral
+                      </h4>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>Total de Funcionários:</span>
+                        <strong style={{ fontSize: '18px', color: 'var(--color-text-main)' }}>{reportStats.total}</strong>
+                      </div>
+                      <div style={{ display: 'flex', gap: '12px', fontSize: '12.5px', color: 'var(--color-text-muted)' }}>
+                        <span>Ativos: <strong style={{ color: '#16a34a' }}>{reportStats.active}</strong></span>
+                        <span>•</span>
+                        <span>Inativos: <strong style={{ color: '#dc2626' }}>{reportStats.inactive}</strong></span>
+                      </div>
                     </div>
-                    <div style={{ border: '1px solid var(--color-border)', padding: '15px', borderRadius: '8px', backgroundColor: 'var(--color-bg-base)' }}>
-                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary)' }}>Distribuição por Género</h4>
-                      <p style={{ margin: '5px 0' }}><strong>Homens:</strong> {reportStats.men}</p>
-                      <p style={{ margin: '5px 0' }}><strong>Mulheres:</strong> {reportStats.women}</p>
+
+                    <div style={{ border: '1px solid var(--color-border)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--color-bg-base)', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary, #1B365D)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        👥 Distribuição por Género
+                      </h4>
+                      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '42px' }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Homens: </span>
+                          <strong style={{ fontSize: '16px', color: 'var(--color-primary, #1B365D)' }}>{reportStats.men}</strong>
+                        </div>
+                        <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)' }}></div>
+                        <div style={{ textAlign: 'center' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Mulheres: </span>
+                          <strong style={{ fontSize: '16px', color: '#db2777' }}>{reportStats.women}</strong>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
+                  {/* AVISO DE ESCOPO PROVINCIAL (QUANDO PERFIL SECUNDÁRIO) */}
+                  {reportStats.isScopedToProvince && (
+                    <div style={{
+                      padding: '10px 16px',
+                      backgroundColor: 'rgba(27, 54, 93, 0.06)',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(27, 54, 93, 0.15)',
+                      color: 'var(--color-primary, #1B365D)',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '16px'
+                    }}>
+                      <span>📍</span>
+                      <span>
+                        <strong>Gerência Territorial Exclusiva:</strong> {reportStats.userDirectorateName} — Estrutura orgânica e quadro de pessoal restritos a esta Província.
+                      </span>
+                    </div>
+                  )}
+
                   {/* BARRA SELETORA DE NÍVEL DA ESTRUTURA ORGÂNICA (no-print) */}
                   <div className="no-print" style={{ 
-                    marginTop: '24px', 
+                    marginTop: '16px', 
                     marginBottom: '20px', 
                     padding: '14px 18px', 
                     borderRadius: '10px', 
@@ -1643,8 +1727,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                      <span style={{ fontSize: '13.5px', fontWeight: 'bold', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                         Filtrar por Estrutura Orgânica:
                       </span>
                       
@@ -1754,48 +1838,54 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
                   {/* ──────────────────────────────────────────────────────────
                       NÍVEL 1: DIRECÇÕES
-                  ────────────────────────────────────────────────────────── */}
+                   ────────────────────────────────────────────────────────── */}
                   {reportViewLevel === 'directorates' && (
                     <>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
                         <h4 style={{ color: 'var(--color-primary)', margin: 0, fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                          Por Onde Está Afecto (Direcções)
+                          Por Onde Está Afecto ({reportStats.isScopedToProvince ? reportStats.userDirectorateName : 'Direcções'})
                         </h4>
 
                         <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
-                              Seleccionar Direcção:
-                            </label>
-                            <select
-                              value={selectedReportDirectorate}
-                              onChange={(e) => setSelectedReportDirectorate(e.target.value)}
-                              style={{
-                                padding: '6px 12px',
-                                borderRadius: '6px',
-                                border: '1px solid var(--color-primary)',
-                                backgroundColor: 'var(--color-bg-base)',
-                                color: 'var(--color-text-main)',
-                                fontSize: '13px',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                                outline: 'none'
-                              }}
-                            >
-                              <option value="ALL">Todas as Direcções ({reportStats.total} funcionários)</option>
-                              {reportStats.allDirectoratesList.map(d => (
-                                <option key={d.id} value={d.id}>
-                                  {d.name} ({d.count} {d.count === 1 ? 'funcionário' : 'funcionários'})
-                                </option>
-                              ))}
-                              {reportStats.unassignedDir.count > 0 && (
-                                <option value="unassigned">
-                                  Sem Afetação / Outros ({reportStats.unassignedDir.count} funcionários)
-                                </option>
-                              )}
-                            </select>
-                          </div>
+                          {!reportStats.isScopedToProvince ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
+                                Seleccionar Direcção:
+                              </label>
+                              <select
+                                value={selectedReportDirectorate}
+                                onChange={(e) => setSelectedReportDirectorate(e.target.value)}
+                                style={{
+                                  padding: '6px 12px',
+                                  borderRadius: '6px',
+                                  border: '1px solid var(--color-primary)',
+                                  backgroundColor: 'var(--color-bg-base)',
+                                  color: 'var(--color-text-main)',
+                                  fontSize: '13px',
+                                  fontWeight: '500',
+                                  cursor: 'pointer',
+                                  outline: 'none'
+                                }}
+                              >
+                                <option value="ALL">Todas as Direcções ({reportStats.total} funcionários)</option>
+                                {reportStats.allDirectoratesList.map(d => (
+                                  <option key={d.id} value={d.id}>
+                                    {d.name} ({d.count} {d.count === 1 ? 'funcionário' : 'funcionários'})
+                                  </option>
+                                ))}
+                                {reportStats.unassignedDir.count > 0 && (
+                                  <option value="unassigned">
+                                    Sem Afetação / Outros ({reportStats.unassignedDir.count} funcionários)
+                                  </option>
+                                )}
+                              </select>
+                            </div>
+                          ) : (
+                            <div style={{ padding: '4px 10px', backgroundColor: 'rgba(27, 54, 93, 0.08)', borderRadius: '6px', fontSize: '12px', fontWeight: '700', color: 'var(--color-primary, #1B365D)' }}>
+                              📍 {reportStats.userDirectorateName}
+                            </div>
+                          )}
 
                           {selectedReportDirectorate === 'ALL' && (
                             <div style={{ position: 'relative' }}>
