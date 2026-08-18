@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
-import useDraggable from '../../hooks/useDraggable';
+import useResizableModal from '../../hooks/useResizableModal';
 import useEvaluationData from '../../hooks/useEvaluationData';
 import { getClassification } from '../../utils/evaluationRules';
 import FunctionalHistory from './acts/FunctionalHistory';
@@ -10,7 +10,17 @@ import useAuthData from '../../hooks/useAuthData';
 export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh, showRegisterAct = false }) {
   if (!emp) return null;
   const { data } = orgData;
-  const { position, onPointerDown } = useDraggable();
+  const {
+    modalRef,
+    position,
+    onPointerDown,
+    isMaximized,
+    toggleMaximize,
+    handleResizePointerDown,
+    handleHeaderDoubleClick,
+    getOverlayProps,
+    modalStyle
+  } = useResizableModal({ defaultWidth: '900px', minWidth: 460, minHeight: 320 });
   const { getLatestEvaluation } = useEvaluationData();
   const { user } = useAuthData();
   const latestEval = getLatestEvaluation(emp.id);
@@ -80,20 +90,28 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
   const careerChangeEval = evaluateCareerChange(emp, orgData);
   // -----------------------------------------
 
-  // Handle overlay click to close
-  const handleOverlayClick = (e) => {
-    if (e.target === e.currentTarget) onClose();
-  };
+  const overlayProps = getOverlayProps(onClose);
 
   return ReactDOM.createPortal(
     <>
-      <div style={styles.overlay} onClick={handleOverlayClick}>
+      <div 
+        style={styles.overlay} 
+        onMouseDown={overlayProps.onMouseDown}
+        onClick={overlayProps.onClick}
+      >
         <div 
-          style={{ ...styles.modal, transform: `translate(${position.x}px, ${position.y}px)` }}
+          ref={modalRef}
+          style={{ ...styles.modal, ...modalStyle }}
         >
-        <div style={styles.header} onPointerDown={onPointerDown} className="drag-handle">
+        <div 
+          style={styles.header} 
+          onPointerDown={isMaximized ? undefined : onPointerDown} 
+          onDoubleClick={handleHeaderDoubleClick}
+          className={isMaximized ? '' : 'drag-handle'}
+          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+        >
             <h2 style={styles.title}>Detalhes do Funcionário</h2>
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               {showRegisterAct && canRegisterAnyAct && (
                 <button 
                   onClick={() => !isInactiveAct && setWizardConfig({ isOpen: true, allowedActTypes: allowedByPerms })}
@@ -110,7 +128,15 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
                   + Registar Acto
                 </button>
               )}
-              <button onClick={onClose} style={styles.closeBtn}>✕</button>
+              <button
+                type="button"
+                onClick={toggleMaximize}
+                style={styles.expandBtn}
+                title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
+              >
+                {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              </button>
+              <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
             </div>
         </div>
 
@@ -287,6 +313,21 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
         <div style={styles.footer}>
           <button onClick={onClose} style={styles.btnSecondary}>Fechar</button>
         </div>
+
+        {/* Handle de redimensionamento por mouse no canto inferior direito */}
+        {!isMaximized && (
+          <div 
+            onPointerDown={handleResizePointerDown}
+            style={styles.resizeHandle}
+            title="Arraste com o rato para expandir ou reduzir livremente"
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="14" y1="3" x2="3" y2="14" />
+              <line x1="14" y1="8" x2="8" y2="14" />
+              <line x1="14" y1="13" x2="13" y2="14" />
+            </svg>
+          </div>
+        )}
       </div>
       </div>
       
@@ -311,34 +352,62 @@ const styles = {
   overlay: {
     position: 'fixed',
     top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
     backdropFilter: 'blur(4px)',
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'center',
     zIndex: 9999,
-    padding: '5vh 20px',
-    overflowY: 'auto'
+    padding: '20px',
+    boxSizing: 'border-box'
   },
   modal: {
     backgroundColor: 'var(--color-bg-base)',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '900px',
-    maxHeight: '90vh',
+    borderRadius: '14px',
     display: 'flex',
     flexDirection: 'column',
-    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-    overflow: 'hidden'
+    boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+    overflow: 'hidden',
+    boxSizing: 'border-box'
   },
   header: {
-    padding: '20px 24px',
+    padding: '16px 22px',
     borderBottom: '1px solid var(--color-border)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'var(--color-bg-card)',
+    cursor: 'move',
+    userSelect: 'none',
     flexShrink: 0
+  },
+  expandBtn: {
+    background: 'rgba(37, 99, 235, 0.08)',
+    border: '1px solid rgba(37, 99, 235, 0.25)',
+    color: '#2563eb',
+    borderRadius: '6px',
+    padding: '4px 8px',
+    fontSize: '11px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3px',
+    transition: 'all 0.15s ease'
+  },
+  resizeHandle: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: '18px',
+    height: '18px',
+    cursor: 'se-resize',
+    color: '#94a3b8',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    userSelect: 'none',
+    zIndex: 10
   },
   title: {
     fontSize: '18px',

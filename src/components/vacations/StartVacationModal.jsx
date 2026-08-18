@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
-import useDraggable from '../../hooks/useDraggable';
+import ReactDOM from 'react-dom';
+import useResizableModal from '../../hooks/useResizableModal';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function StartVacationModal({ request, onClose, onStart }) {
-  const { position, onPointerDown } = useDraggable();
   const { user } = useAuth();
+  const {
+    modalRef,
+    position,
+    onPointerDown,
+    isMaximized,
+    toggleMaximize,
+    handleResizePointerDown,
+    handleHeaderDoubleClick,
+    getOverlayProps,
+    modalStyle
+  } = useResizableModal({ defaultWidth: '550px', minWidth: 380, minHeight: 280 });
   
   const [file, setFile] = useState(null);
   const [fileBase64, setFileBase64] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
+
+  if (!request) return null;
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -67,12 +80,40 @@ export default function StartVacationModal({ request, onClose, onStart }) {
     }
   };
 
-  return (
-    <div style={styles.overlay} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{...styles.modal, transform: `translate(${position.x}px, ${position.y}px)`}}>
-        <div style={styles.header} onPointerDown={onPointerDown} className="drag-handle">
+  const overlayProps = getOverlayProps(onClose);
+
+  return ReactDOM.createPortal(
+    <div 
+      style={styles.overlay} 
+      onMouseDown={overlayProps.onMouseDown}
+      onClick={overlayProps.onClick}
+    >
+      <div 
+        ref={modalRef}
+        style={{
+          ...styles.modal, 
+          ...modalStyle
+        }}
+      >
+        <div 
+          style={styles.header} 
+          onPointerDown={isMaximized ? undefined : onPointerDown} 
+          onDoubleClick={handleHeaderDoubleClick}
+          className={isMaximized ? '' : 'drag-handle'}
+          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+        >
           <h2 style={styles.title}>Iniciar Férias: {request.employeeName}</h2>
-          <button onClick={onClose} style={styles.closeBtn}>✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={toggleMaximize}
+              style={styles.expandBtn}
+              title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
+            >
+              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+            </button>
+            <button onClick={onClose} style={styles.closeBtn}>✕</button>
+          </div>
         </div>
 
         <form onSubmit={handleConfirm} style={styles.body}>
@@ -97,46 +138,210 @@ export default function StartVacationModal({ request, onClose, onStart }) {
 
           <div style={styles.formGroup}>
             <label style={styles.label}>2. Senha de Autorização *</label>
-            <p style={{fontSize: '12px', color: 'var(--color-text-muted)', margin: '0 0 8px 0'}}>
-              Para segurança, confirme a sua senha para assinar digitalmente o início deste gozo de férias.
+            <p style={{fontSize: '12px', color: 'var(--color-text-muted, #64748b)', margin: '0 0 8px 0'}}>
+              Insira a sua senha de utilizador para assinar digitalmente a transição para Gozo de Férias.
             </p>
             <input 
               type="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Digite a sua senha..."
+              placeholder="Sua senha..."
               style={styles.input}
               required
             />
           </div>
 
-          <div style={styles.footer}>
-            <button type="button" onClick={onClose} style={styles.btnCancel}>Cancelar</button>
-            <button type="submit" style={styles.btnConfirm} disabled={isVerifying}>
-              {isVerifying ? 'A verificar...' : 'Validar e Iniciar Férias'}
+          <div style={styles.actions}>
+            <button type="button" onClick={onClose} style={styles.cancelBtn} disabled={isVerifying}>
+              Cancelar
+            </button>
+            <button type="submit" style={styles.confirmBtn} disabled={isVerifying}>
+              {isVerifying ? 'A verificar...' : 'Iniciar Gozo de Férias'}
             </button>
           </div>
         </form>
+
+        {/* Handle de redimensionamento por mouse no canto inferior direito */}
+        {!isMaximized && (
+          <div 
+            onPointerDown={handleResizePointerDown}
+            style={styles.resizeHandle}
+            title="Arraste com o rato para expandir ou reduzir livremente"
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="14" y1="3" x2="3" y2="14" />
+              <line x1="14" y1="8" x2="8" y2="14" />
+              <line x1="14" y1="13" x2="13" y2="14" />
+            </svg>
+          </div>
+        )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
 const styles = {
-  overlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  modal: { backgroundColor: 'var(--color-bg-base)', width: '500px', borderRadius: '12px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
-  header: { padding: '16px 20px', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-elevated)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab' },
-  title: { margin: 0, fontSize: '18px', fontWeight: '600', color: 'var(--color-text-main)' },
-  closeBtn: { background: 'none', border: 'none', fontSize: '20px', color: 'var(--color-text-muted)', cursor: 'pointer' },
-  body: { padding: '24px' },
-  infoBox: { padding: '12px', backgroundColor: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', color: 'var(--color-text-main)', lineHeight: '1.5' },
-  formGroup: { marginBottom: '20px' },
-  label: { display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--color-text-main)', marginBottom: '8px' },
-  fileInput: { width: '100%', padding: '10px', border: '1px dashed var(--color-primary)', borderRadius: '8px', cursor: 'pointer', backgroundColor: 'rgba(49,130,206,0.02)' },
-  fileName: { display: 'block', marginTop: '6px', fontSize: '12px', color: 'var(--color-primary)', fontWeight: '500' },
-  input: { width: '100%', padding: '12px 16px', border: '1px solid var(--color-border)', borderRadius: '8px', backgroundColor: 'var(--color-bg-elevated)', color: 'var(--color-text-main)', outline: 'none', fontSize: '14px' },
-  error: { padding: '10px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', border: '1px solid #FCA5A5' },
-  footer: { display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--color-border)' },
-  btnCancel: { padding: '10px 16px', backgroundColor: 'transparent', border: '1px solid var(--color-border)', borderRadius: '6px', color: 'var(--color-text-main)', cursor: 'pointer', fontWeight: '500' },
-  btnConfirm: { padding: '10px 16px', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.7)',
+    zIndex: 9999,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    backdropFilter: 'blur(4px)',
+    boxSizing: 'border-box'
+  },
+  modal: {
+    backgroundColor: 'var(--color-bg-card, #ffffff)',
+    borderRadius: '14px',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    boxSizing: 'border-box'
+  },
+  header: {
+    padding: '16px 22px',
+    borderBottom: '1px solid var(--color-border, #e2e8f0)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'var(--color-bg-base, #f8fafc)',
+    cursor: 'move',
+    userSelect: 'none',
+    flexShrink: 0
+  },
+  title: {
+    margin: 0,
+    fontSize: '17px',
+    fontWeight: '700',
+    color: 'var(--color-text-main, #0f172a)'
+  },
+  expandBtn: {
+    background: 'rgba(37, 99, 235, 0.08)',
+    border: '1px solid rgba(37, 99, 235, 0.25)',
+    color: '#2563eb',
+    borderRadius: '6px',
+    padding: '4px 8px',
+    fontSize: '11px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3px',
+    transition: 'all 0.15s ease'
+  },
+  closeBtn: {
+    background: 'none',
+    border: 'none',
+    fontSize: '18px',
+    cursor: 'pointer',
+    color: 'var(--color-text-muted, #64748b)',
+    padding: '4px 8px',
+    borderRadius: '6px'
+  },
+  body: {
+    padding: '20px 22px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    flex: 1,
+    overflowY: 'auto',
+    boxSizing: 'border-box'
+  },
+  infoBox: {
+    backgroundColor: 'var(--color-bg-base, #f8fafc)',
+    padding: '12px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border, #e2e8f0)',
+    fontSize: '13px',
+    color: 'var(--color-text-base, #1e293b)'
+  },
+  error: {
+    padding: '10px',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    color: 'var(--color-danger, #ef4444)',
+    borderRadius: '6px',
+    fontSize: '13px',
+    border: '1px solid rgba(239, 68, 68, 0.2)'
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  label: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: 'var(--color-text-main, #0f172a)'
+  },
+  fileInput: {
+    padding: '8px',
+    border: '1px dashed var(--color-border, #cbd5e1)',
+    borderRadius: '6px',
+    backgroundColor: 'var(--color-bg-base, #f8fafc)',
+    cursor: 'pointer'
+  },
+  fileName: {
+    fontSize: '12px',
+    color: 'var(--color-primary, #1B365D)',
+    fontWeight: '500'
+  },
+  input: {
+    padding: '10px 12px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border, #cbd5e1)',
+    backgroundColor: 'var(--color-bg-base, #f8fafc)',
+    color: 'var(--color-text-base, #1e293b)',
+    fontSize: '13px',
+    outline: 'none'
+  },
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '10px',
+    marginTop: '10px',
+    borderTop: '1px solid var(--color-border, #e2e8f0)',
+    paddingTop: '14px',
+    flexShrink: 0
+  },
+  cancelBtn: {
+    padding: '8px 16px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border, #cbd5e1)',
+    backgroundColor: 'transparent',
+    color: 'var(--color-text-base, #1e293b)',
+    cursor: 'pointer',
+    fontSize: '13px'
+  },
+  confirmBtn: {
+    padding: '8px 18px',
+    borderRadius: '6px',
+    border: 'none',
+    backgroundColor: 'var(--color-primary, #1B365D)',
+    color: '#fff',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '13px'
+  },
+  resizeHandle: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: '18px',
+    height: '18px',
+    cursor: 'se-resize',
+    color: '#94a3b8',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    userSelect: 'none',
+    zIndex: 10
+  }
 };
