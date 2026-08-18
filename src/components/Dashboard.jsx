@@ -1115,21 +1115,21 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={styles.headerTitle}>
               {settings.logotipo ? (
-                <img src={settings.logotipo} alt="Logo" style={styles.headerLogo} />
+                <img src={settings.logotipo} alt="Logo" style={{ ...styles.headerLogo, width: '42px', height: '42px' }} />
               ) : (
-                <img src={SERNIC_LOGO_B64} alt="Logo Padrão" style={{ ...styles.headerLogo, width: '34px', height: '34px' }} />
+                <img src={SERNIC_LOGO_B64} alt="Logo Padrão" style={{ ...styles.headerLogo, width: '42px', height: '42px' }} />
               )}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <h2 style={{ ...styles.institutionTitle, margin: 0, lineHeight: '1.2' }}>
+                <h2 style={{ ...styles.institutionTitle, margin: 0, fontSize: '13px', color: 'var(--color-text-muted, #64748b)', fontWeight: '600', lineHeight: '1.2' }}>
                   {settings.nome_instituicao} ({settings.sigla})
                 </h2>
                 {userDirectorate && (
                   <span style={{ 
-                    fontSize: '11px', 
-                    fontWeight: '700', 
+                    fontSize: '20px', 
+                    fontWeight: '800', 
                     color: 'var(--color-primary, #1B365D)', 
                     textTransform: 'uppercase',
-                    letterSpacing: '0.4px',
+                    letterSpacing: '0.6px',
                     marginTop: '2px',
                     lineHeight: '1.2'
                   }}>
@@ -3507,13 +3507,13 @@ const styles = {
     overflowY: 'auto',
   },
   header: {
-    height: '70px',
+    minHeight: '74px',
     backgroundColor: 'var(--color-bg-card)',
     borderBottom: '1px solid var(--color-border)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0 30px',
+    padding: '8px 30px',
     flexShrink: 0,
     transition: 'background-color var(--transition-normal), border-color var(--transition-normal)',
   },
