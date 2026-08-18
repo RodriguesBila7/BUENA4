@@ -21,7 +21,7 @@ import CareerManager from './career/CareerManager';
 import TransferManager from './transfers/TransferManager';
 import VacationManager from './vacations/VacationManager';
 import ErrorBoundary from './common/ErrorBoundary';
-import { isPrimaryCentralAdmin } from '../utils/scopeUtils';
+import { isPrimaryCentralAdmin, isCentralUser } from '../utils/scopeUtils';
 
 const getDynamicGroupIcon = (groupName) => {
   switch(groupName) {
@@ -77,6 +77,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const { employees } = useEmployeeData();
   const { data: orgData } = useOrgData();
   const { actTypes } = useActTypesData();
+
+  const userDirectorate = React.useMemo(() => {
+    if (!user || isCentralUser(user)) return null;
+    return (orgData?.directorates || []).find(d => String(d.id) === String(user.directorateId));
+  }, [user, orgData]);
 
   const reportStats = React.useMemo(() => {
     const total = employees.length;
@@ -1116,6 +1121,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
               )}
               <h2 style={styles.institutionTitle}>
                 {settings.nome_instituicao} ({settings.sigla})
+                {userDirectorate && (
+                  <span style={{ fontWeight: '700', color: 'var(--color-primary, #1B365D)', marginLeft: '8px' }}>
+                    — {userDirectorate.name}
+                  </span>
+                )}
               </h2>
             </div>
           </div>

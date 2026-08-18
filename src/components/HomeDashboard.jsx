@@ -244,15 +244,8 @@ export default function HomeDashboard({ t, onTabChange }) {
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}>
-            {!isCentralUser(currentUser) && userDirectorateObj
-              ? `Visão Geral — ${userDirectorateObj.name}`
-              : (t('dash_overview') || 'Visão Geral do SERNIC')}
+            {t('dash_overview') || 'Visão Geral'}
           </h2>
-          {!isCentralUser(currentUser) && (
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 10px', backgroundColor: 'rgba(37, 99, 235, 0.08)', borderRadius: '20px', border: '1px solid rgba(37, 99, 235, 0.2)', color: '#2563eb', fontSize: '12px', fontWeight: 'bold' }}>
-              📍 Escopo Territorial Ativo: {provincialRoleTag || userDirectorateObj?.name}
-            </div>
-          )}
         </div>
       </div>
 
