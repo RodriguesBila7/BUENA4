@@ -2,20 +2,37 @@ import React, { useState, useMemo } from 'react';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useEffectivenessData from '../../hooks/useEffectivenessData';
 import useOrgData from '../../hooks/useOrgData';
+import { isCentralUser, filterByProvincialScope } from '../../utils/scopeUtils';
 import { mozambiqueStructure } from '../../utils/mozambiqueDistricts';
 import ConfirmModal from '../ConfirmModal';
 import * as XLSX from 'xlsx';
 
-export default function EffectivenessQuery({ onGoToRegister }) {
-  const { employees } = useEmployeeData();
+export default function EffectivenessQuery({ onGoToRegister, user, orgData: passedOrgData, employeesData }) {
+  const { employees: allEmployees } = useEmployeeData();
   const { records, updateRecord, deleteRecord } = useEffectivenessData();
-  const { data: orgData } = useOrgData();
+  const { data: hookOrgData } = useOrgData();
+
+  const orgData = passedOrgData?.data || passedOrgData || hookOrgData || { directorates: [], departments: [], divisions: [], sections: [], careers: [], categories: [] };
+  const isCentral = isCentralUser(user);
+
+  // Escopo de funcionários por utilizador
+  const employees = useMemo(() => {
+    let raw = (employeesData?.employees || (Array.isArray(employeesData) ? employeesData : null) || allEmployees) || [];
+    if (!isCentral && user) {
+      return filterByProvincialScope(raw, user, orgData);
+    }
+    return raw;
+  }, [employeesData, allEmployees, isCentral, user, orgData]);
+
+  // Se for perfil secundário, fixa o directorateId
+  const userDirId = user?.directorateId ? String(user.directorateId) : '';
+  const userDirObj = userDirId ? (orgData?.directorates || []).find(d => String(d.id) === userDirId) : null;
 
   // Search/Filters states
   const [searchTerm, setSearchTerm] = useState('');
-  const [provinceId, setProvinceId] = useState('');
+  const [provinceId, setProvinceId] = useState(!isCentral && userDirObj ? (userDirObj.province || '') : '');
   const [districtId, setDistrictId] = useState('');
-  const [directorateId, setDirectorateId] = useState('');
+  const [directorateId, setDirectorateId] = useState(!isCentral ? userDirId : '');
   const [departmentId, setDepartmentId] = useState('');
   const [divisionId, setDivisionId] = useState('');
   const [sectionId, setSectionId] = useState('');
@@ -31,7 +48,7 @@ export default function EffectivenessQuery({ onGoToRegister }) {
   const [monthFilter, setMonthFilter] = useState('');
 
   // Grouping Criteria
-  const [groupCriteria, setGroupCriteria] = useState('none'); // 'none', 'directorate', 'department', 'province', 'district', 'career', 'category', 'type'
+  const [groupCriteria, setGroupCriteria] = useState('none');
 
   // Selected Employee for History Detail
   const [selectedEmpId, setSelectedEmpId] = useState(null);
@@ -46,7 +63,7 @@ export default function EffectivenessQuery({ onGoToRegister }) {
   const [editError, setEditError] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, hideCancel: false });
 
-  const getName = (list, id) => list?.find(item => item.id === id)?.name || '-';
+  const getName = (list, id) => list?.find(item => String(item.id) === String(id))?.name || '-';
 
   const formatDatesList = (dates = []) => {
     if (!dates.length) return '';
@@ -57,35 +74,38 @@ export default function EffectivenessQuery({ onGoToRegister }) {
     }).join(', ');
   };
 
-  const exportToExcel = () => {
-    const dataToExport = faltososList.map(emp => ({
-      'NUIT': emp.nip,
-      'Nome do Funcionário': emp.name,
-      'Carreira': emp.career,
-      'Categoria': emp.category,
-      'Cargo': emp.role || 'Sem Cargo',
-      'Província': emp.provinceId,
-      'Distrito': emp.districtId,
-      'Direcção / Unidade': emp.directorate,
-      'Departamento': emp.department,
-      'Tipos de Faltas': Array.from(emp.types).join(' / '),
-      'Total de Dias de Faltas': emp.totalDays,
-      'Data da Última Falta': emp.lastAbsenceDate ? emp.lastAbsenceDate.split('-').reverse().join('/') : ''
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio_Faltas");
-    XLSX.writeFile(workbook, `Faltas_SERNIC_${new Date().toISOString().split('T')[0]}.xlsx`);
-  };
-
   // Province districts cascading
   const selectedProvinceData = mozambiqueStructure.find(p => p.province === provinceId);
   const availableDistricts = selectedProvinceData ? selectedProvinceData.districts : [];
 
-  // Filtered list of raw absences records
+  // Scoped records base
+  const scopedRecords = useMemo(() => {
+    if (!isCentral && userDirId) {
+      const scopedEmpIds = new Set(employees.map(e => String(e.id)));
+      return records.filter(rec => {
+        const empMatch = scopedEmpIds.has(String(rec.employeeId));
+        const dirMatch = String(rec.directorateId || rec.registeredByDirectorateId || '') === userDirId;
+        return empMatch || dirMatch;
+      });
+    }
+    return records;
+  }, [records, isCentral, userDirId, employees]);
+
+  // Contagem de faltas por direcção para o dropdown do perfil primário
+  const absenceCountByDir = useMemo(() => {
+    const counts = {};
+    records.forEach(r => {
+      const dId = String(r.directorateId || r.registeredByDirectorateId || '');
+      if (dId) {
+        counts[dId] = (counts[dId] || 0) + (r.daysCount || (r.dates ? r.dates.length : 1));
+      }
+    });
+    return counts;
+  }, [records]);
+
+  // Filtered list of absences
   const filteredAbsences = useMemo(() => {
-    return records.filter(rec => {
+    return scopedRecords.filter(rec => {
       // Global search term (Name or NUIT)
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
@@ -97,14 +117,14 @@ export default function EffectivenessQuery({ onGoToRegister }) {
       // Structure filters
       if (provinceId && rec.provinceId !== provinceId) return false;
       if (districtId && rec.districtId !== districtId) return false;
-      if (directorateId && rec.directorateId !== directorateId) return false;
-      if (departmentId && rec.departmentId !== departmentId) return false;
-      if (divisionId && rec.divisionId !== divisionId) return false;
-      if (sectionId && rec.sectionId !== sectionId) return false;
+      if (directorateId && String(rec.directorateId || rec.registeredByDirectorateId || '') !== String(directorateId)) return false;
+      if (departmentId && String(rec.departmentId || '') !== String(departmentId)) return false;
+      if (divisionId && String(rec.divisionId || '') !== String(divisionId)) return false;
+      if (sectionId && String(rec.sectionId || '') !== String(sectionId)) return false;
 
       // RH filters
-      if (careerId && rec.careerId !== careerId) return false;
-      if (categoryId && rec.categoryId !== categoryId) return false;
+      if (careerId && String(rec.careerId || '') !== String(careerId)) return false;
+      if (categoryId && String(rec.categoryId || '') !== String(categoryId)) return false;
       if (absenceType && rec.type !== absenceType) return false;
 
       if (roleFilter) {
@@ -112,15 +132,12 @@ export default function EffectivenessQuery({ onGoToRegister }) {
         if (!role.includes(roleFilter.toLowerCase())) return false;
       }
 
-      // Fallbacks for older records
       const recStartDate = rec.startDate || (rec.dates && rec.dates.length > 0 ? rec.dates[0] : '');
       const recEndDate = rec.endDate || (rec.dates && rec.dates.length > 0 ? rec.dates[rec.dates.length - 1] : '');
 
-      // Date range overlap check
       if (dateFrom && recEndDate < dateFrom) return false;
       if (dateTo && recStartDate > dateTo) return false;
 
-      // Month/Year check
       if (yearFilter && recStartDate) {
         const recYear = recStartDate.split('-')[0];
         if (recYear !== yearFilter) return false;
@@ -132,7 +149,7 @@ export default function EffectivenessQuery({ onGoToRegister }) {
 
       return true;
     });
-  }, [records, searchTerm, provinceId, districtId, directorateId, departmentId, divisionId, sectionId, careerId, categoryId, roleFilter, absenceType, dateFrom, dateTo, yearFilter, monthFilter]);
+  }, [scopedRecords, searchTerm, provinceId, districtId, directorateId, departmentId, divisionId, sectionId, careerId, categoryId, roleFilter, absenceType, dateFrom, dateTo, yearFilter, monthFilter]);
 
   // Group absences by employee to build the "Funcionários Faltosos" view
   const faltososList = useMemo(() => {
@@ -141,20 +158,26 @@ export default function EffectivenessQuery({ onGoToRegister }) {
     filteredAbsences.forEach(rec => {
       const empId = rec.employeeId;
       if (!map[empId]) {
+        const emp = employees.find(e => String(e.id) === String(empId));
         map[empId] = {
           employeeId: empId,
-          nip: rec.employeeNip,
-          name: rec.employeeName,
-          gender: rec.gender,
+          nip: rec.employeeNip || (emp?.nip || emp?.nuit || '-'),
+          name: rec.employeeName || (emp?.name || 'Funcionário'),
+          gender: rec.gender || emp?.gender,
           provinceId: rec.provinceId || '',
           districtId: rec.districtId || '',
-          career: getName(orgData.careers, rec.careerId),
-          category: getName(orgData.categories, rec.categoryId),
-          role: rec.jobPosition,
-          directorate: getName(orgData.directorates, rec.directorateId),
-          department: getName(orgData.departments, rec.departmentId),
-          division: getName(orgData.divisions, rec.divisionId),
-          section: getName(orgData.sections, rec.sectionId),
+          career: getName(orgData.careers, rec.careerId || emp?.careerId),
+          category: getName(orgData.categories, rec.categoryId || emp?.categoryId),
+          role: rec.jobPosition || emp?.role || 'Investigador',
+          directorate: getName(orgData.directorates, rec.directorateId || emp?.directorateId),
+          directorateName: rec.directorateName || getName(orgData.directorates, rec.directorateId || emp?.directorateId),
+          department: getName(orgData.departments, rec.departmentId || emp?.departmentId),
+          division: getName(orgData.divisions, rec.divisionId || emp?.divisionId),
+          section: getName(orgData.sections, rec.sectionId || emp?.sectionId),
+          registeredBy: rec.registeredByName || rec.registeredBy || 'Operador RH',
+          registeredByRole: rec.registeredByRole || '',
+          totalJustified: 0,
+          totalUnjustified: 0,
           totalDays: 0,
           types: new Set(),
           lastAbsenceDate: '',
@@ -162,10 +185,13 @@ export default function EffectivenessQuery({ onGoToRegister }) {
         };
       }
 
-      const recDaysCount = rec.daysCount !== undefined ? rec.daysCount : (rec.dates ? rec.dates.length : 0);
+      const recDaysCount = rec.daysCount !== undefined ? Number(rec.daysCount) : (rec.dates ? rec.dates.length : 1);
       const recEndDate = rec.endDate || (rec.dates && rec.dates.length > 0 ? rec.dates[rec.dates.length - 1] : '');
 
       map[empId].totalDays += recDaysCount;
+      if (rec.type === 'Falta Justificada') map[empId].totalJustified += recDaysCount;
+      else map[empId].totalUnjustified += recDaysCount;
+
       map[empId].types.add(rec.type);
       map[empId].absences.push(rec);
 
@@ -175,12 +201,12 @@ export default function EffectivenessQuery({ onGoToRegister }) {
     });
 
     return Object.values(map).sort((a, b) => b.totalDays - a.totalDays);
-  }, [filteredAbsences, orgData]);
+  }, [filteredAbsences, employees, orgData]);
 
   // Selected employee's detailed history
   const selectedEmpDetails = useMemo(() => {
     if (!selectedEmpId) return null;
-    return faltososList.find(f => f.employeeId === selectedEmpId) || null;
+    return faltososList.find(f => String(f.employeeId) === String(selectedEmpId)) || null;
   }, [faltososList, selectedEmpId]);
 
   // Smart Grouping logic
@@ -232,7 +258,7 @@ export default function EffectivenessQuery({ onGoToRegister }) {
       }
 
       groups[key].employees.add(rec.employeeId);
-      groups[key].totalDays += rec.daysCount;
+      groups[key].totalDays += (rec.daysCount || 1);
     });
 
     return Object.values(groups).map(g => ({
@@ -243,6 +269,161 @@ export default function EffectivenessQuery({ onGoToRegister }) {
     })).sort((a, b) => b.totalDays - a.totalDays);
   }, [filteredAbsences, groupCriteria, orgData]);
 
+  // Exportar Excel
+  const exportToExcel = () => {
+    const dataToExport = faltososList.map(emp => ({
+      'NUIT / NIP': emp.nip,
+      'Nome do Funcionário': emp.name,
+      'Carreira': emp.career,
+      'Categoria': emp.category,
+      'Cargo': emp.role || 'Sem Cargo',
+      'Província': emp.provinceId,
+      'Direcção / Unidade': emp.directorate,
+      'Faltas Justificadas (Dias)': emp.totalJustified,
+      'Faltas Injustificadas (Dias)': emp.totalUnjustified,
+      'Total de Dias de Faltas': emp.totalDays,
+      'Última Falta': emp.lastAbsenceDate ? emp.lastAbsenceDate.split('-').reverse().join('/') : '',
+      'Registado Por': emp.registeredBy
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio_Faltas");
+    const dirLabel = directorateId ? getName(orgData.directorates, directorateId).replace(/[\/\s]/g, '_') : 'Nacional';
+    XLSX.writeFile(workbook, `Faltas_SERNIC_${dirLabel}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  // Impressão Institucional SERNIC por Perfil Secundário / Direcção Provincial
+  const handlePrintProvincialMap = () => {
+    if (faltososList.length === 0) {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Aviso',
+        message: 'Não existem registos de faltas para imprimir com os filtros selecionados.',
+        hideCancel: true,
+        confirmText: 'OK'
+      });
+      return;
+    }
+
+    const currentDirName = directorateId ? getName(orgData.directorates, directorateId) : 'CONSOLIDADO NACIONAL (TODAS AS DIRECÇÕES)';
+    const dateStr = new Date().toLocaleDateString('pt-PT');
+    const totalFaltosos = faltososList.length;
+    const grandTotalDays = faltososList.reduce((acc, curr) => acc + curr.totalDays, 0);
+    const grandJustified = faltososList.reduce((acc, curr) => acc + curr.totalJustified, 0);
+    const grandUnjustified = faltososList.reduce((acc, curr) => acc + curr.totalUnjustified, 0);
+
+    const printWin = window.open('', '', 'width=1000,height=700');
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Mapa Oficial de Efetividade e Faltas - ${currentDirName}</title>
+          <style>
+            @page { size: A4 landscape; margin: 15mm; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; margin: 0; padding: 20px; font-size: 11px; }
+            .header { text-align: center; border-bottom: 2.5px solid #1B365D; padding-bottom: 12px; margin-bottom: 16px; }
+            .header h2 { margin: 0 0 4px 0; font-size: 14px; text-transform: uppercase; color: #1B365D; }
+            .header h3 { margin: 0 0 4px 0; font-size: 12px; font-weight: 600; }
+            .header h4 { margin: 0 0 6px 0; font-size: 13px; color: #1B365D; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+            .meta-box { display: flex; justify-content: space-between; background-color: #f8fafc; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 14px; }
+            .meta-box div { font-size: 11px; line-height: 1.5; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+            th { background-color: #1B365D; color: #ffffff; padding: 6px 8px; border: 1px solid #0f2442; text-align: left; font-weight: 700; }
+            td { padding: 5px 8px; border: 1px solid #cbd5e1; text-align: left; }
+            tr:nth-child(even) { background-color: #f8fafc; }
+            .footer-totals { margin-top: 14px; padding: 10px 14px; background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; display: flex; justify-content: space-around; font-weight: bold; font-size: 11px; }
+            .signatures { margin-top: 40px; display: flex; justify-content: space-between; text-align: center; }
+            .sig-block { width: 28%; border-top: 1px solid #333; padding-top: 6px; font-size: 10.5px; }
+          </style>
+        </head>
+        <body onload="window.print(); window.close();">
+          <div class="header">
+            <h2>REPÚBLICA DE MOÇAMBIQUE</h2>
+            <h3>MINISTÉRIO DO INTERIOR</h3>
+            <h4>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)</h4>
+            <div style="font-weight: 700; font-size: 12px; color: #1B365D;">DIRECÇÃO DE RECURSOS HUMANOS</div>
+            <div style="margin-top: 6px; font-size: 13px; font-weight: 800; text-transform: uppercase;">
+              MAPA OFICIAL DE EFETIVIDADE E ASSIDUIDADE DE PESSOAL
+            </div>
+          </div>
+
+          <div class="meta-box">
+            <div>
+              <strong>ÂMBITO TERRITORIAL:</strong> ${currentDirName.toUpperCase()}<br />
+              <strong>EMISSÃO:</strong> ${dateStr} • <strong>SISTEMA:</strong> SERNIC-DRH SIGRH
+            </div>
+            <div style="text-align: right;">
+              <strong>TOTAL DE FALTOSOS:</strong> ${totalFaltosos} Funcionários<br />
+              <strong>TOTAL DE DIAS DE FALTA:</strong> ${grandTotalDays} Dias (${grandJustified} Justificadas | ${grandUnjustified} Injustificadas)
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 25px; text-align: center;">Nº</th>
+                <th>NUIT / NIP</th>
+                <th>Nome Completo</th>
+                <th>Carreira / Categoria</th>
+                <th>Cargo / Função</th>
+                <th>Direcção / Província</th>
+                <th style="text-align: center;">F. Just.</th>
+                <th style="text-align: center;">F. Injust.</th>
+                <th style="text-align: center;">Total Dias</th>
+                <th>Última Falta</th>
+                <th>Registado Por</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${faltososList.map((f, i) => `
+                <tr>
+                  <td style="text-align: center;">${i + 1}</td>
+                  <td><strong>${f.nip}</strong></td>
+                  <td><strong>${f.name}</strong></td>
+                  <td>${f.category || f.career}</td>
+                  <td>${f.role || 'Investigador'}</td>
+                  <td>${f.directorate}</td>
+                  <td style="text-align: center; color: #059669; font-weight: bold;">${f.totalJustified}</td>
+                  <td style="text-align: center; color: #dc2626; font-weight: bold;">${f.totalUnjustified}</td>
+                  <td style="text-align: center; font-weight: bold; background-color: #f1f5f9;">${f.totalDays}</td>
+                  <td>${f.lastAbsenceDate ? f.lastAbsenceDate.split('-').reverse().join('/') : '-'}</td>
+                  <td>${f.registeredBy}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="footer-totals">
+            <span>Total Geral de Funcionários: ${totalFaltosos}</span>
+            <span>Total Faltas Justificadas: ${grandJustified} Dias</span>
+            <span>Total Faltas Injustificadas: ${grandUnjustified} Dias</span>
+            <span>Volume Global de Ausências: ${grandTotalDays} Dias</span>
+          </div>
+
+          <div class="signatures">
+            <div class="sig-block">
+              O Responsável Provincial de RH<br /><br /><br />
+              _____________________________________<br />
+              Data: ____/____/2026
+            </div>
+            <div class="sig-block">
+              O Director da Direcção Provincial<br /><br /><br />
+              _____________________________________<br />
+              Data: ____/____/2026
+            </div>
+            <div class="sig-block">
+              Visto Central (DRH / SERNIC)<br /><br /><br />
+              _____________________________________<br />
+              Direcção de Recursos Humanos
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    printWin.document.close();
+  };
+
   // Soft delete / anular falta handler
   const handleSoftDelete = (absenceId) => {
     setConfirmModal({
@@ -251,8 +432,8 @@ export default function EffectivenessQuery({ onGoToRegister }) {
       message: 'Pretende anular/remover esta falta permanentemente do histórico do funcionário? Esta operação será registada na Auditoria.',
       isDestructive: true,
       hideCancel: false,
-      onConfirm: () => {
-        const res = deleteRecord(absenceId);
+      onConfirm: async () => {
+        const res = await deleteRecord(absenceId);
         if (res.success) {
           setConfirmModal({
             isOpen: true,
@@ -286,11 +467,11 @@ export default function EffectivenessQuery({ onGoToRegister }) {
   };
 
   // Submit Edit
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
     setEditError('');
 
-    const res = updateRecord(editingAbsence.id, {
+    const res = await updateRecord(editingAbsence.id, {
       type: editType,
       startDate: editStart,
       endDate: editEnd,
@@ -316,11 +497,127 @@ export default function EffectivenessQuery({ onGoToRegister }) {
 
   return (
     <div style={styles.container}>
+      {/* 1. SELETOR DE ESCOPO / PERFIL SECUNDÁRIO PARA O PERFIL PRIMÁRIO CENTRAL */}
+      {isCentral ? (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: '14px',
+          padding: '14px 18px',
+          backgroundColor: 'rgba(27, 54, 93, 0.05)',
+          borderRadius: '10px',
+          border: '1.5px solid var(--color-primary, #1B365D)',
+          marginBottom: '16px',
+          flexWrap: 'wrap',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>🏛️</span>
+            <div>
+              <div style={{ fontSize: '13.5px', fontWeight: 'bold', color: 'var(--color-primary, #1B365D)' }}>
+                Visão por Perfil Secundário / Direcção Provincial de RH:
+              </div>
+              <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+                Consulte faltas de cada delegação provincial de forma independente ou em visão nacional consolidada.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select
+              value={directorateId}
+              onChange={(e) => {
+                setDirectorateId(e.target.value);
+                setDepartmentId('');
+                setDivisionId('');
+                setSectionId('');
+              }}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '6px',
+                border: '1px solid var(--color-primary)',
+                backgroundColor: 'var(--color-bg-base)',
+                color: 'var(--color-text-main)',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="">🌐 Todas as Direcções Provinciais (Consolidado Nacional)</option>
+              {(orgData?.directorates || []).map(d => (
+                <option key={d.id} value={d.id}>
+                  📍 {d.name} ({absenceCountByDir[String(d.id)] || 0} dias de falta)
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={handlePrintProvincialMap}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: 'var(--color-primary, #1B365D)',
+                color: 'var(--color-accent, #EAAA00)',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontSize: '12.5px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title="Imprimir Mapa Oficial de Faltas desta Direcção"
+            >
+              🖨️ Imprimir Mapa
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          padding: '10px 16px',
+          backgroundColor: 'rgba(27, 54, 93, 0.06)',
+          borderRadius: '8px',
+          border: '1px solid rgba(27, 54, 93, 0.15)',
+          color: 'var(--color-primary, #1B365D)',
+          fontSize: '13px',
+          fontWeight: '600',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '8px',
+          marginBottom: '16px',
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>📍</span>
+            <span>
+              <strong>Gerência Provincial Ativa:</strong> {userDirObj?.name || 'Direcção Local'} — Visualização restrita aos efectivos sob sua alçada.
+            </span>
+          </div>
+          <button
+            onClick={handlePrintProvincialMap}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: 'var(--color-primary, #1B365D)',
+              color: 'var(--color-accent, #EAAA00)',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              fontSize: '12px'
+            }}
+          >
+            🖨️ Imprimir Mapa Provincial
+          </button>
+        </div>
+      )}
       
       {/* Bloco de Filtros */}
       <div style={styles.card}>
         <div style={styles.cardHeader}>
-          <h4 style={styles.cardTitle}>Pesquisa de Funcionários Faltosos</h4>
+          <h4 style={styles.cardTitle}>Pesquisa e Filtros de Efetividade</h4>
         </div>
         <div style={styles.cardBody}>
           <div style={styles.filterGrid}>
@@ -345,13 +642,15 @@ export default function EffectivenessQuery({ onGoToRegister }) {
               </select>
             </div>
 
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Província</label>
-              <select value={provinceId} onChange={(e) => { setProvinceId(e.target.value); setDistrictId(''); }} style={styles.input}>
-                <option value="">Todas</option>
-                {mozambiqueStructure.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}
-              </select>
-            </div>
+            {isCentral && (
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Província</label>
+                <select value={provinceId} onChange={(e) => { setProvinceId(e.target.value); setDistrictId(''); }} style={styles.input}>
+                  <option value="">Todas</option>
+                  {mozambiqueStructure.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}
+                </select>
+              </div>
+            )}
 
             <div style={styles.formGroup}>
               <label style={styles.label}>Distrito</label>
@@ -362,34 +661,18 @@ export default function EffectivenessQuery({ onGoToRegister }) {
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Direcção</label>
-              <select value={directorateId} onChange={(e) => { setDirectorateId(e.target.value); setDepartmentId(''); setDivisionId(''); setSectionId(''); }} style={styles.input}>
-                <option value="">Todas</option>
-                {orgData.directorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Departamento / Direcção Distrital</label>
-              <select value={departmentId} onChange={(e) => { setDepartmentId(e.target.value); setDivisionId(''); setSectionId(''); }} style={styles.input} disabled={!directorateId}>
-                <option value="">Todos</option>
-                {orgData.departments.filter(d => d.directorateId === directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-
-            <div style={styles.formGroup}>
               <label style={styles.label}>Carreira</label>
               <select value={careerId} onChange={(e) => setCareerId(e.target.value)} style={styles.input}>
                 <option value="">Todas</option>
-                {orgData.careers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {(orgData?.careers || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
 
             <div style={styles.formGroup}>
               <label style={styles.label}>Período (De - Até)</label>
               <div style={{display:'flex', gap:'4px', flexWrap:'wrap'}}>
-                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{...styles.input, padding:'10px 4px', flex:1}} />
-                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{...styles.input, padding:'10px 4px', flex:1}} />
+                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{...styles.input, padding:'8px 4px', flex:1}} />
+                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{...styles.input, padding:'8px 4px', flex:1}} />
               </div>
             </div>
 
@@ -431,7 +714,9 @@ export default function EffectivenessQuery({ onGoToRegister }) {
             <button 
               type="button" 
               onClick={() => {
-                setSearchTerm(''); setProvinceId(''); setDistrictId(''); setDirectorateId('');
+                setSearchTerm(''); 
+                if (isCentral) { setProvinceId(''); setDirectorateId(''); }
+                setDistrictId('');
                 setDepartmentId(''); setDivisionId(''); setSectionId(''); setCareerId('');
                 setCategoryId(''); setRoleFilter(''); setAbsenceType(''); setDateFrom('');
                 setDateTo(''); setYearFilter(''); setMonthFilter(''); setGroupCriteria('none');
@@ -492,61 +777,95 @@ export default function EffectivenessQuery({ onGoToRegister }) {
           {/* Tabela Principal */}
           <div style={{...styles.card, flex: 1, minWidth: '350px'}}>
             <div style={styles.cardHeaderWithInfo}>
-              <h4 style={styles.cardTitle}>Lista de Funcionários com Faltas</h4>
-              <div style={{display: 'flex', gap: '10px'}}>
-                <button onClick={exportToExcel} style={{...styles.btnGoToRegister, backgroundColor: '#107c41'}}>Exportar Excel</button>
-                <button onClick={onGoToRegister} style={styles.btnGoToRegister}>+ Registar Nova Falta</button>
+              <h4 style={styles.cardTitle}>
+                Lista de Funcionários com Faltas ({faltososList.length})
+              </h4>
+              <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
+                <button onClick={handlePrintProvincialMap} style={{...styles.btnGoToRegister, backgroundColor: 'var(--color-primary, #1B365D)'}}>
+                  🖨️ Imprimir Mapa
+                </button>
+                <button onClick={exportToExcel} style={{...styles.btnGoToRegister, backgroundColor: '#107c41'}}>
+                  📊 Exportar Excel
+                </button>
+                <button onClick={onGoToRegister} style={styles.btnGoToRegister}>
+                  + Registar Falta
+                </button>
               </div>
             </div>
+
             <div style={styles.cardBody}>
               <div style={styles.tableContainer}>
                 <table className="premium-table">
                   <thead>
                     <tr>
-                      <th>NUIT</th>
                       <th>Funcionário</th>
-                      <th>Direcção / Unidade</th>
-                      <th>Faltas Registadas</th>
+                      <th>Direcção & Origem</th>
+                      <th>Cargo / Carreira</th>
+                      <th>Justificadas</th>
+                      <th>Injustificadas</th>
                       <th>Total Dias</th>
+                      <th>Última Falta</th>
+                      <th style={{textAlign: 'right'}}>Ações</th>
                     </tr>
                   </thead>
                   <tbody>
                     {faltososList.length === 0 ? (
                       <tr>
-                        <td colSpan="5" style={styles.empty}>Nenhum funcionário faltoso encontrado com os filtros definidos.</td>
+                        <td colSpan="8" style={styles.empty}>
+                          Nenhum funcionário com faltas registadas para os filtros definidos.
+                        </td>
                       </tr>
                     ) : (
                       faltososList.map(emp => (
                         <tr 
                           key={emp.employeeId} 
-                          onClick={() => setSelectedEmpId(emp.employeeId)}
                           style={{
                             ...styles.tr,
-                            backgroundColor: selectedEmpId === emp.employeeId ? 'rgba(27, 54, 93, 0.05)' : 'transparent',
+                            backgroundColor: selectedEmpId === emp.employeeId ? 'rgba(27, 54, 93, 0.08)' : 'transparent',
                             cursor: 'pointer'
                           }}
+                          onClick={() => setSelectedEmpId(emp.employeeId === selectedEmpId ? null : emp.employeeId)}
                         >
-                          <td>{emp.nip}</td>
                           <td>
-                            <div style={{fontWeight:'700'}}>{emp.name}</div>
-                            <div style={{fontSize:'12px', color:'var(--color-text-muted)'}}>{emp.role}</div>
+                            <strong>{emp.name}</strong>
+                            <div style={{fontSize: '11px', color: 'var(--color-text-muted)'}}>
+                              NUIT: {emp.nip}
+                            </div>
                           </td>
                           <td>
-                            <div style={{fontWeight:'600'}}>{emp.directorate}</div>
-                            <div style={{fontSize:'11px', color:'var(--color-text-muted)'}}>{emp.department}</div>
+                            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-primary)' }}>
+                              📍 {emp.directorate}
+                            </span>
+                            <div style={{ fontSize: '10.5px', color: 'var(--color-text-muted)' }}>
+                              Reg: {emp.registeredBy}
+                            </div>
                           </td>
                           <td>
-                            {[...emp.types].map(t => (
-                              <span key={t} style={{
-                                ...styles.typeBadge,
-                                ...(t === 'Falta Justificada' ? styles.badgeGreen : styles.badgeRed)
-                              }}>
-                                {t}
-                              </span>
-                            ))}
+                            <div>{emp.role}</div>
+                            <div style={{fontSize: '11px', color: 'var(--color-text-muted)'}}>{emp.category || emp.career}</div>
+                          </td>
+                          <td style={{ color: '#059669', fontWeight: 'bold' }}>
+                            {emp.totalJustified} d
+                          </td>
+                          <td style={{ color: '#dc2626', fontWeight: 'bold' }}>
+                            {emp.totalUnjustified} d
                           </td>
                           <td>
-                            <strong style={{fontSize:'15px', color:'var(--color-primary)'}}>{emp.totalDays}</strong> Dias
+                            <strong style={{fontSize: '13px', color: 'var(--color-text-main)'}}>{emp.totalDays} Dias</strong>
+                          </td>
+                          <td>
+                            {emp.lastAbsenceDate ? emp.lastAbsenceDate.split('-').reverse().join('/') : '-'}
+                          </td>
+                          <td style={{textAlign: 'right'}}>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEmpId(emp.employeeId === selectedEmpId ? null : emp.employeeId);
+                              }}
+                              style={styles.btnViewDetails}
+                            >
+                              {selectedEmpId === emp.employeeId ? 'Fechar Detalhes' : 'Ver Histórico'}
+                            </button>
                           </td>
                         </tr>
                       ))
@@ -557,79 +876,62 @@ export default function EffectivenessQuery({ onGoToRegister }) {
             </div>
           </div>
 
-          {/* Histórico Detalhado do Funcionário Selecionado */}
+          {/* Painel Lateral / Detalhes das Faltas do Funcionário Selecionado */}
           {selectedEmpDetails && (
             <div style={styles.detailCard}>
-              <div style={styles.cardHeader}>
-                <h4 style={styles.cardTitle}>Histórico de Faltas do Colaborador</h4>
+              <div style={styles.detailHeader}>
+                <div>
+                  <h4 style={{margin: 0, fontSize: '15px', color: 'var(--color-primary)'}}>
+                    Histórico: {selectedEmpDetails.name}
+                  </h4>
+                  <div style={{fontSize: '12px', color: 'var(--color-text-muted)'}}>
+                    NUIT: {selectedEmpDetails.nip} • {selectedEmpDetails.directorate}
+                  </div>
+                </div>
+                <button onClick={() => setSelectedEmpId(null)} style={styles.btnCloseDetail}>✕</button>
               </div>
-              <div style={styles.cardBody}>
-                <div style={styles.detailHeaderBox}>
-                  <strong>{selectedEmpDetails.name}</strong><br />
-                  <span style={{fontSize:'12px', color:'var(--color-text-muted)'}}>
-                    NUIT: {selectedEmpDetails.nip} • {selectedEmpDetails.role}
-                  </span>
+
+              <div style={styles.detailBody}>
+                <div style={styles.detailSummary}>
+                  <div><strong>Total:</strong> {selectedEmpDetails.totalDays} Dias</div>
+                  <div><strong>Justificadas:</strong> {selectedEmpDetails.totalJustified} Dias</div>
+                  <div><strong>Injustificadas:</strong> {selectedEmpDetails.totalUnjustified} Dias</div>
                 </div>
 
-                <div style={styles.historyList}>
-                  {selectedEmpDetails.absences.map(abs => (
-                    <div key={abs.id} style={styles.historyItem}>
-                      
-                      <div style={styles.historyItemHeader}>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px'}}>
+                  {selectedEmpDetails.absences.map((abs, i) => (
+                    <div key={abs.id || i} style={styles.absenceItem}>
+                      <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px'}}>
                         <span style={{
-                          ...styles.typeBadge,
-                          ...(abs.type === 'Falta Justificada' ? styles.badgeGreen : styles.badgeRed)
+                          padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
+                          backgroundColor: abs.type === 'Falta Justificada' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                          color: abs.type === 'Falta Justificada' ? '#059669' : '#dc2626'
                         }}>
-                          {abs.type}
+                          {abs.type} ({abs.daysCount || (abs.dates ? abs.dates.length : 1)} dias)
                         </span>
-                        <strong style={{color:'var(--color-primary)'}}>{abs.daysCount} {abs.daysCount === 1 ? 'dia' : 'dias'}</strong>
+                        
+                        <div style={{display: 'flex', gap: '4px'}}>
+                          <button onClick={() => handleOpenEdit(abs)} style={styles.btnSmallEdit} title="Editar Falta">✏️</button>
+                          <button onClick={() => handleSoftDelete(abs.id)} style={styles.btnSmallDelete} title="Anular Falta">🗑️</button>
+                        </div>
                       </div>
 
-                      <div style={styles.historyItemMeta}>
-                        <div>Dias de Falta: <strong>{abs.dates && abs.dates.length > 0 ? formatDatesList(abs.dates) : `${abs.startDate} a ${abs.endDate}`}</strong></div>
-                        <div>Motivo: <em>{abs.reason}</em></div>
-                        {abs.notes && <div style={{marginTop:'4px', fontSize:'12px', color:'var(--color-text-muted)'}}>Obs: {abs.notes}</div>}
-                        {abs.attachment && (
-                          <div style={{marginTop:'6px'}}>
-                            <span style={{fontSize:'12px'}}>Documento: </span>
-                            <a href="#" onClick={(e) => { e.preventDefault(); setConfirmModal({ isOpen: true, title: 'Documento Comprovativo', message: `A simular a abertura do documento "${abs.attachment.name}"...`, hideCancel: true, confirmText: 'Fechar' }); }} style={styles.attachmentLink}>
-                              📄 {abs.attachment.name}
-                            </a>
-                          </div>
-                        )}
+                      <div style={{fontSize: '12px', color: 'var(--color-text-main)', margin: '4px 0'}}>
+                        <strong>Datas:</strong> {abs.dates && abs.dates.length > 0 ? formatDatesList(abs.dates) : `${abs.startDate} a ${abs.endDate}`}
                       </div>
 
-                      <div style={styles.historyItemFooter}>
-                        <span>Registado por: <strong>{abs.createdBy}</strong></span>
-                        <span>Em: {new Date(abs.createdAt).toLocaleDateString()}</span>
-                      </div>
+                      {abs.reason && (
+                        <div style={{fontSize: '11.5px', color: 'var(--color-text-muted)', fontStyle: 'italic'}}>
+                          <strong>Motivo:</strong> {abs.reason}
+                        </div>
+                      )}
 
-                      {/* Botões de Ação na Falta */}
-                      <div style={styles.historyActions}>
-                        <button 
-                          onClick={() => handleOpenEdit(abs)} 
-                          style={styles.btnEditAbsence}
-                        >
-                          Editar Falta
-                        </button>
-                        <button 
-                          onClick={() => handleSoftDelete(abs.id)} 
-                          style={styles.btnDeleteAbsence}
-                        >
-                          Anular/Remover
-                        </button>
+                      <div style={{fontSize: '10.5px', color: 'var(--color-text-muted)', marginTop: '4px'}}>
+                        Registado por: {abs.registeredByName || abs.registeredBy || 'Operador'} ({new Date(abs.createdAt || abs.registeredAt || Date.now()).toLocaleDateString()})
                       </div>
-
                     </div>
                   ))}
                 </div>
-
-                <button 
-                  onClick={() => setSelectedEmpId(null)} 
-                  style={styles.btnCloseDetail}
-                >
-                  Fechar Histórico
-                </button>
               </div>
             </div>
           )}
@@ -637,137 +939,99 @@ export default function EffectivenessQuery({ onGoToRegister }) {
         </div>
       )}
 
-      {/* Modal de Edição de Falta */}
+      {/* MODAL DE EDIÇÃO DE FALTA */}
       {editingAbsence && (
         <div style={styles.modalOverlay}>
-          <div style={styles.modalCard}>
+          <div style={styles.modalContent}>
             <div style={styles.modalHeader}>
-              <h4 style={styles.modalTitle}>Editar Registo de Falta</h4>
-              <button onClick={() => setEditingAbsence(null)} style={styles.closeBtn}>✕</button>
+              <h4 style={{margin: 0, color: 'var(--color-primary)'}}>Editar Registo de Falta</h4>
+              <button onClick={() => setEditingAbsence(null)} style={styles.btnCloseDetail}>✕</button>
             </div>
-            <form onSubmit={handleSaveEdit} style={styles.modalForm}>
-              {editError && <div style={styles.modalError}>{editError}</div>}
-              
-              <div style={styles.formGrid}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Tipo de Falta</label>
-                  <select value={editType} onChange={(e) => setEditType(e.target.value)} style={styles.input} required>
-                    <option value="Falta Justificada">Falta Justificada</option>
-                    <option value="Falta Injustificada">Falta Injustificada</option>
-                  </select>
-                </div>
-                
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Dias de Ausência</label>
-                  <div style={styles.daysBadge}>
-                    {calculateDaysCount(editStart, editEnd)} Dias
-                  </div>
-                </div>
 
+            <form onSubmit={handleSaveEdit} style={{display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px'}}>
+              {editError && <div style={{color: '#dc2626', fontSize: '12px'}}>{editError}</div>}
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Tipo de Falta</label>
+                <select value={editType} onChange={(e) => setEditType(e.target.value)} style={styles.input}>
+                  <option value="Falta Justificada">Falta Justificada</option>
+                  <option value="Falta Injustificada">Falta Injustificada</option>
+                </select>
+              </div>
+
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Data Inicial</label>
                   <input type="date" value={editStart} onChange={(e) => setEditStart(e.target.value)} style={styles.input} required />
                 </div>
-
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Data Final</label>
                   <input type="date" value={editEnd} onChange={(e) => setEditEnd(e.target.value)} style={styles.input} required />
                 </div>
-
-                <div style={{...styles.formGroup, gridColumn: 'span 2'}}>
-                  <label style={styles.label}>Motivo</label>
-                  <input type="text" value={editReason} onChange={(e) => setEditReason(e.target.value)} style={styles.input} required />
-                </div>
-
-                <div style={{...styles.formGroup, gridColumn: 'span 2'}}>
-                  <label style={styles.label}>Observações</label>
-                  <textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} style={{...styles.input, minHeight:'60px'}} />
-                </div>
               </div>
 
-              <div style={styles.modalFooter}>
-                <button type="button" onClick={() => setEditingAbsence(null)} style={styles.btnSecondary}>Cancelar</button>
-                <button type="submit" style={styles.btnSubmit}>Salvar Alterações</button>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Motivo / Justificação</label>
+                <input type="text" value={editReason} onChange={(e) => setEditReason(e.target.value)} style={styles.input} />
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Notas / Observações</label>
+                <textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} style={{...styles.input, minHeight: '60px'}} />
+              </div>
+
+              <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px'}}>
+                <button type="button" onClick={() => setEditingAbsence(null)} style={styles.btnReset}>Cancelar</button>
+                <button type="submit" style={styles.btnGoToRegister}>Guardar Alterações</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
+      {/* MODAL DE CONFIRMAÇÃO */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
         message={confirmModal.message}
-        onConfirm={() => {
-          if (confirmModal.onConfirm) confirmModal.onConfirm();
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
-        }}
+        onConfirm={confirmModal.onConfirm}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
         hideCancel={confirmModal.hideCancel}
-        confirmText={confirmModal.confirmText || 'Confirmar'}
+        confirmText={confirmModal.confirmText}
         isDestructive={confirmModal.isDestructive}
       />
-
     </div>
   );
 }
 
 const styles = {
-  container: { display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.3s' },
-  card: { backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', overflow: 'hidden' },
-  cardHeader: { padding: '16px 20px', borderBottom: '1px solid var(--color-border)' },
-  cardHeaderWithInfo: { padding: '16px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--color-text-base)', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  cardBody: { padding: '20px' },
-  
-  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' },
-  formGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase' },
-  input: { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '14px', outline: 'none' },
-  filterFooter: { marginTop: '16px', display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--color-border)', paddingTop: '16px' },
-  btnReset: { background: 'none', border: '1px solid var(--color-border)', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', color: 'var(--color-text-base)', fontWeight: '600' },
-  
-  resultsContainer: { display: 'flex', gap: '24px', alignItems: 'start', flexWrap: 'wrap' },
+  container: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  card: { backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
+  cardHeader: { padding: '14px 18px', borderBottom: '1px solid var(--color-border)' },
+  cardHeaderWithInfo: { padding: '14px 18px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' },
+  cardTitle: { margin: 0, fontSize: '15px', fontWeight: 'bold', color: 'var(--color-primary)' },
+  cardBody: { padding: '16px' },
+  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' },
+  filterFooter: { display: 'flex', justifyContent: 'flex-end', marginTop: '14px' },
+  formGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
+  label: { fontSize: '11.5px', fontWeight: '600', color: 'var(--color-text-muted)' },
+  input: { padding: '8px 10px', borderRadius: '5px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-main)', fontSize: '12.5px', outline: 'none' },
+  btnReset: { padding: '6px 14px', borderRadius: '5px', border: '1px solid var(--color-border)', backgroundColor: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer', fontSize: '12px' },
+  btnGoToRegister: { padding: '8px 14px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', fontWeight: 'bold', cursor: 'pointer', fontSize: '12.5px' },
   tableContainer: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' },
-  th: { textAlign: 'left', padding: '10px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', fontWeight: '700', textTransform: 'uppercase', fontSize: '11px' },
-  tr: { borderBottom: '1px solid var(--color-border)', transition: 'background 0.2s' },
-  td: { padding: '12px', color: 'var(--color-text-base)' },
-  
-  typeBadge: { padding: '3px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: '700', display: 'inline-block', marginRight: '6px' },
-  badgeGreen: { backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#059669' },
-  badgeRed: { backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#DC2626' },
-  
-  btnGoToRegister: { padding: '8px 16px', backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' },
-  empty: { textAlign: 'center', padding: '40px', color: 'var(--color-text-muted)', fontStyle: 'italic' },
-  
-  // Detail card
-  detailCard: { width: '380px', backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' },
-  detailHeaderBox: { padding: '16px', backgroundColor: 'rgba(27, 54, 93, 0.05)', borderBottom: '1px solid var(--color-border)', lineHeight: '1.4' },
-  historyList: { padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '420px', overflowY: 'auto' },
-  historyItem: { border: '1px solid var(--color-border)', borderRadius: '8px', padding: '12px', backgroundColor: 'var(--color-bg-base)', display: 'flex', flexDirection: 'column', gap: '8px' },
-  historyItemHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  historyItemMeta: { fontSize: '12px', color: 'var(--color-text-base)', lineHeight: '1.4' },
-  attachmentLink: { color: 'var(--color-primary)', textDecoration: 'none', fontWeight: '700' },
-  historyItemFooter: { display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--color-text-muted)', borderTop: '1px dashed var(--color-border)', paddingTop: '6px' },
-  
-  historyActions: { display: 'flex', gap: '8px', marginTop: '4px' },
-  btnEditAbsence: { background: 'none', border: '1px solid var(--color-border)', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', color: 'var(--color-text-base)', cursor: 'pointer' },
-  btnDeleteAbsence: { background: 'none', border: '1px solid rgba(239,68,68,0.3)', color: '#EF4444', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' },
-
-  btnCloseDetail: { display: 'block', width: 'calc(100% - 32px)', margin: '0 16px 16px 16px', padding: '10px', border: '1px solid var(--color-border)', borderRadius: '6px', background: 'transparent', color: 'var(--color-text-base)', fontWeight: '600', cursor: 'pointer', textAlign: 'center' },
-
-  // Modal
-  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' },
-  modalCard: { backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', border: '1px solid var(--color-border)', width: '90%', maxWidth: '500px', overflow: 'hidden' },
-  modalHeader: { padding: '14px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--color-bg-base)' },
-  modalTitle: { margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--color-text-base)' },
-  closeBtn: { border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--color-text-muted)' },
-  modalForm: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' },
-  daysBadge: { padding: '10px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '6px', fontSize: '14px', textAlign: 'center', fontWeight: '700', color: 'var(--color-primary)' },
-  modalError: { padding: '8px 12px', backgroundColor: 'rgba(239,68,68,0.1)', color: '#EF4444', borderRadius: '6px', fontSize: '12px' },
-  modalFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid var(--color-border)', paddingTop: '14px' },
-  btnSecondary: { padding: '8px 16px', border: '1px solid var(--color-border)', borderRadius: '6px', background: 'transparent', color: 'var(--color-text-base)', cursor: 'pointer' },
-  btnSubmit: { padding: '8px 16px', border: 'none', borderRadius: '6px', backgroundColor: 'var(--color-primary)', color: '#fff', fontWeight: '700', cursor: 'pointer' }
+  tr: { borderBottom: '1px solid var(--color-border)' },
+  empty: { textAlign: 'center', padding: '24px', color: 'var(--color-text-muted)', fontStyle: 'italic' },
+  resultsContainer: { display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-start' },
+  btnViewDetails: { padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--color-primary)', backgroundColor: 'transparent', color: 'var(--color-primary)', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' },
+  detailCard: { width: '380px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0,0,0,0.05)' },
+  detailHeader: { padding: '12px 16px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  detailBody: { padding: '14px', maxHeight: '550px', overflowY: 'auto' },
+  btnCloseDetail: { background: 'none', border: 'none', fontSize: '14px', cursor: 'pointer', color: 'var(--color-text-muted)' },
+  detailSummary: { display: 'flex', justifyContent: 'space-between', backgroundColor: 'rgba(27, 54, 93, 0.05)', padding: '8px 12px', borderRadius: '6px', fontSize: '11.5px', fontWeight: '600' },
+  absenceItem: { padding: '10px', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '6px' },
+  btnSmallEdit: { padding: '2px 5px', border: '1px solid var(--color-border)', borderRadius: '3px', background: 'none', cursor: 'pointer', fontSize: '10px' },
+  btnSmallDelete: { padding: '2px 5px', border: '1px solid #ef4444', borderRadius: '3px', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '10px' },
+  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 },
+  modalContent: { backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)', width: '480px', maxWidth: '95%' },
+  modalHeader: { padding: '12px 16px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }
 };
-

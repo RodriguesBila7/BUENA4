@@ -1261,7 +1261,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           {/* TAB EFETIVIDADE */}
           {activeTab === 'effectiveness' && (
             <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
-              <EffectivenessManager />
+              <EffectivenessManager 
+                user={user}
+                orgData={{ data: orgData }}
+                employeesData={{ employees }}
+              />
             </div>
           )}
 

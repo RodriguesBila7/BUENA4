@@ -1,32 +1,43 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useEffectivenessData from '../../hooks/useEffectivenessData';
 import useOrgData from '../../hooks/useOrgData';
+import { isCentralUser, filterByProvincialScope } from '../../utils/scopeUtils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { mozambiqueStructure } from '../../utils/mozambiqueDistricts';
 import ConfirmModal from '../ConfirmModal';
 import useDraggable from '../../hooks/useDraggable';
 
-export default function EffectivenessReports() {
-  const { employees } = useEmployeeData();
-  const { records, removeRecord, updateRecord } = useEffectivenessData();
-  const { data: orgData } = useOrgData();
+export default function EffectivenessReports({ user, orgData: passedOrgData, employeesData }) {
+  const { employees: allEmployees } = useEmployeeData();
+  const { records, deleteRecord, updateRecord } = useEffectivenessData();
+  const { data: hookOrgData } = useOrgData();
+
+  const orgData = passedOrgData?.data || passedOrgData || hookOrgData || { directorates: [], departments: [], divisions: [], sections: [], careers: [], categories: [] };
+  const isCentral = isCentralUser(user);
+
+  // Escopo de funcionários
+  const employees = useMemo(() => {
+    let raw = (employeesData?.employees || (Array.isArray(employeesData) ? employeesData : null) || allEmployees) || [];
+    if (!isCentral && user) {
+      return filterByProvincialScope(raw, user, orgData);
+    }
+    return raw;
+  }, [employeesData, allEmployees, isCentral, user, orgData]);
+
+  const userDirId = user?.directorateId ? String(user.directorateId) : '';
+  const userDirObj = userDirId ? (orgData?.directorates || []).find(d => String(d.id) === userDirId) : null;
 
   // Selections
-  const [reportType, setReportType] = useState('general'); // 'general', 'directorate', 'department', 'division', 'section', 'category', 'career', 'type', 'monthly', 'yearly'
+  const [reportType, setReportType] = useState('directorate'); // 'directorate', 'general', 'department', 'type', 'monthly', 'yearly'
   const [dateFrom, setDateFrom] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
 
-  // Specific filters depending on reportType
-  const [selectedDirectorateId, setSelectedDirectorateId] = useState('');
+  // Specific filters
+  const [selectedDirectorateId, setSelectedDirectorateId] = useState(!isCentral ? userDirId : '');
   const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
-  const [selectedDivisionId, setSelectedDivisionId] = useState('');
-  const [selectedSectionId, setSelectedSectionId] = useState('');
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
-  const [selectedCareerId, setSelectedCareerId] = useState('');
-  const [selectedAbsenceType, setSelectedAbsenceType] = useState('Falta Justificada');
+  const [selectedAbsenceType, setSelectedAbsenceType] = useState('');
   const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString().padStart(2, '0'));
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, hideCancel: false });
@@ -34,7 +45,7 @@ export default function EffectivenessReports() {
   const [editFormData, setEditFormData] = useState(null);
   const { position, onPointerDown } = useDraggable();
 
-  const getName = (list, id) => list?.find(item => item.id === id)?.name || '-';
+  const getName = (list, id) => list?.find(item => String(item.id) === String(id))?.name || '-';
 
   const formatDatesList = (dates = []) => {
     if (!dates.length) return '';
@@ -50,7 +61,10 @@ export default function EffectivenessReports() {
       isOpen: true,
       title: 'Remover Registo de Falta',
       message: 'Tem a certeza que deseja eliminar este registo de falta permanentemente? Esta ação afetará as estatísticas.',
-      onConfirm: () => removeRecord(id),
+      isDestructive: true,
+      onConfirm: async () => {
+        await deleteRecord(id);
+      },
       hideCancel: false
     });
   };
@@ -64,10 +78,10 @@ export default function EffectivenessReports() {
     setEditModalOpen(true);
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (editFormData) {
-      updateRecord(editFormData.id, {
+      await updateRecord(editFormData.id, {
         type: editFormData.type,
         reason: editFormData.reason
       });
@@ -75,75 +89,78 @@ export default function EffectivenessReports() {
     }
   };
 
-  // Filter employees for calculating "Total de funcionários" in target unit
+  // Base Scoped Records
+  const scopedRecords = useMemo(() => {
+    if (!isCentral && userDirId) {
+      const scopedEmpIds = new Set(employees.map(e => String(e.id)));
+      return records.filter(rec => {
+        const empMatch = scopedEmpIds.has(String(rec.employeeId));
+        const dirMatch = String(rec.directorateId || rec.registeredByDirectorateId || '') === userDirId;
+        return empMatch || dirMatch;
+      });
+    }
+    return records;
+  }, [records, isCentral, userDirId, employees]);
+
+  // Active employees in target unit for percentage calculation
   const activeEmployeesInUnit = useMemo(() => {
     return employees.filter(emp => {
       if (!emp.isActive) return false;
-      if (reportType === 'directorate' && selectedDirectorateId && emp.directorateId !== selectedDirectorateId) return false;
-      if (reportType === 'department' && selectedDepartmentId && emp.departmentId !== selectedDepartmentId) return false;
-      if (reportType === 'division' && selectedDivisionId && emp.divisionId !== selectedDivisionId) return false;
-      if (reportType === 'section' && selectedSectionId && emp.sectionId !== selectedSectionId) return false;
-      if (reportType === 'category' && selectedCategoryId && emp.categoryId !== selectedCategoryId) return false;
-      if (reportType === 'career' && selectedCareerId && emp.careerId !== selectedCareerId) return false;
+      if (selectedDirectorateId && String(emp.directorateId) !== String(selectedDirectorateId)) return false;
+      if (selectedDepartmentId && String(emp.departmentId) !== String(selectedDepartmentId)) return false;
       return true;
     });
-  }, [employees, reportType, selectedDirectorateId, selectedDepartmentId, selectedDivisionId, selectedSectionId, selectedCategoryId, selectedCareerId]);
+  }, [employees, selectedDirectorateId, selectedDepartmentId]);
 
   // Generate Report Data
   const reportData = useMemo(() => {
-    return records.filter(rec => {
+    return scopedRecords.filter(rec => {
       // Date constraints
       if (reportType === 'monthly') {
-        const [year, month] = rec.startDate.split('-');
+        const [year, month] = (rec.startDate || '').split('-');
         if (year !== selectedYear || month !== selectedMonth) return false;
       } else if (reportType === 'yearly') {
-        const [year] = rec.startDate.split('-');
+        const [year] = (rec.startDate || '').split('-');
         if (year !== selectedYear) return false;
       } else {
-        // Date range
         if (dateFrom && rec.endDate < dateFrom) return false;
         if (dateTo && rec.startDate > dateTo) return false;
       }
 
-      // Unit/RH constraints
-      if (reportType === 'directorate' && selectedDirectorateId && rec.directorateId !== selectedDirectorateId) return false;
-      if (reportType === 'department' && selectedDepartmentId && rec.departmentId !== selectedDepartmentId) return false;
-      if (reportType === 'division' && selectedDivisionId && rec.divisionId !== selectedDivisionId) return false;
-      if (reportType === 'section' && selectedSectionId && rec.sectionId !== selectedSectionId) return false;
-      if (reportType === 'category' && selectedCategoryId && rec.categoryId !== selectedCategoryId) return false;
-      if (reportType === 'career' && selectedCareerId && rec.careerId !== selectedCareerId) return false;
-      if (reportType === 'type' && selectedAbsenceType && rec.type !== selectedAbsenceType) return false;
+      // Unit constraints
+      if (selectedDirectorateId && String(rec.directorateId || rec.registeredByDirectorateId || '') !== String(selectedDirectorateId)) return false;
+      if (selectedDepartmentId && String(rec.departmentId || '') !== String(selectedDepartmentId)) return false;
+      if (selectedAbsenceType && rec.type !== selectedAbsenceType) return false;
 
       return true;
     }).map(rec => ({
       id: rec.id,
-      nip: rec.employeeNip,
-      name: rec.employeeName,
+      nip: rec.employeeNip || '-',
+      name: rec.employeeName || 'Funcionário',
       type: rec.type,
-      days: rec.daysCount,
+      days: Number(rec.daysCount) || (rec.dates ? rec.dates.length : 1),
       datesStr: (rec.dates && rec.dates.length > 0) ? formatDatesList(rec.dates) : `${rec.startDate} a ${rec.endDate}`,
       startDate: rec.startDate,
-      reason: rec.reason,
-      directorate: getName(orgData.directorates, rec.directorateId),
+      endDate: rec.endDate,
+      reason: rec.reason || '-',
+      directorate: rec.directorateName || getName(orgData.directorates, rec.directorateId),
       province: rec.provinceId || 'Direcção Geral',
-      registeredBy: rec.createdBy,
-      dateRegistered: new Date(rec.createdAt).toLocaleDateString()
-    })).sort((a,b) => b.startDate.localeCompare(a.startDate));
-  }, [records, reportType, dateFrom, dateTo, selectedDirectorateId, selectedDepartmentId, selectedDivisionId, selectedSectionId, selectedCategoryId, selectedCareerId, selectedAbsenceType, selectedMonth, selectedYear, orgData]);
+      registeredBy: rec.registeredByName || rec.registeredBy || 'Operador RH',
+      dateRegistered: new Date(rec.createdAt || rec.registeredAt || Date.now()).toLocaleDateString()
+    })).sort((a,b) => (b.startDate || '').localeCompare(a.startDate || ''));
+  }, [scopedRecords, reportType, dateFrom, dateTo, selectedDirectorateId, selectedDepartmentId, selectedAbsenceType, selectedMonth, selectedYear, orgData]);
 
   // Report Summary Totals
   const summary = useMemo(() => {
     const totalEmployees = activeEmployeesInUnit.length;
     const faltososUnique = new Set(reportData.map(r => r.nip)).size;
     const totalDays = reportData.reduce((acc, curr) => acc + curr.days, 0);
+    const justifiedDays = reportData.filter(r => r.type === 'Falta Justificada').reduce((acc, curr) => acc + curr.days, 0);
+    const unjustifiedDays = reportData.filter(r => r.type !== 'Falta Justificada').reduce((acc, curr) => acc + curr.days, 0);
 
-    let unitName = 'Geral';
-    if (reportType === 'directorate' && selectedDirectorateId) unitName = getName(orgData.directorates, selectedDirectorateId);
-    else if (reportType === 'department' && selectedDepartmentId) unitName = getName(orgData.departments, selectedDepartmentId);
-    else if (reportType === 'division' && selectedDivisionId) unitName = getName(orgData.divisions, selectedDivisionId);
-    else if (reportType === 'section' && selectedSectionId) unitName = getName(orgData.sections, selectedSectionId);
-    else if (reportType === 'career' && selectedCareerId) unitName = getName(orgData.careers, selectedCareerId);
-    else if (reportType === 'category' && selectedCategoryId) unitName = getName(orgData.categories, selectedCategoryId);
+    let unitName = 'CONSOLIDADO NACIONAL';
+    if (selectedDirectorateId) unitName = getName(orgData.directorates, selectedDirectorateId);
+    else if (!isCentral && userDirObj) unitName = userDirObj.name;
 
     let periodStr = `${dateFrom} a ${dateTo}`;
     if (reportType === 'monthly') periodStr = `${selectedMonth}/${selectedYear}`;
@@ -151,9 +168,9 @@ export default function EffectivenessReports() {
 
     const dirBreakdown = {};
     reportData.forEach(r => {
-      const dirName = r.directorate || 'Sem Direcção';
+      const dirName = r.directorate || 'Outra Direcção';
       if (!dirBreakdown[dirName]) dirBreakdown[dirName] = 0;
-      dirBreakdown[dirName] += 1;
+      dirBreakdown[dirName] += r.days;
     });
     const directorateBreakdown = Object.entries(dirBreakdown).map(([name, count]) => ({ name, count })).sort((a,b) => b.count - a.count);
 
@@ -161,12 +178,14 @@ export default function EffectivenessReports() {
       totalEmployees,
       faltososUnique,
       totalDays,
+      justifiedDays,
+      unjustifiedDays,
       unitName,
       periodStr,
       directorateBreakdown,
-      issueDate: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString()
+      issueDate: new Date().toLocaleDateString('pt-PT') + ' ' + new Date().toLocaleTimeString('pt-PT')
     };
-  }, [reportData, activeEmployeesInUnit, reportType, selectedDirectorateId, selectedDepartmentId, selectedDivisionId, selectedSectionId, selectedCareerId, selectedCategoryId, dateFrom, dateTo, selectedMonth, selectedYear, orgData]);
+  }, [reportData, activeEmployeesInUnit, selectedDirectorateId, isCentral, userDirObj, dateFrom, dateTo, reportType, selectedMonth, selectedYear, orgData]);
 
   // Excel Export (.xlsx)
   const handleExportExcel = () => {
@@ -181,35 +200,31 @@ export default function EffectivenessReports() {
       return;
     }
 
-    // Create Excel worksheets
     const titleData = [
       ["SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)"],
       ["Direcção de Recursos Humanos"],
-      ["RELATÓRIO MENSAL DE EFETIVIDADE - GESTÃO DE FALTAS"],
+      ["RELATÓRIO INSTITUCIONAL DE EFETIVIDADE E ASSIDUIDADE"],
       [""],
-      [`Unidade Organizacional: ${summary.unitName}`],
+      [`Unidade / Âmbito Territorial: ${summary.unitName}`],
       [`Período de Referência: ${summary.periodStr}`],
       [`Data de Emissão: ${summary.issueDate}`],
-      [`Total de Funcionários na Unidade: ${summary.totalEmployees}`],
-      [`Total de Funcionários Faltosos no Período: ${summary.faltososUnique}`],
-      [`Total de Dias de Ausência Acumulado: ${summary.totalDays} Dias`],
+      [`Total de Funcionários no Quadro: ${summary.totalEmployees}`],
+      [`Total de Efectivos Faltosos: ${summary.faltososUnique}`],
+      [`Total de Dias de Falta: ${summary.totalDays} Dias (${summary.justifiedDays} Justificadas | ${summary.unjustifiedDays} Injustificadas)`],
       [""]
     ];
 
-    const breakdownStrings = summary.directorateBreakdown.map(d => `${d.name}: ${d.count} faltas`);
-    const breakdownRows = breakdownStrings.length > 0 ? [[""], ["Faltas por Direcção:"], ...breakdownStrings.map(s => [s]), [""]] : [];
-
-    const tableHeaders = ["NUIT", "Nome Completo", "Tipo de Falta", "Dias", "Dias de Falta", "Direcção", "Província", "Motivo", "Registado Por"];
+    const tableHeaders = ["NUIT / NIP", "Nome Completo", "Tipo de Falta", "Dias", "Datas da Falta", "Direcção Provincial", "Motivo", "Registado Por"];
     const rows = reportData.map(r => [
-      r.nip, r.name, r.type, r.days, r.datesStr, r.directorate, r.province, r.reason, r.registeredBy
+      r.nip, r.name, r.type, r.days, r.datesStr, r.directorate, r.reason, r.registeredBy
     ]);
 
-    const finalSheetData = [...titleData, ...breakdownRows, tableHeaders, ...rows];
+    const finalSheetData = [...titleData, tableHeaders, ...rows];
     const ws = XLSX.utils.aoa_to_sheet(finalSheetData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Faltas");
 
-    const fileName = `SERNIC_Relatorio_Faltas_${reportType}_${summary.periodStr.replace(/[\/\s]/g, '_')}.xlsx`;
+    const fileName = `SERNIC_Relatorio_Assiduidade_${summary.unitName.replace(/[\/\s]/g, '_')}_${summary.periodStr.replace(/[\/\s]/g, '_')}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
 
@@ -228,7 +243,7 @@ export default function EffectivenessReports() {
 
     const doc = new jsPDF('landscape');
     
-    // Institutional Header
+    // Header
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
     doc.text("REPÚBLICA DE MOÇAMBIQUE", 14, 15);
@@ -237,62 +252,46 @@ export default function EffectivenessReports() {
     doc.text("SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)", 14, 25);
     doc.text("DIRECÇÃO DE RECURSOS HUMANOS", 14, 30);
     
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
-    doc.text(`RELATÓRIO DE EFETIVIDADE (FALTAS) - ${reportType.toUpperCase()}`, 14, 42);
+    doc.text(`MAPA DE EFETIVIDADE E ASSIDUIDADE - ${summary.unitName.toUpperCase()}`, 14, 40);
     
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`Unidade Organizacional / Critério: ${summary.unitName}`, 14, 48);
-    doc.text(`Período de referência: ${summary.periodStr}`, 14, 53);
-    doc.text(`Data de Emissão: ${summary.issueDate}`, 14, 58);
+    doc.text(`Período de Referência: ${summary.periodStr} | Emissão: ${summary.issueDate}`, 14, 46);
+    doc.text(`Efectivos Faltosos: ${summary.faltososUnique} | Total de Dias: ${summary.totalDays} (${summary.justifiedDays} Just. / ${summary.unjustifiedDays} Injust.)`, 14, 51);
 
-    // Sumary block side by side
-    doc.text(`Total Funcionários na Unidade: ${summary.totalEmployees}`, 180, 48);
-    doc.text(`Total Funcionários Faltosos: ${summary.faltososUnique}`, 180, 53);
-    doc.text(`Total de Dias de Falta: ${summary.totalDays} Dias`, 180, 58);
-
-    let startY = 70;
-    if (summary.directorateBreakdown.length > 0) {
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "bold");
-      doc.text("Faltas por Direcção:", 14, startY);
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      let breakY = startY + 6;
-      summary.directorateBreakdown.forEach(d => {
-        doc.text(`${d.name}: ${d.count} faltas`, 14, breakY);
-        breakY += 5;
-      });
-      startY = breakY + 5;
-    }
-
-    const headers = ["NUIT", "Nome Completo", "Tipo de Falta", "Dias", "Dias de Falta", "Direcção", "Província", "Motivo"];
+    const headers = ["NUIT/NIP", "Nome Completo", "Tipo de Falta", "Dias", "Datas", "Direcção Provincial", "Motivo", "Registado Por"];
     const rows = reportData.map(r => [
-      r.nip, r.name, r.type, r.days, r.datesStr, r.directorate, r.province, r.reason
+      r.nip, r.name, r.type, r.days, r.datesStr, r.directorate, r.reason, r.registeredBy
     ]);
 
     autoTable(doc, {
       head: [headers],
       body: rows,
-      startY: startY,
+      startY: 56,
       theme: 'grid',
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [27, 54, 93], textColor: [255, 255, 255] }
     });
 
     const finalY = (doc.lastAutoTable || doc.previousAutoTable || { finalY: 64 }).finalY + 15;
-    if (finalY + 30 < 210) {
-      doc.setFontSize(10);
-      doc.text("O Diretor de Recursos Humanos", 14, finalY);
-      doc.text("__________________________________________", 14, finalY + 15);
-      doc.text("Assinatura Eletrónica Certificada (SIGRH)", 14, finalY + 20);
+    if (finalY + 30 < 200) {
+      doc.setFontSize(9);
+      doc.text("O Responsável Provincial de RH", 20, finalY);
+      doc.text("___________________________________", 20, finalY + 14);
+
+      doc.text("O Director da Direcção Provincial", 115, finalY);
+      doc.text("___________________________________", 115, finalY + 14);
+
+      doc.text("Visto Central (DRH / SERNIC)", 210, finalY);
+      doc.text("___________________________________", 210, finalY + 14);
     }
 
-    doc.save(`SERNIC_Relatorio_Faltas_${reportType}.pdf`);
+    doc.save(`SERNIC_Relatorio_Assiduidade_${summary.unitName.replace(/[\/\s]/g, '_')}.pdf`);
   };
 
-  // Direct Print
+  // Direct Print A4 Institucional SERNIC
   const handleDirectPrint = () => {
     if (reportData.length === 0) {
       setConfirmModal({
@@ -305,55 +304,109 @@ export default function EffectivenessReports() {
       return;
     }
 
-    const printWin = window.open('', '', 'width=900,height=600');
+    const printWin = window.open('', '', 'width=1000,height=700');
     printWin.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Imprimir Relatório de Efetividade</title>
+          <title>Relatório Oficial de Assiduidade - ${summary.unitName}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 25px; color: #333; }
-            .header { margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-            .header h3, .header h4 { margin: 0 0 5px 0; }
-            .summary-box { display: flex; justify-content: space-between; margin: 15px 0; background-color: #f9f9f9; padding: 10px; border: 1px solid #ddd; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 12px; }
-            th { background-color: #f2f2f2; }
-            .no-print { display: none !important; }
-            .signature { margin-top: 50px; display: flex; justify-content: space-between; }
+            @page { size: A4 landscape; margin: 12mm; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; margin: 0; padding: 15px; font-size: 11px; }
+            .header { text-align: center; border-bottom: 2px solid #1B365D; padding-bottom: 10px; margin-bottom: 14px; }
+            .header h2 { margin: 0 0 3px 0; font-size: 13.5px; text-transform: uppercase; color: #1B365D; }
+            .header h3 { margin: 0 0 3px 0; font-size: 11.5px; font-weight: 600; }
+            .header h4 { margin: 0 0 4px 0; font-size: 12.5px; color: #1B365D; font-weight: 800; text-transform: uppercase; }
+            .meta-box { display: flex; justify-content: space-between; background-color: #f8fafc; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 12px; }
+            .meta-box div { font-size: 10.5px; line-height: 1.5; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
+            th { background-color: #1B365D; color: #ffffff; padding: 5px 6px; border: 1px solid #0f2442; text-align: left; font-weight: 700; }
+            td { padding: 4px 6px; border: 1px solid #cbd5e1; text-align: left; }
+            tr:nth-child(even) { background-color: #f8fafc; }
+            .totals-bar { margin-top: 12px; padding: 8px 12px; background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; display: flex; justify-content: space-around; font-weight: bold; font-size: 10.5px; }
+            .signatures { margin-top: 35px; display: flex; justify-content: space-between; text-align: center; }
+            .sig-block { width: 28%; border-top: 1px solid #333; padding-top: 5px; font-size: 10px; }
           </style>
         </head>
         <body onload="window.print(); window.close();">
           <div class="header">
-            <h3>REPÚBLICA DE MOÇAMBIQUE</h3>
-            <h4>MINISTÉRIO DO INTERIOR</h4>
+            <h2>REPÚBLICA DE MOÇAMBIQUE</h2>
+            <h3>MINISTÉRIO DO INTERIOR</h3>
             <h4>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)</h4>
-            <h4>DIRECÇÃO DE RECURSOS HUMANOS</h4>
-            <p><strong>Relatório Mensal de Efetividade - Ausências e Faltas</strong></p>
-          </div>
-          <div class="summary-box">
-            <div>
-              <strong>Unidade:</strong> ${summary.unitName}<br />
-              <strong>Período:</strong> ${summary.periodStr}<br />
-              <strong>Emissão:</strong> ${summary.issueDate}
-            </div>
-            <div>
-              <strong>Funcionários na Unidade:</strong> ${summary.totalEmployees}<br />
-              <strong>Funcionários Faltosos:</strong> ${summary.faltososUnique}<br />
-              <strong>Total de Dias de Falta:</strong> ${summary.totalDays} Dias
+            <div style="font-weight: 700; font-size: 11px; color: #1B365D;">DIRECÇÃO DE RECURSOS HUMANOS</div>
+            <div style="margin-top: 4px; font-size: 12px; font-weight: 800; text-transform: uppercase;">
+              MAPA OFICIAL DE EFETIVIDADE E ASSIDUIDADE DE PESSOAL
             </div>
           </div>
-          <table className="premium-table">
+
+          <div class="meta-box">
+            <div>
+              <strong>ÂMBITO / DELEGAÇÃO:</strong> ${summary.unitName.toUpperCase()}<br />
+              <strong>PERÍODO DE APURAÇÃO:</strong> ${summary.periodStr}
+            </div>
+            <div style="text-align: right;">
+              <strong>EFECTIVOS FALTOSOS:</strong> ${summary.faltososUnique} Funcionários<br />
+              <strong>VOLUME DE DIAS:</strong> ${summary.totalDays} Dias (${summary.justifiedDays} Justificadas | ${summary.unjustifiedDays} Injustificadas)
+            </div>
+          </div>
+
+          <table>
             <thead>
-              ${document.getElementById('report-tbl-header').innerHTML}
+              <tr>
+                <th style="width: 20px; text-align: center;">Nº</th>
+                <th>NUIT / NIP</th>
+                <th>Nome Completo</th>
+                <th>Tipo de Falta</th>
+                <th style="text-align: center;">Dias</th>
+                <th>Datas da Ausência</th>
+                <th>Direcção Provincial</th>
+                <th>Motivo Apresentado</th>
+                <th>Registado Por</th>
+              </tr>
             </thead>
             <tbody>
-              ${document.getElementById('report-tbl-body').innerHTML}
+              ${reportData.map((r, i) => `
+                <tr>
+                  <td style="text-align: center;">${i + 1}</td>
+                  <td><strong>${r.nip}</strong></td>
+                  <td><strong>${r.name}</strong></td>
+                  <td>
+                    <span style="color: ${r.type === 'Falta Justificada' ? '#059669' : '#dc2626'}; font-weight: bold;">
+                      ${r.type}
+                    </span>
+                  </td>
+                  <td style="text-align: center; font-weight: bold;">${r.days}</td>
+                  <td>${r.datesStr}</td>
+                  <td>${r.directorate}</td>
+                  <td>${r.reason}</td>
+                  <td>${r.registeredBy}</td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
-          <div class="signature">
-            <div>
-              <p>O Diretor de Recursos Humanos</p>
-              <p>_____________________________________</p>
+
+          <div class="totals-bar">
+            <span>Total Funcionários Faltosos: ${summary.faltososUnique}</span>
+            <span>Faltas Justificadas: ${summary.justifiedDays} Dias</span>
+            <span>Faltas Injustificadas: ${summary.unjustifiedDays} Dias</span>
+            <span>Total Acumulado de Dias: ${summary.totalDays} Dias</span>
+          </div>
+
+          <div class="signatures">
+            <div class="sig-block">
+              O Responsável Provincial de RH<br /><br /><br />
+              _____________________________________<br />
+              Data: ____/____/2026
+            </div>
+            <div class="sig-block">
+              O Director da Direcção Provincial<br /><br /><br />
+              _____________________________________<br />
+              Data: ____/____/2026
+            </div>
+            <div class="sig-block">
+              Visto Central (DRH / SERNIC)<br /><br /><br />
+              _____________________________________<br />
+              Direcção de Recursos Humanos
             </div>
           </div>
         </body>
@@ -365,231 +418,175 @@ export default function EffectivenessReports() {
   return (
     <div style={styles.container}>
       
-      {/* Configuração do Relatório */}
+      {/* PAINEL DE CONFIGURAÇÃO DO RELATÓRIO */}
       <div style={styles.card}>
         <div style={styles.cardHeader}>
-          <h4 style={styles.cardTitle}>Gerador de Relatórios de Faltas (Efetividade)</h4>
+          <h4 style={styles.cardTitle}>Emissão de Relatórios de Assiduidade e Faltas</h4>
         </div>
         <div style={styles.cardBody}>
-          
           <div style={styles.filterGrid}>
             
+            {/* SELETOR DE PERFIL SECUNDÁRIO / DIRECÇÃO PROVINCIAL */}
             <div style={styles.formGroup}>
-              <label style={styles.label}>Critério de Emissão</label>
-              <select value={reportType} onChange={(e) => setReportType(e.target.value)} style={styles.input}>
-                <option value="general">Relatório Geral de Faltas</option>
-                <option value="directorate">Por Direcção</option>
-                <option value="department">Por Departamento</option>
-                <option value="division">Por Repartição</option>
-                <option value="section">Por Secção</option>
-                <option value="category">Por Categoria Profissional</option>
-                <option value="career">Por Carreira</option>
-                <option value="type">Por Tipo de Falta</option>
-                <option value="monthly">Relatório Mensal</option>
-                <option value="yearly">Relatório Anual</option>
+              <label style={styles.label}>🏛️ Direcção Provincial / Perfil Secundário</label>
+              <select 
+                value={selectedDirectorateId} 
+                onChange={(e) => {
+                  setSelectedDirectorateId(e.target.value);
+                  setSelectedDepartmentId('');
+                }} 
+                disabled={!isCentral}
+                style={{...styles.input, fontWeight: 'bold', borderColor: 'var(--color-primary)'}}
+              >
+                {isCentral && <option value="">🌐 Todas as Direcções (Consolidado Nacional)</option>}
+                {(orgData?.directorates || []).map(d => (
+                  <option key={d.id} value={d.id}>📍 {d.name}</option>
+                ))}
               </select>
             </div>
 
-            {/* Condicionais */}
-            {reportType === 'directorate' && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Direcção</label>
-                <select value={selectedDirectorateId} onChange={(e) => setSelectedDirectorateId(e.target.value)} style={styles.input}>
-                  <option value="">Selecione...</option>
-                  {orgData.directorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
-            )}
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Tipo de Período</label>
+              <select value={reportType} onChange={(e) => setReportType(e.target.value)} style={styles.input}>
+                <option value="directorate">Por Intervalo de Datas</option>
+                <option value="monthly">Mensal (Mês Selecionado)</option>
+                <option value="yearly">Anual (Ano Selecionado)</option>
+              </select>
+            </div>
 
-            {reportType === 'department' && (
+            {reportType === 'monthly' ? (
               <div style={styles.formGroup}>
-                <label style={styles.label}>Departamento</label>
-                <select value={selectedDepartmentId} onChange={(e) => setSelectedDepartmentId(e.target.value)} style={styles.input}>
-                  <option value="">Selecione...</option>
-                  {orgData.departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
-            )}
-
-            {reportType === 'division' && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Repartição</label>
-                <select value={selectedDivisionId} onChange={(e) => setSelectedDivisionId(e.target.value)} style={styles.input}>
-                  <option value="">Selecione...</option>
-                  {orgData.divisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </div>
-            )}
-
-            {reportType === 'section' && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Secção</label>
-                <select value={selectedSectionId} onChange={(e) => setSelectedSectionId(e.target.value)} style={styles.input}>
-                  <option value="">Selecione...</option>
-                  {orgData.sections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
-            )}
-
-            {reportType === 'category' && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Categoria</label>
-                <select value={selectedCategoryId} onChange={(e) => setSelectedCategoryId(e.target.value)} style={styles.input}>
-                  <option value="">Selecione...</option>
-                  {orgData.categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-            )}
-
-            {reportType === 'career' && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Carreira</label>
-                <select value={selectedCareerId} onChange={(e) => setSelectedCareerId(e.target.value)} style={styles.input}>
-                  <option value="">Selecione...</option>
-                  {orgData.careers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-            )}
-
-            {reportType === 'type' && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Tipo de Falta</label>
-                <select value={selectedAbsenceType} onChange={(e) => setSelectedAbsenceType(e.target.value)} style={styles.input}>
-                  <option value="Falta Justificada">Falta Justificada</option>
-                  <option value="Falta Injustificada">Falta Injustificada</option>
-                </select>
-              </div>
-            )}
-
-            {/* Seleção de Mês/Ano */}
-            {(reportType === 'monthly' || reportType === 'yearly') ? (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Mês de Referência <span style={{color:'red'}}>*</span></label>
-                <div style={{display:'flex', gap:'4px', flexWrap:'wrap'}}>
-                  {reportType === 'monthly' && (
-                    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{...styles.input, flex: 1}}>
-                      <option value="">Mês</option>
-                      {Array.from({length: 12}).map((_, i) => {
-                        const m = (i + 1).toString().padStart(2, '0');
-                        return <option key={m} value={m}>{m}</option>;
-                      })}
-                    </select>
-                  )}
-                  <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} style={{...styles.input, flex: 1}}>
-                    <option value="">Ano</option>
+                <label style={styles.label}>Mês / Ano</label>
+                <div style={{display:'flex', gap:'4px'}}>
+                  <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{...styles.input, flex:1}}>
+                    {Array.from({length: 12}).map((_, i) => {
+                      const m = (i + 1).toString().padStart(2, '0');
+                      return <option key={m} value={m}>{m}</option>;
+                    })}
+                  </select>
+                  <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} style={{...styles.input, flex:1}}>
                     <option value="2026">2026</option>
                     <option value="2025">2025</option>
                   </select>
                 </div>
               </div>
+            ) : reportType === 'yearly' ? (
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Ano de Referência</label>
+                <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} style={styles.input}>
+                  <option value="2026">2026</option>
+                  <option value="2025">2025</option>
+                </select>
+              </div>
             ) : (
-              // Intervalo de Datas
-              <>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Data Inicial (De)</label>
-                  <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={styles.input} />
-                </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Data Final (Até)</label>
-                  <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={styles.input} />
-                </div>
-              </>
-            )}
-
-          </div>
-
-          <div style={styles.actionsBar}>
-            <button onClick={handleDirectPrint} style={styles.btnAction}>
-              🖨 Imprimir
-            </button>
-            <button onClick={handleExportExcel} style={{...styles.btnAction, backgroundColor:'#10B981', color:'#fff', borderColor:'#059669'}}>
-              📊 Excel (.xlsx)
-            </button>
-            <button onClick={handleExportPDF} style={{...styles.btnAction, backgroundColor:'#EF4444', color:'#fff', borderColor:'#DC2626'}}>
-              📕 PDF Certificado
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Pré-visualização do Relatório */}
-      <div style={styles.card}>
-        <div style={styles.cardHeader}>
-          <h4 style={styles.cardTitle}>Pré-visualização do Relatório de Efetividade</h4>
-        </div>
-        <div style={styles.cardBody}>
-          
-          <div style={styles.summaryMetaBox}>
-            <div style={styles.metaColumn}>
-              <div>Instituição: <strong>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)</strong></div>
-              <div>Período: <strong>{summary.periodStr}</strong></div>
-              <div>Unidade/Filtro: <strong>{summary.unitName}</strong></div>
-            </div>
-            <div style={styles.metaColumn}>
-              <div>Funcionários na Unidade: <strong>{summary.totalEmployees}</strong></div>
-              <div>Funcionários Faltosos: <strong>{summary.faltososUnique}</strong></div>
-              <div>Dias de Falta Acumulados: <strong style={{color:'#e53e3e'}}>{summary.totalDays} Dias</strong></div>
-            </div>
-            {summary.directorateBreakdown && summary.directorateBreakdown.length > 0 && (
-              <div style={styles.metaColumn}>
-                <div style={{fontWeight: 'bold', marginBottom: '4px'}}>Faltas por Direcção:</div>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '80px', overflowY: 'auto'}}>
-                  {summary.directorateBreakdown.map((d, idx) => (
-                    <div key={idx} style={{fontSize: '11px'}}>
-                      {d.name}: <strong style={{color:'#e53e3e'}}>{d.count}</strong>
-                    </div>
-                  ))}
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Intervalo de Datas</label>
+                <div style={{display:'flex', gap:'4px'}}>
+                  <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{...styles.input, flex:1}} />
+                  <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{...styles.input, flex:1}} />
                 </div>
               </div>
             )}
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Tipo de Falta</label>
+              <select value={selectedAbsenceType} onChange={(e) => setSelectedAbsenceType(e.target.value)} style={styles.input}>
+                <option value="">Todas (Justificadas e Injustificadas)</option>
+                <option value="Falta Justificada">Apenas Faltas Justificadas</option>
+                <option value="Falta Injustificada">Apenas Faltas Injustificadas</option>
+              </select>
+            </div>
+
           </div>
 
+          <div style={{display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px', flexWrap: 'wrap'}}>
+            <button onClick={handleDirectPrint} style={styles.btnPrint}>
+              🖨️ Imprimir Mapa de Efetividade (A4 Oficial)
+            </button>
+            <button onClick={handleExportPDF} style={styles.btnPdf}>
+              📄 Exportar PDF
+            </button>
+            <button onClick={handleExportExcel} style={styles.btnExcel}>
+              📊 Exportar Excel (.xlsx)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* QUADRO DE RESUMO ESTATÍSTICO DO RELATÓRIO */}
+      <div style={styles.summaryGrid}>
+        <div style={styles.summaryCard}>
+          <div style={styles.summaryTitle}>Âmbito Selecionado</div>
+          <div style={{fontSize: '14px', fontWeight: 'bold', color: 'var(--color-primary)'}}>{summary.unitName}</div>
+        </div>
+        <div style={styles.summaryCard}>
+          <div style={styles.summaryTitle}>Efectivos Faltosos</div>
+          <div style={styles.summaryVal}>{summary.faltososUnique}</div>
+        </div>
+        <div style={styles.summaryCard}>
+          <div style={styles.summaryTitle}>Faltas Justificadas</div>
+          <div style={{...styles.summaryVal, color: '#059669'}}>{summary.justifiedDays} Dias</div>
+        </div>
+        <div style={styles.summaryCard}>
+          <div style={styles.summaryTitle}>Faltas Injustificadas</div>
+          <div style={{...styles.summaryVal, color: '#dc2626'}}>{summary.unjustifiedDays} Dias</div>
+        </div>
+        <div style={styles.summaryCard}>
+          <div style={styles.summaryTitle}>Total Geral de Dias</div>
+          <div style={styles.summaryVal}>{summary.totalDays} Dias</div>
+        </div>
+      </div>
+
+      {/* TABELA DE PRÉ-VISUALIZAÇÃO DO RELATÓRIO */}
+      <div style={styles.card}>
+        <div style={styles.cardHeader}>
+          <h4 style={styles.cardTitle}>Pré-visualização do Mapa de Efetividade ({reportData.length} Registos)</h4>
+        </div>
+        <div style={styles.cardBody}>
           <div style={styles.tableContainer}>
             <table className="premium-table">
-              <thead id="report-tbl-header">
+              <thead>
                 <tr>
-                  <th>NUIT</th>
-                  <th>Nome Completo</th>
+                  <th>NUIT / NIP</th>
+                  <th>Funcionário</th>
+                  <th>Direcção Provincial</th>
                   <th>Tipo de Falta</th>
                   <th>Dias</th>
-                  <th>Dias de Falta</th>
-                  <th>Direcção</th>
-                  <th>Província</th>
-                  <th>Motivo / Justificação</th>
-                  <th className="no-print">Ações</th>
+                  <th>Datas</th>
+                  <th>Motivo</th>
+                  <th>Registado Por</th>
+                  <th style={{textAlign: 'right'}}>Ações</th>
                 </tr>
               </thead>
-              <tbody id="report-tbl-body">
+              <tbody>
                 {reportData.length === 0 ? (
                   <tr>
-                    <td colSpan="8" style={styles.empty}>Nenhum registo de falta corresponde aos critérios de emissão selecionados.</td>
+                    <td colSpan="9" style={styles.empty}>
+                      Nenhum registo encontrado para os filtros e âmbito territorial selecionados.
+                    </td>
                   </tr>
                 ) : (
-                  reportData.map((row, index) => (
-                    <tr key={index} style={styles.tr}>
-                      <td>{row.nip}</td>
-                      <td><strong>{row.name}</strong></td>
+                  reportData.map((r) => (
+                    <tr key={r.id} style={styles.tr}>
+                      <td><strong>{r.nip}</strong></td>
+                      <td><strong>{r.name}</strong></td>
+                      <td>{r.directorate}</td>
                       <td>
                         <span style={{
-                          ...styles.typeBadge,
-                          ...(row.type === 'Falta Justificada' ? styles.badgeGreen : styles.badgeRed)
+                          padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
+                          backgroundColor: r.type === 'Falta Justificada' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                          color: r.type === 'Falta Justificada' ? '#059669' : '#dc2626'
                         }}>
-                          {row.type}
+                          {r.type}
                         </span>
                       </td>
-                      <td><strong>{row.days}</strong></td>
-                      <td>{row.datesStr}</td>
-                      <td>{row.directorate}</td>
-                      <td>{row.province}</td>
-                      <td title={row.reason}>
-                        {row.reason.length > 30 ? row.reason.substring(0, 27) + '...' : row.reason}
-                      </td>
-                      <td className="no-print">
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button onClick={() => handleEdit(row)} style={styles.actionBtn} title="Editar">✏️</button>
-                          <button onClick={() => handleDelete(row.id)} style={{...styles.actionBtn, color: '#ef4444'}} title="Eliminar">🗑️</button>
-                        </div>
+                      <td><strong>{r.days} d</strong></td>
+                      <td>{r.datesStr}</td>
+                      <td>{r.reason}</td>
+                      <td style={{fontSize: '11px', color: 'var(--color-text-muted)'}}>{r.registeredBy}</td>
+                      <td style={{textAlign: 'right'}}>
+                        <button onClick={() => handleEdit(r)} style={styles.btnActionEdit} title="Editar">✏️</button>
+                        <button onClick={() => handleDelete(r.id)} style={styles.btnActionDelete} title="Eliminar">🗑️</button>
                       </td>
                     </tr>
                   ))
@@ -599,90 +596,77 @@ export default function EffectivenessReports() {
           </div>
         </div>
       </div>
-      <ConfirmModal
-        isOpen={confirmModal.isOpen}
-        title={confirmModal.title}
-        message={confirmModal.message}
-        onConfirm={() => {
-          if (confirmModal.onConfirm) confirmModal.onConfirm();
-          setConfirmModal(prev => ({ ...prev, isOpen: false }));
-        }}
-        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-        hideCancel={confirmModal.hideCancel}
-        confirmText={confirmModal.confirmText || 'Confirmar'}
-      />
 
+      {/* MODAL DE EDIÇÃO */}
       {editModalOpen && editFormData && (
         <div style={styles.modalOverlay}>
-          <div 
-            style={{ ...styles.modalContent, transform: `translate(${position.x}px, ${position.y}px)` }}
-            onPointerDown={onPointerDown}
-          >
-            <h4 style={{ margin: '0 0 15px 0', padding: '10px', margin: '-24px -24px 15px -24px', backgroundColor: 'var(--color-bg-card)', borderBottom: '1px solid var(--color-border)', borderRadius: '8px 8px 0 0' }} className="drag-handle">Editar Registo de Falta</h4>
-              <form onSubmit={handleSaveEdit}>
-                <div style={styles.formGroup}>
+          <div style={styles.modalContent}>
+            <div style={styles.modalHeader}>
+              <h4 style={{margin: 0, color: 'var(--color-primary)'}}>Retificar Falta</h4>
+              <button onClick={() => setEditModalOpen(false)} style={styles.btnCloseDetail}>✕</button>
+            </div>
+            <form onSubmit={handleSaveEdit} style={{display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px'}}>
+              <div style={styles.formGroup}>
                 <label style={styles.label}>Tipo de Falta</label>
-                <select 
-                  value={editFormData.type} 
-                  onChange={e => setEditFormData({...editFormData, type: e.target.value})}
-                  style={styles.input}
-                >
+                <select value={editFormData.type} onChange={(e) => setEditFormData({...editFormData, type: e.target.value})} style={styles.input}>
                   <option value="Falta Justificada">Falta Justificada</option>
                   <option value="Falta Injustificada">Falta Injustificada</option>
                 </select>
               </div>
-              <div style={{...styles.formGroup, marginTop: '15px'}}>
+              <div style={styles.formGroup}>
                 <label style={styles.label}>Motivo / Justificação</label>
-                <textarea 
-                  value={editFormData.reason}
-                  onChange={e => setEditFormData({...editFormData, reason: e.target.value})}
-                  style={{...styles.input, minHeight: '80px', resize: 'vertical'}}
-                />
+                <input type="text" value={editFormData.reason} onChange={(e) => setEditFormData({...editFormData, reason: e.target.value})} style={styles.input} />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+              <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px'}}>
                 <button type="button" onClick={() => setEditModalOpen(false)} style={styles.btnCancel}>Cancelar</button>
-                <button type="submit" style={styles.btnAction}>Guardar</button>
+                <button type="submit" style={styles.btnSave}>Guardar</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
+      {/* CONFIRMAÇÃO */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        hideCancel={confirmModal.hideCancel}
+        confirmText={confirmModal.confirmText}
+        isDestructive={confirmModal.isDestructive}
+      />
     </div>
   );
 }
 
 const styles = {
-  container: { display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.3s' },
-  card: { backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', overflow: 'hidden' },
-  cardHeader: { padding: '16px 20px', borderBottom: '1px solid var(--color-border)' },
-  cardTitle: { margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--color-text-base)', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  cardBody: { padding: '20px' },
-  
-  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'end' },
-  formGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase' },
-  input: { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '14px', outline: 'none' },
-  actionsBar: { display: 'flex', gap: '12px', marginTop: '20px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' },
-  btnAction: { padding: '10px 20px', border: '1px solid var(--color-border)', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', transition: 'all 0.2s' },
-  
-  summaryMetaBox: { display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', padding: '16px', backgroundColor: 'rgba(27,54,93,0.03)', border: '1px solid var(--color-border)', borderRadius: '8px', marginBottom: '20px', fontSize: '13px', lineHeight: '1.6' },
-  metaColumn: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  
+  container: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  card: { backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
+  cardHeader: { padding: '14px 18px', borderBottom: '1px solid var(--color-border)' },
+  cardTitle: { margin: 0, fontSize: '15px', fontWeight: 'bold', color: 'var(--color-primary)' },
+  cardBody: { padding: '16px' },
+  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' },
+  formGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
+  label: { fontSize: '11.5px', fontWeight: '600', color: 'var(--color-text-muted)' },
+  input: { padding: '8px 10px', borderRadius: '5px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-main)', fontSize: '12.5px', outline: 'none' },
+  btnPrint: { padding: '9px 18px', backgroundColor: 'var(--color-primary, #1B365D)', color: 'var(--color-accent, #EAAA00)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+  btnPdf: { padding: '9px 16px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+  btnExcel: { padding: '9px 16px', backgroundColor: '#107c41', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+  summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' },
+  summaryCard: { padding: '14px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '8px' },
+  summaryTitle: { fontSize: '11px', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600' },
+  summaryVal: { fontSize: '20px', fontWeight: 'bold', color: 'var(--color-text-main)' },
   tableContainer: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' },
-  th: { textAlign: 'left', padding: '10px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', fontWeight: '600' },
   tr: { borderBottom: '1px solid var(--color-border)' },
-  td: { padding: '10px', color: 'var(--color-text-base)' },
-  empty: { textAlign: 'center', padding: '30px', color: 'var(--color-text-muted)', fontStyle: 'italic' },
-  
-  typeBadge: { padding: '3px 8px', borderRadius: '12px', fontSize: '10px', fontWeight: '700', display: 'inline-block' },
-  badgeGreen: { backgroundColor: 'rgba(16, 185, 129, 0.15)', color: '#059669' },
-  badgeRed: { backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#DC2626' },
-  
-  actionBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '4px', opacity: 0.8, transition: 'opacity 0.2s' },
-  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modalContent: { backgroundColor: 'var(--color-bg-base)', padding: '24px', borderRadius: '8px', width: '400px', maxWidth: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', color: 'var(--color-text-base)' },
-  btnCancel: { padding: '8px 16px', border: '1px solid var(--color-border)', borderRadius: '6px', cursor: 'pointer', backgroundColor: 'transparent', color: 'var(--color-text-base)' }
+  empty: { textAlign: 'center', padding: '24px', color: 'var(--color-text-muted)', fontStyle: 'italic' },
+  btnActionEdit: { padding: '3px 6px', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'none', cursor: 'pointer', fontSize: '11px', marginRight: '4px' },
+  btnActionDelete: { padding: '3px 6px', border: '1px solid #ef4444', borderRadius: '4px', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '11px' },
+  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 },
+  modalContent: { backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)', width: '450px', maxWidth: '95%' },
+  modalHeader: { padding: '12px 16px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  btnCloseDetail: { background: 'none', border: 'none', fontSize: '14px', cursor: 'pointer', color: 'var(--color-text-muted)' },
+  btnCancel: { padding: '6px 12px', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'none', cursor: 'pointer' },
+  btnSave: { padding: '6px 14px', border: 'none', borderRadius: '4px', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', fontWeight: 'bold', cursor: 'pointer' }
 };
-

@@ -3,13 +3,25 @@ import { mozambiqueStructure } from '../../utils/mozambiqueDistricts';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useEffectivenessData from '../../hooks/useEffectivenessData';
 import useOrgData from '../../hooks/useOrgData';
+import { isCentralUser, filterByProvincialScope } from '../../utils/scopeUtils';
 import ConfirmModal from '../ConfirmModal';
 import MultiDateCalendar from './MultiDateCalendar';
 
-export default function EffectivenessForm({ onRegistrationComplete }) {
-  const { employees } = useEmployeeData();
+export default function EffectivenessForm({ onRegistrationComplete, user, orgData: passedOrgData, employeesData }) {
+  const { employees: allEmployees } = useEmployeeData();
   const { addRecord } = useEffectivenessData();
-  const { data: orgData } = useOrgData();
+  const { data: hookOrgData } = useOrgData();
+
+  const orgData = passedOrgData?.data || passedOrgData || hookOrgData || {};
+  const isCentral = isCentralUser(user);
+
+  const employees = useMemo(() => {
+    let raw = (employeesData?.employees || (Array.isArray(employeesData) ? employeesData : null) || allEmployees) || [];
+    if (!isCentral && user) {
+      return filterByProvincialScope(raw, user, orgData);
+    }
+    return raw;
+  }, [employeesData, allEmployees, isCentral, user, orgData]);
 
   // Structure selection states
   const [provinceId, setProvinceId] = useState('');
@@ -204,6 +216,8 @@ export default function EffectivenessForm({ onRegistrationComplete }) {
       return;
     }
 
+    const dirObj = (orgData?.directorates || []).find(d => String(d.id) === String(selectedEmp.directorateId));
+
     const payload = {
       employeeId: selectedEmp.id,
       employeeNip: selectedEmp.nip,
@@ -218,15 +232,21 @@ export default function EffectivenessForm({ onRegistrationComplete }) {
       notes: notes,
       attachment: attachment,
       // structural logs
-      provinceId: selectedEmp.provinceId,
-      districtId: selectedEmp.districtId,
+      provinceId: selectedEmp.provinceId || dirObj?.province || '',
+      districtId: selectedEmp.districtId || '',
       directorateId: selectedEmp.directorateId,
+      directorateName: dirObj?.name || selectedEmp.directorate || 'Direcção Geral',
       departmentId: selectedEmp.departmentId || '',
       divisionId: selectedEmp.divisionId || '',
       sectionId: selectedEmp.sectionId || '',
       careerId: selectedEmp.careerId,
       categoryId: selectedEmp.categoryId || '',
-      jobPosition: selectedEmp.role || 'Investigador'
+      jobPosition: selectedEmp.role || 'Investigador',
+      registeredBy: user?.username || 'Utilizador',
+      registeredByName: user?.name || user?.username || 'Utilizador RH',
+      registeredByRole: user?.roleName || user?.roleId || 'Operador',
+      registeredByDirectorateId: user?.directorateId || selectedEmp.directorateId,
+      registeredAt: new Date().toISOString()
     };
 
     const res = await addRecord(payload);

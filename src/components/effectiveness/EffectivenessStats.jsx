@@ -1,14 +1,45 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useEffectivenessData from '../../hooks/useEffectivenessData';
 import useOrgData from '../../hooks/useOrgData';
+import { isCentralUser, filterByProvincialScope } from '../../utils/scopeUtils';
 
-export default function EffectivenessStats() {
-  const { employees } = useEmployeeData();
+export default function EffectivenessStats({ user, orgData: passedOrgData, employeesData }) {
+  const { employees: allEmployees } = useEmployeeData();
   const { records } = useEffectivenessData();
-  const { data: orgData } = useOrgData();
+  const { data: hookOrgData } = useOrgData();
 
-  const getName = (list, id) => list?.find(item => item.id === id)?.name || '-';
+  const orgData = passedOrgData?.data || passedOrgData || hookOrgData || { directorates: [], departments: [], divisions: [], sections: [], careers: [], categories: [] };
+  const isCentral = isCentralUser(user);
+
+  const userDirId = user?.directorateId ? String(user.directorateId) : '';
+  const [selectedDirFilter, setSelectedDirFilter] = useState(!isCentral ? userDirId : '');
+
+  const employees = useMemo(() => {
+    let raw = (employeesData?.employees || (Array.isArray(employeesData) ? employeesData : null) || allEmployees) || [];
+    if (!isCentral && user) {
+      return filterByProvincialScope(raw, user, orgData);
+    }
+    return raw;
+  }, [employeesData, allEmployees, isCentral, user, orgData]);
+
+  // Scoped records
+  const scopedRecords = useMemo(() => {
+    let base = records;
+    if (!isCentral && userDirId) {
+      const scopedEmpIds = new Set(employees.map(e => String(e.id)));
+      base = records.filter(rec => {
+        const empMatch = scopedEmpIds.has(String(rec.employeeId));
+        const dirMatch = String(rec.directorateId || rec.registeredByDirectorateId || '') === userDirId;
+        return empMatch || dirMatch;
+      });
+    } else if (isCentral && selectedDirFilter) {
+      base = records.filter(rec => String(rec.directorateId || rec.registeredByDirectorateId || '') === selectedDirFilter);
+    }
+    return base;
+  }, [records, isCentral, userDirId, selectedDirFilter, employees]);
+
+  const getName = (list, id) => list?.find(item => String(item.id) === String(id))?.name || '-';
 
   // Calculate age from birthDate string (YYYY-MM-DD)
   const getAgeGroup = (birthDate) => {
@@ -21,25 +52,26 @@ export default function EffectivenessStats() {
     return 'Seniores (> 50 anos)';
   };
 
-  // General counts over all historical absences
+  // General counts over filtered absences
   const stats = useMemo(() => {
     const totalEmployees = employees.filter(e => e.isActive).length;
     
     // Set of employees who have absences
-    const faltososEmpIds = new Set(records.map(r => r.employeeId));
+    const faltososEmpIds = new Set(scopedRecords.map(r => r.employeeId));
     const employeesWithAbsences = faltososEmpIds.size;
-    const employeesWithoutAbsences = totalEmployees - employeesWithAbsences;
+    const employeesWithoutAbsences = Math.max(0, totalEmployees - employeesWithAbsences);
 
     let totalJustified = 0;
     let totalUnjustified = 0;
     let totalDaysLost = 0;
 
-    records.forEach(r => {
-      totalDaysLost += r.daysCount;
+    scopedRecords.forEach(r => {
+      const days = Number(r.daysCount) || (r.dates ? r.dates.length : 1);
+      totalDaysLost += days;
       if (r.type === 'Falta Justificada') {
-        totalJustified++;
+        totalJustified += days;
       } else {
-        totalUnjustified++;
+        totalUnjustified += days;
       }
     });
 
@@ -51,27 +83,27 @@ export default function EffectivenessStats() {
       totalUnjustified,
       totalDaysLost
     };
-  }, [records, employees]);
+  }, [scopedRecords, employees]);
 
   // Organizational stats calculation (by Directorate, Province, District)
   const orgStats = useMemo(() => {
     // 1. Directorate
     const dirsMap = {};
-    orgData.directorates.forEach(d => {
+    (orgData.directorates || []).forEach(d => {
       dirsMap[d.id] = { name: d.name, days: 0, count: 0 };
     });
 
     // 2. Province
     const provsMap = {};
 
-    // 3. District
-    const distsMap = {};
+    scopedRecords.forEach(r => {
+      const days = Number(r.daysCount) || (r.dates ? r.dates.length : 1);
 
-    records.forEach(r => {
       // Directorate
-      if (r.directorateId && dirsMap[r.directorateId]) {
-        dirsMap[r.directorateId].days += r.daysCount;
-        dirsMap[r.directorateId].count++;
+      const dId = r.directorateId || r.registeredByDirectorateId;
+      if (dId && dirsMap[dId]) {
+        dirsMap[dId].days += days;
+        dirsMap[dId].count++;
       }
 
       // Province
@@ -79,296 +111,125 @@ export default function EffectivenessStats() {
       if (!provsMap[prov]) {
         provsMap[prov] = { name: prov, days: 0, count: 0 };
       }
-      provsMap[prov].days += r.daysCount;
+      provsMap[prov].days += days;
       provsMap[prov].count++;
-
-      // District
-      const dist = r.districtId || 'Direcção Geral';
-      if (!distsMap[dist]) {
-        distsMap[dist] = { name: dist, days: 0, count: 0 };
-      }
-      distsMap[dist].days += r.daysCount;
-      distsMap[dist].count++;
     });
 
     return {
       directorates: Object.values(dirsMap).filter(d => d.count > 0).sort((a,b) => b.days - a.days),
-      provinces: Object.values(provsMap).sort((a,b) => b.days - a.days),
-      districts: Object.values(distsMap).sort((a,b) => b.days - a.days)
+      provinces: Object.values(provsMap).sort((a,b) => b.days - a.days)
     };
-  }, [records, orgData.directorates]);
-
-  // HR statistics (by Career, Gender, Age Group)
-  const hrStats = useMemo(() => {
-    const careersMap = {};
-    orgData.careers.forEach(c => {
-      careersMap[c.id] = { name: c.name, days: 0, count: 0 };
-    });
-
-    const gendersMap = {
-      'M': { name: 'Masculino (M)', days: 0, count: 0 },
-      'F': { name: 'Feminino (F)', days: 0, count: 0 }
-    };
-
-    const ageMap = {
-      'Jovens (< 35 anos)': { name: 'Jovens (< 35)', days: 0, count: 0 },
-      'Adultos (35-50 anos)': { name: 'Adultos (35-50)', days: 0, count: 0 },
-      'Seniores (> 50 anos)': { name: 'Seniores (> 50)', days: 0, count: 0 },
-      'Não Definido': { name: 'Não Definido', days: 0, count: 0 }
-    };
-
-    records.forEach(r => {
-      // Career
-      if (r.careerId && careersMap[r.careerId]) {
-        careersMap[r.careerId].days += r.daysCount;
-        careersMap[r.careerId].count++;
-      }
-
-      // Gender
-      const gen = r.gender || 'M';
-      if (gendersMap[gen]) {
-        gendersMap[gen].days += r.daysCount;
-        gendersMap[gen].count++;
-      }
-
-      // Age Group
-      const emp = employees.find(e => e.id === r.employeeId);
-      const ageGroup = getAgeGroup(emp?.birthDate);
-      if (ageMap[ageGroup]) {
-        ageMap[ageGroup].days += r.daysCount;
-        ageMap[ageGroup].count++;
-      }
-    });
-
-    return {
-      careers: Object.values(careersMap).filter(c => c.count > 0).sort((a,b) => b.days - a.days),
-      genders: Object.values(gendersMap).filter(g => g.count > 0).sort((a,b) => b.days - a.days),
-      ages: Object.values(ageMap).filter(a => a.count > 0).sort((a,b) => b.days - a.days)
-    };
-  }, [records, orgData.careers, employees]);
+  }, [scopedRecords, orgData.directorates]);
 
   return (
     <div style={styles.container}>
-      
-      {/* 1. Indicadores Gerais */}
-      <div style={styles.card}>
-        <div style={styles.cardHeader}>
-          <h4 style={styles.cardTitle}>Painel de Estatísticas Gerais (Ausências)</h4>
+      {/* SELETOR DE ESCOPO PARA ADMIN CENTRAL */}
+      {isCentral && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '12px 16px',
+          backgroundColor: 'rgba(27, 54, 93, 0.05)',
+          borderRadius: '8px',
+          border: '1px solid var(--color-primary)',
+          marginBottom: '16px',
+          flexWrap: 'wrap'
+        }}>
+          <span style={{ fontWeight: 'bold', color: 'var(--color-primary)', fontSize: '13px' }}>
+            🏛️ Filtrar Estatísticas por Perfil Secundário / Direcção:
+          </span>
+          <select
+            value={selectedDirFilter}
+            onChange={(e) => setSelectedDirFilter(e.target.value)}
+            style={{
+              padding: '7px 12px',
+              borderRadius: '6px',
+              border: '1px solid var(--color-primary)',
+              backgroundColor: 'var(--color-bg-base)',
+              color: 'var(--color-text-main)',
+              fontSize: '13px',
+              fontWeight: '600'
+            }}
+          >
+            <option value="">🌐 Estatísticas Globais (Consolidado Nacional)</option>
+            {(orgData?.directorates || []).map(d => (
+              <option key={d.id} value={d.id}>📍 {d.name}</option>
+            ))}
+          </select>
         </div>
-        <div style={styles.cardBody}>
-          <div style={styles.statsGrid}>
-            
-            <div style={styles.statBox}>
-              <span style={styles.statBoxVal}>{stats.totalEmployees}</span>
-              <span style={styles.statBoxLabel}>Total Funcionários</span>
-            </div>
+      )}
 
-            <div style={styles.statBox}>
-              <span style={{...styles.statBoxVal, color: '#e53e3e'}}>{stats.employeesWithAbsences}</span>
-              <span style={styles.statBoxLabel}>Funcionários com Falta</span>
-              <small style={styles.statBoxSub}>
-                {stats.totalEmployees > 0 ? ((stats.employeesWithAbsences / stats.totalEmployees) * 100).toFixed(1) : 0}% do total
-              </small>
-            </div>
-
-            <div style={styles.statBox}>
-              <span style={{...styles.statBoxVal, color: '#38a169'}}>{stats.employeesWithoutAbsences}</span>
-              <span style={styles.statBoxLabel}>Funcionários sem Falta</span>
-              <small style={styles.statBoxSub}>
-                {stats.totalEmployees > 0 ? ((stats.employeesWithoutAbsences / stats.totalEmployees) * 100).toFixed(1) : 0}% de assiduidade total
-              </small>
-            </div>
-
-            <div style={styles.statBox}>
-              <span style={{...styles.statBoxVal, color: 'var(--color-primary)'}}>{stats.totalDaysLost}</span>
-              <span style={styles.statBoxLabel}>Total Dias Perdidos</span>
-              <small style={styles.statBoxSub}>Média: {stats.employeesWithAbsences > 0 ? (stats.totalDaysLost / stats.employeesWithAbsences).toFixed(1) : 0} dias/func</small>
-            </div>
-
-            <div style={styles.statBox}>
-              <span style={{...styles.statBoxVal, color: '#3182ce'}}>{stats.totalJustified}</span>
-              <span style={styles.statBoxLabel}>Faltas Justificadas</span>
-            </div>
-
-            <div style={styles.statBox}>
-              <span style={{...styles.statBoxVal, color: '#dd6b20'}}>{stats.totalUnjustified}</span>
-              <span style={styles.statBoxLabel}>Faltas Injustificadas</span>
-            </div>
-
+      {/* KPI CARDS */}
+      <div style={styles.gridCards}>
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Total Efectivos no Quadro</div>
+          <div style={styles.cardValue}>{stats.totalEmployees}</div>
+        </div>
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Funcionários com Faltas</div>
+          <div style={{...styles.cardValue, color: '#dc2626'}}>{stats.employeesWithAbsences}</div>
+        </div>
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Total Dias de Ausência</div>
+          <div style={styles.cardValue}>{stats.totalDaysLost} Dias</div>
+        </div>
+        <div style={styles.card}>
+          <div style={styles.cardTitle}>Faltas Justificadas vs Injustificadas</div>
+          <div style={{fontSize: '14px', fontWeight: 'bold', marginTop: '6px'}}>
+            <span style={{color: '#059669'}}>✓ {stats.totalJustified}d Just.</span> | <span style={{color: '#dc2626'}}>✕ {stats.totalUnjustified}d Injust.</span>
           </div>
         </div>
       </div>
 
-      <div style={styles.horizontalPanels}>
-        
-        {/* 2. Análise Organizacional */}
-        <div style={styles.panelCard}>
-          <div style={styles.cardHeader}>
-            <h4 style={styles.cardTitle}>Perda de Dias por Unidade Organizacional</h4>
-          </div>
-          <div style={styles.cardBody}>
-            
-            <h5 style={styles.subTitle}>Faltas por Província</h5>
-            <div style={styles.tableWrapper}>
-              <table className="premium-table">
-                <thead>
-                  <tr>
-                    <th>Província</th>
-                    <th>Registos</th>
-                    <th>Total Dias Perdidos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orgStats.provinces.length === 0 ? (
-                    <tr><td colSpan="3" style={styles.empty}>Sem registos de faltas.</td></tr>
-                  ) : (
-                    orgStats.provinces.map(p => (
-                      <tr key={p.name} style={styles.tr}>
-                        <td><strong>{p.name}</strong></td>
-                        <td>{p.count}</td>
-                        <td><strong style={{color:'#e53e3e'}}>{p.days} Dias</strong></td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <h5 style={{...styles.subTitle, marginTop: '24px'}}>Faltas por Direcção</h5>
-            <div style={styles.tableWrapper}>
-              <table className="premium-table">
-                <thead>
-                  <tr>
-                    <th>Direcção</th>
-                    <th>Registos</th>
-                    <th>Total Dias Perdidos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orgStats.directorates.length === 0 ? (
-                    <tr><td colSpan="3" style={styles.empty}>Sem registos de faltas.</td></tr>
-                  ) : (
-                    orgStats.directorates.map(d => (
-                      <tr key={d.name} style={styles.tr}>
-                        <td title={d.name}><strong>{d.name.length > 25 ? d.name.substring(0, 22) + '...' : d.name}</strong></td>
-                        <td>{d.count}</td>
-                        <td><strong style={{color:'var(--color-primary)'}}>{d.days} Dias</strong></td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
+      {/* DETALHE POR PROVÍNCIA / DIRECÇÃO */}
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px', marginTop: '20px'}}>
+        <div style={styles.chartCard}>
+          <h4 style={styles.chartTitle}>Faltas por Província / Direcção</h4>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+            {orgStats.directorates.length === 0 ? (
+              <div style={{color: 'var(--color-text-muted)', fontStyle: 'italic', padding: '16px', textAlign: 'center'}}>
+                Sem registos de faltas a apresentar.
+              </div>
+            ) : (
+              orgStats.directorates.map((d, i) => (
+                <div key={i} style={{display: 'flex', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: 'var(--color-bg-card)', borderRadius: '6px', border: '1px solid var(--color-border)'}}>
+                  <span style={{fontWeight: '600', fontSize: '13px'}}>{d.name}</span>
+                  <span style={{fontWeight: 'bold', color: 'var(--color-primary)'}}>{d.days} Dias ({d.count} ocorrências)</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* 3. Análise de Recursos Humanos */}
-        <div style={styles.panelCard}>
-          <div style={styles.cardHeader}>
-            <h4 style={styles.cardTitle}>Ausências por Fatores de RH</h4>
-          </div>
-          <div style={styles.cardBody}>
-            
-            <h5 style={styles.subTitle}>Faltas por Género</h5>
-            <div style={styles.tableWrapper}>
-              <table className="premium-table">
-                <thead>
-                  <tr>
-                    <th>Género</th>
-                    <th>Registos</th>
-                    <th>Total Dias Perdidos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {hrStats.genders.map(g => (
-                    <tr key={g.name} style={styles.tr}>
-                      <td><strong>{g.name}</strong></td>
-                      <td>{g.count}</td>
-                      <td><strong style={{color:'#3182ce'}}>{g.days} Dias</strong></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <h5 style={{...styles.subTitle, marginTop: '24px'}}>Faltas por Faixa Etária</h5>
-            <div style={styles.tableWrapper}>
-              <table className="premium-table">
-                <thead>
-                  <tr>
-                    <th>Faixa Etária</th>
-                    <th>Registos</th>
-                    <th>Total Dias Perdidos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {hrStats.ages.map(a => (
-                    <tr key={a.name} style={styles.tr}>
-                      <td><strong>{a.name}</strong></td>
-                      <td>{a.count}</td>
-                      <td><strong style={{color:'#8b5cf6'}}>{a.days} Dias</strong></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <h5 style={{...styles.subTitle, marginTop: '24px'}}>Faltas por Carreira</h5>
-            <div style={styles.tableWrapper}>
-              <table className="premium-table">
-                <thead>
-                  <tr>
-                    <th>Carreira</th>
-                    <th>Registos</th>
-                    <th>Total Dias Perdidos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {hrStats.careers.length === 0 ? (
-                    <tr><td colSpan="3" style={styles.empty}>Sem registos de faltas.</td></tr>
-                  ) : (
-                    hrStats.careers.map(c => (
-                      <tr key={c.name} style={styles.tr}>
-                        <td><strong>{c.name}</strong></td>
-                        <td>{c.count}</td>
-                        <td><strong style={{color:'#dd6b20'}}>{c.days} Dias</strong></td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
+        <div style={styles.chartCard}>
+          <h4 style={styles.chartTitle}>Distribuição por Âmbito Regional</h4>
+          <div style={{display: 'flex', flexDirection: 'column', gap: '10px'}}>
+            {orgStats.provinces.length === 0 ? (
+              <div style={{color: 'var(--color-text-muted)', fontStyle: 'italic', padding: '16px', textAlign: 'center'}}>
+                Sem dados regionais.
+              </div>
+            ) : (
+              orgStats.provinces.map((p, i) => (
+                <div key={i} style={{display: 'flex', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: 'var(--color-bg-card)', borderRadius: '6px', border: '1px solid var(--color-border)'}}>
+                  <span style={{fontWeight: '600', fontSize: '13px'}}>📍 {p.name}</span>
+                  <span style={{fontWeight: 'bold', color: '#dc2626'}}>{p.days} Dias</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
-
       </div>
-
     </div>
   );
 }
 
 const styles = {
-  container: { display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.3s' },
-  card: { backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', overflow: 'hidden' },
-  panelCard: { backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', overflow: 'hidden', flex: 1, minWidth: '350px' },
-  cardHeader: { padding: '16px 20px', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)' },
-  cardTitle: { margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--color-text-base)', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  cardBody: { padding: '20px' },
-  
-  statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '16px' },
-  statBox: { backgroundColor: 'var(--color-bg-base)', padding: '16px', borderRadius: '10px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', justifyContent: 'center' },
-  statBoxVal: { fontSize: '28px', fontWeight: '800', color: 'var(--color-text-base)', marginBottom: '4px' },
-  statBoxLabel: { fontSize: '12px', fontWeight: '600', color: 'var(--color-text-muted)' },
-  statBoxSub: { fontSize: '10px', color: 'var(--color-text-muted)', marginTop: '4px' },
-  
-  horizontalPanels: { display: 'flex', gap: '24px', flexWrap: 'wrap' },
-  subTitle: { margin: '0 0 12px 0', fontSize: '13px', fontWeight: '700', color: 'var(--color-primary)', textTransform: 'uppercase', borderBottom: '1px dashed var(--color-border)', paddingBottom: '6px' },
-  tableWrapper: { overflowX: 'auto' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' },
-  th: { textAlign: 'left', padding: '10px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', fontWeight: '600' },
-  tr: { borderBottom: '1px solid var(--color-border)' },
-  td: { padding: '10px', color: 'var(--color-text-base)' },
-  empty: { textAlign: 'center', padding: '20px', color: 'var(--color-text-muted)', fontStyle: 'italic' }
+  container: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  gridCards: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' },
+  card: { padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
+  cardTitle: { fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: '600', marginBottom: '8px', textTransform: 'uppercase' },
+  cardValue: { fontSize: '26px', fontWeight: 'bold', color: 'var(--color-text-main)' },
+  chartCard: { padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)' },
+  chartTitle: { fontSize: '14.5px', color: 'var(--color-primary)', fontWeight: 'bold', marginBottom: '14px' }
 };

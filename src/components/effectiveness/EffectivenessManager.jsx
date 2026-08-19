@@ -4,14 +4,14 @@ import EffectivenessQuery from './EffectivenessQuery';
 import EffectivenessReports from './EffectivenessReports';
 import EffectivenessStats from './EffectivenessStats';
 
-export default function EffectivenessManager() {
+export default function EffectivenessManager({ user, orgData, employeesData }) {
   const [activeTab, setActiveTab] = useState('query');
 
   const tabs = [
-    { id: 'query', label: 'Funcionários Faltosos' },
-    { id: 'register', label: 'Registar Faltas' },
-    { id: 'stats', label: 'Estatísticas de Faltas' },
-    { id: 'reports', label: 'Relatórios de Assiduidade' }
+    { id: 'query', label: '📋 Funcionários Faltosos' },
+    { id: 'register', label: '✍️ Registar Faltas' },
+    { id: 'reports', label: '🖨️ Relatórios & Impressão por Província' },
+    { id: 'stats', label: '📊 Estatísticas de Faltas' }
   ];
 
   return (
@@ -19,7 +19,7 @@ export default function EffectivenessManager() {
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}>Módulo de Efetividade (Gestão de Faltas)</h2>
-          <p style={styles.desc}>Controlo, registo e relatórios de faltas justificadas e injustificadas da Função Pública.</p>
+          <p style={styles.desc}>Controlo territorial, registo descentralizado e relatórios oficiais de assiduidade do SERNIC.</p>
         </div>
       </div>
 
@@ -37,10 +37,36 @@ export default function EffectivenessManager() {
       </div>
 
       <div style={styles.contentArea}>
-        {activeTab === 'query' && <EffectivenessQuery onGoToRegister={() => setActiveTab('register')} />}
-        {activeTab === 'register' && <EffectivenessForm onRegistrationComplete={() => setActiveTab('query')} />}
-        {activeTab === 'reports' && <EffectivenessReports />}
-        {activeTab === 'stats' && <EffectivenessStats />}
+        {activeTab === 'query' && (
+          <EffectivenessQuery 
+            user={user}
+            orgData={orgData}
+            employeesData={employeesData}
+            onGoToRegister={() => setActiveTab('register')} 
+          />
+        )}
+        {activeTab === 'register' && (
+          <EffectivenessForm 
+            user={user}
+            orgData={orgData}
+            employeesData={employeesData}
+            onRegistrationComplete={() => setActiveTab('query')} 
+          />
+        )}
+        {activeTab === 'reports' && (
+          <EffectivenessReports 
+            user={user}
+            orgData={orgData}
+            employeesData={employeesData}
+          />
+        )}
+        {activeTab === 'stats' && (
+          <EffectivenessStats 
+            user={user}
+            orgData={orgData}
+            employeesData={employeesData}
+          />
+        )}
       </div>
     </div>
   );
