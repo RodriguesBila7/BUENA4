@@ -1247,7 +1247,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           {/* TAB PROCESSOS DISCIPLINARES */}
           {activeTab === 'disciplinary' && (
             <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
-              <DisciplinaryManager orgData={{ data: orgData }} employeesData={{ employees }} />
+              <DisciplinaryManager 
+                orgData={{ data: orgData }} 
+                employeesData={{ employees }} 
+                user={user}
+                onNavigateTab={handleTabChange}
+              />
             </div>
           )}
 

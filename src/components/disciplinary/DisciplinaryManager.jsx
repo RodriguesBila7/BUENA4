@@ -2,36 +2,49 @@ import React, { useState } from 'react';
 import DisciplinaryDashboard from './DisciplinaryDashboard';
 import DisciplinaryList from './DisciplinaryList';
 
-export default function DisciplinaryManager({ orgData, employeesData }) {
-  const [activeTab, setActiveTab] = useState('dashboard');
+export default function DisciplinaryManager({ orgData, employeesData, user, onNavigateTab }) {
+  const [activeTab, setActiveTab] = useState('list');
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}>Processos Disciplinares</h2>
-          <p style={styles.desc}>Gestão, acompanhamento e estatísticas de sanções disciplinares.</p>
+          <p style={styles.desc}>Gestão, tramitação de despachos e execução de sanções disciplinares.</p>
         </div>
       </div>
 
       <div style={styles.tabsContainer}>
         <button 
-          onClick={() => setActiveTab('dashboard')} 
-          style={activeTab === 'dashboard' ? styles.activeTab : styles.tab}
-        >
-          Dashboard & Estatísticas
-        </button>
-        <button 
           onClick={() => setActiveTab('list')} 
           style={activeTab === 'list' ? styles.activeTab : styles.tab}
         >
-          Listagem de Processos
+          📋 Listagem & Despachos
+        </button>
+        <button 
+          onClick={() => setActiveTab('dashboard')} 
+          style={activeTab === 'dashboard' ? styles.activeTab : styles.tab}
+        >
+          📊 Dashboard & Estatísticas
         </button>
       </div>
 
       <div style={styles.contentArea}>
-        {activeTab === 'dashboard' && <DisciplinaryDashboard orgData={orgData} employeesData={employeesData} />}
-        {activeTab === 'list' && <DisciplinaryList orgData={orgData} employeesData={employeesData} />}
+        {activeTab === 'list' && (
+          <DisciplinaryList 
+            orgData={orgData} 
+            employeesData={employeesData} 
+            user={user} 
+            onNavigateTab={onNavigateTab} 
+          />
+        )}
+        {activeTab === 'dashboard' && (
+          <DisciplinaryDashboard 
+            orgData={orgData} 
+            employeesData={employeesData} 
+            user={user} 
+          />
+        )}
       </div>
     </div>
   );
