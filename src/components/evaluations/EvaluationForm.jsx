@@ -3,10 +3,11 @@ import useEmployeeData from '../../hooks/useEmployeeData';
 import useOrgData from '../../hooks/useOrgData';
 import useEvaluationData from '../../hooks/useEvaluationData';
 import { getClassification } from '../../utils/evaluationRules';
+import { filterByProvincialScope } from '../../utils/scopeUtils';
 import ConfirmModal from '../ConfirmModal';
 
 export default function EvaluationForm({ user, onSave }) {
-  const { employees } = useEmployeeData();
+  const { employees = [] } = useEmployeeData();
   const { data: orgData } = useOrgData();
   const { addEvaluation } = useEvaluationData();
 
@@ -15,8 +16,8 @@ export default function EvaluationForm({ user, onSave }) {
   const [formData, setFormData] = useState({
     year: new Date().getFullYear().toString(),
     period: 'Anual',
-    evaluatorName: user?.name || '',
-    evaluatorRole: user?.role || '',
+    evaluatorName: user?.name || user?.username || 'Avaliador',
+    evaluatorRole: user?.roleName || user?.roleDetails?.name || user?.role || 'Avaliador',
     evaluationDate: new Date().toISOString().split('T')[0],
     dispatchNumber: '',
     score: '',
@@ -56,31 +57,33 @@ export default function EvaluationForm({ user, onSave }) {
   };
 
   const filteredEmployees = useMemo(() => {
-    let result = employees.filter(e => e.isActive !== false);
+    const rawList = Array.isArray(employees) ? employees : [];
+    const scopedList = user ? filterByProvincialScope(rawList, user, orgData) : rawList;
+    let result = scopedList.filter(e => e && e.isActive !== false);
 
-    if (filters.directorateId) result = result.filter(e => e.directorateId === filters.directorateId);
-    if (filters.departmentId) result = result.filter(e => e.departmentId === filters.departmentId);
-    if (filters.divisionId) result = result.filter(e => e.divisionId === filters.divisionId);
-    if (filters.sectionId) result = result.filter(e => e.sectionId === filters.sectionId);
-    if (filters.careerId) result = result.filter(e => e.careerId === filters.careerId);
-    if (filters.categoryId) result = result.filter(e => e.categoryId === filters.categoryId);
+    if (filters.directorateId) result = result.filter(e => String(e.directorateId) === String(filters.directorateId));
+    if (filters.departmentId) result = result.filter(e => String(e.departmentId) === String(filters.departmentId));
+    if (filters.divisionId) result = result.filter(e => String(e.divisionId) === String(filters.divisionId));
+    if (filters.sectionId) result = result.filter(e => String(e.sectionId) === String(filters.sectionId));
+    if (filters.careerId) result = result.filter(e => String(e.careerId) === String(filters.careerId));
+    if (filters.categoryId) result = result.filter(e => String(e.categoryId) === String(filters.categoryId));
 
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
       result = result.filter(e => 
-        e.name.toLowerCase().includes(lower) || 
+        (e.name && e.name.toLowerCase().includes(lower)) || 
         (e.nip && e.nip.toLowerCase().includes(lower))
       );
     }
     
-    return result.slice(0, 10);
-  }, [searchTerm, filters, employees]);
+    return result.slice(0, 15);
+  }, [searchTerm, filters, employees, user, orgData]);
 
-  const selectedEmp = useMemo(() => employees.find(e => e.id === selectedEmpId), [employees, selectedEmpId]);
+  const selectedEmp = useMemo(() => (employees || []).find(e => e && e.id === selectedEmpId), [employees, selectedEmpId]);
   
   const classification = useMemo(() => getClassification(formData.score), [formData.score]);
 
-  const getName = (list, id) => list?.find(item => item.id === id)?.name || '-';
+  const getName = (list, id) => (list || []).find(item => item && item.id === id)?.name || '-';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -110,25 +113,29 @@ export default function EvaluationForm({ user, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedEmpId) {
-      setAlertModal({ isOpen: true, message: 'Selecione um funcionário.' });
+    if (!selectedEmpId || !selectedEmp) {
+      setAlertModal({ isOpen: true, message: 'Por favor, selecione um funcionário da lista.' });
       return;
     }
     
-    if (formData.score === '' || formData.score < 0 || formData.score > 20) {
-      setAlertModal({ isOpen: true, message: 'A pontuação deve estar entre 0 e 20.' });
+    if (formData.score === '' || isNaN(parseFloat(formData.score)) || parseFloat(formData.score) < 0 || parseFloat(formData.score) > 20) {
+      setAlertModal({ isOpen: true, message: 'A pontuação deve ser um número válido entre 0 e 20.' });
       return;
     }
 
     try {
       await addEvaluation({
         employeeId: selectedEmpId,
-        employeeNip: selectedEmp.nip,
-        employeeName: selectedEmp.name,
+        employeeNip: selectedEmp.nip || 'Sem NUIT',
+        employeeName: selectedEmp.name || 'Sem Nome',
+        directorateId: selectedEmp.directorateId,
+        provincialDirectorateId: selectedEmp.provincialDirectorateId,
+        districtDirectorateId: selectedEmp.districtDirectorateId || selectedEmp.districtId,
+        province: selectedEmp.province,
         ...formData,
         classificationLabel: classification.label
       });
-      onSave();
+      if (onSave) onSave();
     } catch (err) {
       setAlertModal({ isOpen: true, message: err.message });
     }
@@ -191,6 +198,11 @@ export default function EvaluationForm({ user, onSave }) {
                   <strong>{emp.nip}</strong> - {emp.name}
                 </div>
               ))}
+              {filteredEmployees.length === 0 && (
+                <div style={{ padding: '15px', color: 'var(--color-text-muted)', fontSize: '13px', textAlign: 'center' }}>
+                  Nenhum funcionário encontrado no seu âmbito territorial ou critérios selecionados.
+                </div>
+              )}
             </div>
           </div>
 
@@ -212,7 +224,7 @@ export default function EvaluationForm({ user, onSave }) {
                   {selectedEmp.photo ? (
                     <img src={selectedEmp.photo} alt="Avatar" style={{width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%'}} />
                   ) : (
-                    selectedEmp.name.charAt(0)
+                    (selectedEmp.name || 'F').charAt(0)
                   )}
                 </div>
                 <div style={styles.previewGrid}>
@@ -223,16 +235,16 @@ export default function EvaluationForm({ user, onSave }) {
                     <strong>Nº Mecanográfico (NUIT):</strong> {selectedEmp.nip}
                   </div>
                   <div style={styles.previewItem}>
-                    <strong>Carreira:</strong> {getName(orgData.careers || [], selectedEmp.careerId)}
+                    <strong>Carreira:</strong> {getName(orgData?.careers || [], selectedEmp.careerId)}
                   </div>
                   <div style={styles.previewItem}>
-                    <strong>Categoria:</strong> {getName(orgData.categories, selectedEmp.categoryId)}
+                    <strong>Categoria:</strong> {getName(orgData?.categories || [], selectedEmp.categoryId)}
                   </div>
                   <div style={styles.previewItem}>
                     <strong>Cargo:</strong> {selectedEmp.role || 'Nenhum'}
                   </div>
                   <div style={styles.previewItem}>
-                    <strong>Unidade Orgânica:</strong> {getName(orgData.directorates, selectedEmp.directorateId)}
+                    <strong>Unidade Orgânica:</strong> {getName(orgData?.directorates || [], selectedEmp.directorateId)}
                   </div>
                   <div style={styles.previewItem}>
                     <strong>Tempo de Serviço:</strong> {timeOfService}
@@ -344,4 +356,3 @@ const styles = {
   footer: { display: 'flex', justifyContent: 'flex-end', paddingTop: '10px' },
   btnSave: { padding: '12px 24px', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px', transition: 'opacity 0.2s' }
 };
-

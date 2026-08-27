@@ -307,15 +307,20 @@ router.post('/departments', (req, res) => {
 });
 
 router.put('/departments/:id', (req, res) => {
-  const { name } = req.body;
+  const { name, directorateId } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatorio' });
   try {
     const db = getDb();
     const target = db.prepare('SELECT directorate_id FROM departments WHERE id = ?').get(req.params.id);
     if (!target) return res.status(404).json({ error: 'not_found' });
-    const dup = db.prepare('SELECT id FROM departments WHERE lower(name) = lower(?) AND directorate_id = ? AND id != ?').get(name.trim(), target.directorate_id, req.params.id);
+    const targetDirId = directorateId || target.directorate_id;
+    const dup = db.prepare('SELECT id FROM departments WHERE lower(name) = lower(?) AND directorate_id = ? AND id != ?').get(name.trim(), targetDirId, req.params.id);
     if (dup) return res.status(409).json({ error: 'duplicate' });
-    db.prepare('UPDATE departments SET name = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name.trim(), req.params.id);
+    if (directorateId) {
+      db.prepare('UPDATE departments SET name = ?, directorate_id = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name.trim(), directorateId, req.params.id);
+    } else {
+      db.prepare('UPDATE departments SET name = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name.trim(), req.params.id);
+    }
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -356,15 +361,20 @@ router.post('/divisions', (req, res) => {
 });
 
 router.put('/divisions/:id', (req, res) => {
-  const { name } = req.body;
+  const { name, departmentId } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatorio' });
   try {
     const db = getDb();
     const target = db.prepare('SELECT department_id FROM divisions WHERE id = ?').get(req.params.id);
     if (!target) return res.status(404).json({ error: 'not_found' });
-    const dup = db.prepare('SELECT id FROM divisions WHERE lower(name) = lower(?) AND department_id = ? AND id != ?').get(name.trim(), target.department_id, req.params.id);
+    const targetDeptId = departmentId || target.department_id;
+    const dup = db.prepare('SELECT id FROM divisions WHERE lower(name) = lower(?) AND department_id = ? AND id != ?').get(name.trim(), targetDeptId, req.params.id);
     if (dup) return res.status(409).json({ error: 'duplicate' });
-    db.prepare('UPDATE divisions SET name = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name.trim(), req.params.id);
+    if (departmentId) {
+      db.prepare('UPDATE divisions SET name = ?, department_id = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name.trim(), departmentId, req.params.id);
+    } else {
+      db.prepare('UPDATE divisions SET name = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name.trim(), req.params.id);
+    }
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

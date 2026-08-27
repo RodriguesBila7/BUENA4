@@ -1,25 +1,53 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import useEvaluationData from '../../hooks/useEvaluationData';
+import useOrgData from '../../hooks/useOrgData';
 import { getClassification } from '../../utils/evaluationRules';
+import { filterByProvincialScope } from '../../utils/scopeUtils';
 
-export default function EvaluationList() {
-  const { evaluations } = useEvaluationData();
+export default function EvaluationList({ user }) {
+  const { evaluations = [], loading, error } = useEvaluationData();
+  const { data: orgData } = useOrgData();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
 
   const filtered = useMemo(() => {
-    return evaluations.filter(e => {
-      if (filterYear && e.year !== filterYear) return false;
+    const rawList = Array.isArray(evaluations) ? evaluations : [];
+    const scopedList = user ? filterByProvincialScope(rawList, user, orgData) : rawList;
+
+    return scopedList.filter(e => {
+      if (!e) return false;
+      if (filterYear && String(e.year) !== String(filterYear)) return false;
       if (searchTerm) {
         const lower = searchTerm.toLowerCase();
-        if (!e.employeeName.toLowerCase().includes(lower) && !e.employeeNip.toLowerCase().includes(lower)) return false;
+        const name = String(e.employeeName || '').toLowerCase();
+        const nip = String(e.employeeNip || '').toLowerCase();
+        if (!name.includes(lower) && !nip.includes(lower)) return false;
       }
       return true;
-    }).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
-  }, [evaluations, searchTerm, filterYear]);
+    }).sort((a, b) => {
+      const dateA = a?.createdAt || a?.evaluationDate || '';
+      const dateB = b?.createdAt || b?.evaluationDate || '';
+      return dateB.localeCompare(dateA);
+    });
+  }, [evaluations, user, orgData, searchTerm, filterYear]);
+
+  if (loading) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div className="sernic-spinner"></div>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>A carregar avaliações...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
+      {error && (
+        <div style={styles.errorBanner}>
+          <span>⚠️ {error}</span>
+        </div>
+      )}
+
       <div style={styles.filters}>
         <input 
           type="text" 
@@ -53,13 +81,13 @@ export default function EvaluationList() {
           </thead>
           <tbody>
             {filtered.map(ev => {
-              const cls = getClassification(ev.score);
+              const cls = getClassification(ev?.score);
               return (
-                <tr key={ev.id} style={styles.tr}>
-                  <td><strong>{ev.employeeNip}</strong></td>
-                  <td>{ev.employeeName}</td>
-                  <td>{ev.year}</td>
-                  <td><strong>{ev.score}</strong></td>
+                <tr key={ev?.id || Math.random()} style={styles.tr}>
+                  <td><strong>{ev?.employeeNip || '-'}</strong></td>
+                  <td>{ev?.employeeName || '-'}</td>
+                  <td>{ev?.year || '-'}</td>
+                  <td><strong>{ev?.score ?? '-'}</strong></td>
                   <td>
                     <span style={{
                       padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700',
@@ -68,15 +96,27 @@ export default function EvaluationList() {
                       {cls.label}
                     </span>
                   </td>
-                  <td>{ev.evaluationDate}</td>
-                  <td>{ev.evaluatorName}</td>
-                  <td>{ev.status}</td>
+                  <td>{ev?.evaluationDate || '-'}</td>
+                  <td>{ev?.evaluatorName || '-'}</td>
+                  <td>{ev?.status || '-'}</td>
                   <td>
-                    {ev.pdfBase64 ? (
-                      <button style={styles.btnPdf} onClick={() => {
-                        const pdfWindow = window.open("");
-                        pdfWindow.document.write(`<iframe width='100%' height='100%' src='${ev.pdfBase64}'></iframe>`);
-                      }}>Ver PDF</button>
+                    {ev?.pdfBase64 ? (
+                      <button 
+                        style={styles.btnPdf} 
+                        type="button"
+                        onClick={() => {
+                          try {
+                            const pdfWindow = window.open("");
+                            if (pdfWindow) {
+                              pdfWindow.document.write(`<iframe width='100%' height='100%' style='border:none' src='${ev.pdfBase64}'></iframe>`);
+                            }
+                          } catch {
+                            // ignore popup block
+                          }
+                        }}
+                      >
+                        Ver PDF
+                      </button>
                     ) : (
                       <span style={{color: 'var(--color-text-muted)', fontSize: '11px'}}>Sem Anexo</span>
                     )}
@@ -96,14 +136,12 @@ export default function EvaluationList() {
 
 const styles = {
   container: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' },
-  filters: { display: 'flex', gap: '15px' },
+  loadingContainer: { padding: '50px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '15px' },
+  errorBanner: { padding: '12px 16px', backgroundColor: '#fee2e2', borderRadius: '8px', border: '1px solid #fca5a5', color: '#b91c1c', fontSize: '13px' },
+  filters: { display: 'flex', gap: '15px', flexWrap: 'wrap' },
   input: { padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-base)', outline: 'none', fontSize: '13px', minWidth: '200px' },
   tableContainer: { overflowX: 'auto', backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', border: '1px solid var(--color-border)' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' },
-  th: { textAlign: 'left', padding: '14px 20px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' },
   tr: { borderBottom: '1px solid var(--color-border)' },
-  td: { padding: '14px 20px', color: 'var(--color-text-base)' },
   empty: { padding: '30px', textAlign: 'center', color: 'var(--color-text-muted)' },
   btnPdf: { padding: '4px 10px', fontSize: '11px', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', borderRadius: '4px', cursor: 'pointer' }
 };
-

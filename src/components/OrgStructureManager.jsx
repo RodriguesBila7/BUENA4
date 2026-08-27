@@ -184,16 +184,18 @@ export default function OrgStructureManager({ t }) {
     } else if (activeTab === 'dep') {
       if (!name.trim()) return showError('Digite o nome');
       if (!parentDirId) return showError('org_select_dir');
-      if (editingId) success = await updateDepartment(editingId, name);
+      if (editingId) success = await updateDepartment(editingId, name, parentDirId);
       else success = await addDepartment(parentDirId, name);
     } else if (activeTab === 'rep') {
-      if (!name.trim()) return showError('Digite o nome');
+      if (!parentDirId) return showError('org_select_dir');
       if (!parentDepId) return showError('org_select_dep');
-      if (editingId) success = await updateDivision(editingId, name);
+      if (!name.trim()) return showError('Digite o nome');
+      if (editingId) success = await updateDivision(editingId, name, parentDepId);
       else success = await addDivision(parentDepId, name);
     } else if (activeTab === 'sec') {
-      if (!name.trim()) return showError('Digite o nome');
+      if (!parentDirId) return showError('org_select_dir');
       if (!parentDepId) return showError('org_select_dep');
+      if (!name.trim()) return showError('Digite o nome');
       const pId = parentRepId || parentDepId;
       const pType = parentRepId ? 'divisionId' : 'departmentId';
       if (editingId) success = await updateSection(editingId, name, pId, pType);
@@ -372,10 +374,33 @@ export default function OrgStructureManager({ t }) {
 
   // List filters
   const displayDepartments = parentDirId ? data.departments.filter(d => d.directorateId === parentDirId) : data.departments;
-  const displayDivisions = parentDepId ? data.divisions.filter(d => d.departmentId === parentDepId) : data.divisions;
+  const displayDivisions = parentDepId 
+    ? data.divisions.filter(d => d.departmentId === parentDepId) 
+    : (parentDirId 
+        ? data.divisions.filter(div => {
+            const dep = data.departments.find(d => d.id === div.departmentId);
+            return dep && dep.directorateId === parentDirId;
+          })
+        : data.divisions);
   const displaySections = parentRepId 
     ? data.sections.filter(s => s.divisionId === parentRepId) 
-    : (parentDepId ? data.sections.filter(s => s.departmentId === parentDepId) : data.sections.filter(s => !s.districtDirectorateId));
+    : (parentDepId 
+        ? data.sections.filter(s => s.departmentId === parentDepId || (s.divisionId && data.divisions.some(div => div.id === s.divisionId && div.departmentId === parentDepId)))
+        : (parentDirId
+            ? data.sections.filter(s => {
+                if (s.districtDirectorateId) return false;
+                if (s.departmentId) {
+                  const dep = data.departments.find(d => d.id === s.departmentId);
+                  return dep && dep.directorateId === parentDirId;
+                }
+                if (s.divisionId) {
+                  const div = data.divisions.find(d => d.id === s.divisionId);
+                  const dep = div ? data.departments.find(d => d.id === div.departmentId) : null;
+                  return dep && dep.directorateId === parentDirId;
+                }
+                return false;
+              })
+            : data.sections.filter(s => !s.districtDirectorateId)));
   const displayDistricts = selectedDistrictId && selectedDistrictId !== 'NEW'
     ? (data.districtDirectorates || []).filter(d => String(d.id) === String(selectedDistrictId))
     : (parentDirId ? availableDistricts : (data.districtDirectorates || []));
@@ -454,7 +479,7 @@ export default function OrgStructureManager({ t }) {
               <form onSubmit={handleSave} style={styles.form}>
                 {['dep', 'rep', 'sec'].includes(activeTab) && (
                   <div style={styles.formGroup}>
-                    <label style={styles.label}>{t('org_tab_dir')}</label>
+                    <label style={styles.label}>{t('org_tab_dir')} *</label>
                     <select 
                       value={parentDirId} 
                       onChange={(e) => {
@@ -468,6 +493,44 @@ export default function OrgStructureManager({ t }) {
                     >
                       <option value="">-- {t('org_select_dir')} --</option>
                       {data.directorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {['rep', 'sec'].includes(activeTab) && (
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>{t('org_tab_dep')} *</label>
+                    <select 
+                      value={parentDepId} 
+                      onChange={(e) => {
+                        setParentDepId(e.target.value);
+                        setParentRepId('');
+                      }}
+                      onKeyDown={handleKeyPress}
+                      style={styles.input}
+                      required
+                      disabled={!parentDirId}
+                    >
+                      <option value="">
+                        {!parentDirId ? `-- ${t('org_select_dir')} primeiro --` : `-- ${t('org_select_dep')} --`}
+                      </option>
+                      {availableDepartments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {activeTab === 'sec' && (
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>{t('org_tab_rep')} (Opcional)</label>
+                    <select 
+                      value={parentRepId} 
+                      onChange={(e) => setParentRepId(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      style={styles.input}
+                      disabled={!parentDepId}
+                    >
+                      <option value="">-- Directa no Departamento (Sem Repartição) --</option>
+                      {availableDivisions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                     </select>
                   </div>
                 )}

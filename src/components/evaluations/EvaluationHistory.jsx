@@ -1,35 +1,42 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import useEvaluationData from '../../hooks/useEvaluationData';
 import useEmployeeData from '../../hooks/useEmployeeData';
+import useOrgData from '../../hooks/useOrgData';
 import { getClassification } from '../../utils/evaluationRules';
+import { filterByProvincialScope } from '../../utils/scopeUtils';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export default function EvaluationHistory() {
-  const { evaluations } = useEvaluationData();
-  const { employees } = useEmployeeData();
+export default function EvaluationHistory({ user }) {
+  const { evaluations = [] } = useEvaluationData();
+  const { employees = [] } = useEmployeeData();
+  const { data: orgData } = useOrgData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedEmpId, setSelectedEmpId] = useState(null);
 
   const filteredEmployees = useMemo(() => {
     if (!searchTerm) return [];
     const lower = searchTerm.toLowerCase();
-    return employees.filter(e => e.isActive !== false && (
-      e.name.toLowerCase().includes(lower) || 
-      e.nip.toLowerCase().includes(lower)
+    const rawList = Array.isArray(employees) ? employees : [];
+    const scopedList = user ? filterByProvincialScope(rawList, user, orgData) : rawList;
+
+    return scopedList.filter(e => e && e.isActive !== false && (
+      (e.name && e.name.toLowerCase().includes(lower)) || 
+      (e.nip && e.nip.toLowerCase().includes(lower))
     )).slice(0, 10);
-  }, [searchTerm, employees]);
+  }, [searchTerm, employees, user, orgData]);
 
   const history = useMemo(() => {
     if (!selectedEmpId) return [];
-    return evaluations
-      .filter(e => e.employeeId === selectedEmpId)
-      .sort((a, b) => parseInt(a.year) - parseInt(b.year));
+    const rawEvals = Array.isArray(evaluations) ? evaluations : [];
+    return rawEvals
+      .filter(e => e && String(e.employeeId) === String(selectedEmpId))
+      .sort((a, b) => (parseInt(a?.year || 0) - parseInt(b?.year || 0)));
   }, [evaluations, selectedEmpId]);
 
   const chartData = useMemo(() => {
     return history.map(h => ({
-      year: h.year,
-      score: parseFloat(h.score)
+      year: h?.year || '-',
+      score: parseFloat(h?.score || 0)
     }));
   }, [history]);
 
@@ -52,10 +59,14 @@ export default function EvaluationHistory() {
                 style={{...styles.empItem, ...(selectedEmpId === emp.id ? styles.empItemSelected : {})}}
                 onClick={() => setSelectedEmpId(emp.id)}
               >
-                <strong>{emp.nip}</strong> - {emp.name}
+                <strong>{emp.nip || 'Sem NUIT'}</strong> - {emp.name || 'Sem Nome'}
               </div>
             ))}
-            {filteredEmployees.length === 0 && <div style={{padding: '10px', color: 'var(--color-text-muted)', fontSize: '13px'}}>Nenhum funcionário encontrado.</div>}
+            {filteredEmployees.length === 0 && (
+              <div style={{padding: '10px', color: 'var(--color-text-muted)', fontSize: '13px'}}>
+                Nenhum funcionário encontrado no seu âmbito territorial.
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -97,12 +108,12 @@ export default function EvaluationHistory() {
               </thead>
               <tbody>
                 {history.map(ev => {
-                  const cls = getClassification(ev.score);
+                  const cls = getClassification(ev?.score);
                   return (
-                    <tr key={ev.id} style={styles.tr}>
-                      <td><strong>{ev.year}</strong></td>
-                      <td>{ev.period}</td>
-                      <td><strong>{ev.score}</strong></td>
+                    <tr key={ev?.id || Math.random()} style={styles.tr}>
+                      <td><strong>{ev?.year || '-'}</strong></td>
+                      <td>{ev?.period || '-'}</td>
+                      <td><strong>{ev?.score ?? '-'}</strong></td>
                       <td>
                         <span style={{
                           padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700',
@@ -111,9 +122,9 @@ export default function EvaluationHistory() {
                           {cls.label}
                         </span>
                       </td>
-                      <td>{ev.evaluationDate}</td>
-                      <td>{ev.evaluatorName}</td>
-                      <td>{ev.status}</td>
+                      <td>{ev?.evaluationDate || '-'}</td>
+                      <td>{ev?.evaluatorName || '-'}</td>
+                      <td>{ev?.status || '-'}</td>
                     </tr>
                   );
                 })}
@@ -142,10 +153,6 @@ const styles = {
   tableCard: { backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', border: '1px solid var(--color-border)', overflowX: 'auto' },
   chartTitle: { margin: '0 0 20px 0', fontSize: '15px', color: 'var(--color-text-base)', padding: '0 20px', paddingTop: '20px' },
   emptyChart: { height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontStyle: 'italic' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px' },
-  th: { textAlign: 'left', padding: '14px 20px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' },
   tr: { borderBottom: '1px solid var(--color-border)' },
-  td: { padding: '14px 20px', color: 'var(--color-text-base)' },
   empty: { padding: '30px', textAlign: 'center', color: 'var(--color-text-muted)' }
 };
-

@@ -22,8 +22,31 @@ export default function PermissionGuard({ module, action, children, fallback = n
     return children;
   }
 
+  const normalize = (str) => String(str || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+
   // Verifica as permissões estruturadas {"Modulo": ["Visualizar", "Criar"]}
-  const modulePerms = perms[module] || [];
+  let modulePerms = perms[module];
+  if (!modulePerms) {
+    const targetNorm = normalize(module);
+    const matchedKey = Object.keys(perms).find(k => {
+      const kNorm = normalize(k);
+      return kNorm === targetNorm || 
+             kNorm.startsWith(targetNorm) || 
+             targetNorm.startsWith(kNorm) ||
+             (targetNorm.includes('avaliacao') && kNorm.includes('avaliacao')) ||
+             (targetNorm.includes('ferias') && kNorm.includes('ferias')) ||
+             (targetNorm.includes('transferencia') && kNorm.includes('transferencia')) ||
+             (targetNorm.includes('acesso') && kNorm.includes('acesso')) ||
+             (targetNorm.includes('disciplinar') && kNorm.includes('disciplinar')) ||
+             (targetNorm.includes('efetividade') && kNorm.includes('efetividade')) ||
+             (targetNorm.includes('carreira') && kNorm.includes('carreira'));
+    });
+    if (matchedKey) {
+      modulePerms = perms[matchedKey];
+    }
+  }
+
+  modulePerms = Array.isArray(modulePerms) ? modulePerms : (modulePerms ? ['Visualizar'] : []);
   if (modulePerms.includes(action)) {
     return children;
   }

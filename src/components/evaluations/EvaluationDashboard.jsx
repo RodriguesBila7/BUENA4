@@ -1,23 +1,30 @@
 import React, { useMemo } from 'react';
 import useEvaluationData from '../../hooks/useEvaluationData';
 import useEmployeeData from '../../hooks/useEmployeeData';
+import useOrgData from '../../hooks/useOrgData';
 import { getClassification } from '../../utils/evaluationRules';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { filterByProvincialScope } from '../../utils/scopeUtils';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-export default function EvaluationDashboard() {
-  const { evaluations } = useEvaluationData();
-  const { employees } = useEmployeeData();
+export default function EvaluationDashboard({ user }) {
+  const { evaluations = [], loading: loadingEvals, error: errorEvals } = useEvaluationData();
+  const { employees = [], loading: loadingEmps } = useEmployeeData();
+  const { data: orgData } = useOrgData();
   
   const currentYear = new Date().getFullYear().toString();
 
   const stats = useMemo(() => {
-    const activeEmployees = employees.filter(e => e.isActive !== false);
+    const rawEmployees = Array.isArray(employees) ? employees : [];
+    const scopedEmployees = user ? filterByProvincialScope(rawEmployees, user, orgData) : rawEmployees;
+    const activeEmployees = scopedEmployees.filter(e => e && e.isActive !== false);
     const totalEmployees = activeEmployees.length;
     
-    const evalsThisYear = evaluations.filter(e => e.year === currentYear);
+    const rawEvaluations = Array.isArray(evaluations) ? evaluations : [];
+    const scopedEvaluations = user ? filterByProvincialScope(rawEvaluations, user, orgData) : rawEvaluations;
+    const evalsThisYear = scopedEvaluations.filter(e => e && String(e.year) === String(currentYear));
     const evaluatedCount = evalsThisYear.length;
-    const pendingCount = totalEmployees - evaluatedCount;
-    const percentComplete = totalEmployees > 0 ? ((evaluatedCount / totalEmployees) * 100).toFixed(1) : 0;
+    const pendingCount = Math.max(0, totalEmployees - evaluatedCount);
+    const percentComplete = totalEmployees > 0 ? ((evaluatedCount / totalEmployees) * 100).toFixed(1) : '0.0';
 
     let totalScore = 0;
     const distribution = {
@@ -29,14 +36,17 @@ export default function EvaluationDashboard() {
     };
 
     evalsThisYear.forEach(ev => {
-      totalScore += parseFloat(ev.score);
-      const cls = getClassification(ev.score).label;
+      const s = parseFloat(ev?.score || 0);
+      if (!isNaN(s)) {
+        totalScore += s;
+      }
+      const cls = getClassification(ev?.score)?.label || 'Não Avaliado';
       if (distribution[cls] !== undefined) {
         distribution[cls]++;
       }
     });
 
-    const averageScore = evaluatedCount > 0 ? (totalScore / evaluatedCount).toFixed(1) : 0;
+    const averageScore = evaluatedCount > 0 ? (totalScore / evaluatedCount).toFixed(1) : '0.0';
 
     const pieData = Object.keys(distribution).map(key => ({
       name: key,
@@ -47,7 +57,28 @@ export default function EvaluationDashboard() {
     return {
       totalEmployees, evaluatedCount, pendingCount, percentComplete, averageScore, pieData, distribution
     };
-  }, [evaluations, employees, currentYear]);
+  }, [evaluations, employees, orgData, user, currentYear]);
+
+  if (loadingEvals && loadingEmps) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div className="sernic-spinner"></div>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>A carregar indicadores de avaliação...</p>
+      </div>
+    );
+  }
+
+  if (errorEvals) {
+    return (
+      <div style={styles.errorBanner}>
+        <span style={{ fontSize: '20px' }}>⚠️</span>
+        <div>
+          <strong style={{ display: 'block', color: '#b91c1c' }}>Aviso ao carregar dados de avaliação</strong>
+          <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{errorEvals}</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -134,6 +165,8 @@ export default function EvaluationDashboard() {
 
 const styles = {
   container: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '25px' },
+  loadingContainer: { padding: '50px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '15px' },
+  errorBanner: { padding: '16px 20px', margin: '20px', backgroundColor: '#fee2e2', borderRadius: '8px', border: '1px solid #fca5a5', display: 'flex', alignItems: 'center', gap: '12px' },
   gridCards: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' },
   card: { backgroundColor: 'var(--color-bg-card)', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '10px' },
   cardTitle: { fontSize: '13px', color: 'var(--color-text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' },

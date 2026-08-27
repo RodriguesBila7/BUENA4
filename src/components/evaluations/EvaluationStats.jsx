@@ -3,32 +3,38 @@ import useEvaluationData from '../../hooks/useEvaluationData';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useOrgData from '../../hooks/useOrgData';
 import { getClassification } from '../../utils/evaluationRules';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { filterByProvincialScope } from '../../utils/scopeUtils';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-export default function EvaluationStats() {
-  const { evaluations } = useEvaluationData();
-  const { employees } = useEmployeeData();
+export default function EvaluationStats({ user }) {
+  const { evaluations = [], loading: loadingEvals } = useEvaluationData();
+  const { employees = [] } = useEmployeeData();
   const { data: orgData } = useOrgData();
 
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
 
   const stats = useMemo(() => {
-    const filteredEvals = filterYear ? evaluations.filter(e => e.year === filterYear) : evaluations;
+    const rawEvals = Array.isArray(evaluations) ? evaluations : [];
+    const scopedEvals = user ? filterByProvincialScope(rawEvals, user, orgData) : rawEvals;
+    const filteredEvals = filterYear ? scopedEvals.filter(e => e && String(e.year) === String(filterYear)) : scopedEvals;
     
     const byDirectorate = {};
     const byGender = { 'Masculino': 0, 'Feminino': 0 };
     const byClass = { 'Excelente': 0, 'Muito Bom': 0, 'Bom': 0, 'Suficiente': 0, 'Medíocre': 0 };
 
-    if (orgData.directorates) {
+    if (orgData && Array.isArray(orgData.directorates)) {
       orgData.directorates.forEach(d => {
-        byDirectorate[d.id] = { name: d.name, sum: 0, count: 0 };
+        if (d && d.id) {
+          byDirectorate[d.id] = { name: d.name || 'Direcção', sum: 0, count: 0 };
+        }
       });
     }
 
     filteredEvals.forEach(ev => {
-      const emp = employees.find(e => e.id === ev.employeeId);
-      const score = parseFloat(ev.score);
-      const cls = getClassification(ev.score).label;
+      if (!ev) return;
+      const emp = (employees || []).find(e => e && String(e.id) === String(ev.employeeId));
+      const score = parseFloat(ev.score || 0);
+      const cls = getClassification(ev.score)?.label || 'Não Avaliado';
       
       if (byClass[cls] !== undefined) byClass[cls]++;
 
@@ -63,7 +69,16 @@ export default function EvaluationStats() {
     })).filter(d => d.value > 0);
 
     return { dirData, genderData, classData, total: filteredEvals.length };
-  }, [evaluations, employees, orgData, filterYear]);
+  }, [evaluations, employees, orgData, user, filterYear]);
+
+  if (loadingEvals) {
+    return (
+      <div style={styles.loadingContainer}>
+        <div className="sernic-spinner"></div>
+        <p style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>A processar estatísticas...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -78,22 +93,26 @@ export default function EvaluationStats() {
       </div>
 
       {stats.total === 0 ? (
-        <div style={styles.empty}>Nenhum dado encontrado para o período selecionado.</div>
+        <div style={styles.empty}>Nenhum dado encontrado para o período selecionado no seu âmbito territorial.</div>
       ) : (
         <div style={styles.grid}>
           {/* Média por Direcção */}
           <div style={styles.cardFull}>
             <h4 style={styles.cardTitle}>Média de Pontuação por Direcção</h4>
             <div style={{ height: 350 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.dirData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} tick={{fontSize: 11}} />
-                  <YAxis domain={[0, 20]} />
-                  <Tooltip />
-                  <Bar dataKey="media" name="Média (0-20)" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              {stats.dirData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.dirData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} tick={{fontSize: 11}} />
+                    <YAxis domain={[0, 20]} />
+                    <Tooltip />
+                    <Bar dataKey="media" name="Média (0-20)" fill="var(--color-primary)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={styles.empty}>Sem dados departamentais registados.</div>
+              )}
             </div>
           </div>
 
@@ -101,23 +120,27 @@ export default function EvaluationStats() {
           <div style={styles.cardHalf}>
             <h4 style={styles.cardTitle}>Avaliações por Gênero</h4>
             <div style={{ height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={stats.genderData}
-                    cx="50%" cy="50%"
-                    innerRadius={60} outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {stats.genderData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {stats.genderData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={stats.genderData}
+                      cx="50%" cy="50%"
+                      innerRadius={60} outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                      label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {stats.genderData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={styles.empty}>Sem dados de gênero.</div>
+              )}
             </div>
           </div>
 
@@ -125,23 +148,27 @@ export default function EvaluationStats() {
           <div style={styles.cardHalf}>
             <h4 style={styles.cardTitle}>Geral das Classificações</h4>
             <div style={{ height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={stats.classData}
-                    cx="50%" cy="50%"
-                    innerRadius={60} outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  >
-                    {stats.classData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {stats.classData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={stats.classData}
+                      cx="50%" cy="50%"
+                      innerRadius={60} outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                      label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {stats.classData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={styles.empty}>Sem dados de classificações.</div>
+              )}
             </div>
           </div>
         </div>
@@ -152,8 +179,9 @@ export default function EvaluationStats() {
 
 const styles = {
   container: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' },
+  loadingContainer: { padding: '50px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '15px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--color-bg-card)', padding: '15px 20px', borderRadius: '12px', border: '1px solid var(--color-border)' },
-  select: { padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', outline: 'none', fontSize: '14px' },
+  select: { padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', outline: 'none', fontSize: '14px' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' },
   cardFull: { gridColumn: '1 / -1', backgroundColor: 'var(--color-bg-card)', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid var(--color-border)' },
   cardHalf: { backgroundColor: 'var(--color-bg-card)', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid var(--color-border)' },

@@ -141,14 +141,14 @@ export default function useOrgData() {
   // DEPARTAMENTOS
   // ════════════════════════════════════════════════════════════════════════════
   const addDepartment    = (directorateId, name) => exec('POST', '/departments', { id: _id(), directorateId, name });
-  const updateDepartment = (id, name) => exec('PUT', `/departments/${id}`, { name });
+  const updateDepartment = (id, name, directorateId) => exec('PUT', `/departments/${id}`, { name, directorateId });
   const deleteDepartment = (id) => exec('DELETE', `/departments/${id}`);
 
   // ════════════════════════════════════════════════════════════════════════════
   // REPARTICOES
   // ════════════════════════════════════════════════════════════════════════════
   const addDivision    = (departmentId, name) => exec('POST', '/divisions', { id: _id(), departmentId, name });
-  const updateDivision = (id, name) => exec('PUT', `/divisions/${id}`, { name });
+  const updateDivision = (id, name, departmentId) => exec('PUT', `/divisions/${id}`, { name, departmentId });
   const deleteDivision = (id) => exec('DELETE', `/divisions/${id}`);
 
   // ════════════════════════════════════════════════════════════════════════════

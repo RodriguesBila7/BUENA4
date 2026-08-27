@@ -1232,9 +1232,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
           {/* TAB AVALIAÇÕES */}
           {activeTab === 'evaluations' && (
-            <PermissionGuard module="Avaliacao de Desempenho" action="Visualizar">
-              <EvaluationManager user={user} />
-            </PermissionGuard>
+            <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
+              <PermissionGuard module="Avaliação de Desempenho" action="Visualizar" showLockCard={true}>
+                <EvaluationManager user={user} />
+              </PermissionGuard>
+            </div>
           )}
 
           {/* TAB 1.5: FUNCIONÁRIOS */}
