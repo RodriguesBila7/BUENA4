@@ -290,9 +290,19 @@ export default function EmployeeViewer({ employees, orgData, onEdit, onDelete, o
               <option value="">Selecione o Departamento...</option>
               {data.departments.filter(d => d.directorateId === filters.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
-            <select name="divisionId" value={filters.divisionId} onChange={(e) => setFilters(p => ({...p, divisionId: e.target.value, sectionId: ''}))} style={styles.filterSelect} disabled={!filters.departmentId}>
+            <select 
+              name="divisionId" 
+              value={filters.divisionId} 
+              onChange={(e) => setFilters(p => ({...p, divisionId: e.target.value, sectionId: ''}))} 
+              style={styles.filterSelect} 
+              disabled={!filters.departmentId && !filters.directorateId}
+            >
               <option value="">Selecione a Repartição...</option>
-              {data.divisions.filter(d => d.departmentId === filters.departmentId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              {data.divisions.filter(d => {
+                if (filters.departmentId) return d.departmentId === filters.departmentId;
+                if (filters.directorateId) return d.directorateId === filters.directorateId || (d.departmentId && data.departments.some(dep => dep.id === d.departmentId && dep.directorateId === filters.directorateId));
+                return true;
+              }).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </div>
         </div>

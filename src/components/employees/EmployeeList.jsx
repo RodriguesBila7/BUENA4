@@ -87,14 +87,28 @@ export default function EmployeeList({ employees, orgData, onEdit, onDelete }) {
             {data.departments.filter(d => d.directorateId === filters.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
 
-          <select name="divisionId" value={filters.divisionId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.departmentId}>
+          <select name="divisionId" value={filters.divisionId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.departmentId && !filters.directorateId}>
             <option value="">Todas as Repartições</option>
-            {data.divisions.filter(d => d.departmentId === filters.departmentId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            {data.divisions.filter(d => {
+              if (filters.departmentId) return d.departmentId === filters.departmentId;
+              if (filters.directorateId) return d.directorateId === filters.directorateId || (d.departmentId && data.departments.some(dep => dep.id === d.departmentId && dep.directorateId === filters.directorateId));
+              return true;
+            }).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
 
-          <select name="sectionId" value={filters.sectionId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.departmentId && !filters.divisionId}>
+          <select name="sectionId" value={filters.sectionId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.departmentId && !filters.divisionId && !filters.directorateId}>
             <option value="">Todas as Secções</option>
-            {data.sections.filter(s => filters.divisionId ? s.divisionId === filters.divisionId : s.departmentId === filters.departmentId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {data.sections.filter(s => {
+              if (filters.divisionId) return s.divisionId === filters.divisionId;
+              if (filters.departmentId) return s.departmentId === filters.departmentId;
+              if (filters.directorateId) {
+                const secDiv = s.divisionId ? data.divisions.find(d => d.id === s.divisionId) : null;
+                if (secDiv && (secDiv.directorateId === filters.directorateId || (secDiv.departmentId && data.departments.some(dep => dep.id === secDiv.departmentId && dep.directorateId === filters.directorateId)))) return true;
+                if (s.departmentId && data.departments.some(dep => dep.id === s.departmentId && dep.directorateId === filters.directorateId)) return true;
+                return false;
+              }
+              return true;
+            }).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
 
           <select name="careerId" value={filters.careerId} onChange={handleFilterChange} style={styles.filterSelect}>

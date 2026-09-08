@@ -258,8 +258,19 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
   };
 
   // Dynamic Filtering for Dropdowns
+  const selectedEmpDir = data.directorates.find(d => d.id === formData.directorateId);
+  const isEmpDirProvincial = !!(selectedEmpDir && (selectedEmpDir.province || (selectedEmpDir.name || '').toLowerCase().includes('provincial') || (selectedEmpDir.name || '').toLowerCase().includes('cidade de maputo')));
+
   const activeDepartments = data.departments.filter(d => d.isActive && d.directorateId === formData.directorateId);
-  const activeDivisions = data.divisions.filter(d => d.isActive && d.departmentId === formData.departmentId);
+  const activeDivisions = data.divisions.filter(d => {
+    if (!d.isActive) return false;
+    if (formData.departmentId) return d.departmentId === formData.departmentId;
+    if (formData.directorateId) {
+      if (d.directorateId === formData.directorateId && (!d.departmentId || d.departmentId === '')) return true;
+      if (activeDepartments.length === 0 && d.directorateId === formData.directorateId) return true;
+    }
+    return false;
+  });
   
   // Distritos filtrados por Direção Provincial
   const activeDistricts = (data.districtDirectorates || []).filter(d => d.isActive && d.provincialDirectorateId === formData.directorateId);
@@ -578,15 +589,21 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
             {!formData.districtDirectorateId && (
               <>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Departamento</label>
+                  <label style={styles.label}>Departamento {isEmpDirProvincial ? '(Opcional na Província)' : ''}</label>
                   <select name="departmentId" value={formData.departmentId} onChange={handleChange} style={styles.input} disabled={!formData.directorateId}>
-                    <option value="">-- Selecione o Departamento --</option>
+                    <option value="">{isEmpDirProvincial ? '-- Nenhum / Directo na Direcção --' : '-- Selecione o Departamento --'}</option>
                     {activeDepartments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                   </select>
                 </div>
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Repartição (Opcional)</label>
-                  <select name="divisionId" value={formData.divisionId} onChange={handleChange} style={styles.input} disabled={!formData.departmentId || activeDivisions.length === 0}>
+                  <select 
+                    name="divisionId" 
+                    value={formData.divisionId} 
+                    onChange={handleChange} 
+                    style={styles.input} 
+                    disabled={(!formData.departmentId && !formData.directorateId) || activeDivisions.length === 0}
+                  >
                     <option value="">-- Nenhuma / Sem Repartição --</option>
                     {activeDivisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                   </select>

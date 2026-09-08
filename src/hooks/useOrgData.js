@@ -147,8 +147,8 @@ export default function useOrgData() {
   // ════════════════════════════════════════════════════════════════════════════
   // REPARTICOES
   // ════════════════════════════════════════════════════════════════════════════
-  const addDivision    = (departmentId, name) => exec('POST', '/divisions', { id: _id(), departmentId, name });
-  const updateDivision = (id, name, departmentId) => exec('PUT', `/divisions/${id}`, { name, departmentId });
+  const addDivision    = (departmentId, name, directorateId = null) => exec('POST', '/divisions', { id: _id(), departmentId: departmentId || null, directorateId: directorateId || null, name });
+  const updateDivision = (id, name, departmentId, directorateId = null) => exec('PUT', `/divisions/${id}`, { name, departmentId: departmentId || null, directorateId: directorateId || null });
   const deleteDivision = (id) => exec('DELETE', `/divisions/${id}`);
 
   // ════════════════════════════════════════════════════════════════════════════

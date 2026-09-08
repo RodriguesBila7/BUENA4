@@ -52,10 +52,8 @@ export const getHierarchyTree = (data) => {
   const divs = data.divisions || [];
   const secs = data.sections || [];
 
-  return dirs.map(dir => ({
-    ...dir,
-    type: 'dir',
-    children: deps.filter(dep => dep.directorateId === dir.id).map(dep => ({
+  return dirs.map(dir => {
+    const dirDeps = deps.filter(dep => dep.directorateId === dir.id).map(dep => ({
       ...dep,
       type: 'dep',
       children: divs.filter(div => div.departmentId === dep.id).map(div => ({
@@ -67,8 +65,24 @@ export const getHierarchyTree = (data) => {
           children: []
         }))
       }))
-    }))
-  }));
+    }));
+
+    const directDivs = divs.filter(div => !div.departmentId && div.directorateId === dir.id).map(div => ({
+      ...div,
+      type: 'rep',
+      children: secs.filter(sec => sec.divisionId === div.id).map(sec => ({
+        ...sec,
+        type: 'sec',
+        children: []
+      }))
+    }));
+
+    return {
+      ...dir,
+      type: 'dir',
+      children: [...dirDeps, ...directDivs]
+    };
+  });
 };
 
 export const getAuditIssues = (data) => {
@@ -90,21 +104,23 @@ export const getAuditIssues = (data) => {
   });
 
   divs.forEach(div => {
-    if (!depIds.has(div.departmentId)) {
+    if (div.departmentId && !depIds.has(div.departmentId)) {
       issues.push({ type: 'orphan', level: 'Repartição', name: div.name, msg: `A Repartição "${div.name}" aponta para um Departamento inexistente.` });
+    } else if (!div.departmentId && (!div.directorateId || !dirIds.has(div.directorateId))) {
+      issues.push({ type: 'orphan', level: 'Repartição', name: div.name, msg: `A Repartição "${div.name}" não está associada a uma Direcção válida.` });
     }
   });
 
   secs.forEach(sec => {
-    if (!divIds.has(sec.divisionId)) {
-      issues.push({ type: 'orphan', level: 'Secção', name: sec.name, msg: `A Secção "${sec.name}" aponta para uma Repartição inexistente.` });
+    if (!divIds.has(sec.divisionId) && !depIds.has(sec.departmentId)) {
+      issues.push({ type: 'orphan', level: 'Secção', name: sec.name, msg: `A Secção "${sec.name}" aponta para uma Repartição ou Departamento inexistente.` });
     }
   });
 
   // Estruturas Incompletas (Vazias)
   dirs.forEach(dir => {
-    const hasChild = deps.some(d => d.directorateId === dir.id);
-    if (!hasChild) issues.push({ type: 'empty', level: 'Direcção', name: dir.name, msg: `A Direcção "${dir.name}" não tem Departamentos.` });
+    const hasChild = deps.some(d => d.directorateId === dir.id) || divs.some(div => div.directorateId === dir.id);
+    if (!hasChild) issues.push({ type: 'empty', level: 'Direcção', name: dir.name, msg: `A Direcção "${dir.name}" não tem Departamentos nem Repartições directas.` });
   });
 
   deps.forEach(dep => {

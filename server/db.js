@@ -65,7 +65,8 @@ function initSchema(db) {
 
     CREATE TABLE IF NOT EXISTS divisions (
       id             TEXT PRIMARY KEY,
-      department_id  TEXT NOT NULL REFERENCES departments(id),
+      directorate_id TEXT REFERENCES directorates(id),
+      department_id  TEXT REFERENCES departments(id),
       name           TEXT NOT NULL,
       is_active      INTEGER NOT NULL DEFAULT 1,
       sort_order     INTEGER NOT NULL DEFAULT 0,
@@ -349,6 +350,47 @@ function initSchema(db) {
   }
 
   // Migrações e correções automáticas de nomenclatura para esquemas existentes
+  try {
+    const divCols = db.prepare("PRAGMA table_info(divisions)").all();
+    const hasDirId = divCols.some(c => c.name === 'directorate_id');
+    const deptCol = divCols.find(c => c.name === 'department_id');
+    const deptIsNotNull = deptCol && deptCol.notnull === 1;
+
+    if (!hasDirId || deptIsNotNull) {
+      db.exec("PRAGMA foreign_keys = OFF");
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS divisions_new (
+          id             TEXT PRIMARY KEY,
+          directorate_id TEXT REFERENCES directorates(id),
+          department_id  TEXT REFERENCES departments(id),
+          name           TEXT NOT NULL,
+          is_active      INTEGER NOT NULL DEFAULT 1,
+          sort_order     INTEGER NOT NULL DEFAULT 0,
+          created_at     TEXT DEFAULT (datetime('now')),
+          updated_at     TEXT DEFAULT (datetime('now'))
+        );
+        INSERT INTO divisions_new (id, directorate_id, department_id, name, is_active, sort_order, created_at, updated_at)
+        SELECT 
+          d.id, 
+          COALESCE(dep.directorate_id, NULL) as directorate_id,
+          d.department_id, 
+          d.name, 
+          d.is_active, 
+          d.sort_order, 
+          d.created_at, 
+          d.updated_at
+        FROM divisions d
+        LEFT JOIN departments dep ON d.department_id = dep.id;
+        DROP TABLE divisions;
+        ALTER TABLE divisions_new RENAME TO divisions;
+        CREATE INDEX IF NOT EXISTS idx_divisions_directorate_id ON divisions(directorate_id);
+        CREATE INDEX IF NOT EXISTS idx_divisions_department_id ON divisions(department_id);
+      `);
+      db.exec("PRAGMA foreign_keys = ON");
+    }
+  } catch (e) {
+    console.error('[db.js] Migration divisions error:', e.message);
+  }
   try { db.exec("ALTER TABLE directorates ADD COLUMN province TEXT DEFAULT NULL"); } catch (e) {}
   try { db.exec("ALTER TABLE sections ADD COLUMN district_directorate_id TEXT DEFAULT NULL REFERENCES district_directorates(id)"); } catch (e) {}
   try { db.exec("ALTER TABLE employees ADD COLUMN unit_type TEXT DEFAULT 'normal'"); } catch (e) {}

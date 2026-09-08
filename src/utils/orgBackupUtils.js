@@ -60,10 +60,13 @@ export const validateBackupPayload = (payload) => {
     }
   }
 
-  // Divisões -> Departamentos
+  // Divisões -> Departamentos ou Direcções
   for (const div of data.divisions) {
-    if (!depIds.has(div.departmentId)) {
+    if (div.departmentId && !depIds.has(div.departmentId)) {
       return { isValid: false, error: `Integridade corrompida: A repartição '${div.name}' refere-se a um Departamento inexistente.` };
+    }
+    if (!div.departmentId && (!div.directorateId || !dirIds.has(div.directorateId))) {
+      return { isValid: false, error: `Integridade corrompida: A repartição '${div.name}' refere-se a uma Direcção inexistente.` };
     }
   }
 

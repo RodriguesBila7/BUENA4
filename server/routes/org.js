@@ -118,7 +118,7 @@ router.post('/migrate', (req, res) => {
   const insert = db.transaction(() => {
     const insertDir = db.prepare('INSERT OR IGNORE INTO directorates (id, name, is_active, sort_order) VALUES (?, ?, ?, ?)');
     const insertDep = db.prepare('INSERT OR IGNORE INTO departments  (id, directorate_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, ?)');
-    const insertDiv = db.prepare('INSERT OR IGNORE INTO divisions    (id, department_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, ?)');
+    const insertDiv = db.prepare('INSERT OR IGNORE INTO divisions    (id, directorate_id, department_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)');
     const insertSec = db.prepare('INSERT OR IGNORE INTO sections     (id, department_id, division_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)');
     const insertCar = db.prepare('INSERT OR IGNORE INTO careers      (id, name, is_active, sort_order) VALUES (?, ?, ?, ?)');
     const insertCat = db.prepare('INSERT OR IGNORE INTO categories   (id, career_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, ?)');
@@ -127,7 +127,7 @@ router.post('/migrate', (req, res) => {
 
     (data.directorates || []).forEach((d, i) => { insertDir.run(d.id, d.name, d.isActive ? 1 : 0, i); counts.directorates++; });
     (data.departments  || []).forEach((d, i) => { insertDep.run(d.id, d.directorateId, d.name, d.isActive ? 1 : 0, i); counts.departments++; });
-    (data.divisions    || []).forEach((d, i) => { insertDiv.run(d.id, d.departmentId, d.name, d.isActive ? 1 : 0, i); counts.divisions++; });
+    (data.divisions    || []).forEach((d, i) => { insertDiv.run(d.id, d.directorateId || null, d.departmentId || null, d.name, d.isActive ? 1 : 0, i); counts.divisions++; });
     (data.sections     || []).forEach((s, i) => { insertSec.run(s.id, s.departmentId || null, s.divisionId || null, s.name, s.isActive ? 1 : 0, i); counts.sections++; });
     (data.careers      || []).forEach((c, i) => { insertCar.run(c.id, c.name, c.isActive ? 1 : 0, i); counts.careers++; });
     (data.categories   || []).forEach((c, i) => { insertCat.run(c.id, c.careerId, c.name, c.isActive ? 1 : 0, i); counts.categories++; });
@@ -276,7 +276,8 @@ router.delete('/directorates/:id', (req, res) => {
   try {
     const db = getDb();
     const hasChildren = db.prepare('SELECT id FROM departments WHERE directorate_id = ? LIMIT 1').get(req.params.id);
-    if (hasChildren) return res.status(409).json({ error: 'has_children' });
+    const hasDirectDivisions = db.prepare('SELECT id FROM divisions WHERE directorate_id = ? LIMIT 1').get(req.params.id);
+    if (hasChildren || hasDirectDivisions) return res.status(409).json({ error: 'has_children' });
 
     // Verificar se tem funcionários normais
     const hasEmployees = db.prepare('SELECT id FROM employees WHERE directorate_id = ? LIMIT 1').get(req.params.id);
@@ -337,7 +338,7 @@ router.delete('/departments/:id', (req, res) => {
   try {
     const db = getDb();
     const hasDivisions = db.prepare('SELECT id FROM divisions WHERE department_id = ? LIMIT 1').get(req.params.id);
-    const hasSections  = db.prepare('SELECT id FROM sections  WHERE department_id = ? LIMIT 1').get(req.params.id);
+    const hasSections = db.prepare('SELECT id FROM sections WHERE department_id = ? LIMIT 1').get(req.params.id);
     if (hasDivisions || hasSections) return res.status(409).json({ error: 'has_children' });
     db.prepare('DELETE FROM departments WHERE id = ?').run(req.params.id);
     res.json({ success: true });
@@ -348,33 +349,58 @@ router.delete('/departments/:id', (req, res) => {
 // REPARTICOES
 // ═══════════════════════════════════════════════════════════════════════════════
 router.post('/divisions', (req, res) => {
-  const { id, departmentId, name } = req.body;
-  if (!name?.trim() || !departmentId) return res.status(400).json({ error: 'Campos obrigatorios' });
+  const { id, directorateId, departmentId, name } = req.body;
+  if (!name?.trim() || (!departmentId && !directorateId)) {
+    return res.status(400).json({ error: 'Campos obrigatorios' });
+  }
   try {
     const db = getDb();
-    const exists = db.prepare('SELECT id FROM divisions WHERE lower(name) = lower(?) AND department_id = ?').get(name.trim(), departmentId);
+    let resolvedDirId = directorateId || null;
+    let resolvedDeptId = departmentId || null;
+
+    if (resolvedDeptId && !resolvedDirId) {
+      const dep = db.prepare('SELECT directorate_id FROM departments WHERE id = ?').get(resolvedDeptId);
+      if (dep) resolvedDirId = dep.directorate_id;
+    }
+
+    const exists = resolvedDeptId
+      ? db.prepare('SELECT id FROM divisions WHERE lower(name) = lower(?) AND department_id = ?').get(name.trim(), resolvedDeptId)
+      : db.prepare('SELECT id FROM divisions WHERE lower(name) = lower(?) AND directorate_id = ? AND (department_id IS NULL OR department_id = \'\')').get(name.trim(), resolvedDirId);
     if (exists) return res.status(409).json({ error: 'duplicate' });
-    const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM divisions WHERE department_id = ?').get(departmentId).m;
-    db.prepare('INSERT INTO divisions (id, department_id, name, is_active, sort_order) VALUES (?, ?, ?, 1, ?)').run(id, departmentId, name.trim(), maxOrder + 1);
+
+    const maxOrder = resolvedDeptId
+      ? db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM divisions WHERE department_id = ?').get(resolvedDeptId).m
+      : db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM divisions WHERE directorate_id = ?').get(resolvedDirId).m;
+
+    db.prepare('INSERT INTO divisions (id, directorate_id, department_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, 1, ?)')
+      .run(id, resolvedDirId, resolvedDeptId, name.trim(), maxOrder + 1);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 router.put('/divisions/:id', (req, res) => {
-  const { name, departmentId } = req.body;
+  const { name, departmentId, directorateId } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatorio' });
   try {
     const db = getDb();
-    const target = db.prepare('SELECT department_id FROM divisions WHERE id = ?').get(req.params.id);
+    const target = db.prepare('SELECT directorate_id, department_id FROM divisions WHERE id = ?').get(req.params.id);
     if (!target) return res.status(404).json({ error: 'not_found' });
-    const targetDeptId = departmentId || target.department_id;
-    const dup = db.prepare('SELECT id FROM divisions WHERE lower(name) = lower(?) AND department_id = ? AND id != ?').get(name.trim(), targetDeptId, req.params.id);
-    if (dup) return res.status(409).json({ error: 'duplicate' });
-    if (departmentId) {
-      db.prepare('UPDATE divisions SET name = ?, department_id = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name.trim(), departmentId, req.params.id);
-    } else {
-      db.prepare('UPDATE divisions SET name = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name.trim(), req.params.id);
+
+    let finalDeptId = departmentId !== undefined ? (departmentId || null) : target.department_id;
+    let finalDirId = directorateId !== undefined ? (directorateId || null) : target.directorate_id;
+
+    if (finalDeptId && !finalDirId) {
+      const dep = db.prepare('SELECT directorate_id FROM departments WHERE id = ?').get(finalDeptId);
+      if (dep) finalDirId = dep.directorate_id;
     }
+
+    const dup = finalDeptId
+      ? db.prepare('SELECT id FROM divisions WHERE lower(name) = lower(?) AND department_id = ? AND id != ?').get(name.trim(), finalDeptId, req.params.id)
+      : db.prepare('SELECT id FROM divisions WHERE lower(name) = lower(?) AND directorate_id = ? AND (department_id IS NULL OR department_id = \'\') AND id != ?').get(name.trim(), finalDirId, req.params.id);
+    if (dup) return res.status(409).json({ error: 'duplicate' });
+
+    db.prepare('UPDATE divisions SET name = ?, directorate_id = ?, department_id = ?, updated_at = datetime(\'now\') WHERE id = ?')
+      .run(name.trim(), finalDirId, finalDeptId, req.params.id);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

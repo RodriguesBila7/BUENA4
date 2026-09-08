@@ -42,7 +42,9 @@ export default function AdvancedFilters({ filters, setFilters, orgData }) {
   // Repartições
   const activeDivisions = filters.departmentId
     ? (data?.divisions || []).filter(d => String(d.departmentId) === String(filters.departmentId))
-    : (data?.divisions || []);
+    : (filters.directorateId
+        ? (data?.divisions || []).filter(d => String(d.directorateId) === String(filters.directorateId) || (d.departmentId && data?.departments?.some(dep => dep.id === d.departmentId && String(dep.directorateId) === String(filters.directorateId))))
+        : (data?.divisions || []));
 
   // Secções
   const activeSections = (data?.sections || []).filter(s => {

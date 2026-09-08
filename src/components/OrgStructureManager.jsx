@@ -188,13 +188,20 @@ export default function OrgStructureManager({ t }) {
       else success = await addDepartment(parentDirId, name);
     } else if (activeTab === 'rep') {
       if (!parentDirId) return showError('org_select_dir');
-      if (!parentDepId) return showError('org_select_dep');
+      const selectedDir = (data.directorates || []).find(d => String(d.id) === String(parentDirId));
+      const isProv = !!(selectedDir && (selectedDir.province || (selectedDir.name || '').toLowerCase().includes('provincial') || (selectedDir.name || '').toLowerCase().includes('cidade de maputo')));
+
+      if (!isProv && !parentDepId) return showError('org_select_dep');
       if (!name.trim()) return showError('Digite o nome');
-      if (editingId) success = await updateDivision(editingId, name, parentDepId);
-      else success = await addDivision(parentDepId, name);
+      if (editingId) success = await updateDivision(editingId, name, parentDepId || null, parentDirId);
+      else success = await addDivision(parentDepId || null, name, parentDirId);
     } else if (activeTab === 'sec') {
       if (!parentDirId) return showError('org_select_dir');
-      if (!parentDepId) return showError('org_select_dep');
+      const selectedDir = (data.directorates || []).find(d => String(d.id) === String(parentDirId));
+      const isProv = !!(selectedDir && (selectedDir.province || (selectedDir.name || '').toLowerCase().includes('provincial') || (selectedDir.name || '').toLowerCase().includes('cidade de maputo')));
+
+      if (!isProv && !parentDepId) return showError('org_select_dep');
+      if (isProv && !parentRepId) return showError('Selecione a Repartição');
       if (!name.trim()) return showError('Digite o nome');
       const pId = parentRepId || parentDepId;
       const pType = parentRepId ? 'divisionId' : 'departmentId';
@@ -253,17 +260,21 @@ export default function OrgStructureManager({ t }) {
     } else if (activeTab === 'dep') {
       setParentDirId(item.directorateId);
     } else if (activeTab === 'rep') {
-      setParentDepId(item.departmentId);
-      const dep = data.departments.find(d => d.id === item.departmentId);
-      if (dep) setParentDirId(dep.directorateId);
+      setParentDepId(item.departmentId || '');
+      if (item.directorateId) {
+        setParentDirId(item.directorateId);
+      } else if (item.departmentId) {
+        const dep = data.departments.find(d => d.id === item.departmentId);
+        if (dep) setParentDirId(dep.directorateId);
+      }
     } else if (activeTab === 'sec') {
       if (item.divisionId) {
         setParentRepId(item.divisionId);
         const rep = data.divisions.find(r => r.id === item.divisionId);
         if (rep) {
-          setParentDepId(rep.departmentId);
-          const dep = data.departments.find(d => d.id === rep.departmentId);
-          if (dep) setParentDirId(dep.directorateId);
+          setParentDepId(rep.departmentId || '');
+          const dirId = rep.directorateId || (rep.departmentId ? data.departments.find(d => d.id === rep.departmentId)?.directorateId : null);
+          if (dirId) setParentDirId(dirId);
         }
       } else if (item.departmentId) {
         setParentRepId('');
@@ -338,12 +349,19 @@ export default function OrgStructureManager({ t }) {
   };
 
   // Filtragem dinâmica
-  const availableDepartments = data.departments.filter(d => d.directorateId === parentDirId);
-  const availableDivisions = data.divisions.filter(d => d.departmentId === parentDepId);
-
-  // Província selecionada no form dist_dir
   const selectedProvDir = (data.directorates || []).find(d => String(d.id) === String(parentDirId));
+  const isSelectedDirProvincial = !!(selectedProvDir && (selectedProvDir.province || (selectedProvDir.name || '').toLowerCase().includes('provincial') || (selectedProvDir.name || '').toLowerCase().includes('cidade de maputo')));
   const selectedProvinceName = selectedProvDir ? selectedProvDir.province : null;
+
+  const availableDepartments = data.departments.filter(d => d.directorateId === parentDirId);
+  const availableDivisions = data.divisions.filter(d => {
+    if (parentDepId) return d.departmentId === parentDepId;
+    if (parentDirId) {
+      if (d.directorateId === parentDirId) return true;
+      if (d.departmentId && data.departments.some(dep => dep.id === d.departmentId && dep.directorateId === parentDirId)) return true;
+    }
+    return false;
+  });
 
   let availableDistricts = [];
   if (parentDirId) {
@@ -378,6 +396,7 @@ export default function OrgStructureManager({ t }) {
     ? data.divisions.filter(d => d.departmentId === parentDepId) 
     : (parentDirId 
         ? data.divisions.filter(div => {
+            if (div.directorateId === parentDirId) return true;
             const dep = data.departments.find(d => d.id === div.departmentId);
             return dep && dep.directorateId === parentDirId;
           })
@@ -389,13 +408,14 @@ export default function OrgStructureManager({ t }) {
         : (parentDirId
             ? data.sections.filter(s => {
                 if (s.districtDirectorateId) return false;
-                if (s.departmentId) {
-                  const dep = data.departments.find(d => d.id === s.departmentId);
-                  return dep && dep.directorateId === parentDirId;
-                }
                 if (s.divisionId) {
                   const div = data.divisions.find(d => d.id === s.divisionId);
+                  if (div && div.directorateId === parentDirId) return true;
                   const dep = div ? data.departments.find(d => d.id === div.departmentId) : null;
+                  return dep && dep.directorateId === parentDirId;
+                }
+                if (s.departmentId) {
+                  const dep = data.departments.find(d => d.id === s.departmentId);
                   return dep && dep.directorateId === parentDirId;
                 }
                 return false;
@@ -497,9 +517,12 @@ export default function OrgStructureManager({ t }) {
                   </div>
                 )}
 
+                {/* DEPARTAMENTO: Obrigatório para direcções centrais, opcional a nível provincial */}
                 {['rep', 'sec'].includes(activeTab) && (
                   <div style={styles.formGroup}>
-                    <label style={styles.label}>{t('org_tab_dep')} *</label>
+                    <label style={styles.label}>
+                      {t('org_tab_dep')} {isSelectedDirProvincial ? '(Opcional)' : '*'}
+                    </label>
                     <select 
                       value={parentDepId} 
                       onChange={(e) => {
@@ -508,28 +531,40 @@ export default function OrgStructureManager({ t }) {
                       }}
                       onKeyDown={handleKeyPress}
                       style={styles.input}
-                      required
+                      required={!isSelectedDirProvincial}
                       disabled={!parentDirId}
                     >
                       <option value="">
-                        {!parentDirId ? `-- ${t('org_select_dir')} primeiro --` : `-- ${t('org_select_dep')} --`}
+                        {!parentDirId 
+                          ? `-- ${t('org_select_dir')} primeiro --` 
+                          : (isSelectedDirProvincial 
+                              ? '-- Sem Departamento (Pertence à Direcção Provincial) --' 
+                              : `-- ${t('org_select_dep')} --`)}
                       </option>
                       {availableDepartments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                   </div>
                 )}
 
+                {/* REPARTIÇÃO: Quando na aba de Secções */}
                 {activeTab === 'sec' && (
                   <div style={styles.formGroup}>
-                    <label style={styles.label}>{t('org_tab_rep')} (Opcional)</label>
+                    <label style={styles.label}>
+                      {t('org_tab_rep')} {isSelectedDirProvincial ? '*' : '(Opcional)'}
+                    </label>
                     <select 
                       value={parentRepId} 
                       onChange={(e) => setParentRepId(e.target.value)}
                       onKeyDown={handleKeyPress}
                       style={styles.input}
-                      disabled={!parentDepId}
+                      required={isSelectedDirProvincial}
+                      disabled={isSelectedDirProvincial ? !parentDirId : !parentDepId}
                     >
-                      <option value="">-- Directa no Departamento (Sem Repartição) --</option>
+                      <option value="">
+                        {isSelectedDirProvincial 
+                          ? (!parentDirId ? `-- ${t('org_select_dir')} primeiro --` : '-- Seleccione a Repartição --')
+                          : '-- Directa no Departamento (Sem Repartição) --'}
+                      </option>
                       {availableDivisions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                     </select>
                   </div>
@@ -801,13 +836,21 @@ export default function OrgStructureManager({ t }) {
                     })}
 
                     {activeTab === 'rep' && displayDivisions.map(item => {
-                      const pDep = data.departments.find(d => d.id === item.departmentId);
-                      const pDir = data.directorates.find(d => d.id === pDep?.directorateId);
+                      const pDep = item.departmentId ? data.departments.find(d => d.id === item.departmentId) : null;
+                      const pDir = data.directorates.find(d => d.id === (item.directorateId || pDep?.directorateId));
                       return (
                         <tr key={item.id} {...getTrProps(item.id)}>
-                          <td>{item.name}</td>
+                          <td><strong>{item.name}</strong></td>
                           <td>{pDir?.name || '-'}</td>
-                          <td>{pDep?.name || '-'}</td>
+                          <td>
+                            {pDep?.name ? (
+                              pDep.name
+                            ) : (
+                              <span style={{ color: 'var(--color-primary)', fontWeight: 500, fontSize: '12px' }}>
+                                Directa (Direcção Provincial)
+                              </span>
+                            )}
+                          </td>
                           <td>
                             <span style={item.isActive ? styles.badgeActive : styles.badgeInactive}>{item.isActive ? t('org_active') : t('org_inactive')}</span>
                           </td>
@@ -828,8 +871,8 @@ export default function OrgStructureManager({ t }) {
                       
                       if (item.divisionId) {
                         pRep = data.divisions.find(d => d.id === item.divisionId);
-                        pDep = data.departments.find(d => d.id === pRep?.departmentId);
-                        pDir = data.directorates.find(d => d.id === pDep?.directorateId);
+                        pDep = pRep?.departmentId ? data.departments.find(d => d.id === pRep.departmentId) : null;
+                        pDir = data.directorates.find(d => d.id === (pRep?.directorateId || pDep?.directorateId));
                       } else if (item.departmentId) {
                         pDep = data.departments.find(d => d.id === item.departmentId);
                         pDir = data.directorates.find(d => d.id === pDep?.directorateId);
@@ -837,9 +880,9 @@ export default function OrgStructureManager({ t }) {
 
                       return (
                         <tr key={item.id} {...getTrProps(item.id)}>
-                          <td>{item.name}</td>
+                          <td><strong>{item.name}</strong></td>
                           <td>{pDir?.name || '-'}</td>
-                          <td>{pDep?.name || '-'}</td>
+                          <td>{pDep?.name || <span style={{color: '#a0aec0', fontStyle: 'italic', fontSize: '12px'}}>N/A (Provincial)</span>}</td>
                           <td>{pRep ? pRep.name : <span style={{color: '#a0aec0', fontStyle: 'italic'}}>Dir. Direta</span>}</td>
                           <td>
                             <span style={item.isActive ? styles.badgeActive : styles.badgeInactive}>{item.isActive ? t('org_active') : t('org_inactive')}</span>
