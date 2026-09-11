@@ -151,8 +151,8 @@ const translations = {
     report_summary_title: 'Resumo Estatístico',
     report_summary_text: 'O efectivo total encontra-se em conformidade com as orientações do Ministério do Interior. Observa-se um incremento de 4.2% no recrutamento de investigadores criminais qualificados para combater crimes de alta complexidade.',
     report_signature: 'O Director de Recursos Humanos',
-    report_address: 'Avenida de Moçambique, Nº 1024, Maputo - Moçambique',
-    report_contact: 'Telefone: +258 21 000 000 | Email: contacto@sernic.gov.mz',
+    report_address: 'Rua John Issa, no. 33, Maputo, 2o andar, CP. 2127',
+    report_contact: 'Tel: 21421832 | Email: contacto@sernic.gov.mz',
 
     /* ── Estrutura Organizacional ── */
     org_title: 'Estrutura Organizacional',
@@ -366,8 +366,8 @@ const translations = {
     report_summary_title: 'Statistical Summary',
     report_summary_text: 'The total staff is in compliance with the guidelines of the Ministry of Interior. A 4.2% increase in the recruitment of qualified criminal investigators to combat high-complexity crimes has been observed.',
     report_signature: 'The Director of Human Resources',
-    report_address: 'Avenida de Moçambique, No. 1024, Maputo - Mozambique',
-    report_contact: 'Phone: +258 21 000 000 | Email: contacto@sernic.gov.mz',
+    report_address: 'Rua John Issa, No. 33, Maputo, 2nd floor, P.O. Box 2127',
+    report_contact: 'Tel: 21421832 | Email: contacto@sernic.gov.mz',
 
     /* ── Organizational Structure ── */
     org_title: 'Organizational Structure',

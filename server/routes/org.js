@@ -109,6 +109,100 @@ router.post('/bootstrap-districts', (req, res) => {
   }
 });
 
+// ─── POST /api/org/sync-provincial-structures — Sincronizar todas as Províncias ───
+router.post('/sync-provincial-structures', (req, res) => {
+  try {
+    const db = getDb();
+    let sourceDir = req.body?.sourceDirectorateId 
+      ? db.prepare('SELECT * FROM directorates WHERE id = ?').get(req.body.sourceDirectorateId)
+      : db.prepare('SELECT * FROM directorates WHERE province = "Cidade de Maputo" OR lower(name) LIKE "%cidade de maputo%"').get();
+
+    if (!sourceDir) {
+      sourceDir = db.prepare('SELECT * FROM directorates WHERE province IS NOT NULL OR lower(name) LIKE "%provincial%" LIMIT 1').get();
+    }
+    if (!sourceDir) return res.status(404).json({ error: 'Nenhuma direcção provincial encontrada como referência' });
+
+    const sourceDepts = db.prepare('SELECT * FROM departments WHERE directorate_id = ? ORDER BY sort_order, name').all(sourceDir.id);
+    const sourceDivs = db.prepare('SELECT * FROM divisions WHERE directorate_id = ? OR department_id IN (SELECT id FROM departments WHERE directorate_id = ?) ORDER BY sort_order, name').all(sourceDir.id, sourceDir.id);
+    const sourceSecs = db.prepare('SELECT * FROM sections WHERE department_id IN (SELECT id FROM departments WHERE directorate_id = ?) OR division_id IN (SELECT id FROM divisions WHERE directorate_id = ? OR department_id IN (SELECT id FROM departments WHERE directorate_id = ?)) ORDER BY sort_order, name').all(sourceDir.id, sourceDir.id, sourceDir.id);
+
+    const targetDirs = db.prepare('SELECT * FROM directorates WHERE (province IS NOT NULL OR lower(name) LIKE "%provincial%" OR lower(name) LIKE "%cidade de maputo%") AND id != ?').all(sourceDir.id);
+
+    const generateId = () => Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 6);
+
+    const sync = db.transaction(() => {
+      let created = { depts: 0, divs: 0, secs: 0 };
+
+      for (const targetDir of targetDirs) {
+        const deptMap = {};
+        for (const d of sourceDepts) {
+          let existing = db.prepare('SELECT id FROM departments WHERE directorate_id = ? AND lower(name) = lower(?)').get(targetDir.id, d.name.trim());
+          if (!existing) {
+            const newId = generateId();
+            db.prepare('INSERT INTO departments (id, directorate_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, ?)')
+              .run(newId, targetDir.id, d.name.trim(), d.is_active, d.sort_order);
+            deptMap[d.id] = newId;
+            created.depts++;
+          } else {
+            deptMap[d.id] = existing.id;
+          }
+        }
+
+        const divMap = {};
+        for (const v of sourceDivs) {
+          const targetDeptId = v.department_id ? deptMap[v.department_id] : null;
+          let existing;
+          if (targetDeptId) {
+            existing = db.prepare('SELECT id FROM divisions WHERE department_id = ? AND lower(name) = lower(?)').get(targetDeptId, v.name.trim());
+          } else {
+            existing = db.prepare('SELECT id FROM divisions WHERE directorate_id = ? AND (department_id IS NULL OR department_id = \'\') AND lower(name) = lower(?)').get(targetDir.id, v.name.trim());
+          }
+
+          if (!existing) {
+            const newId = generateId();
+            db.prepare('INSERT INTO divisions (id, directorate_id, department_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)')
+              .run(newId, targetDir.id, targetDeptId, v.name.trim(), v.is_active, v.sort_order);
+            divMap[v.id] = newId;
+            created.divs++;
+          } else {
+            divMap[v.id] = existing.id;
+          }
+        }
+
+        for (const s of sourceSecs) {
+          const targetDeptId = s.department_id ? deptMap[s.department_id] : null;
+          const targetDivId = s.division_id ? divMap[s.division_id] : null;
+          let existing;
+          if (targetDivId) {
+            existing = db.prepare('SELECT id FROM sections WHERE division_id = ? AND lower(name) = lower(?)').get(targetDivId, s.name.trim());
+          } else if (targetDeptId) {
+            existing = db.prepare('SELECT id FROM sections WHERE department_id = ? AND lower(name) = lower(?)').get(targetDeptId, s.name.trim());
+          }
+          if (!existing) {
+            const newId = generateId();
+            db.prepare('INSERT INTO sections (id, department_id, division_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)')
+              .run(newId, targetDeptId, targetDivId, s.name.trim(), s.is_active, s.sort_order);
+            created.secs++;
+          }
+        }
+      }
+
+      return created;
+    });
+
+    const counts = sync();
+    res.json({
+      success: true,
+      message: `Estrutura sincronizada com sucesso para todas as ${targetDirs.length} Direcções Provinciais!`,
+      counts,
+      source: sourceDir.name
+    });
+  } catch (e) {
+    console.error('[org POST /sync-provincial-structures]', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── POST /api/org/migrate — importar dados do localStorage (one-time) ───────
 router.post('/migrate', (req, res) => {
   const data = req.body;
@@ -295,7 +389,7 @@ router.delete('/directorates/:id', (req, res) => {
 // DEPARTAMENTOS
 // ═══════════════════════════════════════════════════════════════════════════════
 router.post('/departments', (req, res) => {
-  const { id, directorateId, name } = req.body;
+  const { id, directorateId, name, replicateToAllProvinces } = req.body;
   if (!name?.trim() || !directorateId) return res.status(400).json({ error: 'Campos obrigatorios' });
   try {
     const db = getDb();
@@ -303,6 +397,26 @@ router.post('/departments', (req, res) => {
     if (exists) return res.status(409).json({ error: 'duplicate' });
     const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM departments WHERE directorate_id = ?').get(directorateId).m;
     db.prepare('INSERT INTO departments (id, directorate_id, name, is_active, sort_order) VALUES (?, ?, ?, 1, ?)').run(id, directorateId, name.trim(), maxOrder + 1);
+
+    if (replicateToAllProvinces) {
+      const sourceDir = db.prepare('SELECT province, name FROM directorates WHERE id = ?').get(directorateId);
+      const isProv = !!(sourceDir && (sourceDir.province || (sourceDir.name || '').toLowerCase().includes('provincial') || (sourceDir.name || '').toLowerCase().includes('cidade de maputo')));
+      if (isProv) {
+        const otherProvDirs = db.prepare('SELECT id FROM directorates WHERE (province IS NOT NULL OR lower(name) LIKE "%provincial%" OR lower(name) LIKE "%cidade de maputo%") AND id != ?').all(directorateId);
+        const insertStmt = db.prepare('INSERT INTO departments (id, directorate_id, name, is_active, sort_order) VALUES (?, ?, ?, 1, ?)');
+        const checkStmt = db.prepare('SELECT id FROM departments WHERE directorate_id = ? AND lower(name) = lower(?)');
+        const maxStmt = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM departments WHERE directorate_id = ?');
+
+        for (const p of otherProvDirs) {
+          if (!checkStmt.get(p.id, name.trim())) {
+            const m = maxStmt.get(p.id).m;
+            const newId = Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 6);
+            insertStmt.run(newId, p.id, name.trim(), m + 1);
+          }
+        }
+      }
+    }
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -349,7 +463,7 @@ router.delete('/departments/:id', (req, res) => {
 // REPARTICOES
 // ═══════════════════════════════════════════════════════════════════════════════
 router.post('/divisions', (req, res) => {
-  const { id, directorateId, departmentId, name } = req.body;
+  const { id, directorateId, departmentId, name, replicateToAllProvinces } = req.body;
   if (!name?.trim() || (!departmentId && !directorateId)) {
     return res.status(400).json({ error: 'Campos obrigatorios' });
   }
@@ -374,6 +488,45 @@ router.post('/divisions', (req, res) => {
 
     db.prepare('INSERT INTO divisions (id, directorate_id, department_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, 1, ?)')
       .run(id, resolvedDirId, resolvedDeptId, name.trim(), maxOrder + 1);
+
+    if (replicateToAllProvinces && resolvedDirId) {
+      const sourceDir = db.prepare('SELECT province, name FROM directorates WHERE id = ?').get(resolvedDirId);
+      const isProv = !!(sourceDir && (sourceDir.province || (sourceDir.name || '').toLowerCase().includes('provincial') || (sourceDir.name || '').toLowerCase().includes('cidade de maputo')));
+      if (isProv) {
+        let parentDeptName = null;
+        if (resolvedDeptId) {
+          const dObj = db.prepare('SELECT name FROM departments WHERE id = ?').get(resolvedDeptId);
+          if (dObj) parentDeptName = dObj.name.trim();
+        }
+
+        const otherProvDirs = db.prepare('SELECT id FROM directorates WHERE (province IS NOT NULL OR lower(name) LIKE "%provincial%" OR lower(name) LIKE "%cidade de maputo%") AND id != ?').all(resolvedDirId);
+
+        for (const p of otherProvDirs) {
+          let targetDeptId = null;
+          if (parentDeptName) {
+            const mDept = db.prepare('SELECT id FROM departments WHERE directorate_id = ? AND lower(name) = lower(?)').get(p.id, parentDeptName);
+            if (mDept) targetDeptId = mDept.id;
+          }
+
+          let alreadyExists;
+          if (targetDeptId) {
+            alreadyExists = db.prepare('SELECT id FROM divisions WHERE department_id = ? AND lower(name) = lower(?)').get(targetDeptId, name.trim());
+          } else {
+            alreadyExists = db.prepare('SELECT id FROM divisions WHERE directorate_id = ? AND (department_id IS NULL OR department_id = \'\') AND lower(name) = lower(?)').get(p.id, name.trim());
+          }
+
+          if (!alreadyExists) {
+            const newId = Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 6);
+            const m = targetDeptId
+              ? db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM divisions WHERE department_id = ?').get(targetDeptId).m
+              : db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM divisions WHERE directorate_id = ?').get(p.id).m;
+            db.prepare('INSERT INTO divisions (id, directorate_id, department_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, 1, ?)')
+              .run(newId, p.id, targetDeptId, name.trim(), m + 1);
+          }
+        }
+      }
+    }
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

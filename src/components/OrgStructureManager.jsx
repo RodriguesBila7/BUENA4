@@ -19,6 +19,7 @@ export default function OrgStructureManager({ t }) {
     bootstrapNationalStructure,
     resetAndBootstrap,
     bootstrapDistricts,
+    syncProvincialStructures,
     reorderItem, moveItem
   } = useOrgData();
 
@@ -110,6 +111,7 @@ export default function OrgStructureManager({ t }) {
   const [editingId, setEditingId] = useState(null);
   const [province, setProvince] = useState('');
   const [code, setCode] = useState('');
+  const [replicateToAllProvinces, setReplicateToAllProvinces] = useState(false);
 
   const resetForm = () => {
     setName('');
@@ -123,6 +125,7 @@ export default function OrgStructureManager({ t }) {
     setCode('');
     setNotes('');
     setEditingId(null);
+    setReplicateToAllProvinces(false);
     setErrorMsg('');
   };
 
@@ -172,6 +175,26 @@ export default function OrgStructureManager({ t }) {
     });
   };
 
+  const handleSyncProvincialStructures = () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Sincronizar Estrutura Provincial',
+      message: 'Deseja clonar e sincronizar todos os Departamentos e Repartições registados na Direcção da Cidade de Maputo para todas as 10 restantes Direcções Provinciais? Nenhum registo existente será duplicado.',
+      isDestructive: false,
+      hideCancel: false,
+      onConfirm: async () => {
+        try {
+          const res = await syncProvincialStructures();
+          if (res && res.success) {
+            showToast(res.message || 'Estrutura provincial sincronizada com sucesso!', 'success');
+          }
+        } catch (err) {
+          showToast('Erro ao sincronizar estruturas provinciais', 'error');
+        }
+      }
+    });
+  };
+
   const handleSave = async (e) => {
     if (e) e.preventDefault();
 
@@ -185,7 +208,7 @@ export default function OrgStructureManager({ t }) {
       if (!name.trim()) return showError('Digite o nome');
       if (!parentDirId) return showError('org_select_dir');
       if (editingId) success = await updateDepartment(editingId, name, parentDirId);
-      else success = await addDepartment(parentDirId, name);
+      else success = await addDepartment(parentDirId, name, replicateToAllProvinces);
     } else if (activeTab === 'rep') {
       if (!parentDirId) return showError('org_select_dir');
       const selectedDir = (data.directorates || []).find(d => String(d.id) === String(parentDirId));
@@ -194,7 +217,7 @@ export default function OrgStructureManager({ t }) {
       if (!isProv && !parentDepId) return showError('org_select_dep');
       if (!name.trim()) return showError('Digite o nome');
       if (editingId) success = await updateDivision(editingId, name, parentDepId || null, parentDirId);
-      else success = await addDivision(parentDepId || null, name, parentDirId);
+      else success = await addDivision(parentDepId || null, name, parentDirId, replicateToAllProvinces);
     } else if (activeTab === 'sec') {
       if (!parentDirId) return showError('org_select_dir');
       const selectedDir = (data.directorates || []).find(d => String(d.id) === String(parentDirId));
@@ -458,6 +481,30 @@ export default function OrgStructureManager({ t }) {
           <h2 style={styles.title}>{t('org_title')}</h2>
           <p style={styles.desc}>{t('org_desc')}</p>
         </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button 
+            type="button" 
+            onClick={handleSyncProvincialStructures} 
+            style={{ 
+              backgroundColor: 'var(--color-primary, #1e3a8a)', 
+              color: 'var(--color-accent, #ffffff)', 
+              border: '1px solid var(--color-border)', 
+              padding: '9px 15px', 
+              borderRadius: '8px', 
+              fontWeight: '600', 
+              fontSize: '13px', 
+              cursor: 'pointer', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '8px',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.2s'
+            }}
+            title="Sincroniza todos os Departamentos e Repartições de Maputo com todas as Direcções Provinciais"
+          >
+            <span>🔄</span> Sincronizar Estrutura Provincial
+          </button>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -696,6 +743,23 @@ export default function OrgStructureManager({ t }) {
                       <option value="Niassa">Niassa</option>
                       <option value="Cabo Delgado">Cabo Delgado</option>
                     </select>
+                  </div>
+                )}
+
+                {['dep', 'rep'].includes(activeTab) && !editingId && isSelectedDirProvincial && (
+                  <div style={{ margin: '14px 0', padding: '12px 14px', background: 'rgba(56, 161, 105, 0.08)', borderRadius: '8px', border: '1px solid rgba(56, 161, 105, 0.25)' }}>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: 'var(--color-text)' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={replicateToAllProvinces} 
+                        onChange={(e) => setReplicateToAllProvinces(e.target.checked)} 
+                        style={{ cursor: 'pointer', width: '16px', height: '16px', marginTop: '2px' }}
+                      />
+                      <span>Replicar em todas as Direcções Provinciais</span>
+                    </label>
+                    <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px', marginLeft: '26px' }}>
+                      Cria este mesmo registo em todas as 11 Direcções Provinciais de Moçambique, mantendo o organograma padronizado.
+                    </div>
                   </div>
                 )}
 

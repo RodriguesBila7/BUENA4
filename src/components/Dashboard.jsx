@@ -613,6 +613,46 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     window.print();
   };
 
+  const getReportAddress = () => {
+    let activeDir = null;
+    if (reportStats.isScopedToProvince && reportStats.userDirectorateName) {
+      activeDir = reportStats.userDirectorateName;
+    } else if (selectedReportDirectorate && selectedReportDirectorate !== 'ALL' && selectedReportDirectorate !== 'unassigned') {
+      const dirObj = (reportStats.directorates || []).find(d => String(d.id) === String(selectedReportDirectorate)) ||
+                     (reportStats.allDirectoratesList || []).find(d => String(d.id) === String(selectedReportDirectorate));
+      if (dirObj) activeDir = dirObj.name;
+    }
+
+    if (!activeDir) {
+      return t('report_address');
+    }
+
+    const norm = activeDir.toLowerCase();
+    if (norm.includes('geral') || norm.includes('cidade de maputo')) {
+      return t('report_address');
+    }
+
+    return `${activeDir} - Moçambique`;
+  };
+
+  const getReportContact = () => {
+    let activeDir = null;
+    if (reportStats.isScopedToProvince && reportStats.userDirectorateName) {
+      activeDir = reportStats.userDirectorateName;
+    } else if (selectedReportDirectorate && selectedReportDirectorate !== 'ALL' && selectedReportDirectorate !== 'unassigned') {
+      const dirObj = (reportStats.directorates || []).find(d => String(d.id) === String(selectedReportDirectorate)) ||
+                     (reportStats.allDirectoratesList || []).find(d => String(d.id) === String(selectedReportDirectorate));
+      if (dirObj) activeDir = dirObj.name;
+    }
+
+    const norm = (activeDir || '').toLowerCase();
+    if (!activeDir || norm.includes('geral') || norm.includes('cidade de maputo')) {
+      return t('report_contact');
+    }
+
+    return 'Email: contacto@sernic.gov.mz';
+  };
+
   const getNavItemStyle = (isActive, isSub = false) => ({
     ...styles.navItem,
     backgroundColor: isActive ? 'rgba(27, 54, 93, 0.08)' : 'transparent',
@@ -3346,8 +3386,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
                 {/* RODAPÉ DO RELATÓRIO */}
                 <div style={styles.reportFooter}>
-                  <p>{t('report_address')}</p>
-                  <p>{t('report_contact')}</p>
+                  <p>{getReportAddress()}</p>
+                  <p>{getReportContact()}</p>
                 </div>
               </div>
             </div>

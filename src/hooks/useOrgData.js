@@ -140,14 +140,14 @@ export default function useOrgData() {
   // ════════════════════════════════════════════════════════════════════════════
   // DEPARTAMENTOS
   // ════════════════════════════════════════════════════════════════════════════
-  const addDepartment    = (directorateId, name) => exec('POST', '/departments', { id: _id(), directorateId, name });
+  const addDepartment    = (directorateId, name, replicateToAllProvinces = false) => exec('POST', '/departments', { id: _id(), directorateId, name, replicateToAllProvinces });
   const updateDepartment = (id, name, directorateId) => exec('PUT', `/departments/${id}`, { name, directorateId });
   const deleteDepartment = (id) => exec('DELETE', `/departments/${id}`);
 
   // ════════════════════════════════════════════════════════════════════════════
   // REPARTICOES
   // ════════════════════════════════════════════════════════════════════════════
-  const addDivision    = (departmentId, name, directorateId = null) => exec('POST', '/divisions', { id: _id(), departmentId: departmentId || null, directorateId: directorateId || null, name });
+  const addDivision    = (departmentId, name, directorateId = null, replicateToAllProvinces = false) => exec('POST', '/divisions', { id: _id(), departmentId: departmentId || null, directorateId: directorateId || null, name, replicateToAllProvinces });
   const updateDivision = (id, name, departmentId, directorateId = null) => exec('PUT', `/divisions/${id}`, { name, departmentId: departmentId || null, directorateId: directorateId || null });
   const deleteDivision = (id) => exec('DELETE', `/divisions/${id}`);
 
@@ -229,6 +229,17 @@ export default function useOrgData() {
     }
   };
 
+  const syncProvincialStructures = async (sourceDirectorateId = null) => {
+    try {
+      const result = await api('POST', '/sync-provincial-structures', { sourceDirectorateId });
+      await fetchOrgData();
+      return result;
+    } catch (e) {
+      console.error('[useOrgData] Erro ao sincronizar estruturas provinciais:', e);
+      throw e;
+    }
+  };
+
   // ─── Restauro de Backup ────────────────────────────────────────────────────
   const restoreBackupData = async (payload) => {
     try {
@@ -264,6 +275,7 @@ export default function useOrgData() {
     bootstrapNationalStructure,
     resetAndBootstrap,
     bootstrapDistricts,
+    syncProvincialStructures,
     restoreBackupData,
   };
 }
