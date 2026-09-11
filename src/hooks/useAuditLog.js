@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { getFallbackAudit, saveFallbackAudit } from '../services/storageFallback';
 
 async function api(method, path, body) {
   const res = await fetch(`/api/audit${path}`, {
@@ -16,14 +17,15 @@ async function api(method, path, body) {
 
 export default function useAuditLog() {
   const { user } = useAuth();
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState(() => getFallbackAudit());
 
   const fetchLogs = useCallback(async () => {
     try {
       const data = await api('GET', '/');
       setLogs(data);
+      saveFallbackAudit(data);
     } catch (e) {
-      console.error('[useAuditLog] Erro ao carregar:', e);
+      setLogs(getFallbackAudit());
     }
   }, []);
 
@@ -33,18 +35,26 @@ export default function useAuditLog() {
 
   const logAction = useCallback(async (action, module, details = '') => {
     const username = user?.username || 'Sistema';
+    const newLog = {
+      id: 'log_' + Date.now(),
+      user: username,
+      action,
+      module,
+      details,
+      created_at: new Date().toISOString()
+    };
     try {
       await api('POST', '/', { user: username, action, module, details });
       await fetchLogs();
     } catch (e) {
-      console.error('[useAuditLog] Erro ao gravar log:', e);
+      const current = getFallbackAudit();
+      const updated = [newLog, ...current.slice(0, 99)];
+      saveFallbackAudit(updated);
+      setLogs(updated);
     }
   }, [user, fetchLogs]);
 
   const clearLogs = useCallback(async () => {
-    // Audit router currently doesn't implement DELETE /api/audit to clear logs.
-    // For a real system we shouldn't allow clearing audit logs.
-    // So this is a no-op or we could implement it if required.
     console.warn("Audit logs cannot be cleared via API for security reasons.");
   }, []);
 

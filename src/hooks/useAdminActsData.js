@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { getFallbackAdminActs, saveFallbackAdminActs } from '../services/storageFallback';
 
 async function api(method, path, body) {
   let isSecondary = false;
@@ -36,14 +37,16 @@ async function api(method, path, body) {
 }
 
 export default function useAdminActsData() {
-  const [acts, setActs] = useState([]);
+  const [acts, setActs] = useState(() => getFallbackAdminActs());
 
   const fetchData = useCallback(async () => {
     try {
       const data = await api('GET', '/');
       setActs(data);
+      saveFallbackAdminActs(data);
     } catch (e) {
-      console.error('[useAdminActsData] Erro ao carregar:', e);
+      console.warn('[useAdminActsData] API indisponível, a carregar actos administrativos locais...');
+      setActs(getFallbackAdminActs());
     }
   }, []);
 
@@ -57,7 +60,14 @@ export default function useAdminActsData() {
       await api('POST', '/', { ...actData, id });
       await fetchData();
       return { success: true };
-    } catch (e) { return { success: false, error: e.message }; }
+    } catch (e) {
+      const current = getFallbackAdminActs();
+      const id = 'act_' + Date.now();
+      const updated = [{ ...actData, id, createdAt: new Date().toISOString() }, ...current];
+      saveFallbackAdminActs(updated);
+      setActs(updated);
+      return { success: true };
+    }
   };
 
   const registerAct = async (actData) => {
@@ -65,7 +75,15 @@ export default function useAdminActsData() {
       const result = await api('POST', '/register', actData);
       await fetchData();
       return result;
-    } catch (e) { return { success: false, error: e.message }; }
+    } catch (e) {
+      const current = getFallbackAdminActs();
+      const id = 'act_' + Date.now();
+      const newAct = { ...actData, id, status: 'Pendente', createdAt: new Date().toISOString() };
+      const updated = [newAct, ...current];
+      saveFallbackAdminActs(updated);
+      setActs(updated);
+      return { success: true, act: newAct };
+    }
   };
 
   const confirmAct = async (actId) => {
@@ -73,15 +91,21 @@ export default function useAdminActsData() {
       const result = await api('POST', `/confirm/${actId}`);
       await fetchData();
       return result;
-    } catch (e) { return { success: false, error: e.message }; }
+    } catch (e) {
+      const current = getFallbackAdminActs();
+      const updated = current.map(a => a.id === actId ? { ...a, status: 'Aprovado', confirmedAt: new Date().toISOString() } : a);
+      saveFallbackAdminActs(updated);
+      setActs(updated);
+      return { success: true };
+    }
   };
 
   const fetchHistory = async (employeeId) => {
     try {
       return await api('GET', `/history/${employeeId}`);
     } catch (e) { 
-      console.error(e);
-      return []; 
+      const current = getFallbackAdminActs();
+      return current.filter(a => a.employeeId === employeeId);
     }
   };
 
@@ -90,7 +114,13 @@ export default function useAdminActsData() {
       await api('PUT', `/${id}`, actData);
       await fetchData();
       return { success: true };
-    } catch (e) { return { success: false, error: e.message }; }
+    } catch (e) {
+      const current = getFallbackAdminActs();
+      const updated = current.map(a => a.id === id ? { ...a, ...actData } : a);
+      saveFallbackAdminActs(updated);
+      setActs(updated);
+      return { success: true };
+    }
   };
 
   const deleteAct = async (id) => {
@@ -98,7 +128,13 @@ export default function useAdminActsData() {
       await api('DELETE', `/${id}`);
       await fetchData();
       return { success: true };
-    } catch (e) { return { success: false, error: e.message }; }
+    } catch (e) {
+      const current = getFallbackAdminActs();
+      const updated = current.filter(a => a.id !== id);
+      saveFallbackAdminActs(updated);
+      setActs(updated);
+      return { success: true };
+    }
   };
 
   const stats = useMemo(() => {

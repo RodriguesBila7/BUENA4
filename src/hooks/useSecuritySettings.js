@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getFallbackSecurity, saveFallbackSecurity } from '../services/storageFallback';
 
 async function api(method, path, body) {
   const res = await fetch(`/api/security${path}`, {
@@ -14,31 +15,35 @@ async function api(method, path, body) {
 }
 
 export default function useSecuritySettings() {
-  const [policies, setPolicies] = useState({
-    sessionTimeoutMinutes: 30, // minutos
-    loginMaxAttempts: 5,
-    loginLockoutMinutes: 15,
-    passwordExpirationDays: 90,
-    passwordMinLength: 6,
-    minLength: 6,
-    complexity: 'high',
-    maxAttempts: 5,
-    sessionTimeout: 30,
-    force2FA: false,
-    autoLogout: true,
-    maxSessions: 1,
-    multipleDevices: false
+  const [policies, setPolicies] = useState(() => {
+    const saved = getFallbackSecurity();
+    return {
+      sessionTimeoutMinutes: saved?.session_timeout_minutes || 30,
+      loginMaxAttempts: saved?.max_login_attempts || 5,
+      loginLockoutMinutes: saved?.lockout_duration_minutes || 15,
+      passwordExpirationDays: saved?.password_expiry_days || 90,
+      passwordMinLength: saved?.password_min_length || 6,
+      minLength: saved?.password_min_length || 6,
+      complexity: 'high',
+      maxAttempts: saved?.max_login_attempts || 5,
+      sessionTimeout: saved?.session_timeout_minutes || 30,
+      force2FA: !!saved?.two_factor_auth,
+      autoLogout: true,
+      maxSessions: 1,
+      multipleDevices: false,
+      ...(saved || {})
+    };
   });
 
   const fetchData = useCallback(async () => {
     try {
       const data = await api('GET', '/');
       if (Object.keys(data).length > 0) {
-        // Map the new generic settings to the policies format expected by the app
         setPolicies(prev => ({ ...prev, ...data }));
+        saveFallbackSecurity(data);
       }
     } catch (e) {
-      console.error('[useSecuritySettings] Erro ao carregar:', e);
+      console.warn('[useSecuritySettings] Servidor offline, a usar configurações locais...');
     }
   }, []);
 
@@ -51,9 +56,12 @@ export default function useSecuritySettings() {
     try {
       await api('PUT', '/', updated);
       setPolicies(updated);
+      saveFallbackSecurity(updated);
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      setPolicies(updated);
+      saveFallbackSecurity(updated);
+      return { success: true };
     }
   };
 
@@ -70,4 +78,3 @@ export default function useSecuritySettings() {
     validatePassword
   };
 }
-

@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { mozambiqueStructure } from '../utils/mozambiqueDistricts';
+import { getFallbackOrg, saveFallbackOrg } from '../services/storageFallback';
 
 // ─── ID GENERATOR ─────────────────────────────────────────────────────────────
 const _id = () => `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 6)}`;
@@ -64,16 +65,19 @@ async function fetchOrgData() {
   try {
     const data = await api('GET', '/');
     notifyAll(data);
+    saveFallbackOrg(data);
     return data;
   } catch (e) {
-    console.error('[useOrgData] Erro ao carregar dados:', e);
-    return _cache || EMPTY;
+    console.warn('[useOrgData] API indisponível, a carregar estrutura orgânica de demonstração...');
+    const fallback = getFallbackOrg();
+    notifyAll(fallback);
+    return fallback;
   }
 }
 
 // ─── HOOK PRINCIPAL ───────────────────────────────────────────────────────────
 export default function useOrgData() {
-  const [data, _setLocal] = useState(_cache || EMPTY);
+  const [data, _setLocal] = useState(_cache || getFallbackOrg());
 
   useEffect(() => {
     const listener = newData => _setLocal(newData);

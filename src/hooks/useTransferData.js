@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import useAuditLog from './useAuditLog';
+import { getFallbackTransfers, saveFallbackTransfers } from '../services/storageFallback';
 
 let _cache = null;
 const _listeners = new Set();
@@ -27,16 +28,18 @@ async function fetchData() {
   try {
     const data = await api('GET', '/');
     notifyAll(data);
+    saveFallbackTransfers(data);
   } catch (e) {
-    console.error('[useTransferData] Erro ao carregar:', e);
-    if (!_cache) notifyAll([]);
+    console.warn('[useTransferData] API indisponível, a carregar dados locais...');
+    const fallback = getFallbackTransfers();
+    notifyAll(fallback);
   }
 }
 
 export default function useTransferData() {
   const { user: currentUser } = useAuth();
   const { logAction } = useAuditLog();
-  const [transfersRaw, setLocalTransfers] = useState(_cache || []);
+  const [transfersRaw, setLocalTransfers] = useState(_cache || getFallbackTransfers());
 
   useEffect(() => {
     const listener = (data) => setLocalTransfers(data);
@@ -69,20 +72,25 @@ export default function useTransferData() {
   const generateId = () => 'trf_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 
   const requestTransfer = useCallback(async (transferData) => {
+    const newTransfer = {
+      ...transferData,
+      id: generateId(),
+      status: 'Pendente',
+      requestDate: new Date().toISOString(),
+      requestedBy: currentUser?.username || 'Sistema',
+    };
     try {
-      const newTransfer = {
-        ...transferData,
-        id: generateId(),
-        status: 'Pendente',
-        requestDate: new Date().toISOString(),
-        requestedBy: currentUser?.username || 'Sistema',
-      };
       await api('POST', '/', newTransfer);
       await fetchData();
       logAction('Criar', 'Transferencias', `Criou pedido de transferencia para o funcionario ID: ${transferData.employeeId}`);
       return { success: true, transfer: newTransfer };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackTransfers();
+      const updated = [newTransfer, ...current];
+      saveFallbackTransfers(updated);
+      notifyAll(updated);
+      logAction('Criar', 'Transferencias', `Criou pedido de transferencia para o funcionario ID: ${transferData.employeeId}`);
+      return { success: true, transfer: newTransfer };
     }
   }, [currentUser, logAction]);
 
@@ -93,7 +101,12 @@ export default function useTransferData() {
       logAction('Editar', 'Transferencias', `Editou pedido de transferencia ID: ${id}`);
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackTransfers();
+      const updated = current.map(t => t.id === id ? { ...t, ...transferData, updatedAt: new Date().toISOString() } : t);
+      saveFallbackTransfers(updated);
+      notifyAll(updated);
+      logAction('Editar', 'Transferencias', `Editou pedido de transferencia ID: ${id}`);
+      return { success: true };
     }
   }, [logAction]);
 
@@ -113,7 +126,20 @@ export default function useTransferData() {
       logAction('Validar', 'Transferencias', `Aprovou pedido de transferencia ID: ${id}`);
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackTransfers();
+      const target = current.find(t => t.id === id);
+      if (!target) return { success: false, error: 'not_found' };
+      const updated = current.map(t => t.id === id ? {
+        ...t,
+        status: 'Aprovada',
+        approvalDate: new Date().toISOString(),
+        approvedBy: currentUser?.username || 'Sistema',
+        notes: notes || t.notes
+      } : t);
+      saveFallbackTransfers(updated);
+      notifyAll(updated);
+      logAction('Validar', 'Transferencias', `Aprovou pedido de transferencia ID: ${id}`);
+      return { success: true };
     }
   }, [transfersRaw, currentUser, logAction]);
 
@@ -133,7 +159,18 @@ export default function useTransferData() {
       logAction('Validar', 'Transferencias', `Rejeitou pedido de transferencia ID: ${id}`);
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackTransfers();
+      const updated = current.map(t => t.id === id ? {
+        ...t,
+        status: 'Rejeitada',
+        rejectionDate: new Date().toISOString(),
+        rejectedBy: currentUser?.username || 'Sistema',
+        rejectionReason: reason
+      } : t);
+      saveFallbackTransfers(updated);
+      notifyAll(updated);
+      logAction('Validar', 'Transferencias', `Rejeitou pedido de transferencia ID: ${id}`);
+      return { success: true };
     }
   }, [transfersRaw, currentUser, logAction]);
 
@@ -152,7 +189,17 @@ export default function useTransferData() {
       logAction('Eliminar', 'Transferencias', `Cancelou pedido de transferencia ID: ${id}`);
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackTransfers();
+      const updated = current.map(t => t.id === id ? {
+        ...t,
+        status: 'Cancelada',
+        cancelledDate: new Date().toISOString(),
+        cancelledBy: currentUser?.username || 'Sistema'
+      } : t);
+      saveFallbackTransfers(updated);
+      notifyAll(updated);
+      logAction('Eliminar', 'Transferencias', `Cancelou pedido de transferencia ID: ${id}`);
+      return { success: true };
     }
   }, [transfersRaw, currentUser, logAction]);
 
@@ -163,7 +210,12 @@ export default function useTransferData() {
       logAction('Eliminar', 'Transferencias', `Apagou o registo de transferencia ID: ${id}`);
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackTransfers();
+      const updated = current.filter(t => t.id !== id);
+      saveFallbackTransfers(updated);
+      notifyAll(updated);
+      logAction('Eliminar', 'Transferencias', `Apagou o registo de transferencia ID: ${id}`);
+      return { success: true };
     }
   }, [logAction]);
 

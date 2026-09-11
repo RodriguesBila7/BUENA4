@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getFallbackActTypes, saveFallbackActTypes } from '../services/storageFallback';
 
 export default function useActTypesData() {
-  const [actTypes, setActTypes] = useState([]);
+  const [actTypes, setActTypes] = useState(() => getFallbackActTypes());
   const [loading, setLoading] = useState(true);
 
   const fetchActTypes = useCallback(async () => {
@@ -11,9 +12,13 @@ export default function useActTypesData() {
       if (res.ok) {
         const data = await res.json();
         setActTypes(data);
+        saveFallbackActTypes(data);
+      } else {
+        setActTypes(getFallbackActTypes());
       }
     } catch (e) {
-      console.error('[useActTypesData] Erro ao carregar:', e);
+      console.warn('[useActTypesData] API indisponível, a usar tipos de actos de demonstração...');
+      setActTypes(getFallbackActTypes());
     } finally {
       setLoading(false);
     }
@@ -34,9 +39,14 @@ export default function useActTypesData() {
         await fetchActTypes();
         return { success: true };
       }
-      return { success: false };
+      throw new Error('Falha ao gravar tipo de acto');
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackActTypes();
+      const id = 'act_type_' + Date.now();
+      const updated = [...current, { ...actTypeData, id }];
+      saveFallbackActTypes(updated);
+      setActTypes(updated);
+      return { success: true };
     }
   };
 
@@ -51,9 +61,13 @@ export default function useActTypesData() {
         await fetchActTypes();
         return { success: true };
       }
-      return { success: false };
+      throw new Error('Falha ao atualizar tipo de acto');
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackActTypes();
+      const updated = current.map(item => item.id === id ? { ...item, ...actTypeData } : item);
+      saveFallbackActTypes(updated);
+      setActTypes(updated);
+      return { success: true };
     }
   };
 
@@ -64,9 +78,13 @@ export default function useActTypesData() {
         await fetchActTypes();
         return { success: true };
       }
-      return { success: false };
+      throw new Error('Falha ao eliminar tipo de acto');
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackActTypes();
+      const updated = current.filter(item => item.id !== id);
+      saveFallbackActTypes(updated);
+      setActTypes(updated);
+      return { success: true };
     }
   };
 

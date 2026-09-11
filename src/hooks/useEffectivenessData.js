@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getFallbackEffectiveness, saveFallbackEffectiveness } from '../services/storageFallback';
 
 async function api(method, path, body) {
   const res = await fetch(`/api/effectiveness${path}`, {
@@ -14,14 +15,16 @@ async function api(method, path, body) {
 }
 
 export default function useEffectivenessData() {
-  const [records, setRecords] = useState([]);
+  const [records, setRecords] = useState(() => getFallbackEffectiveness());
 
   const fetchData = useCallback(async () => {
     try {
       const data = await api('GET', '/');
       setRecords(data);
+      saveFallbackEffectiveness(data);
     } catch (e) {
-      console.error('[useEffectivenessData] Erro ao carregar:', e);
+      console.warn('[useEffectivenessData] API indisponível, a carregar dados locais...');
+      setRecords(getFallbackEffectiveness());
     }
   }, []);
 
@@ -32,12 +35,18 @@ export default function useEffectivenessData() {
   const generateId = () => 'eff_' + Date.now().toString(36);
 
   const addRecord = async (recordData) => {
+    const id = generateId();
     try {
-      const id = generateId();
       await api('POST', '/', { ...recordData, id, createdAt: new Date().toISOString() });
       await fetchData();
       return { success: true };
-    } catch (e) { return { success: false, error: e.message }; }
+    } catch (e) {
+      const current = getFallbackEffectiveness();
+      const updated = [{ ...recordData, id, createdAt: new Date().toISOString() }, ...current];
+      saveFallbackEffectiveness(updated);
+      setRecords(updated);
+      return { success: true };
+    }
   };
 
   const updateRecord = async (id, updates) => {
@@ -45,7 +54,13 @@ export default function useEffectivenessData() {
       await api('PUT', `/${id}`, { ...updates, id, updatedAt: new Date().toISOString() });
       await fetchData();
       return { success: true };
-    } catch (e) { return { success: false, error: e.message }; }
+    } catch (e) {
+      const current = getFallbackEffectiveness();
+      const updated = current.map(r => r.id === id ? { ...r, ...updates, updatedAt: new Date().toISOString() } : r);
+      saveFallbackEffectiveness(updated);
+      setRecords(updated);
+      return { success: true };
+    }
   };
 
   const deleteRecord = async (id) => {
@@ -53,7 +68,13 @@ export default function useEffectivenessData() {
       await api('DELETE', `/${id}`);
       await fetchData();
       return { success: true };
-    } catch (e) { return { success: false, error: e.message }; }
+    } catch (e) {
+      const current = getFallbackEffectiveness();
+      const updated = current.filter(r => r.id !== id);
+      saveFallbackEffectiveness(updated);
+      setRecords(updated);
+      return { success: true };
+    }
   };
 
   return {

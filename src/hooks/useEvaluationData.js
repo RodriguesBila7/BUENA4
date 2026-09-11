@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { EVALUATION_STATES } from '../utils/evaluationRules';
+import { getFallbackEvaluations, saveFallbackEvaluations } from '../services/storageFallback';
 
 function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -32,7 +33,7 @@ async function api(method, path, body) {
 }
 
 export default function useEvaluationData() {
-  const [evaluations, setEvaluations] = useState([]);
+  const [evaluations, setEvaluations] = useState(() => getFallbackEvaluations());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -41,11 +42,12 @@ export default function useEvaluationData() {
       setLoading(true);
       setError(null);
       const data = await api('GET', '/');
-      setEvaluations(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      setEvaluations(list);
+      saveFallbackEvaluations(list);
     } catch (e) {
-      console.error('[useEvaluationData] Erro ao carregar:', e);
-      setError(e.message || 'Erro ao carregar dados de avaliação');
-      setEvaluations([]);
+      console.warn('[useEvaluationData] API indisponível, a carregar dados locais...');
+      setEvaluations(getFallbackEvaluations());
     } finally {
       setLoading(false);
     }
@@ -72,19 +74,40 @@ export default function useEvaluationData() {
       status: record.status || EVALUATION_STATES.EVALUATED
     };
 
-    await api('POST', '/', newRecord);
-    await fetchData();
+    try {
+      await api('POST', '/', newRecord);
+      await fetchData();
+    } catch (e) {
+      const current = getFallbackEvaluations();
+      const updated = [newRecord, ...current];
+      saveFallbackEvaluations(updated);
+      setEvaluations(updated);
+    }
     return newRecord;
   };
 
   const updateEvaluation = async (id, updates) => {
-    await api('PUT', `/${id}`, { ...updates, id, updatedAt: new Date().toISOString() });
-    await fetchData();
+    try {
+      await api('PUT', `/${id}`, { ...updates, id, updatedAt: new Date().toISOString() });
+      await fetchData();
+    } catch (e) {
+      const current = getFallbackEvaluations();
+      const updated = current.map(item => item.id === id ? { ...item, ...updates, updatedAt: new Date().toISOString() } : item);
+      saveFallbackEvaluations(updated);
+      setEvaluations(updated);
+    }
   };
 
   const removeEvaluation = async (id) => {
-    await api('DELETE', `/${id}`);
-    await fetchData();
+    try {
+      await api('DELETE', `/${id}`);
+      await fetchData();
+    } catch (e) {
+      const current = getFallbackEvaluations();
+      const updated = current.filter(item => item.id !== id);
+      saveFallbackEvaluations(updated);
+      setEvaluations(updated);
+    }
   };
 
   const getLatestEvaluation = (employeeId) => {
@@ -98,10 +121,10 @@ export default function useEvaluationData() {
     evaluations: Array.isArray(evaluations) ? evaluations : [],
     loading,
     error,
-    reload: fetchData,
     addEvaluation,
     updateEvaluation,
     removeEvaluation,
-    getLatestEvaluation
+    getLatestEvaluation,
+    refreshEvaluations: fetchData
   };
 }

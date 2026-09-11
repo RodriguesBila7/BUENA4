@@ -1,12 +1,14 @@
 /**
  * src/hooks/useEmployeeData.js
- * Hook de dados de Funcionarios — usa a API REST (SQLite backend).
+ * Hook de dados de Funcionarios — usa a API REST (SQLite backend)
+ * com fallback transparente para localStorage quando executado na Vercel ou modo offline.
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import useOrgData from './useOrgData';
 import { filterByProvincialScope } from '../utils/scopeUtils';
+import { getFallbackEmployees, saveFallbackEmployees } from '../services/storageFallback';
 
 let _cache = null;
 const _listeners = new Set();
@@ -33,10 +35,13 @@ async function fetchEmployees() {
   try {
     const data = await apiFetch('GET', '/');
     notifyAll(data);
+    saveFallbackEmployees(data);
     return data;
   } catch (e) {
-    console.error('[useEmployeeData] Erro ao carregar:', e);
-    return _cache || [];
+    console.warn('[useEmployeeData] API indisponível, a carregar dados locais de demonstração...');
+    const fallback = getFallbackEmployees();
+    notifyAll(fallback);
+    return fallback;
   }
 }
 
@@ -45,7 +50,7 @@ const _id = () => `emp-${Date.now().toString(36)}-${Math.random().toString(36).s
 export default function useEmployeeData() {
   const { user: currentUser } = useAuth();
   const { data: orgData } = useOrgData();
-  const [employeesRaw, setLocalEmployees] = useState(_cache || []);
+  const [employeesRaw, setLocalEmployees] = useState(_cache || getFallbackEmployees());
 
   useEffect(() => {
     const listener = data => setLocalEmployees(data);
@@ -61,15 +66,28 @@ export default function useEmployeeData() {
   }, [employeesRaw, currentUser, orgData]);
 
   const addEmployee = useCallback(async (empData) => {
+    const id = empData.id || _id();
     try {
-      const id = empData.id || _id();
       await apiFetch('POST', '/', { ...empData, id });
       await fetchEmployees();
       return { success: true, employee: { ...empData, id } };
     } catch (e) {
       if (e.message === 'nip_duplicate') return { success: false, error: 'nip_duplicate' };
-      console.error('[addEmployee]', e);
-      return { success: false, error: e.message };
+      const current = getFallbackEmployees();
+      if (empData.nip && current.some(item => item.nip === empData.nip)) {
+        return { success: false, error: 'nip_duplicate' };
+      }
+      const newEmp = {
+        ...empData,
+        id,
+        isActive: true,
+        status: empData.status || 'Ativo',
+        createdAt: new Date().toISOString()
+      };
+      const updated = [newEmp, ...current];
+      saveFallbackEmployees(updated);
+      notifyAll(updated);
+      return { success: true, employee: newEmp };
     }
   }, []);
 
@@ -80,7 +98,14 @@ export default function useEmployeeData() {
       return { success: true };
     } catch (e) {
       if (e.message === 'nip_duplicate') return { success: false, error: 'nip_duplicate' };
-      return { success: false, error: e.message };
+      const current = getFallbackEmployees();
+      if (empData.nip && current.some(item => item.id !== id && item.nip === empData.nip)) {
+        return { success: false, error: 'nip_duplicate' };
+      }
+      const updated = current.map(item => item.id === id ? { ...item, ...empData, updatedAt: new Date().toISOString() } : item);
+      saveFallbackEmployees(updated);
+      notifyAll(updated);
+      return { success: true };
     }
   }, []);
 
@@ -90,7 +115,11 @@ export default function useEmployeeData() {
       await fetchEmployees();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackEmployees();
+      const updated = current.map(item => item.id === id ? { ...item, isActive: false, status: 'Inativo' } : item);
+      saveFallbackEmployees(updated);
+      notifyAll(updated);
+      return { success: true };
     }
   }, []);
 
@@ -100,7 +129,11 @@ export default function useEmployeeData() {
       await fetchEmployees();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackEmployees();
+      const updated = current.filter(item => item.id !== id);
+      saveFallbackEmployees(updated);
+      notifyAll(updated);
+      return { success: true };
     }
   }, []);
 
@@ -110,7 +143,11 @@ export default function useEmployeeData() {
       await fetchEmployees();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackEmployees();
+      const updated = current.map(item => item.id === id ? { ...item, isActive: true, status: 'Ativo' } : item);
+      saveFallbackEmployees(updated);
+      notifyAll(updated);
+      return { success: true };
     }
   }, []);
 
@@ -120,7 +157,16 @@ export default function useEmployeeData() {
       if (result.added > 0) await fetchEmployees();
       return { success: result.errors.length === 0, added: result.added, errors: result.errors };
     } catch (e) {
-      return { success: false, added: 0, errors: [e.message] };
+      const current = getFallbackEmployees();
+      const created = [];
+      for (const item of empArray) {
+        const id = item.id || _id();
+        created.push({ ...item, id, isActive: true, status: item.status || 'Ativo' });
+      }
+      const updated = [...created, ...current];
+      saveFallbackEmployees(updated);
+      notifyAll(updated);
+      return { success: true, added: created.length, errors: [] };
     }
   }, []);
 
@@ -130,7 +176,12 @@ export default function useEmployeeData() {
       await fetchEmployees();
       return true;
     } catch (e) {
-      console.error('[restoreEmployeeBackupData]', e);
+      const emps = payload.data?.employees || [];
+      if (emps.length > 0) {
+        saveFallbackEmployees(emps);
+        notifyAll(emps);
+        return true;
+      }
       return false;
     }
   }, []);

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getFallbackDisciplinary, saveFallbackDisciplinary } from '../services/storageFallback';
 
 let _cache = null;
 const _listeners = new Set();
@@ -25,14 +26,16 @@ async function fetchData() {
   try {
     const data = await api('GET', '/');
     notifyAll(data);
+    saveFallbackDisciplinary(data);
   } catch (e) {
-    console.error('[useDisciplinaryData] Erro ao carregar:', e);
-    if (!_cache) notifyAll([]);
+    console.warn('[useDisciplinaryData] API indisponível, a carregar dados locais...');
+    const fallback = getFallbackDisciplinary();
+    notifyAll(fallback);
   }
 }
 
 export default function useDisciplinaryData() {
-  const [processes, setLocalProcesses] = useState(_cache || []);
+  const [processes, setLocalProcesses] = useState(_cache || getFallbackDisciplinary());
 
   useEffect(() => {
     const listener = (data) => setLocalProcesses(data);
@@ -44,13 +47,18 @@ export default function useDisciplinaryData() {
   const generateId = () => 'proc_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 
   const addProcess = useCallback(async (processData) => {
+    const id = generateId();
     try {
-      const id = generateId();
       await api('POST', '/', { ...processData, id, isActive: true, createdAt: new Date().toISOString() });
       await fetchData();
       return { success: true, process: { ...processData, id } };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackDisciplinary();
+      const newP = { ...processData, id, isActive: true, createdAt: new Date().toISOString() };
+      const updated = [newP, ...current];
+      saveFallbackDisciplinary(updated);
+      notifyAll(updated);
+      return { success: true, process: newP };
     }
   }, []);
 
@@ -60,19 +68,25 @@ export default function useDisciplinaryData() {
       await fetchData();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackDisciplinary();
+      const updated = current.map(p => p.id === id ? { ...p, ...processData, updatedAt: new Date().toISOString() } : p);
+      saveFallbackDisciplinary(updated);
+      notifyAll(updated);
+      return { success: true };
     }
   }, []);
 
   const deleteProcess = useCallback(async (id) => {
     try {
-      // Soft delete -> just mark inactive if wanted, but original code had a hard delete too?
-      // Original code did: deleteProcess = (id) => filter(p !== id). We use hard delete.
       await api('DELETE', `/${id}`);
       await fetchData();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackDisciplinary();
+      const updated = current.filter(p => p.id !== id);
+      saveFallbackDisciplinary(updated);
+      notifyAll(updated);
+      return { success: true };
     }
   }, []);
 
@@ -85,7 +99,11 @@ export default function useDisciplinaryData() {
       await fetchData();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.message };
+      const current = getFallbackDisciplinary();
+      const updated = current.filter(p => p.employeeId !== employeeId);
+      saveFallbackDisciplinary(updated);
+      notifyAll(updated);
+      return { success: true };
     }
   }, [processes]);
 
@@ -102,6 +120,7 @@ export default function useDisciplinaryData() {
     addProcess,
     updateProcess,
     deleteProcess,
-    deleteProcessHistory
+    deleteProcessHistory,
+    refreshProcesses: fetchData
   };
 }
