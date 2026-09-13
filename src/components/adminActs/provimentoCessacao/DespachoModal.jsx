@@ -127,7 +127,13 @@ export default function DespachoModal({ act, onClose, onSaveDespacho, currentUse
             <button type="button" onClick={onClose} style={styles.cancelBtn} disabled={isSubmitting}>
               Cancelar
             </button>
-            <button type="submit" style={styles.submitBtn} disabled={isSubmitting}>
+            <button 
+              type="submit" 
+              style={styles.submitBtn} 
+              disabled={isSubmitting}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
+            >
               {isSubmitting ? 'A Processar...' : '📜 Gravar Despacho e Avançar para Aprovação'}
             </button>
           </div>
@@ -290,15 +296,16 @@ const styles = {
     cursor: 'pointer',
   },
   submitBtn: {
-    padding: '8px 18px',
+    padding: '9px 20px',
     borderRadius: '6px',
     border: 'none',
-    backgroundColor: '#1B365D',
+    backgroundColor: '#DC2626',
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: '13px',
     cursor: 'pointer',
-    boxShadow: '0 2px 4px rgba(27, 54, 93, 0.2)',
+    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)',
+    transition: 'all 0.2s ease',
   },
   resizeHandle: {
     position: 'absolute',

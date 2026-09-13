@@ -222,7 +222,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
 
       {/* ═══════════ CARTÕES DE MÉTRICAS ═══════════ */}
       <div style={styles.metricsGrid}>
-        <div style={{ ...styles.metricCard, borderLeft: '4px solid #1B365D' }}>
+        <div style={{ ...styles.metricCard, borderLeft: '4px solid #DC2626' }}>
           <span style={styles.metricLabel}>Total de Processos</span>
           <span style={styles.metricVal}>{stats.total}</span>
           <span style={styles.metricSub}>Registados no sistema</span>
@@ -267,8 +267,8 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
               onClick={() => setActiveTab(t.id)}
               style={{
                 ...styles.tabBtn,
-                borderBottom: activeTab === t.id ? '3px solid #1B365D' : '3px solid transparent',
-                color: activeTab === t.id ? '#1B365D' : '#64748B',
+                borderBottom: activeTab === t.id ? '3px solid #DC2626' : '3px solid transparent',
+                color: activeTab === t.id ? '#DC2626' : '#64748B',
                 fontWeight: activeTab === t.id ? '700' : '500',
               }}
             >

@@ -175,10 +175,10 @@ export default function ProvimentoCessacaoWizard({
                     onClick={() => setActType(t)}
                     style={{
                       ...styles.typeBtn,
-                      backgroundColor: actType === t ? '#1B365D' : '#F1F5F9',
+                      backgroundColor: actType === t ? '#DC2626' : '#F1F5F9',
                       color: actType === t ? '#FFFFFF' : '#334155',
                       fontWeight: actType === t ? '700' : '500',
-                      border: actType === t ? '1px solid #1B365D' : '1px solid #CBD5E1'
+                      border: actType === t ? '1px solid #DC2626' : '1px solid #CBD5E1'
                     }}
                   >
                     {t === 'Nomeação' ? '👔 Nomeação' : t === 'Cessação de Funções' ? '🛑 Cessação de Funções' : '🔄 Reintegração'}
@@ -228,7 +228,14 @@ export default function ProvimentoCessacaoWizard({
                             NUIT: {emp.nuit || '-'} • {emp.categoryName || 'Geral'} • {emp.role || 'Sem Cargo'}
                           </span>
                         </div>
-                        <button type="button" style={styles.selectEmpBtn}>Seleccionar</button>
+                        <button 
+                          type="button" 
+                          style={styles.selectEmpBtn}
+                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
+                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
+                        >
+                          Seleccionar
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -241,7 +248,7 @@ export default function ProvimentoCessacaoWizard({
                       <span style={{ fontSize: '12px', color: '#64748B', display: 'block' }}>
                         NUIT: {selectedEmployee.nuit || '-'} • Categoria: {selectedEmployee.categoryName || '-'}
                       </span>
-                      <span style={{ fontSize: '11px', color: '#1B365D', fontWeight: '600' }}>
+                      <span style={{ fontSize: '11px', color: '#DC2626', fontWeight: '600' }}>
                         Cargo Atual: {selectedEmployee.extra_data?.role || selectedEmployee.role || 'Sem Cargo de Liderança'}
                       </span>
                     </div>
@@ -408,7 +415,7 @@ export default function ProvimentoCessacaoWizard({
             {/* Inserção de Despacho (Exclusivo para Usuário Primário) */}
             {isPrimary && (
               <div style={styles.despachoFieldBox}>
-                <label style={{ ...styles.label, color: '#1B365D' }}>📜 Despacho da Direcção de Recursos Humanos (Opcional na Criação)</label>
+                <label style={{ ...styles.label, color: '#DC2626' }}>📜 Despacho da Direcção de Recursos Humanos (Opcional na Criação)</label>
                 <textarea
                   value={despacho}
                   onChange={e => setDespacho(e.target.value)}
@@ -425,7 +432,13 @@ export default function ProvimentoCessacaoWizard({
             <button type="button" onClick={onClose} style={styles.cancelBtn} disabled={isSubmitting}>
               Cancelar
             </button>
-            <button type="submit" style={styles.submitBtn} disabled={isSubmitting}>
+            <button 
+              type="submit" 
+              style={styles.submitBtn} 
+              disabled={isSubmitting}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
+            >
               {isSubmitting ? 'A Gravar...' : '🚀 Submeter Processo'}
             </button>
           </div>
@@ -626,14 +639,15 @@ const styles = {
     backgroundColor: '#FFFFFF',
   },
   selectEmpBtn: {
-    padding: '4px 10px',
-    backgroundColor: '#1B365D',
+    padding: '5px 12px',
+    backgroundColor: '#DC2626',
     color: '#FFFFFF',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '5px',
     fontSize: '11px',
-    fontWeight: '600',
+    fontWeight: '700',
     cursor: 'pointer',
+    transition: 'all 0.15s ease',
   },
   selectedEmpCard: {
     padding: '12px 14px',
@@ -644,8 +658,8 @@ const styles = {
   changeEmpBtn: {
     padding: '4px 10px',
     backgroundColor: '#FFFFFF',
-    color: '#1B365D',
-    border: '1px solid #CBD5E1',
+    color: '#DC2626',
+    border: '1px solid #FCA5A5',
     borderRadius: '6px',
     fontSize: '11px',
     fontWeight: '600',
@@ -680,15 +694,16 @@ const styles = {
     cursor: 'pointer',
   },
   submitBtn: {
-    padding: '8px 20px',
+    padding: '9px 22px',
     borderRadius: '6px',
     border: 'none',
-    backgroundColor: '#1B365D',
+    backgroundColor: '#DC2626',
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: '13px',
     cursor: 'pointer',
-    boxShadow: '0 2px 4px rgba(27, 54, 93, 0.2)',
+    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)',
+    transition: 'all 0.2s ease',
   },
   resizeHandle: {
     position: 'absolute',

@@ -144,7 +144,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
                 <span style={styles.fieldLabel}>
                   {act.actType === 'Nomeação' ? 'Novo Cargo / Função:' : act.actType === 'Cessação de Funções' ? 'Cargo Cessado:' : 'Função de Retorno:'}
                 </span>
-                <span style={{ ...styles.fieldVal, color: '#1B365D', fontWeight: '700' }}>
+                <span style={{ ...styles.fieldVal, color: '#DC2626', fontWeight: '700' }}>
                   {act.details?.newRole || act.details?.newCargo || act.details?.previousRole || '-'}
                 </span>
               </div>
@@ -164,7 +164,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
           </div>
 
           {/* Seção 3: Despacho da Direcção de Recursos Humanos */}
-          <div style={{ ...styles.sectionCard, borderLeft: '4px solid #1B365D' }}>
+          <div style={{ ...styles.sectionCard, borderLeft: '4px solid #DC2626' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
               <h4 style={{ ...styles.sectionTitle, margin: 0 }}>📜 Despacho da Direcção de Recursos Humanos</h4>
               {isPrimary && (!act.despacho || act.status === 'Pendente de Despacho') && (
@@ -198,7 +198,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
                   O processo só é finalizado após a aprovação individual e vinculativa dos 3 perfis centrais.
                 </p>
               </div>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: approvedCount === 3 ? '#059669' : '#1B365D' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: approvedCount === 3 ? '#059669' : '#DC2626' }}>
                 Progresso: {approvedCount} de 3 Aprovados
               </span>
             </div>
@@ -624,7 +624,7 @@ const styles = {
     width: '10px',
     height: '10px',
     borderRadius: '50%',
-    backgroundColor: '#1B365D',
+    backgroundColor: '#DC2626',
     border: '2px solid #FFFFFF',
   },
   timelineContent: {
@@ -652,7 +652,7 @@ const styles = {
     color: '#64748B',
   },
   actionBtnPrimary: {
-    backgroundColor: '#1B365D',
+    backgroundColor: '#DC2626',
     color: '#FFFFFF',
     border: 'none',
     padding: '6px 12px',
