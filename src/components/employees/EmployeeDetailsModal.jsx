@@ -243,9 +243,9 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
               <div style={styles.infoRow}><span style={styles.label}>Situação:</span> <span style={styles.value}>{emp.employmentStatus || '-'}</span></div>
             </div>
 
-            {/* Avaliação de Desempenho (Novo Módulo) */}
+            {/* Gestão de Desempenho Individual (GDI) */}
             <div style={styles.card}>
-              <h4 style={styles.cardTitle}>Avaliação de Desempenho</h4>
+              <h4 style={styles.cardTitle}>Gestão de Desempenho Individual (GDI)</h4>
               {latestEval ? (
                 <>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>

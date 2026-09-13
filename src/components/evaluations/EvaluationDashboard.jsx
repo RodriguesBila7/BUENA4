@@ -82,26 +82,26 @@ export default function EvaluationDashboard({ user }) {
 
   return (
     <div style={styles.container}>
-      {/* Cards de Indicadores Gerais */}
+      {/* Cards de Indicadores Gerais da GDI */}
       <div style={styles.gridCards}>
         <div style={styles.card}>
-          <div style={styles.cardTitle}>Total de Funcionários</div>
+          <div style={styles.cardTitle}>Total no Efetivo</div>
           <div style={styles.cardValue}>{stats.totalEmployees}</div>
         </div>
         <div style={styles.card}>
-          <div style={styles.cardTitle}>Avaliados em {currentYear}</div>
+          <div style={styles.cardTitle}>Fichas GDI ({currentYear})</div>
           <div style={{...styles.cardValue, color: 'var(--color-success)'}}>{stats.evaluatedCount}</div>
         </div>
         <div style={styles.card}>
-          <div style={styles.cardTitle}>Pendentes</div>
+          <div style={styles.cardTitle}>Pendentes no Ciclo</div>
           <div style={{...styles.cardValue, color: 'var(--color-warning)'}}>{stats.pendingCount}</div>
         </div>
         <div style={styles.card}>
-          <div style={styles.cardTitle}>Progresso</div>
+          <div style={styles.cardTitle}>Adesão ao Ciclo Anual</div>
           <div style={styles.cardValue}>{stats.percentComplete}%</div>
         </div>
         <div style={styles.card}>
-          <div style={styles.cardTitle}>Média Geral ({currentYear})</div>
+          <div style={styles.cardTitle}>Média Global GDI ({currentYear})</div>
           <div style={{...styles.cardValue, color: 'var(--color-primary)'}}>{stats.averageScore} / 20</div>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function EvaluationDashboard({ user }) {
       <div style={styles.chartsGrid}>
         {/* Gráfico de Barras */}
         <div style={styles.chartCard}>
-          <h3 style={styles.chartTitle}>Distribuição das Classificações ({currentYear})</h3>
+          <h3 style={styles.chartTitle}>Classificações Homologadas ({currentYear}) — Dec. 22/2018</h3>
           <div style={{ height: 300 }}>
             {stats.pieData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
