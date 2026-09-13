@@ -12,12 +12,10 @@
   /* Cores de Fundo e Texto do Modo Claro (invertidas: base ↔ card) */
   --color-bg-base: #FFFFFF;
   --color-bg-card: #F8FAFC;
-  --color-bg-subtle: #F1F5F9;
   --color-bg-sidebar: #1E293B; /* Sidebar sempre escura para contraste institucional */
   --color-sidebar-text: #F8FAFC;
   --color-sidebar-text-muted: #94A3B8;
   --color-text-base: #0F172A;
-  --color-text-main: #0F172A;
   --color-text-muted: #475569;
   --color-text-light: #64748B;
   --color-border: #E2E8F0;
@@ -40,92 +38,18 @@
   --radius-lg: 16px;
 }
 
-/* Modo Escuro - Reestruturado: Mais Claro, Nobre, Suave e Visualmente Agradável */
+/* Modo Escuro (Aplicado ao body ou html via classe ou data-attribute) */
 [data-theme="dark"] {
-  /* Fundo e Superfícies Elevadas (Tons Grafite Suaves - Muito mais claros que o preto antigo) */
-  --color-bg-base: #1C2433;      /* Fundo geral da aplicação: ardósia suave, sem preto pesado */
-  --color-bg-card: #243044;      /* Cards e superfícies: tom elevado, acolhedor e nítido */
-  --color-bg-subtle: #2A3850;    /* Pequenos blocos e badges neutros */
-  --color-bg-sidebar: #1A2130;   /* Sidebar elegante e integrada */
-  --color-sidebar-text: #F8FAFC;
-  --color-sidebar-text-muted: #A4B5CD;
-
-  /* Tipografia Clara de Altíssima Legibilidade */
-  --color-text-base: #F8FAFC;    /* Texto principal: branco pérola nítido */
-  --color-text-main: #F8FAFC;    /* Suporte a componentes que usam text-main */
-  --color-text-muted: #A8B7CD;   /* Texto secundário: prata-azulado límpido e agradável */
-  --color-text-light: #CBD5E1;   /* Rótulos e legendas bem visíveis */
-
-  /* Bordas Suaves e Bem Delimitadas */
-  --color-border: #3A4A66;       /* Bordas que separam suavemente os elementos */
-  --color-border-hover: #506488; /* Realce ao passar o cursor */
-
-  /* Sombras Naturais e Refinadas */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.35);
-  --shadow-glow: 0 0 25px rgba(79, 141, 247, 0.2);
-
-  /* Cor Institucional Primária LUMINOSA (Safira Nobre de Alta Visibilidade) */
-  --color-primary: #4F8DF7;
-  --color-secondary: #3A4A66;
-  --color-accent: #FFFFFF;
-
-  /* Alertas no Modo Escuro */
-  --color-success: #34D399;
-  --color-warning: #FBBF24;
-  --color-danger: #F87171;
-  --color-info: #60A5FA;
-}
-
-/* Formulários e Entradas no Modo Escuro */
-[data-theme="dark"] input,
-[data-theme="dark"] select,
-[data-theme="dark"] textarea {
-  background-color: #1C2433 !important;
-  color: #F8FAFC !important;
-  border-color: #3A4A66 !important;
-}
-
-[data-theme="dark"] input:focus,
-[data-theme="dark"] select:focus,
-[data-theme="dark"] textarea:focus {
-  border-color: #4F8DF7 !important;
-  box-shadow: 0 0 0 3px rgba(79, 141, 247, 0.25) !important;
-  outline: none;
-}
-
-[data-theme="dark"] input::placeholder,
-[data-theme="dark"] textarea::placeholder {
-  color: #8294AD !important;
-}
-
-[data-theme="dark"] select option {
-  background-color: #243044;
-  color: #F8FAFC;
-}
-
-/* Tabelas no Modo Escuro */
-[data-theme="dark"] .premium-table {
-  background-color: #202B3C;
-  border-color: #3A4A66;
-}
-
-[data-theme="dark"] .premium-table thead,
-[data-theme="dark"] .premium-table th {
-  background-color: #29374E !important;
-  color: #CBD5E1 !important;
-  border-bottom-color: #3A4A66 !important;
-}
-
-[data-theme="dark"] .premium-table td {
-  color: #F8FAFC;
-  border-bottom-color: #2C384D;
-}
-
-[data-theme="dark"] .premium-table tbody tr:hover,
-[data-theme="dark"] tr:hover td {
-  background-color: #2D3D56 !important;
+  --color-bg-base: #1E293B;
+  --color-bg-card: #0F172A;
+  --color-text-base: #F8FAFC;
+  --color-text-muted: #94A3B8;
+  --color-text-light: #64748B;
+  --color-border: #334155;
+  --color-border-hover: #475569;
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.05);
 }
 
 /* Estilos Globais */

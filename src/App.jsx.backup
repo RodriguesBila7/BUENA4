@@ -41,17 +41,9 @@ export default function App() {
   // Aplicar cores e tema globalmente sempre que houver alteração
   useEffect(() => {
     // Injeção de variáveis CSS customizadas
-    if (settings.modo_tema === 'dark') {
-      const isDefaultDarkNavy = !settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D';
-      const primaryColor = isDefaultDarkNavy ? '#4F8DF7' : settings.cor_principal;
-      document.documentElement.style.setProperty('--color-primary', primaryColor);
-      document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria || '#3A4A66');
-      document.documentElement.style.setProperty('--color-accent', settings.cor_destaque || '#FFFFFF');
-    } else {
-      document.documentElement.style.setProperty('--color-primary', settings.cor_principal);
-      document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria);
-      document.documentElement.style.setProperty('--color-accent', settings.cor_destaque);
-    }
+    document.documentElement.style.setProperty('--color-primary', settings.cor_principal);
+    document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria);
+    document.documentElement.style.setProperty('--color-accent', settings.cor_destaque);
     
     // Injeção do modo de tema no html/root
     document.documentElement.setAttribute('data-theme', settings.modo_tema);
