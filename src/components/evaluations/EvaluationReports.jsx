@@ -31,12 +31,11 @@ export default function EvaluationReports({ user }) {
       'Ano': ev?.year || '-',
       'NUIT': ev?.employeeNip || '-',
       'Nome': ev?.employeeName || '-',
-      'Objectivos (ODIs)': Array.isArray(ev?.objectives) ? ev.objectives.length : 'Padronizado',
       'Pontuação': ev?.score ?? '-',
       'Classificação': getClassification(ev?.score)?.label || 'Não Avaliado',
       'Avaliador': ev?.evaluatorName || '-',
-      'Data Avaliação': ev?.evaluationDate || '-',
-      'Despacho': ev?.dispatchNumber || '-'
+      'Data': ev?.evaluationDate || '-',
+      'Estado': ev?.status || '-'
     }));
 
     if (data.length === 0) {
@@ -46,9 +45,9 @@ export default function EvaluationReports({ user }) {
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "GDI_Desempenho");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Avaliacoes");
     const dateStr = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
-    XLSX.writeFile(workbook, `Relatorio_GDI_${dateStr}.xlsx`);
+    XLSX.writeFile(workbook, `Relatorio_Avaliacao_${dateStr}.xlsx`);
   };
 
   const exportPDF = () => {
@@ -61,17 +60,16 @@ export default function EvaluationReports({ user }) {
     const doc = new jsPDF('landscape');
     
     doc.setFontSize(16);
-    doc.text('Relatório Geral de Gestão de Desempenho Individual (GDI)', 14, 15);
+    doc.text('Relatório Geral de Avaliação de Desempenho', 14, 15);
     doc.setFontSize(10);
-    doc.text(`Ano de Referência: ${filterYear || 'Todos'} | Filtro Classificação: ${filterClass || 'Todos'} (Decreto n.º 22/2018)`, 14, 22);
+    doc.text(`Ano de Referência: ${filterYear || 'Todos'} | Filtro Classificação: ${filterClass || 'Todos'}`, 14, 22);
     doc.text(`Total Registos: ${data.length} | Data Exportação: ${new Date().toLocaleDateString()}`, 14, 28);
 
-    const tableColumn = ["Ano", "NUIT", "Nome do Funcionário", "ODIs", "Pontuação", "Classificação Final", "Avaliador", "Data"];
+    const tableColumn = ["Ano", "NUIT", "Nome", "Pontuação", "Classificação", "Avaliador", "Data"];
     const tableRows = data.map(ev => [
       ev?.year || '-',
       ev?.employeeNip || '-',
       ev?.employeeName || '-',
-      Array.isArray(ev?.objectives) ? `${ev.objectives.length} ODIs` : '1',
       `${ev?.score ?? '-'}v`,
       getClassification(ev?.score)?.label || 'Não Avaliado',
       ev?.evaluatorName || '-',
@@ -87,12 +85,12 @@ export default function EvaluationReports({ user }) {
     });
 
     const dateStr = new Date().toLocaleDateString('pt-PT').replace(/\//g, '-');
-    doc.save(`Relatorio_GDI_${dateStr}.pdf`);
+    doc.save(`Relatorio_Avaliacao_${dateStr}.pdf`);
   };
 
   return (
     <div style={styles.container}>
-      <h3 style={styles.title}>Centro de Relatórios — Gestão de Desempenho Individual (GDI)</h3>
+      <h3 style={styles.title}>Centro de Relatórios de Desempenho</h3>
       
       <div style={styles.card}>
         <div style={styles.filters}>

@@ -748,13 +748,13 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             Efetividade
           </button>
 
-          {/* Menu Gestão de Desempenho Individual */}
+          {/* Menu Avaliação Desempenho */}
           <button 
             onClick={() => handleTabChange('evaluations')}
             style={getNavItemStyle(activeTab === 'evaluations')}
           >
             <svg style={{ ...styles.navIcon, color: activeTab === 'evaluations' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6M6 20V10M18 20V4" /><circle cx="12" cy="10" r="2" /><circle cx="6" cy="6" r="2" /><circle cx="18" cy="16" r="2" /></svg>
-            Gestão de Desempenho Individual
+            Avaliação Desempenho
           </button>
 
 

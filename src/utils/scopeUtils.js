@@ -127,7 +127,6 @@ export const PROVINCIAL_DEFAULT_MODULES = [
   'Contencioso Laboral',
   'Processos Disciplinares',
   'Efetividade (Faltas)',
-  'Gestão de Desempenho Individual',
   'Avaliação de Desempenho',
   'Férias e Licenças',
   'Saúde e Óbitos',

@@ -3,7 +3,7 @@ import useAuthData from '../../hooks/useAuthData';
 
 const MODULES = [
   'Dashboard', 'Funcionários', 'Estrutura Organizacional', 'Contencioso Laboral',
-  'Efetividade (Faltas)', 'Gestão de Desempenho Individual', 'Promoção e Progressão',
+  'Efetividade (Faltas)', 'Avaliação de Desempenho', 'Promoção e Progressão',
   'Férias e Licenças', 'Mudança de Carreira', 'Provimento e Cessação',
   'Reserva e Reforma', 'Saúde e Óbitos', 'Transferências e Mobilidade',
   'Carreiras', 'Categorias Funcionais', 'Relatórios e Impressão', 'Configurações',
@@ -48,9 +48,7 @@ export default function ModulePermissions() {
           const matchingRoles = (roles || []).filter(r => {
             const perms = r.permissions || {};
             if (perms.all === true) return true;
-            const modPerms = perms[mod] || 
-              (mod === 'Contencioso Laboral' ? perms['Processos Disciplinares'] : null) ||
-              (mod === 'Gestão de Desempenho Individual' ? (perms['Avaliação de Desempenho'] || perms['Avaliacao de Desempenho']) : null);
+            const modPerms = perms[mod] || (mod === 'Contencioso Laboral' ? perms['Processos Disciplinares'] : null);
             return Array.isArray(modPerms) ? modPerms.length > 0 : Boolean(modPerms);
           });
 
@@ -60,9 +58,7 @@ export default function ModulePermissions() {
               <ul style={styles.roleList}>
                 {matchingRoles.map(r => {
                   const perms = r.permissions || {};
-                  const modPerms = perms[mod] || 
-                    (mod === 'Contencioso Laboral' ? perms['Processos Disciplinares'] : []) || 
-                    (mod === 'Gestão de Desempenho Individual' ? (perms['Avaliação de Desempenho'] || perms['Avaliacao de Desempenho'] || []) : []) || [];
+                  const modPerms = perms[mod] || (mod === 'Contencioso Laboral' ? perms['Processos Disciplinares'] : []) || [];
                   const isFull = perms.all === true || (Array.isArray(modPerms) && modPerms.length >= 9);
                   const summaryText = isFull 
                     ? 'Acesso Total' 
