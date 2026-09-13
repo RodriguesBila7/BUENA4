@@ -517,12 +517,36 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const [showSaveMessage, setShowSaveMessage] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langMenuRef = React.useRef(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = React.useRef(null);
+  const fileInputRef = React.useRef(null);
+
+  // Foto de perfil persistida no localStorage ou vinda do utilizador
+  const [profilePhoto, setProfilePhoto] = useState(() => {
+    return localStorage.getItem('sernic_user_photo_' + (user?.username || 'admin')) || user?.photo || null;
+  });
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      setProfilePhoto(base64);
+      localStorage.setItem('sernic_user_photo_' + (user?.username || 'admin'), base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', action: null, isDestructive: false });
 
   React.useEffect(() => {
     const handleClickOutside = (event) => {
       if (langMenuRef.current && !langMenuRef.current.contains(event.target)) {
         setShowLangMenu(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -549,6 +573,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
 
   const isSuperAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(user.roleId || user.role) || user.username === 'admin';
+  const userDisplayName = user?.name || (user?.username ? user.username.toUpperCase() : 'ADMINISTRADOR');
+  const userRoleDisplay = isSuperAdmin 
+    ? 'Super Administrador Principal' 
+    : (user?.roleName || user?.role || 'Utilizador do Sistema');
+  const userDirectorateDisplay = userDirectorate?.name || 'Direcção Geral (DRH)';
 
   // Sincronizar form se as configurações centrais mudarem (ex: reset)
   React.useEffect(() => {
@@ -1051,13 +1080,28 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
         <div style={styles.sidebarFooter}>
           <div style={styles.sidebarUser}>
-            <div style={styles.userBadge}>
-              {user.username.charAt(0)}
-            </div>
+            {profilePhoto ? (
+              <img 
+                src={profilePhoto} 
+                alt="Avatar" 
+                style={{ 
+                  width: '38px', 
+                  height: '38px', 
+                  borderRadius: '50%', 
+                  objectFit: 'cover', 
+                  border: '2px solid rgba(255,255,255,0.2)',
+                  flexShrink: 0
+                }} 
+              />
+            ) : (
+              <div style={styles.userBadge}>
+                {user.username.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div style={styles.userInfo}>
-              <div style={styles.username}>{user.username}</div>
+              <div style={styles.username}>{userDisplayName}</div>
               <div style={styles.userRole}>
-                {user.roleName || (user.role === 'super_admin' ? t('role_super_admin') : t('role_user'))}
+                {userRoleDisplay}
               </div>
             </div>
           </div>
@@ -1234,11 +1278,353 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
               </span>
             </button>
 
-            <div style={styles.headerUserTag}>
-              <span style={styles.roleDot(isSuperAdmin)}></span>
-              <span style={styles.headerUserRole}>
-                {isSuperAdmin ? 'SUPER ADMIN' : 'USER'}
-              </span>
+            {/* Perfil do Administrador Moderno e Sofisticado */}
+            <div style={{ position: 'relative' }} ref={profileMenuRef}>
+              <button
+                type="button"
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  backgroundColor: 'var(--color-bg-base)',
+                  padding: '4px 14px 4px 6px',
+                  borderRadius: '30px',
+                  border: showProfileMenu ? '1.5px solid var(--color-primary, #1B365D)' : '1px solid var(--color-border)',
+                  boxShadow: showProfileMenu 
+                    ? '0 0 0 3px rgba(27, 54, 93, 0.12), 0 4px 12px rgba(0,0,0,0.06)' 
+                    : '0 2px 6px rgba(0,0,0,0.03)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  outline: 'none',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--color-primary, #1B365D)';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!showProfileMenu) {
+                    e.currentTarget.style.borderColor = 'var(--color-border)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.03)';
+                  }
+                }}
+                title="Perfil do Utilizador"
+              >
+                {/* Foto / Avatar com Status Indicator */}
+                <div style={{ position: 'relative', width: '36px', height: '36px', flexShrink: 0 }}>
+                  {profilePhoto ? (
+                    <img 
+                      src={profilePhoto} 
+                      alt="Foto de Perfil" 
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '2px solid var(--color-primary, #1B365D)',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                      }} 
+                    />
+                  ) : (
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: isSuperAdmin 
+                        ? 'linear-gradient(135deg, #1B365D 0%, #2563eb 100%)' 
+                        : 'linear-gradient(135deg, #374151 0%, #4b5563 100%)',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: '800',
+                      fontSize: '14px',
+                      letterSpacing: '0.5px',
+                      boxShadow: '0 2px 5px rgba(27, 54, 93, 0.25)',
+                      border: '1.5px solid rgba(255,255,255,0.7)'
+                    }}>
+                      {userDisplayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
+                  {/* Indicador Activo com Brilho Suave */}
+                  <span style={{
+                    position: 'absolute',
+                    bottom: '-1px',
+                    right: '-1px',
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    backgroundColor: '#10B981',
+                    border: '2px solid var(--color-bg-base, #ffffff)',
+                    boxShadow: '0 0 6px rgba(16, 185, 129, 0.8)'
+                  }}></span>
+                </div>
+
+                {/* Nome e Cargo / Função */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: '1.2' }}>
+                  <div style={{ 
+                    fontSize: '12.5px', 
+                    fontWeight: '700', 
+                    color: 'var(--color-text-base)', 
+                    maxWidth: '160px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {userDisplayName}
+                  </div>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '5px', 
+                    marginTop: '2px'
+                  }}>
+                    <span style={{
+                      fontSize: '9px',
+                      padding: '1px 6px',
+                      borderRadius: '10px',
+                      backgroundColor: isSuperAdmin ? 'rgba(16, 185, 129, 0.12)' : 'rgba(27, 54, 93, 0.08)',
+                      color: isSuperAdmin ? '#047857' : 'var(--color-primary, #1B365D)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.4px',
+                      fontWeight: '800'
+                    }}>
+                      {isSuperAdmin ? 'SUPER ADMIN' : 'USER'}
+                    </span>
+                    <span style={{
+                      color: 'var(--color-text-muted)',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      maxWidth: '140px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {userRoleDisplay}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Seta / Chevron */}
+                <svg 
+                  width="13" 
+                  height="13" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  style={{
+                    color: 'var(--color-text-muted)',
+                    transition: 'transform 0.2s ease',
+                    transform: showProfileMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+                    marginLeft: '4px'
+                  }}
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+
+              {/* Menu Dropdown Sofisticado */}
+              {showProfileMenu && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: '0',
+                  width: '290px',
+                  backgroundColor: 'var(--color-bg-card)',
+                  borderRadius: '16px',
+                  padding: '18px',
+                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0,0,0,0.06)',
+                  border: '1px solid var(--color-border)',
+                  zIndex: 1000,
+                  backdropFilter: 'blur(10px)',
+                  animation: 'fadeIn 0.2s ease-out'
+                }}>
+                  {/* Cabeçalho do Perfil com Avatar Grande e Troca de Foto */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid var(--color-border)' }}>
+                    <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
+                      {profilePhoto ? (
+                        <img 
+                          src={profilePhoto} 
+                          alt="Foto" 
+                          style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-primary, #1B365D)' }} 
+                        />
+                      ) : (
+                        <div style={{
+                          width: '52px',
+                          height: '52px',
+                          borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #1B365D 0%, #2563eb 100%)',
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: '800',
+                          fontSize: '20px'
+                        }}>
+                          {userDisplayName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      {/* Botão de Upload com Ícone de Câmara */}
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Carregar nova foto"
+                        style={{
+                          position: 'absolute',
+                          bottom: '-2px',
+                          right: '-2px',
+                          width: '22px',
+                          height: '22px',
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--color-primary, #1B365D)',
+                          color: '#ffffff',
+                          border: '2px solid var(--color-bg-card)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
+                      <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-text-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {userDisplayName}
+                      </span>
+                      <span style={{ fontSize: '11.5px', fontWeight: '600', color: isSuperAdmin ? '#059669' : 'var(--color-primary, #1B365D)', marginTop: '2px' }}>
+                        {userRoleDisplay}
+                      </span>
+                      <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                        {userDirectorateDisplay}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Input invisível para carregar foto */}
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handlePhotoUpload} 
+                    accept="image/*" 
+                    style={{ display: 'none' }} 
+                  />
+
+                  {/* Detalhes Institucionais */}
+                  <div style={{ backgroundColor: 'var(--color-bg-base)', borderRadius: '10px', padding: '10px 12px', marginBottom: '14px', fontSize: '11.5px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--color-text-muted)' }}>Utilizador / NUIT:</span>
+                      <span style={{ fontWeight: '600', color: 'var(--color-text-base)' }}>{user?.username || 'admin'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--color-text-muted)' }}>Sessão de Acesso:</span>
+                      <span style={{ fontWeight: '600', color: '#10B981', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
+                        Protegida & Activa
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Ações */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: 'transparent',
+                        color: 'var(--color-text-base)',
+                        fontSize: '12.5px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background-color 0.15s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                      {profilePhoto ? 'Alterar Foto de Perfil' : 'Adicionar Foto de Perfil'}
+                    </button>
+
+                    {isSuperAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          handleTabChange('settings_roles');
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          width: '100%',
+                          padding: '9px 12px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          backgroundColor: 'transparent',
+                          color: 'var(--color-text-base)',
+                          fontSize: '12.5px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'background-color 0.15s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        Gestão de Acessos e Perfis
+                      </button>
+                    )}
+
+                    <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '4px 0' }}></div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        onLogout();
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                        color: '#EF4444',
+                        fontSize: '12.5px',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background-color 0.15s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.15)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)'}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                      {t('menu_logout')}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
