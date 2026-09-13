@@ -14,8 +14,8 @@ export default function EvaluationManager({ user }) {
   const perms = user?.permissions || user?.roleDetails?.permissions || {};
   const isSuperAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(user?.roleId || user?.role) || user?.username === 'admin' || perms.all === true;
   
-  // Obter permissões do módulo de avaliação
-  const evalPerms = perms['Avaliação de Desempenho'] || perms['Avaliacao de Desempenho'] || (isSuperAdmin ? ['Visualizar', 'Criar', 'Editar', 'Eliminar', 'Validar', 'Exportar', 'Importar', 'Imprimir', 'Administrar'] : ['Visualizar']);
+  // Obter permissões do módulo de Gestão de Desempenho Individual (com suporte retroativo)
+  const evalPerms = perms['Gestão de Desempenho Individual'] || perms['Gestao de Desempenho Individual'] || perms['Avaliação de Desempenho'] || perms['Avaliacao de Desempenho'] || (isSuperAdmin ? ['Visualizar', 'Criar', 'Editar', 'Eliminar', 'Validar', 'Exportar', 'Importar', 'Imprimir', 'Administrar'] : ['Visualizar']);
   const canCreate = isSuperAdmin || evalPerms.includes('Criar');
   const canAdmin = isSuperAdmin || evalPerms.includes('Administrar') || evalPerms.includes('Editar');
 
@@ -23,8 +23,8 @@ export default function EvaluationManager({ user }) {
     <div style={styles.container}>
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>Avaliação de Desempenho</h2>
-          <p style={styles.subtitle}>Gestão de Avaliações Anuais e Histórico (Decreto n.º 22/2018)</p>
+          <h2 style={styles.title}>Gestão de Desempenho Individual</h2>
+          <p style={styles.subtitle}>Gestão de Desempenho Individual e Histórico (Decreto n.º 22/2018)</p>
         </div>
       </div>
 
