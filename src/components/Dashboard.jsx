@@ -1662,7 +1662,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
           {/* TAB SEGURANÇA E ACESSOS */}
           {['users_manage', 'users_roles', 'users_permissions', 'users_policies', 'users_audit'].includes(activeTab) && (
-            <div className="animate-fade-in" style={{...styles.tabContainer, maxWidth: '1180px', padding: 0}}>
+            <div className="animate-fade-in" style={{...styles.tabContainer, maxWidth: '1400px', padding: 0}}>
               <PermissionGuard module="Acessos" action="Visualizar" fallback={<div style={{padding: '20px', color: 'red'}}>Acesso não autorizado.</div>}>
                 <AccessManager currentView={activeTab} onViewChange={handleTabChange} />
               </PermissionGuard>

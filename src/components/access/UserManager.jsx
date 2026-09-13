@@ -14,9 +14,9 @@ const styles = {
   btnPrimary: { backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', display: 'inline-flex', alignItems: 'center', gap: '6px' },
   btnAction: { backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)', padding: '5px 10px', borderRadius: '6px', cursor: 'pointer', color: 'var(--color-text-main)', fontSize: '12px', transition: 'all 0.15s ease' },
   tableWrapper: { width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: '10px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)', marginBottom: '16px' },
-  table: { width: '100%', minWidth: '920px', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' },
-  th: { padding: '11px 14px', textAlign: 'left', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', fontWeight: '600', fontSize: '11.5px', letterSpacing: '0.03em', textTransform: 'uppercase', whiteSpace: 'nowrap', backgroundColor: 'var(--color-bg-card)' },
-  td: { padding: '11px 14px', borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-main)', verticalAlign: 'middle' }
+  table: { width: '100%', minWidth: '1080px', borderCollapse: 'separate', borderSpacing: 0, fontSize: '13px' },
+  th: { padding: '12px 16px', textAlign: 'left', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', fontWeight: '600', fontSize: '11.5px', letterSpacing: '0.03em', textTransform: 'uppercase', whiteSpace: 'nowrap', backgroundColor: 'var(--color-bg-card)' },
+  td: { padding: '12px 16px', borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-main)', verticalAlign: 'middle' }
 };
 
 export default function UserManager() {
@@ -164,11 +164,11 @@ export default function UserManager() {
         <table className="premium-table" style={styles.table}>
           <thead>
             <tr>
-              <th style={{ ...styles.th, width: '26%' }}>Utilizador (Identificação & NUIT)</th>
-              <th style={{ ...styles.th, width: '22%' }}>Contactos</th>
-              <th style={{ ...styles.th, width: '27%' }}>Perfil & Delegação</th>
-              <th style={{ ...styles.th, width: '10%', textAlign: 'center' }}>Estado</th>
-              <th style={{ ...styles.th, width: '15%', textAlign: 'right' }}>Ações</th>
+              <th style={{ ...styles.th, width: '26%', minWidth: '250px' }}>Utilizador (Identificação & NUIT)</th>
+              <th style={{ ...styles.th, width: '21%', minWidth: '190px' }}>Contactos</th>
+              <th style={{ ...styles.th, width: '28%', minWidth: '270px' }}>Perfil & Delegação</th>
+              <th style={{ ...styles.th, width: '10%', minWidth: '100px', textAlign: 'center' }}>Estado</th>
+              <th style={{ ...styles.th, width: '15%', minWidth: '180px', textAlign: 'right' }}>Ações</th>
             </tr>
           </thead>
           <tbody>
