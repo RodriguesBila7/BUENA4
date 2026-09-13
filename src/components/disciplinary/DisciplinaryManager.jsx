@@ -9,8 +9,8 @@ export default function DisciplinaryManager({ orgData, employeesData, user, onNa
     <div style={styles.container}>
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>Processos Disciplinares</h2>
-          <p style={styles.desc}>Gestão, tramitação de despachos e execução de sanções disciplinares.</p>
+          <h2 style={styles.title}>Contencioso Laboral</h2>
+          <p style={styles.desc}>Gestão de contencioso laboral, tramitação de despachos e execução de sanções disciplinares.</p>
         </div>
       </div>
 

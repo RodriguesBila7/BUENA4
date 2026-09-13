@@ -4,7 +4,7 @@ const MODULES = [
   'Dashboard',
   'Funcionários',
   'Estrutura Organizacional',
-  'Processos Disciplinares',
+  'Contencioso Laboral',
   'Efetividade (Faltas)',
   'Avaliação de Desempenho',
   'Promoção e Progressão',
@@ -182,7 +182,7 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
                 // Se for um perfil provincial (Administrador ou Usuário), predefinir a matriz com os 10 módulos autorizados do SERNIC
                 let newPerms = { ...role.permissions };
                 if (val === 'Administrador' || val === 'Usuário') {
-                  const ALLOWED = ['Dashboard', 'Funcionários', 'Processos Disciplinares', 'Efetividade (Faltas)', 'Avaliação de Desempenho', 'Férias e Licenças', 'Saúde e Óbitos', 'Transferências e Mobilidade', 'Relatórios e Impressão', 'Configurações'];
+                  const ALLOWED = ['Dashboard', 'Funcionários', 'Contencioso Laboral', 'Processos Disciplinares', 'Efetividade (Faltas)', 'Avaliação de Desempenho', 'Férias e Licenças', 'Saúde e Óbitos', 'Transferências e Mobilidade', 'Relatórios e Impressão', 'Configurações'];
                   MODULES.forEach(m => {
                     newPerms[m] = ALLOWED.includes(m) ? [...ACTIONS] : [];
                   });

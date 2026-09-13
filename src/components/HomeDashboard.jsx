@@ -337,7 +337,7 @@ export default function HomeDashboard({ t, onTabChange }) {
         </div>
 
         <div style={styles.kpiCard}>
-          <h3 style={styles.kpiTitle}>Processos Disciplinares</h3>
+          <h3 style={styles.kpiTitle}>Contencioso Laboral</h3>
           <div style={styles.kpiTotal}>{sysStats.disciplinary.total}</div>
           <div style={styles.kpiDetails}>
             <span style={styles.kpiInactive}>● {sysStats.disciplinary.active} Em Curso</span>

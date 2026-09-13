@@ -499,7 +499,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
         }}>
           <span>📍</span>
           <span>
-            <strong>Gestão Provincial de Processos Disciplinares:</strong> Acesso restrito aos efectivos sob gerência da sua Província. Conclusão formal requer homologação do Despacho Final.
+            <strong>Gestão Provincial de Contencioso Laboral:</strong> Acesso restrito aos efectivos sob gerência da sua Província. Conclusão formal requer homologação do Despacho Final.
           </span>
         </div>
       )}

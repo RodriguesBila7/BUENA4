@@ -124,6 +124,7 @@ export function formatProvincialRoleName(roleName, directorateId, orgData) {
 export const PROVINCIAL_DEFAULT_MODULES = [
   'Dashboard',
   'Funcionários',
+  'Contencioso Laboral',
   'Processos Disciplinares',
   'Efetividade (Faltas)',
   'Avaliação de Desempenho',

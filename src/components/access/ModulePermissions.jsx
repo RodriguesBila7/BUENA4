@@ -2,7 +2,7 @@ import React from 'react';
 import useAuthData from '../../hooks/useAuthData';
 
 const MODULES = [
-  'Dashboard', 'Funcionários', 'Estrutura Organizacional', 'Processos Disciplinares',
+  'Dashboard', 'Funcionários', 'Estrutura Organizacional', 'Contencioso Laboral',
   'Efetividade (Faltas)', 'Avaliação de Desempenho', 'Promoção e Progressão',
   'Férias e Licenças', 'Mudança de Carreira', 'Provimento e Cessação',
   'Reserva e Reforma', 'Saúde e Óbitos', 'Transferências e Mobilidade',
@@ -48,7 +48,7 @@ export default function ModulePermissions() {
           const matchingRoles = (roles || []).filter(r => {
             const perms = r.permissions || {};
             if (perms.all === true) return true;
-            const modPerms = perms[mod];
+            const modPerms = perms[mod] || (mod === 'Contencioso Laboral' ? perms['Processos Disciplinares'] : null);
             return Array.isArray(modPerms) ? modPerms.length > 0 : Boolean(modPerms);
           });
 
@@ -58,7 +58,7 @@ export default function ModulePermissions() {
               <ul style={styles.roleList}>
                 {matchingRoles.map(r => {
                   const perms = r.permissions || {};
-                  const modPerms = perms[mod] || [];
+                  const modPerms = perms[mod] || (mod === 'Contencioso Laboral' ? perms['Processos Disciplinares'] : []) || [];
                   const isFull = perms.all === true || (Array.isArray(modPerms) && modPerms.length >= 9);
                   const summaryText = isFull 
                     ? 'Acesso Total' 

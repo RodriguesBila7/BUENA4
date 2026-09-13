@@ -382,7 +382,7 @@ function OverviewTab({ stats, backups, onRestore, onRefresh }) {
           ) : <p style={styles.emptyNote}>Sem dados</p>}
         </ModuleCard>
 
-        <ModuleCard title="Processos Disciplinares" color="#ef4444">
+        <ModuleCard title="Contencioso Laboral" color="#ef4444">
           {stats.disciplinary ? (
             <StatRow label="Total de processos" value={stats.disciplinary.total} />
           ) : <p style={styles.emptyNote}>Sem dados</p>}
@@ -431,7 +431,7 @@ function FullBackupTab({ isGenerating, onDownload, onFileChange, stats }) {
       <div style={{ ...styles.actionsCard, borderLeft: '4px solid var(--color-primary)' }}>
         <h4 style={styles.cardTitle}>Backup Geral do Sistema</h4>
         <p style={styles.descText}>
-          Exporta <strong>todos os dados da aplicação</strong> (Estrutura Orgânica, Funcionários, Avaliações, Processos Disciplinares e Configurações do Sistema) num único ficheiro JSON.
+          Exporta <strong>todos os dados da aplicação</strong> (Estrutura Orgânica, Funcionários, Avaliações, Contencioso Laboral e Configurações do Sistema) num único ficheiro JSON.
         </p>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '16px' }}>
           <button onClick={onDownload} disabled={isGenerating} style={{ ...styles.bigBtn, opacity: isGenerating ? 0.7 : 1 }}>
@@ -454,7 +454,7 @@ function FullBackupTab({ isGenerating, onDownload, onFileChange, stats }) {
           {stats.org && <StatCard label="Direções" value={stats.org.directorates} />}
           {stats.employees && <StatCard label="Funcionários" value={stats.employees.total} />}
           {stats.evaluations && <StatCard label="Avaliações" value={stats.evaluations.total} />}
-          {stats.disciplinary && <StatCard label="Processos Disciplinares" value={stats.disciplinary.total} />}
+          {stats.disciplinary && <StatCard label="Contencioso Laboral" value={stats.disciplinary.total} />}
         </div>
       </div>
 

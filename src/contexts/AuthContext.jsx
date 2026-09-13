@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
             'Dashboard',
             'Funcionários',
             'Estrutura Organizacional',
+            'Contencioso Laboral',
             'Processos Disciplinares',
             'Efetividade (Faltas)',
             'Avaliação de Desempenho',
