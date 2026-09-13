@@ -1533,67 +1533,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     </div>
                   </div>
 
-                  {/* Ações */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        width: '100%',
-                        padding: '9px 12px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        backgroundColor: 'transparent',
-                        color: 'var(--color-text-base)',
-                        fontSize: '12.5px',
-                        fontWeight: '500',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'background-color 0.15s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-                      {profilePhoto ? 'Alterar Foto de Perfil' : 'Adicionar Foto de Perfil'}
-                    </button>
-
-                    {isSuperAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowProfileMenu(false);
-                          handleTabChange('settings_roles');
-                        }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          width: '100%',
-                          padding: '9px 12px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          backgroundColor: 'transparent',
-                          color: 'var(--color-text-base)',
-                          fontSize: '12.5px',
-                          fontWeight: '500',
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          transition: 'background-color 0.15s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.04)'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                        Gestão de Acessos e Perfis
-                      </button>
-                    )}
-
-                    <div style={{ height: '1px', backgroundColor: 'var(--color-border)', margin: '4px 0' }}></div>
-
+                  {/* Ação de Logout */}
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
                     <button
                       type="button"
                       onClick={() => {
@@ -1605,21 +1546,27 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                         alignItems: 'center',
                         gap: '10px',
                         width: '100%',
-                        padding: '9px 12px',
-                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        borderRadius: '10px',
                         border: 'none',
                         backgroundColor: 'rgba(239, 68, 68, 0.08)',
                         color: '#EF4444',
-                        fontSize: '12.5px',
+                        fontSize: '13px',
                         fontWeight: '600',
                         cursor: 'pointer',
                         textAlign: 'left',
-                        transition: 'background-color 0.15s'
+                        transition: 'all 0.15s ease'
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.15)'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)'}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
                     >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                       {t('menu_logout')}
                     </button>
                   </div>
