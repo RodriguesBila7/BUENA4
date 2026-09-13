@@ -23,18 +23,18 @@ export default function AdminActsManager({ activeTab, onTabChange, actTypesDb })
       const groupName = groupNameRaw.replace(/_/g, ' ');
       
       // Look up all act types for this group
-      const actsInGroup = (actTypesDb || [])
-        .filter(a => a.group_name === groupName && a.is_active)
+      let actsInGroup = (actTypesDb || [])
+        .filter(a => a.group_name === groupName && (a.is_active || a.isActive !== false))
         .map(a => a.act_name);
 
+      // Fallbacks standard acts if db is empty or loading
       if (actsInGroup.length === 0) {
-        return (
-          <GenericAdminActsList 
-            title={`Módulo de ${groupName}`} 
-            actTypes={[]} 
-            emptyMessage={`Nenhum acto registado para ${groupName}.`} 
-          />
-        );
+        if (groupName === 'Provimento e Cessação') actsInGroup = ['Nomeação', 'Recondução', 'Designação', 'Cessação de Funções', 'Exoneração', 'Reintegração'];
+        else if (groupName === 'Mudança de Carreira') actsInGroup = ['Mudança de Carreira'];
+        else if (groupName === 'Férias e Licenças') actsInGroup = ['Férias', 'Licença'];
+        else if (groupName === 'Reserva e Reforma') actsInGroup = ['Reserva', 'Reforma'];
+        else if (groupName === 'Transferências e Mobilidade') actsInGroup = ['Transferência', 'Destacamento', 'Reafectação', 'Comissão de Serviço'];
+        else if (groupName === 'Saúde e Óbitos') actsInGroup = ['Junta de Saúde', 'Óbito'];
       }
 
       // Special overrides for modules that have specific components

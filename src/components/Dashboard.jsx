@@ -786,8 +786,22 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                  {[
                    { id: 'admin_acts_dashboard', label: 'Dashboard Executivo', icon: <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path> },
                    ...(isPrimaryCentralAdmin(user) ? [{ id: 'career', label: 'Promoção e Progressão', icon: <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path> }] : []),
-                 ...Object.keys(actTypes.reduce((acc, act) => { if (act.is_active) acc[act.group_name] = true; return acc; }, {}))
-                   .filter(group => group !== 'Promoção e Progressão' && group !== 'Processos Disciplinares')
+                 ...Object.keys(
+                   (Array.isArray(actTypes) ? actTypes : []).reduce((acc, act) => {
+                     if ((act.is_active || act.isActive !== false) && act.group_name) {
+                       acc[act.group_name] = true;
+                     }
+                     return acc;
+                   }, {
+                     'Férias e Licenças': true,
+                     'Mudança de Carreira': true,
+                     'Provimento e Cessação': true,
+                     'Reserva e Reforma': true,
+                     'Saúde e Óbitos': true,
+                     'Transferências e Mobilidade': true
+                   })
+                 )
+                   .filter(group => group && group !== 'Promoção e Progressão' && group !== 'Processos Disciplinares')
                    .sort()
                    .map(group => ({
                    id: `admin_acts_dynamic_${group.replace(/\s+/g, '_')}`,

@@ -18159,129 +18159,179 @@
   ],
   "actTypes": [
     {
-      "id": "actt_kt2t0rn5d",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_00an7vcdg",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_krl15yamk",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_stxv27ctl",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_2nsrw47bd",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_qg5roeex2",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_esfaezojx",
-      "isActive": true,
-      "fields": []
+      "id": "actt_rs29bc4gj",
+      "group_name": "Férias e Licenças",
+      "act_name": "Férias",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
       "id": "actt_u37v66pil",
-      "isActive": true,
-      "fields": []
+      "group_name": "Férias e Licenças",
+      "act_name": "Licença",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
-      "id": "actt_rs29bc4gj",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_b8cvxpf2k",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_j3cbinn3t",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_940uzlfdq",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_y7q83cxar",
-      "isActive": true,
-      "fields": []
+      "id": "actt_krl15yamk",
+      "group_name": "Mudança de Carreira",
+      "act_name": "Mudança de Carreira",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
       "id": "actt_bl8mv8r1m",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_hwx1v9wmx",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_76p6z07p7",
-      "isActive": true,
-      "fields": []
-    },
-    {
-      "id": "actt_dinh6rjx3",
-      "isActive": true,
-      "fields": []
+      "group_name": "Processos Disciplinares",
+      "act_name": "Advertência",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
       "id": "actt_ma4eug1ei",
-      "isActive": true,
-      "fields": []
+      "group_name": "Processos Disciplinares",
+      "act_name": "Demissão",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
       "id": "actt_jyl49odls",
-      "isActive": true,
-      "fields": []
+      "group_name": "Processos Disciplinares",
+      "act_name": "Expulsão",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
-      "id": "actt_0ft8xcq0t",
-      "isActive": true,
-      "fields": []
+      "id": "actt_76p6z07p7",
+      "group_name": "Processos Disciplinares",
+      "act_name": "Multa",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
-      "id": "actt_icrw2zgy8",
-      "isActive": true,
-      "fields": []
+      "id": "actt_hwx1v9wmx",
+      "group_name": "Processos Disciplinares",
+      "act_name": "Repreensão",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
-      "id": "actt_1fvoqs1rt",
-      "isActive": true,
-      "fields": []
+      "id": "actt_dinh6rjx3",
+      "group_name": "Processos Disciplinares",
+      "act_name": "Suspensão",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_00an7vcdg",
+      "group_name": "Promoção e Progressão",
+      "act_name": "Progressão",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_kt2t0rn5d",
+      "group_name": "Promoção e Progressão",
+      "act_name": "Promoção",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
       "id": "actt_ji2hu3tny",
-      "isActive": true,
-      "fields": []
+      "group_name": "Provimento e Cessação",
+      "act_name": "Cessação de Funções",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_1fvoqs1rt",
+      "group_name": "Provimento e Cessação",
+      "act_name": "Designação",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
       "id": "actt_mg27zod3d",
-      "isActive": true,
-      "fields": []
+      "group_name": "Provimento e Cessação",
+      "act_name": "Exoneração",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_0ft8xcq0t",
+      "group_name": "Provimento e Cessação",
+      "act_name": "Nomeação",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_icrw2zgy8",
+      "group_name": "Provimento e Cessação",
+      "act_name": "Recondução",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     },
     {
       "id": "actt_3nt3a299o",
-      "isActive": true,
-      "fields": []
+      "group_name": "Provimento e Cessação",
+      "act_name": "Reintegração",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_y7q83cxar",
+      "group_name": "Reserva e Reforma",
+      "act_name": "Reforma",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_940uzlfdq",
+      "group_name": "Reserva e Reforma",
+      "act_name": "Reserva",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_b8cvxpf2k",
+      "group_name": "Saúde e Óbitos",
+      "act_name": "Junta de Saúde",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_j3cbinn3t",
+      "group_name": "Saúde e Óbitos",
+      "act_name": "Óbito",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_esfaezojx",
+      "group_name": "Transferências e Mobilidade",
+      "act_name": "Comissão de Serviço",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_2nsrw47bd",
+      "group_name": "Transferências e Mobilidade",
+      "act_name": "Destacamento",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_qg5roeex2",
+      "group_name": "Transferências e Mobilidade",
+      "act_name": "Reafectação",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
+    },
+    {
+      "id": "actt_stxv27ctl",
+      "group_name": "Transferências e Mobilidade",
+      "act_name": "Transferência",
+      "is_active": 1,
+      "created_at": "2026-07-15 20:46:06"
     }
   ],
   "adminActs": [

@@ -204,11 +204,43 @@ export function authenticateOffline(username, password) {
   return { success: false, error: 'Utilizador ou senha incorrectos.' };
 }
 
+export const DEFAULT_ACT_TYPES = [
+  { id: "actt_rs29bc4gj", group_name: "Férias e Licenças", act_name: "Férias", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_u37v66pil", group_name: "Férias e Licenças", act_name: "Licença", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_krl15yamk", group_name: "Mudança de Carreira", act_name: "Mudança de Carreira", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_bl8mv8r1m", group_name: "Processos Disciplinares", act_name: "Advertência", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_ma4eug1ei", group_name: "Processos Disciplinares", act_name: "Demissão", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_jyl49odls", group_name: "Processos Disciplinares", act_name: "Expulsão", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_76p6z07p7", group_name: "Processos Disciplinares", act_name: "Multa", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_hwx1v9wmx", group_name: "Processos Disciplinares", act_name: "Repreensão", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_dinh6rjx3", group_name: "Processos Disciplinares", act_name: "Suspensão", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_00an7vcdg", group_name: "Promoção e Progressão", act_name: "Progressão", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_kt2t0rn5d", group_name: "Promoção e Progressão", act_name: "Promoção", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_0ft8xcq0t", group_name: "Provimento e Cessação", act_name: "Nomeação", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_icrw2zgy8", group_name: "Provimento e Cessação", act_name: "Recondução", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_1fvoqs1rt", group_name: "Provimento e Cessação", act_name: "Designação", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_ji2hu3tny", group_name: "Provimento e Cessação", act_name: "Cessação de Funções", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_mg27zod3d", group_name: "Provimento e Cessação", act_name: "Exoneração", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_3nt3a299o", group_name: "Provimento e Cessação", act_name: "Reintegração", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_940uzlfdq", group_name: "Reserva e Reforma", act_name: "Reserva", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_y7q83cxar", group_name: "Reserva e Reforma", act_name: "Reforma", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_b8cvxpf2k", group_name: "Saúde e Óbitos", act_name: "Junta de Saúde", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_j3cbinn3t", group_name: "Saúde e Óbitos", act_name: "Óbito", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_2nsrw47bd", group_name: "Transferências e Mobilidade", act_name: "Destacamento", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_esfaezojx", group_name: "Transferências e Mobilidade", act_name: "Comissão de Serviço", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_qg5roeex2", group_name: "Transferências e Mobilidade", act_name: "Reafectação", is_active: 1, created_at: "2026-07-15 20:46:06" },
+  { id: "actt_stxv27ctl", group_name: "Transferências e Mobilidade", act_name: "Transferência", is_active: 1, created_at: "2026-07-15 20:46:06" }
+];
+
 // ─── ACT TYPES ──────────────────────────────────────────────────────────
 export function getFallbackActTypes() {
   const current = getStored(STORAGE_KEYS.ACT_TYPES, null);
-  if (current && Array.isArray(current)) return current;
-  const initial = initialData.actTypes || [];
+  if (current && Array.isArray(current) && current.length > 0 && current.some(a => a.group_name)) {
+    return current;
+  }
+  const initial = (initialData.actTypes && initialData.actTypes.length > 0 && initialData.actTypes.some(a => a.group_name))
+    ? initialData.actTypes
+    : DEFAULT_ACT_TYPES;
   setStored(STORAGE_KEYS.ACT_TYPES, initial);
   return initial;
 }
