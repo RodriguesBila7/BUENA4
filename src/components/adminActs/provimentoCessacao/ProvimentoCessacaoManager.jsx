@@ -209,7 +209,12 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
           <button onClick={handleExportExcel} style={styles.btnSecondary}>
             📊 Exportar Excel
           </button>
-          <button onClick={() => setWizardOpen(true)} style={styles.btnPrimary}>
+          <button 
+            onClick={() => setWizardOpen(true)} 
+            style={styles.btnPrimary}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
+          >
             + Novo Processo
           </button>
         </div>
@@ -610,14 +615,18 @@ const styles = {
   },
   btnPrimary: {
     padding: '9px 18px',
-    backgroundColor: '#1B365D',
+    backgroundColor: '#DC2626',
     color: '#FFFFFF',
     border: 'none',
     borderRadius: '8px',
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: '13px',
     cursor: 'pointer',
-    boxShadow: '0 2px 4px rgba(27, 54, 93, 0.25)',
+    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    transition: 'all 0.2s ease',
   },
   btnSecondary: {
     padding: '9px 16px',

@@ -506,7 +506,12 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
 
       {/* BARRA DE FERRAMENTAS */}
       <div style={styles.toolbar}>
-        <button onClick={() => handleOpenNew()} style={styles.btnAddProcess}>
+        <button 
+          onClick={() => handleOpenNew()} 
+          style={styles.btnAddProcess}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+        >
           <span style={{ fontSize: '16px', fontWeight: 'bold' }}>+</span> Novo Processo Disciplinar
         </button>
 
@@ -1295,8 +1300,8 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
 
 const styles = {
   toolbar: { display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' },
-  btnAddProcess: { padding: '10px 18px', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' },
-  btnQuickAdd: { padding: '4px 10px', backgroundColor: 'transparent', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' },
+  btnAddProcess: { padding: '10px 18px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)', transition: 'all 0.2s ease' },
+  btnQuickAdd: { padding: '4px 10px', backgroundColor: 'transparent', border: '1px solid #dc2626', color: '#dc2626', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' },
   searchInput: { flex: 1, minWidth: '240px', padding: '9px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px' },
   select: { padding: '9px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px' },
   btnExport: { padding: '9px 16px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
