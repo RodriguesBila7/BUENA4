@@ -3,9 +3,31 @@ import EffectivenessForm from './EffectivenessForm';
 import EffectivenessQuery from './EffectivenessQuery';
 import EffectivenessReports from './EffectivenessReports';
 import EffectivenessStats from './EffectivenessStats';
+import useEffectivenessData from '../../hooks/useEffectivenessData';
+import useEmployeeData from '../../hooks/useEmployeeData';
+import useOrgData from '../../hooks/useOrgData';
+import { isPrimaryCentralAdmin, isCentralUser } from '../../utils/scopeUtils';
+import { printAllAbsencesNationalMap } from './printAllEffectiveness';
 
 export default function EffectivenessManager({ user, orgData, employeesData }) {
   const [activeTab, setActiveTab] = useState('query');
+  const { records = [] } = useEffectivenessData();
+  const { employees = [] } = useEmployeeData();
+  const { data: hookOrgData } = useOrgData();
+
+  const finalOrgData = orgData?.data || orgData || hookOrgData || {};
+  const finalEmployees = employeesData?.employees || (Array.isArray(employeesData) ? employeesData : null) || employees || [];
+
+  const isPrincipal = isPrimaryCentralAdmin(user) || isCentralUser(user);
+
+  const handlePrintAll = () => {
+    printAllAbsencesNationalMap({
+      records,
+      employees: finalEmployees,
+      orgData: finalOrgData,
+      user
+    });
+  };
 
   const tabs = [
     { id: 'query', label: '📋 Funcionários Faltosos' },
@@ -21,6 +43,17 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
           <h2 style={styles.title}>Módulo de Efetividade (Gestão de Faltas)</h2>
           <p style={styles.desc}>Controlo territorial, registo descentralizado e relatórios oficiais de assiduidade do SERNIC.</p>
         </div>
+        {isPrincipal && (
+          <button 
+            onClick={handlePrintAll}
+            style={styles.btnPrintAll}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
+            title="Imprimir mapa consolidado de faltas de todas as direcções e unidades do SERNIC"
+          >
+            🖨️ Imprimir Todas as Faltas (Todas as Direcções)
+          </button>
+        )}
       </div>
 
       {/* Navegação interna do módulo */}
@@ -79,6 +112,20 @@ const styles = {
   desc: { color: 'var(--color-text-muted)', fontSize: '14px', margin: 0 },
   tabsContainer: { display: 'flex', gap: '8px', borderBottom: '1px solid var(--color-border)', paddingBottom: '2px', flexWrap: 'wrap' },
   tab: { padding: '10px 18px', background: 'transparent', border: 'none', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: '600', cursor: 'pointer', borderBottom: '3px solid transparent', transition: 'all 0.2s', outline: 'none' },
-  activeTab: { padding: '10px 18px', background: 'transparent', border: 'none', color: 'var(--color-primary)', fontSize: '14px', fontWeight: '700', cursor: 'pointer', borderBottom: '3px solid var(--color-primary)', transition: 'all 0.2s', outline: 'none' },
-  contentArea: { marginTop: '10px' }
+  contentArea: { marginTop: '10px' },
+  btnPrintAll: {
+    padding: '9px 18px',
+    backgroundColor: '#DC2626',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: '700',
+    fontSize: '13px',
+    cursor: 'pointer',
+    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    transition: 'all 0.2s ease',
+  }
 };

@@ -2,10 +2,11 @@ import React, { useState, useMemo } from 'react';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useEffectivenessData from '../../hooks/useEffectivenessData';
 import useOrgData from '../../hooks/useOrgData';
-import { isCentralUser, filterByProvincialScope } from '../../utils/scopeUtils';
+import { isCentralUser, isPrimaryCentralAdmin, filterByProvincialScope } from '../../utils/scopeUtils';
 import { mozambiqueStructure } from '../../utils/mozambiqueDistricts';
 import ConfirmModal from '../ConfirmModal';
 import * as XLSX from 'xlsx';
+import { printAllAbsencesNationalMap } from './printAllEffectiveness';
 
 export default function EffectivenessQuery({ onGoToRegister, user, orgData: passedOrgData, employeesData }) {
   const { employees: allEmployees } = useEmployeeData();
@@ -14,6 +15,16 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
 
   const orgData = passedOrgData?.data || passedOrgData || hookOrgData || { directorates: [], departments: [], divisions: [], sections: [], careers: [], categories: [] };
   const isCentral = isCentralUser(user);
+  const isPrincipal = isPrimaryCentralAdmin(user) || isCentralUser(user);
+
+  const handlePrintAllNational = () => {
+    printAllAbsencesNationalMap({
+      records,
+      employees: allEmployees,
+      orgData,
+      user
+    });
+  };
 
   // Escopo de funcionários por utilizador
   const employees = useMemo(() => {
@@ -572,6 +583,29 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
             >
               🖨️ Imprimir Mapa
             </button>
+
+            {isPrincipal && (
+              <button
+                onClick={handlePrintAllNational}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#DC2626',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '12.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
+                }}
+                title="Imprimir todas as faltas de todas as direcções e unidades (Consolidado Nacional)"
+              >
+                🏛️ Imprimir Todas as Direcções
+              </button>
+            )}
           </div>
         </div>
       ) : (
@@ -781,6 +815,20 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                 Lista de Funcionários com Faltas ({faltososList.length})
               </h4>
               <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
+                {isPrincipal && (
+                  <button 
+                    onClick={handlePrintAllNational} 
+                    style={{
+                      ...styles.btnGoToRegister, 
+                      backgroundColor: '#DC2626', 
+                      color: '#FFFFFF',
+                      boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
+                    }}
+                    title="Imprimir todas as faltas de todas as direcções e unidades do SERNIC"
+                  >
+                    🏛️ Imprimir Todas as Faltas (Todas as Direcções)
+                  </button>
+                )}
                 <button onClick={handlePrintProvincialMap} style={{...styles.btnGoToRegister, backgroundColor: 'var(--color-primary, #1B365D)'}}>
                   🖨️ Imprimir Mapa
                 </button>

@@ -2,12 +2,13 @@ import React, { useState, useMemo } from 'react';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useEffectivenessData from '../../hooks/useEffectivenessData';
 import useOrgData from '../../hooks/useOrgData';
-import { isCentralUser, filterByProvincialScope } from '../../utils/scopeUtils';
+import { isCentralUser, isPrimaryCentralAdmin, filterByProvincialScope } from '../../utils/scopeUtils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import ConfirmModal from '../ConfirmModal';
 import useDraggable from '../../hooks/useDraggable';
+import { printAllAbsencesNationalMap } from './printAllEffectiveness';
 
 export default function EffectivenessReports({ user, orgData: passedOrgData, employeesData }) {
   const { employees: allEmployees } = useEmployeeData();
@@ -16,6 +17,16 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
 
   const orgData = passedOrgData?.data || passedOrgData || hookOrgData || { directorates: [], departments: [], divisions: [], sections: [], careers: [], categories: [] };
   const isCentral = isCentralUser(user);
+  const isPrincipal = isPrimaryCentralAdmin(user) || isCentralUser(user);
+
+  const handlePrintAllNational = () => {
+    printAllAbsencesNationalMap({
+      records,
+      employees: allEmployees,
+      orgData,
+      user
+    });
+  };
 
   // Escopo de funcionários
   const employees = useMemo(() => {
@@ -500,6 +511,21 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
           </div>
 
           <div style={{display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px', flexWrap: 'wrap'}}>
+            {isPrincipal && (
+              <button 
+                onClick={handlePrintAllNational} 
+                style={{
+                  ...styles.btnPrint, 
+                  backgroundColor: '#DC2626', 
+                  color: '#FFFFFF',
+                  borderColor: '#DC2626',
+                  boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
+                }}
+                title="Imprimir todas as faltas de todas as direcções e unidades do SERNIC"
+              >
+                🏛️ Imprimir Todas as Faltas (Todas as Direcções)
+              </button>
+            )}
             <button onClick={handleDirectPrint} style={styles.btnPrint}>
               🖨️ Imprimir Mapa de Efetividade (A4 Oficial)
             </button>
