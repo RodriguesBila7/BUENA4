@@ -64,9 +64,9 @@ export default function CareerManager({ user }) {
       </div>
 
       {pendingActs.length > 0 && (
-        <div style={{ padding: '15px', backgroundColor: '#fffbeb', borderLeft: '4px solid #f59e0b', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ padding: '15px', backgroundColor: 'rgba(245, 158, 11, 0.12)', borderLeft: '4px solid #f59e0b', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-          <span style={{ color: '#92400e', fontWeight: 'bold' }}>
+          <span style={{ color: '#f59e0b', fontWeight: 'bold' }}>
             Tem {pendingActs.length} {pendingActs.length === 1 ? 'acto pendente' : 'actos pendentes'} a aguardar confirmação. 
             Vá à aba "Histórico" para rever e confirmar.
           </span>

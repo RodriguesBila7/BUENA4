@@ -397,20 +397,20 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
 
                     <div style={styles.empInfoBlock}>
                       <div style={styles.infoRow}>
-                        <span>Carreira:</span>
-                        <strong>{getName(orgData.careers, emp.careerId)}</strong>
+                        <span style={styles.infoLabel}>Carreira:</span>
+                        <strong style={styles.infoVal} title={getName(orgData.careers, emp.careerId)}>{getName(orgData.careers, emp.careerId)}</strong>
                       </div>
                       <div style={styles.infoRow}>
-                        <span>Categoria:</span>
-                        <strong>{getName(orgData.categories, emp.categoryId)}</strong>
+                        <span style={styles.infoLabel}>Categoria:</span>
+                        <strong style={styles.infoVal} title={getName(orgData.categories, emp.categoryId)}>{getName(orgData.categories, emp.categoryId)}</strong>
                       </div>
                       <div style={styles.infoRow}>
-                        <span>Cargo:</span>
-                        <strong>{emp.role || 'Sem Cargo'}</strong>
+                        <span style={styles.infoLabel}>Cargo:</span>
+                        <strong style={styles.infoVal} title={emp.role || 'Sem Cargo'}>{emp.role || 'Sem Cargo'}</strong>
                       </div>
                       <div style={styles.infoRow}>
-                        <span>Local:</span>
-                        <strong>{emp.provinceId} • {emp.districtId || '-'}</strong>
+                        <span style={styles.infoLabel}>Local:</span>
+                        <strong style={styles.infoVal}>{emp.provinceId ? `${emp.provinceId} • ${emp.districtId || '-'}` : '-'}</strong>
                       </div>
                     </div>
 
@@ -419,7 +419,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
                       onClick={() => handleOpenModal(emp)} 
                       style={styles.btnRegisterFalta}
                     >
-                      Registar Falta
+                      ✍️ Registar Falta
                     </button>
                   </div>
                 ))}
@@ -702,35 +702,104 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
 
 const styles = {
   container: { display: 'flex', flexDirection: 'column', gap: '24px', animation: 'fadeIn 0.3s' },
-  card: { backgroundColor: 'var(--color-bg-card)', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', overflow: 'hidden' },
+  card: { backgroundColor: 'var(--color-bg-card)', borderRadius: '14px', border: '1px solid var(--color-border)', boxShadow: '0 4px 18px rgba(0,0,0,0.1)', overflow: 'hidden' },
   cardHeader: { padding: '16px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '10px' },
   cardHeaderWithInfo: { padding: '16px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  stepBadge: { width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '700' },
-  cardTitle: { margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--color-text-base)' },
-  badgeCount: { fontSize: '12px', backgroundColor: 'var(--color-bg-base)', padding: '4px 10px', borderRadius: '20px', fontWeight: '600', color: 'var(--color-text-muted)' },
+  stepBadge: { width: '26px', height: '26px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800', boxShadow: '0 2px 6px rgba(220, 38, 38, 0.4)' },
+  cardTitle: { margin: 0, fontSize: '15.5px', fontWeight: '700', color: 'var(--color-text-base)' },
+  badgeCount: { fontSize: '12px', backgroundColor: 'var(--color-bg-base)', padding: '5px 12px', borderRadius: '20px', fontWeight: '700', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' },
   cardBody: { padding: '20px' },
   selectRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' },
   formGroup: { display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 },
-  label: { fontSize: '12px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase' },
-  input: { width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '14px', outline: 'none' },
+  label: { fontSize: '11.5px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.4px' },
+  input: { width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13.5px', outline: 'none' },
   prompt: { padding: '60px 20px', textAlign: 'center', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', border: '1px dashed var(--color-border)', borderRadius: '12px', backgroundColor: 'var(--color-bg-card)' },
   empty: { textAlign: 'center', padding: '40px', color: 'var(--color-text-muted)', fontStyle: 'italic' },
   
-  employeeGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' },
-  employeeCard: { border: '1px solid var(--color-border)', borderRadius: '10px', padding: '16px', backgroundColor: 'var(--color-bg-card)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', transition: 'box-shadow 0.2s', ':hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.05)' } },
-  empHeader: { display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '14px' },
-  empAvatar: { width: '44px', height: '44px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', fontWeight: '700', overflow: 'hidden' },
-  empMeta: { display: 'flex', flexDirection: 'column' },
-  empName: { fontSize: '14px', fontWeight: '700', color: 'var(--color-text-base)' },
-  empNip: { fontSize: '12px', color: 'var(--color-text-muted)' },
+  employeeGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '18px' },
+  employeeCard: { 
+    border: '1px solid var(--color-border)', 
+    borderRadius: '12px', 
+    padding: '18px', 
+    backgroundColor: 'var(--color-bg-base)', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    justifyContent: 'space-between', 
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
+  },
+  empHeader: { display: 'flex', gap: '14px', alignItems: 'center', marginBottom: '14px' },
+  empAvatar: { 
+    width: '46px', 
+    height: '46px', 
+    borderRadius: '50%', 
+    backgroundColor: 'var(--color-primary)', 
+    color: '#fff', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    fontSize: '18px', 
+    fontWeight: '800', 
+    overflow: 'hidden',
+    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.35)',
+    flexShrink: 0
+  },
+  empMeta: { display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' },
+  empName: { fontSize: '14.5px', fontWeight: '700', color: 'var(--color-text-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  empNip: { fontSize: '11.5px', color: 'var(--color-text-muted)' },
   
-  empInfoBlock: { borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)', padding: '12px 0', marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '6px' },
-  infoRow: { display: 'flex', justifyContent: 'space-between', fontSize: '12px' },
-  btnRegisterFalta: { width: '100%', padding: '10px', backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '13px', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s', ':hover': { opacity: 0.95 } },
+  empInfoBlock: { 
+    borderTop: '1px solid var(--color-border)', 
+    borderBottom: '1px solid var(--color-border)', 
+    padding: '12px 0', 
+    marginBottom: '14px', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    gap: '6px' 
+  },
+  infoRow: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    gap: '10px',
+    fontSize: '12px' 
+  },
+  infoLabel: {
+    color: 'var(--color-text-muted)',
+    fontWeight: '500',
+    flexShrink: 0
+  },
+  infoVal: {
+    color: 'var(--color-text-base)',
+    fontWeight: '600',
+    textAlign: 'right',
+    maxWidth: '65%',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+  },
+  btnRegisterFalta: { 
+    width: '100%', 
+    padding: '10px 14px', 
+    backgroundColor: 'var(--color-primary)', 
+    color: '#fff', 
+    border: 'none', 
+    borderRadius: '8px', 
+    fontWeight: '700', 
+    fontSize: '13px', 
+    cursor: 'pointer', 
+    textAlign: 'center', 
+    transition: 'all 0.2s', 
+    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.35)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px'
+  },
   
-  viewToggle: { display: 'flex', backgroundColor: 'var(--color-bg-base)', borderRadius: '6px', border: '1px solid var(--color-border)', overflow: 'hidden' },
-  viewBtn: { padding: '6px 10px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  viewBtnActive: { padding: '6px 10px', backgroundColor: 'var(--color-primary)', border: 'none', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  viewToggle: { display: 'flex', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)', overflow: 'hidden', padding: '2px' },
+  viewBtn: { padding: '6px 10px', background: 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' },
+  viewBtnActive: { padding: '6px 10px', backgroundColor: 'var(--color-primary)', border: 'none', borderRadius: '6px', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' },
   
   employeeList: { overflowX: 'auto', border: '1px solid var(--color-border)', borderRadius: '8px' },
   listTable: { width: '100%', borderCollapse: 'collapse', textAlign: 'left' },

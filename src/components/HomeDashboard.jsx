@@ -251,12 +251,12 @@ export default function HomeDashboard({ t, onTabChange }) {
 
       {pendingObitosCount > 0 && (
         <div 
-          style={{ padding: '16px', backgroundColor: '#FEF2F2', border: '1px solid #F87171', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          style={{ padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
           onClick={() => handleAlertClick(pendingObitosActs, 'admin_acts_dynamic_Saúde_e_Óbitos')}
           title="Ver Detalhes"
         >
           <span style={{ fontSize: '20px' }}>⚠️</span>
-          <div style={{ color: '#991B1B' }}>
+          <div style={{ color: '#EF4444' }}>
             <strong>Atenção:</strong> Existem <strong>{pendingObitosCount}</strong> processo(s) de Óbito pendente(s) de conclusão. Por favor, aceda ao Módulo de Saúde e Óbitos para os finalizar.
           </div>
         </div>
@@ -264,12 +264,12 @@ export default function HomeDashboard({ t, onTabChange }) {
 
       {retirementAlerts.byService.length > 0 && (
         <div 
-          style={{ padding: '16px', backgroundColor: '#EFF6FF', border: '1px solid #93C5FD', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          style={{ padding: '16px', backgroundColor: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
           onClick={() => handleAlertClick(retirementAlerts.byService, 'admin_acts_dynamic_Reserva_e_Reforma')}
           title="Ver Detalhes"
         >
           <span style={{ fontSize: '20px' }}>ℹ️</span>
-          <div style={{ color: '#1E3A8A' }}>
+          <div style={{ color: '#60A5FA' }}>
             <strong>Alerta de Reforma (Tempo de Serviço):</strong> Existem <strong>{retirementAlerts.byService.length}</strong> funcionário(s) que já completaram 35 anos de serviço e devem ser passados à Reserva ou Reforma.
           </div>
         </div>
@@ -277,12 +277,12 @@ export default function HomeDashboard({ t, onTabChange }) {
 
       {retirementAlerts.byAge.length > 0 && (
         <div 
-          style={{ padding: '16px', backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          style={{ padding: '16px', backgroundColor: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
           onClick={() => handleAlertClick(retirementAlerts.byAge, 'admin_acts_dynamic_Reserva_e_Reforma')}
           title="Ver Detalhes"
         >
           <span style={{ fontSize: '20px' }}>🔔</span>
-          <div style={{ color: '#92400E' }}>
+          <div style={{ color: '#F59E0B' }}>
             <strong>Alerta de Reforma (Por Idade):</strong> Existem <strong>{retirementAlerts.byAge.length}</strong> funcionário(s) que já atingiram a idade limite obrigatória para passagem à Reserva/Reforma.
           </div>
         </div>
@@ -290,12 +290,12 @@ export default function HomeDashboard({ t, onTabChange }) {
 
       {retirementAlerts.byMedical.length > 0 && (
         <div 
-          style={{ padding: '16px', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          style={{ padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
           onClick={() => handleAlertClick(retirementAlerts.byMedical, 'admin_acts_dynamic_Reserva_e_Reforma')}
           title="Ver Detalhes"
         >
           <span style={{ fontSize: '20px' }}>🚨</span>
-          <div style={{ color: '#991B1B' }}>
+          <div style={{ color: '#EF4444' }}>
             <strong>Alerta de Reforma Compulsiva (Doença/Inaptidão):</strong> Existem <strong>{retirementAlerts.byMedical.length}</strong> funcionário(s) considerados Inaptos pela Junta Médica que devem ser passados à Reforma ou Reserva Compulsiva.
           </div>
         </div>

@@ -80,11 +80,17 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   // Ignorar o logotipo em cache temporariamente para forçar o transparente
   const logoSrc = SERNIC_LOGO_B64;
 
+  const isDark = bwMode === 'noite' || settings.modo_tema === 'dark';
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
+
   /* calcula a cor de fundo activa */
   const bgColor =
-    bwMode === 'noite' ? '#111111' :
-    bwMode === 'claro' ? '#F5F5F5' :
-    (settings.cor_principal || '#1B365D');
+    bwMode === 'noite' ? '#1C2433' :
+    bwMode === 'claro' ? '#F8FAFC' :
+    (settings.cor_principal || '#1C2433');
 
   /* ciclo: theme → noite → claro → theme */
   const toggleBwMode = () => {
@@ -527,33 +533,37 @@ const s = {
   /* ── Card ── */
   card: {
     width: '100%',
-    maxWidth: '380px',
-    backgroundColor: '#FFFFFF',
-    borderRadius: '6px',
-    padding: '30px 28px 22px',
-    boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+    maxWidth: '400px',
+    backgroundColor: 'var(--color-bg-card, #243044)',
+    border: '1px solid var(--color-border, #3A4A66)',
+    borderRadius: '16px',
+    padding: '34px 30px 26px',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.45)',
+    boxSizing: 'border-box'
   },
   cardTitle: {
-    fontSize: '26px',
-    fontWeight: '400',
-    color: '#333',
+    fontSize: '24px',
+    fontWeight: '800',
+    color: 'var(--color-text-base, #F8FAFC)',
     textAlign: 'center',
     margin: '0 0 22px',
+    letterSpacing: '-0.3px'
   },
   errorMsg: {
-    backgroundColor: '#FDEDEC',
-    color: '#C0392B',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    color: '#EF4444',
     padding: '10px 14px',
-    borderRadius: '4px',
+    borderRadius: '8px',
     fontSize: '13px',
     marginBottom: '14px',
     textAlign: 'center',
-    borderLeft: '3px solid #C0392B',
+    borderLeft: '4px solid #EF4444',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '13px',
+    gap: '14px',
   },
 
   /* ── Campos ── */
@@ -561,17 +571,18 @@ const s = {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    border: '1px solid #E0E0E0',
-    borderRadius: '4px',
-    backgroundColor: '#FAFAFA',
+    border: '1px solid var(--color-border, #3A4A66)',
+    borderRadius: '8px',
+    backgroundColor: 'var(--color-bg-base, #1C2433)',
     overflow: 'hidden',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
   },
   fieldIcon: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     width: '40px',
-    color: '#999',
+    color: 'var(--color-text-muted, #A8B7CD)',
     flexShrink: 0,
   },
   field: {
@@ -580,7 +591,7 @@ const s = {
     background: 'transparent',
     padding: '13px 8px',
     fontSize: '14px',
-    color: '#333',
+    color: 'var(--color-text-base, #F8FAFC)',
     outline: 'none',
   },
   fieldIconRight: {
@@ -607,28 +618,28 @@ const s = {
   btnPrimary: {
     width: '100%',
     padding: '13px',
-    backgroundColor: '#F0B429',
+    backgroundColor: 'var(--color-primary, #DC2626)',
     color: '#FFFFFF',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '700',
-    letterSpacing: '1.5px',
+    letterSpacing: '1px',
     cursor: 'pointer',
-    marginTop: '4px',
-    transition: 'filter 0.2s ease',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+    marginTop: '6px',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)',
   },
   btnSecondary: {
     width: '100%',
     padding: '13px',
     backgroundColor: 'transparent',
-    color: '#4A5568',
-    border: '1px solid #CBD5E1',
-    borderRadius: '4px',
+    color: 'var(--color-text-base, #F8FAFC)',
+    border: '1px solid var(--color-border, #3A4A66)',
+    borderRadius: '8px',
     fontSize: '14px',
     fontWeight: '700',
-    letterSpacing: '1.5px',
+    letterSpacing: '1px',
     cursor: 'pointer',
     marginTop: '10px',
     transition: 'all 0.2s ease',
@@ -641,22 +652,23 @@ const s = {
   linkBtn: {
     background: 'none',
     border: 'none',
-    color: '#3182CE',
+    color: 'var(--color-primary, #EF4444)',
     fontSize: '13px',
     fontWeight: '600',
     cursor: 'pointer',
-    textDecoration: 'underline',
+    textDecoration: 'none',
+    transition: 'opacity 0.2s ease',
   },
 
   /* ── Credenciais de teste ── */
   testBox: {
     marginTop: '18px',
     paddingTop: '14px',
-    borderTop: '1px dashed #E0E0E0',
+    borderTop: '1px dashed var(--color-border, #3A4A66)',
   },
   testLabel: {
     fontSize: '11px',
-    color: '#999',
+    color: 'var(--color-text-muted, #A8B7CD)',
     fontWeight: '600',
     margin: '0 0 7px',
   },
@@ -664,15 +676,15 @@ const s = {
     display: 'block',
     width: '100%',
     textAlign: 'left',
-    padding: '7px 10px',
-    background: '#F5F5F5',
-    border: 'none',
-    borderRadius: '4px',
+    padding: '8px 12px',
+    background: 'var(--color-bg-base, #1C2433)',
+    border: '1px solid var(--color-border, #3A4A66)',
+    borderRadius: '6px',
     fontSize: '12px',
-    color: '#555',
+    color: 'var(--color-text-base, #F8FAFC)',
     cursor: 'pointer',
-    marginBottom: '5px',
-    transition: 'background 0.15s',
+    marginBottom: '6px',
+    transition: 'all 0.15s',
   },
 
   /* ── Dropdown de Temas ── */
@@ -685,8 +697,8 @@ const s = {
     alignItems: 'center',
   },
   iconBtn: {
-    background: 'rgba(255, 255, 255, 0.2)',
-    border: 'none',
+    background: 'rgba(255, 255, 255, 0.15)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     borderRadius: '50%',
     width: '40px',
     height: '40px',
@@ -695,31 +707,33 @@ const s = {
     justifyContent: 'center',
     color: '#FFFFFF',
     cursor: 'pointer',
-    transition: 'background 0.2s, transform 0.2s',
-    backdropFilter: 'blur(4px)',
+    transition: 'all 0.2s',
+    backdropFilter: 'blur(6px)',
   },
   themeDropdown: {
     position: 'absolute',
     top: '50px',
     right: '0',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'var(--color-bg-card, #243044)',
+    border: '1px solid var(--color-border, #3A4A66)',
     borderRadius: '12px',
     padding: '18px 16px 14px',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.22)',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
     width: '252px',
     zIndex: 10,
+    color: 'var(--color-text-base, #F8FAFC)'
   },
   dropdownTitle: {
     fontSize: '10px',
     fontWeight: '700',
-    color: '#999',
+    color: 'var(--color-text-muted, #A8B7CD)',
     letterSpacing: '0.8px',
     textTransform: 'uppercase',
     margin: '0 0 10px',
   },
   dropdownDivider: {
     height: '1px',
-    backgroundColor: '#F0F0F0',
+    backgroundColor: 'var(--color-border, #3A4A66)',
     margin: '12px 0',
   },
   temaSwatches: {
