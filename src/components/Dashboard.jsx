@@ -3745,19 +3745,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             <OrgStructureManager t={t} />
           )}
 
-          {/* TAB: OUTROS (MÓDULOS EM DESENVOLVIMENTO) */}
-          {!['home', 'identity', 'reports', 'org_structure', 'emp_list', 'emp_form', 'emp_import', 'emp_deleted', 'disc_list', 'disc_inspections', 'users_manage', 'users_roles', 'users_permissions', 'users_policies', 'users_audit', 'settings_languages', 'settings_system', 'settings_accounts', 'settings_backup', 'evaluations', 'effectiveness', 'transfers', 'vacations', 'career'].includes(activeTab) && !activeTab.startsWith('admin_acts') && (
-            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(0, 0, 0, 0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
-              </div>
-              <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>Módulo em Desenvolvimento</h3>
-              <p style={{ color: 'var(--color-text-muted)', maxWidth: '400px', lineHeight: '1.6' }}>
-                A funcionalidade selecionada encontra-se em fase de implementação. Em breve estarão disponíveis as novas opções de gestão e parametrização.
-              </p>
-            </div>
-          )}
-
           </ErrorBoundary>
         </div>
       </main>
