@@ -36,20 +36,33 @@ export default function AuditViewer() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  const renderSafeString = (val, fallback = '') => {
+    if (val === null || val === undefined) return fallback;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object') {
+      return val.name || val.username || val.action || val.title || JSON.stringify(val);
+    }
+    return String(val);
+  };
+
   // Resetar para a primeira página sempre que os filtros mudarem
   useEffect(() => {
     setCurrentPage(1);
   }, [filterUser, filterModule, dateFrom, dateTo]);
 
   const filteredLogs = logs.filter(log => {
-    const dLog = new Date(log.date);
-    const mFrom = dateFrom ? dLog >= new Date(dateFrom) : true;
-    const mTo = dateTo ? dLog <= new Date(dateTo) : true;
+    const rawDate = log.date || (log.timestamp ? log.timestamp.split(' ')[0] : '') || (log.created_at ? log.created_at.split('T')[0] : '');
+    const dLog = rawDate ? new Date(rawDate) : null;
+    const mFrom = dateFrom && dLog ? dLog >= new Date(dateFrom) : true;
+    const mTo = dateTo && dLog ? dLog <= new Date(dateTo) : true;
+
+    const uName = renderSafeString(log.username || log.user);
+    const mod = renderSafeString(log.module);
 
     return (
       mFrom && mTo &&
-      (log.username || '').toLowerCase().includes(filterUser.toLowerCase()) &&
-      (log.module || '').toLowerCase().includes(filterModule.toLowerCase())
+      uName.toLowerCase().includes(filterUser.toLowerCase()) &&
+      mod.toLowerCase().includes(filterModule.toLowerCase())
     );
   });
 
@@ -64,9 +77,18 @@ export default function AuditViewer() {
 
   const exportToCSV = () => {
     const header = ['Data,Hora,Utilizador,Perfil,Módulo,Ação,Detalhes,IP,Resultado'];
-    const rows = filteredLogs.map(l => 
-      `${l.date || ''},${l.time || ''},${l.username || ''},${l.role || ''},${l.module || ''},${l.action || ''},"${(l.details || '').replace(/"/g, '""')}",${l.ip || ''},${l.result || ''}`
-    );
+    const rows = filteredLogs.map(l => {
+      const logDate = l.date || (l.timestamp ? l.timestamp.split(' ')[0] : '') || (l.created_at ? l.created_at.split('T')[0] : '');
+      const logTime = l.time || (l.timestamp ? l.timestamp.split(' ')[1] : '') || (l.created_at ? l.created_at.split('T')[1]?.split('.')[0] : '');
+      const uName = renderSafeString(l.username || l.user);
+      const uRole = renderSafeString(l.role);
+      const mod = renderSafeString(l.module);
+      const act = renderSafeString(l.action);
+      const det = renderSafeString(l.details).replace(/"/g, '""');
+      const ip = renderSafeString(l.ip);
+      const res = renderSafeString(l.result, 'Sucesso');
+      return `${logDate},${logTime},${uName},${uRole},${mod},${act},"${det}",${ip},${res}`;
+    });
     const csvContent = "data:text/csv;charset=utf-8," + [header, ...rows].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -116,25 +138,37 @@ export default function AuditViewer() {
           </tr>
         </thead>
         <tbody>
-          {paginatedLogs.map(log => (
-            <tr key={log.id}>
-              <td>{log.date} {log.time}</td>
-              <td><strong>{log.username || 'Sistema'}</strong><br/><span style={{fontSize:'11px', color:'var(--color-text-muted)'}}>{log.role || 'Automatizado'}</span></td>
-              <td>{log.module}</td>
-              <td>{log.action}</td>
-              <td>{log.details}</td>
-              <td>{log.ip}</td>
-              <td>
-                <span style={{
-                  ...styles.badge, 
-                  backgroundColor: log.result === 'Sucesso' ? '#e8f5e9' : '#ffebee', 
-                  color: log.result === 'Sucesso' ? '#2e7d32' : '#c62828'
-                }}>
-                  {log.result}
-                </span>
-              </td>
-            </tr>
-          ))}
+          {paginatedLogs.map(log => {
+            const logDate = log.date || (log.timestamp ? log.timestamp.split(' ')[0] : '') || (log.created_at ? log.created_at.split('T')[0] : '');
+            const logTime = log.time || (log.timestamp ? log.timestamp.split(' ')[1] : '') || (log.created_at ? log.created_at.split('T')[1]?.split('.')[0] : '');
+            const uName = renderSafeString(log.username || log.user, 'Sistema');
+            const uRole = renderSafeString(log.role, 'Automatizado');
+            const mod = renderSafeString(log.module, 'Sistema');
+            const act = renderSafeString(log.action, 'Ação');
+            const det = renderSafeString(log.details, '—');
+            const ip = renderSafeString(log.ip, '—');
+            const res = renderSafeString(log.result, 'Sucesso');
+
+            return (
+              <tr key={log.id}>
+                <td>{logDate} {logTime}</td>
+                <td><strong>{uName}</strong><br/><span style={{fontSize:'11px', color:'var(--color-text-muted)'}}>{uRole}</span></td>
+                <td>{mod}</td>
+                <td>{act}</td>
+                <td>{det}</td>
+                <td>{ip}</td>
+                <td>
+                  <span style={{
+                    ...styles.badge, 
+                    backgroundColor: res === 'Sucesso' ? '#e8f5e9' : '#ffebee', 
+                    color: res === 'Sucesso' ? '#2e7d32' : '#c62828'
+                  }}>
+                    {res}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
           {filteredLogs.length === 0 && (
             <tr>
               <td colSpan="7" style={{...styles.td, textAlign: 'center', fontStyle: 'italic', color: 'var(--color-text-muted)'}}>

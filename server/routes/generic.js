@@ -139,16 +139,46 @@ auditRouter.get('/', (req, res) => {
     if (user)   { query += ' AND user = ?';   params.push(user); }
     query += ' ORDER BY timestamp DESC LIMIT ?';
     params.push(Number(limit));
-    res.json(db.prepare(query).all(...params));
+    const rows = db.prepare(query).all(...params);
+    const normalized = rows.map(r => {
+      const parts = (r.timestamp || '').split(' ');
+      return {
+        ...r,
+        username: r.user || 'Sistema',
+        date: parts[0] || '',
+        time: parts[1] || '',
+        result: 'Sucesso'
+      };
+    });
+    res.json(normalized);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 auditRouter.post('/', (req, res) => {
-  const { user, action, module, details } = req.body;
+  let { user, action, module, details } = req.body;
   if (!user || !action || !module) return res.status(400).json({ error: 'user, action, module obrigatorios' });
+  
+  if (typeof user === 'object' && user !== null) {
+    user = user.username || user.name || 'Sistema';
+  }
+  if (typeof action === 'object' && action !== null) {
+    action = action.action || action.name || 'Ação';
+  }
+  if (typeof module === 'object' && module !== null) {
+    module = module.name || 'Geral';
+  }
+  if (typeof details === 'object' && details !== null) {
+    details = JSON.stringify(details);
+  }
+
+  user = String(user);
+  action = String(action);
+  module = String(module);
+  details = details !== undefined && details !== null ? String(details) : null;
+
   try {
     const db = getDb();
-    const result = db.prepare('INSERT INTO audit_log (user, action, module, details) VALUES (?, ?, ?, ?)').run(user, action, module, details || null);
+    const result = db.prepare('INSERT INTO audit_log (user, action, module, details) VALUES (?, ?, ?, ?)').run(user, action, module, details);
     res.json({ success: true, id: result.lastInsertRowid });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

@@ -67,13 +67,13 @@ export default function UserManager() {
     if (view === 'create') {
       const res = await addUser(userData);
       if (res && res.success) {
-        logAction(currentUser, 'Utilizadores', 'Criar', `Criou o utilizador ${userData.username}`);
+        logAction('Criar Utilizador', 'Utilizadores', `Criou o utilizador ${userData.username}`);
         setView('list');
       } else showModal('Erro', res?.error || 'Erro ao criar utilizador', 'alert');
     } else {
       const res = await updateUser(editingUser.id, userData);
       if (res && res.success) {
-        logAction(currentUser, 'Utilizadores', 'Editar', `Atualizou o utilizador ${userData.username}`);
+        logAction('Editar Utilizador', 'Utilizadores', `Atualizou o utilizador ${userData.username}`);
         setView('list');
       } else showModal('Erro', res?.error || 'Erro ao atualizar utilizador', 'alert');
     }
@@ -93,7 +93,7 @@ export default function UserManager() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    logAction(currentUser, 'Utilizadores', 'Exportar', 'Exportou lista de utilizadores');
+    logAction('Exportar Utilizadores', 'Utilizadores', 'Exportou lista de utilizadores');
   };
 
   const handleConfirmDelegation = async (userId, userName) => {
@@ -104,7 +104,7 @@ export default function UserManager() {
         body: JSON.stringify({ approvedBy: currentUser?.name || 'Perfil Superior Central' })
       });
       if (res.ok) {
-        logAction(currentUser, 'Acessos', 'Confirmar Delegação', `Confirmou o perfil secundário do utilizador ${userName}`);
+        logAction('Confirmar Delegação', 'Acessos', `Confirmou o perfil secundário do utilizador ${userName}`);
         window.location.reload();
       }
     } catch (e) {
@@ -119,7 +119,7 @@ export default function UserManager() {
         headers: { 'Content-Type': 'application/json' }
       });
       if (res.ok) {
-        logAction(currentUser, 'Acessos', 'Rejeitar Delegação', `Rejeitou a delegação de poderes do utilizador ${userName}`);
+        logAction('Rejeitar Delegação', 'Acessos', `Rejeitou a delegação de poderes do utilizador ${userName}`);
         window.location.reload();
       }
     } catch (e) {

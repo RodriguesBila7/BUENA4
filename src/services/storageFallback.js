@@ -328,10 +328,83 @@ export function saveFallbackSecurity(settings) {
 }
 
 // ─── AUDIT LOGS ─────────────────────────────────────────────────────────
+function sanitizeAuditItem(l, idx) {
+  if (!l || typeof l !== 'object') return null;
+  const item = { ...l };
+  
+  // Se action for um objecto (ex: o objecto do utilizador passado por engano)
+  if (typeof item.action === 'object' && item.action !== null) {
+    if (!item.user || item.user === 'Sistema') {
+      item.user = item.action.username || item.action.name || 'Sistema';
+    }
+    item.action = item.action.action || item.action.name || 'Ação no Sistema';
+  } else if (!item.action) {
+    item.action = 'Ação no Sistema';
+  } else {
+    item.action = String(item.action);
+  }
+
+  // Garantir user e username como string
+  if (typeof item.user === 'object' && item.user !== null) {
+    item.user = item.user.username || item.user.name || 'Sistema';
+  }
+  item.user = item.user ? String(item.user) : 'Sistema';
+  item.username = item.username ? (typeof item.username === 'object' ? (item.username.username || item.username.name || item.user) : String(item.username)) : item.user;
+
+  // Garantir module e details como string
+  if (typeof item.module === 'object' && item.module !== null) {
+    item.module = item.module.name || 'Geral';
+  }
+  item.module = item.module ? String(item.module) : 'Geral';
+
+  if (typeof item.details === 'object' && item.details !== null) {
+    item.details = JSON.stringify(item.details);
+  }
+  item.details = item.details !== undefined && item.details !== null ? String(item.details) : '';
+
+  // Garantir role como string
+  if (typeof item.role === 'object' && item.role !== null) {
+    item.role = item.role.name || item.role.id || 'Utilizador';
+  }
+  item.role = item.role ? String(item.role) : 'Utilizador';
+
+  // Extrair data e hora
+  const ts = item.timestamp || item.created_at || '';
+  if (!item.date && ts) {
+    item.date = ts.includes('T') ? ts.split('T')[0] : ts.split(' ')[0];
+  }
+  if (!item.time && ts) {
+    item.time = ts.includes('T') ? ts.split('T')[1].split('.')[0] : (ts.split(' ')[1] || '');
+  }
+  if (!item.date) item.date = new Date().toISOString().split('T')[0];
+  if (!item.time) item.time = new Date().toTimeString().split(' ')[0];
+
+  item.id = item.id || `log_${Date.now()}_${idx}`;
+  item.result = item.result ? (typeof item.result === 'object' ? 'Sucesso' : String(item.result)) : 'Sucesso';
+
+  return item;
+}
+
 export function getFallbackAudit() {
-  return getStored(STORAGE_KEYS.AUDIT, []);
+  const raw = getStored(STORAGE_KEYS.AUDIT, []);
+  if (!Array.isArray(raw)) return [];
+  let changed = false;
+  const sanitized = raw.map((l, i) => {
+    const s = sanitizeAuditItem(l, i);
+    if (typeof l.action === 'object' || typeof l.user === 'object' || !l.username) {
+      changed = true;
+    }
+    return s;
+  }).filter(Boolean);
+
+  if (changed) {
+    setStored(STORAGE_KEYS.AUDIT, sanitized);
+  }
+  return sanitized;
 }
 
 export function saveFallbackAudit(logs) {
-  setStored(STORAGE_KEYS.AUDIT, logs);
+  if (!Array.isArray(logs)) return;
+  const sanitized = logs.map((l, i) => sanitizeAuditItem(l, i)).filter(Boolean);
+  setStored(STORAGE_KEYS.AUDIT, sanitized);
 }

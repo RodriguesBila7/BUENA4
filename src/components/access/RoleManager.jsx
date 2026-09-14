@@ -107,14 +107,14 @@ export default function RoleManager() {
     if (view === 'create') {
       const res = await addRole(roleData);
       if (res && res.success) {
-        logAction(currentUser, 'Acessos', 'Criar Perfil', `Criou o perfil ${roleData.name}`);
+        logAction('Criar Perfil', 'Acessos', `Criou o perfil ${roleData.name}`);
         showToast('Perfil criado com sucesso!', 'success');
         setView('list');
       } else showModal('Erro', res?.error || 'Erro ao criar perfil', 'alert');
     } else {
       const res = await updateRole(editingRole.id, roleData);
       if (res && res.success) {
-        logAction(currentUser, 'Acessos', 'Editar Perfil', `Atualizou o perfil ${roleData.name}`);
+        logAction('Editar Perfil', 'Acessos', `Atualizou o perfil ${roleData.name}`);
         showToast('Perfil atualizado com sucesso!', 'success');
         setView('list');
       } else showModal('Erro', res?.error || 'Erro ao atualizar perfil', 'alert');
@@ -237,7 +237,7 @@ export default function RoleManager() {
                             showModal('Atenção', `Tem a certeza que deseja eliminar o perfil "${r.name}"?`, 'confirm', async () => {
                               const res = await deleteRole(r.id);
                               if (res && res.success) {
-                                logAction(currentUser, 'Acessos', 'Eliminar Perfil', `Eliminou o perfil ${r.name}`);
+                                logAction('Eliminar Perfil', 'Acessos', `Eliminou o perfil ${r.name}`);
                                 showToast('Perfil eliminado com sucesso!', 'success');
                               } else showModal('Erro', res?.error || 'Erro ao eliminar perfil', 'alert');
                             });

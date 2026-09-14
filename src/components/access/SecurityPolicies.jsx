@@ -40,7 +40,7 @@ export default function SecurityPolicies() {
 
   const handleSave = () => {
     updatePolicies(formData);
-    logAction(user, 'Acessos', 'Alterar Políticas', 'Alterou as políticas de segurança globais');
+    logAction('Alterar Políticas', 'Acessos', 'Alterou as políticas de segurança globais');
     showModal('Sucesso', 'Políticas de segurança atualizadas com sucesso!');
   };
 
