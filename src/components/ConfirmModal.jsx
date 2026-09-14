@@ -190,7 +190,7 @@ const styles = {
     padding: '8px 16px',
     borderRadius: '6px',
     border: '1px solid var(--color-border, #cbd5e0)',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--color-bg-subtle, #ffffff)',
     color: 'var(--color-text-base, #4a5568)',
     fontSize: '13px',
     fontWeight: '600',

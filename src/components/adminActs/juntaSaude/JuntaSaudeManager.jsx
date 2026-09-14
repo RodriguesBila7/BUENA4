@@ -303,8 +303,8 @@ const styles = {
   cardIconBoxGreen: { width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   cardValue: { fontSize: '28px', fontWeight: '800', color: 'var(--color-text-main)', lineHeight: '1' },
   cardTitle: { fontSize: '13px', color: '#64748b', fontWeight: '500' },
-  tabBtn: { padding: '10px 16px', backgroundColor: 'transparent', border: '1px solid #cbd5e0', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: '#475569', transition: 'all 0.2s' },
-  tabBtnActive: { backgroundColor: '#2563eb', color: 'white', borderColor: '#2563eb' },
+  tabBtn: { padding: '10px 16px', backgroundColor: 'transparent', border: '1px solid var(--color-border, #cbd5e0)', borderRadius: '8px', cursor: 'pointer', fontWeight: '500', color: 'var(--color-text-muted, #475569)', transition: 'all 0.2s' },
+  tabBtnActive: { backgroundColor: 'var(--color-primary, #2563eb)', color: 'white', borderColor: 'var(--color-primary, #2563eb)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   searchInput: { width: '300px', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '14px' },
   btnPrimary: { padding: '10px 20px', borderRadius: '8px', border: 'none', backgroundColor: 'var(--color-primary)', color: '#fff', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
@@ -319,8 +319,8 @@ const styles = {
   empty: { padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px' },
   badgeWarning: { display: 'inline-block', padding: '4px 10px', backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#D97706', borderRadius: '6px', fontSize: '12px', fontWeight: '700' },
   badgeDanger: { display: 'inline-block', padding: '4px 10px', backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#DC2626', borderRadius: '6px', fontSize: '12px', fontWeight: '700' },
-  statusEmBaixa: { display: 'inline-block', padding: '4px 10px', backgroundColor: '#FFFBEB', border: '1px solid #FCD34D', color: '#B45309', borderRadius: '20px', fontSize: '12px', fontWeight: '700' },
-  statusAlta: { display: 'inline-block', padding: '4px 10px', backgroundColor: '#ECFDF5', border: '1px solid #6EE7B7', color: '#047857', borderRadius: '20px', fontSize: '12px', fontWeight: '700' },
-  btnAlta: { padding: '6px 12px', borderRadius: '6px', backgroundColor: '#fff', border: '1px solid var(--color-border)', color: 'var(--color-text-base)', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', ':hover': { backgroundColor: '#F3F4F6' } },
-  btnAgravar: { padding: '6px 12px', borderRadius: '6px', backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', color: '#B91C1C', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', ':hover': { backgroundColor: '#FEE2E2' } }
+  statusEmBaixa: { display: 'inline-block', padding: '4px 10px', backgroundColor: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', color: '#f59e0b', borderRadius: '20px', fontSize: '12px', fontWeight: '700' },
+  statusAlta: { display: 'inline-block', padding: '4px 10px', backgroundColor: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981', borderRadius: '20px', fontSize: '12px', fontWeight: '700' },
+  btnAlta: { padding: '6px 12px', borderRadius: '6px', backgroundColor: 'var(--color-bg-subtle, #fff)', border: '1px solid var(--color-border)', color: 'var(--color-text-base)', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' },
+  btnAgravar: { padding: '6px 12px', borderRadius: '6px', backgroundColor: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' }
 };

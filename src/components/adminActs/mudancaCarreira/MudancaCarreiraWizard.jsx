@@ -217,19 +217,20 @@ export default function MudancaCarreiraWizard({ employee, onClose, onComplete })
 
 const styles = {
   infoBox: {
-    backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', 
-    border: '1px solid #e2e8f0', fontSize: '14px', marginBottom: '16px', color: '#4a5568'
+    backgroundColor: 'var(--color-bg-base, #f8fafc)', padding: '12px', borderRadius: '8px', 
+    border: '1px solid var(--color-border, #e2e8f0)', fontSize: '14px', marginBottom: '16px', color: 'var(--color-text-base, #4a5568)'
   },
   formGroup: { marginBottom: '16px' },
-  label: { display: 'block', fontSize: '14px', fontWeight: '600', color: '#4a5568', marginBottom: '8px' },
+  label: { display: 'block', fontSize: '14px', fontWeight: '600', color: 'var(--color-text-muted, #4a5568)', marginBottom: '8px' },
   input: {
-    width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e0',
+    width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--color-border, #cbd5e0)',
+    backgroundColor: 'var(--color-bg-base, #ffffff)', color: 'var(--color-text-base, #1e293b)',
     fontSize: '14px', outline: 'none'
   },
-  error: { color: '#e53e3e', fontSize: '14px', marginTop: '10px', fontWeight: '500' },
+  error: { color: '#ef4444', fontSize: '14px', marginTop: '10px', fontWeight: '500' },
   btnCancel: {
-    padding: '10px 16px', borderRadius: '8px', border: '1px solid #cbd5e0',
-    backgroundColor: '#fff', color: '#4a5568', cursor: 'pointer', fontWeight: '500'
+    padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--color-border, #cbd5e0)',
+    backgroundColor: 'var(--color-bg-subtle, #fff)', color: 'var(--color-text-base, #4a5568)', cursor: 'pointer', fontWeight: '500'
   },
   btnSubmit: {
     padding: '10px 16px', borderRadius: '8px', border: 'none',

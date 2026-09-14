@@ -117,17 +117,17 @@ export default function SaudeEstatisticas({ saudeActs }) {
 const styles = {
   container: { marginTop: '20px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' },
-  title: { margin: 0, color: '#1e293b', fontSize: '18px' },
+  title: { margin: 0, color: 'var(--color-text-base)', fontSize: '18px' },
   filters: { display: 'flex', gap: '15px', alignItems: 'center' },
-  label: { fontSize: '13px', color: '#64748b', marginRight: '8px', fontWeight: '500' },
-  input: { padding: '8px 12px', border: '1px solid #cbd5e0', borderRadius: '6px', outline: 'none' },
+  label: { fontSize: '13px', color: 'var(--color-text-muted)', marginRight: '8px', fontWeight: '500' },
+  input: { padding: '8px 12px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', borderRadius: '6px', outline: 'none' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' },
-  card: { backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
-  cardTitle: { margin: '0 0 15px 0', color: '#334155', fontSize: '15px', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' },
-  statRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: '#475569' },
-  empty: { color: '#94a3b8', fontSize: '14px', fontStyle: 'italic' },
+  card: { backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '10px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
+  cardTitle: { margin: '0 0 15px 0', color: 'var(--color-primary)', fontSize: '15px', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' },
+  statRow: { display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontSize: '14px', color: 'var(--color-text-base)' },
+  empty: { color: 'var(--color-text-muted)', fontSize: '14px', fontStyle: 'italic' },
   table: { width: '100%', borderCollapse: 'collapse' },
-  th: { padding: '10px', borderBottom: '2px solid #e2e8f0', color: '#475569', fontSize: '13px', textAlign: 'left' },
-  td: { padding: '10px', borderBottom: '1px solid #f1f5f9', color: '#334155', fontSize: '14px' },
-  tr: { ':hover': { backgroundColor: '#f8fafc' } }
+  th: { padding: '10px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', fontSize: '13px', textAlign: 'left', backgroundColor: 'var(--color-bg-subtle)' },
+  td: { padding: '10px', borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-base)', fontSize: '14px' },
+  tr: { borderBottom: '1px solid var(--color-border)' }
 };

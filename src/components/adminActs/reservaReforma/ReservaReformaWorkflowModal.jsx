@@ -385,7 +385,7 @@ const styles = {
     padding: '10px 12px',
     borderRadius: '8px',
     border: '1px solid var(--color-border, #cbd5e1)',
-    backgroundColor: '#ffffff',
+    backgroundColor: 'var(--color-bg-base, #ffffff)',
     color: 'var(--color-text-base, #1e293b)',
     fontSize: '13px',
     boxSizing: 'border-box',
@@ -421,13 +421,13 @@ const styles = {
     fontSize: '13px'
   },
   errorAlert: {
-    backgroundColor: '#FEF2F2',
-    color: '#991B1B',
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    color: '#ef4444',
     padding: '10px 14px',
     borderRadius: '6px',
     fontSize: '12px',
     marginBottom: '14px',
-    border: '1px solid #F87171'
+    border: '1px solid rgba(239, 68, 68, 0.3)'
   },
   resizeHandle: {
     position: 'absolute',

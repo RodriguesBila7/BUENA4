@@ -515,7 +515,7 @@ const styles = {
   empty: { textAlign: 'center', padding: '60px', color: '#94a3b8', fontStyle: 'italic', fontSize: '15px' },
   badgeActive: { backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#059669', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' },
   badgeInactive: { backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#DC2626', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' },
-  badgeSaude: { backgroundColor: '#FFFBEB', color: '#B45309', border: '1px solid #FCD34D', padding: '4px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '700' },
+  badgeSaude: { backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '4px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '700' },
   pagination: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', padding: '16px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)' },
   pageBtn: { padding: '8px 16px', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '6px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' },
   fullscreenOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', animation: 'fadeIn 0.2s ease' },

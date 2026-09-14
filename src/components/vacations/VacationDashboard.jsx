@@ -128,10 +128,10 @@ const styles = {
   card: { backgroundColor: 'var(--color-bg-elevated)', borderRadius: '8px', padding: '20px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '8px' },
   cardTitle: { color: 'var(--color-text-muted)', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase' },
   cardValue: { color: 'var(--color-text-base)', fontSize: '28px', fontWeight: '800' },
-  alertsContainer: { marginTop: '16px', backgroundColor: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '8px', padding: '16px' },
-  alertsTitle: { margin: '0 0 16px 0', fontSize: '15px', fontWeight: '600', color: '#92400E' },
+  alertsContainer: { marginTop: '16px', backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '8px', padding: '16px' },
+  alertsTitle: { margin: '0 0 16px 0', fontSize: '15px', fontWeight: '600', color: '#f59e0b' },
   alertsList: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  alertItem: { display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: '#fff', padding: '12px', borderRadius: '6px', border: '1px solid #FDE68A' },
+  alertItem: { display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: 'var(--color-bg-card, #fff)', padding: '12px', borderRadius: '6px', border: '1px solid var(--color-border)' },
   alertIcon: { fontSize: '20px' },
-  alertContent: { color: '#92400E', fontSize: '14px', lineHeight: '1.4' }
+  alertContent: { color: 'var(--color-text-base)', fontSize: '14px', lineHeight: '1.4' }
 };

@@ -156,12 +156,12 @@ const styles = {
   actionBtn: { padding: '6px 12px', backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
   pagination: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '20px', padding: '10px' },
   pageBtn: { padding: '6px 12px', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '4px', cursor: 'pointer' },
-  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modalContent: { backgroundColor: '#fff', padding: '24px', borderRadius: '8px', width: '450px', maxHeight: '90vh', overflowY: 'auto' },
+  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
+  modalContent: { backgroundColor: 'var(--color-bg-card, #fff)', color: 'var(--color-text-base)', border: '1px solid var(--color-border)', padding: '24px', borderRadius: '8px', width: '450px', maxHeight: '90vh', overflowY: 'auto' },
   formGroup: { marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '5px' },
-  label: { fontSize: '13px', fontWeight: 'bold' },
-  input: { padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' },
-  inputDisabled: { padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', backgroundColor: '#f3f4f6', color: '#6b7280' },
-  cancelBtn: { padding: '8px 16px', backgroundColor: 'transparent', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer' },
+  label: { fontSize: '13px', fontWeight: 'bold', color: 'var(--color-text-base)' },
+  input: { padding: '8px', border: '1px solid var(--color-border, #d1d5db)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', borderRadius: '4px', outline: 'none' },
+  inputDisabled: { padding: '8px', border: '1px solid var(--color-border, #d1d5db)', borderRadius: '4px', backgroundColor: 'var(--color-bg-subtle, #f3f4f6)', color: 'var(--color-text-muted, #6b7280)' },
+  cancelBtn: { padding: '8px 16px', backgroundColor: 'transparent', border: '1px solid var(--color-border, #d1d5db)', color: 'var(--color-text-base)', borderRadius: '4px', cursor: 'pointer' },
   confirmBtn: { padding: '8px 16px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }
 };

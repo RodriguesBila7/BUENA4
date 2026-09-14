@@ -284,7 +284,7 @@ const styles = {
     padding: '8px 16px',
     borderRadius: '6px',
     border: '1px solid var(--color-border, #cbd5e1)',
-    backgroundColor: '#fff',
+    backgroundColor: 'var(--color-bg-subtle, #fff)',
     color: 'var(--color-text-base, #1e293b)',
     cursor: 'pointer',
     fontSize: '13px'

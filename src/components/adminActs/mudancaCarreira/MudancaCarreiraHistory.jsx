@@ -280,24 +280,24 @@ export default function MudancaCarreiraHistory({ acts, onNewRequest }) {
 }
 
 const styles = {
-  container: { backgroundColor: '#fff', borderRadius: '8px', padding: '0px' },
+  container: { backgroundColor: 'transparent', borderRadius: '8px', padding: '0px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
   tabBtn: { padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s' },
   tabBtnActive: { backgroundColor: 'var(--color-primary)', color: '#fff', borderColor: 'var(--color-primary)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' },
-  searchInput: { padding: '10px 16px', borderRadius: '8px', border: '1px solid #cbd5e0', width: '300px', fontSize: '14px', outline: 'none' },
+  searchInput: { padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', width: '300px', fontSize: '14px', outline: 'none' },
   btnExport: { backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-main)', border: '1px solid var(--color-border)', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s' },
-  btnAdd: { backgroundColor: '#e53e3e', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', transition: 'all 0.2s' },
-  empty: { padding: '40px', textAlign: 'center', color: '#a0aec0' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '14px', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' },
-  th: { textAlign: 'left', padding: '16px', borderBottom: '2px solid #edf2f7', color: '#4a5568', backgroundColor: '#f8fafc', fontWeight: '600' },
-  tr: { borderBottom: '1px solid #edf2f7' },
-  td: { padding: '16px', color: '#2d3748', verticalAlign: 'middle' },
-  btnView: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', backgroundColor: '#ebf4ff', color: '#3182ce', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' },
-  btnEdit: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', backgroundColor: '#faf5ff', color: '#805ad5', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' },
-  btnDelete: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', backgroundColor: '#fff5f5', color: '#e53e3e', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' },
+  btnAdd: { backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', transition: 'all 0.2s' },
+  empty: { padding: '40px', textAlign: 'center', color: 'var(--color-text-muted)' },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: '14px', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '8px', overflow: 'hidden' },
+  th: { textAlign: 'left', padding: '16px', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', backgroundColor: 'var(--color-bg-subtle)', fontWeight: '600' },
+  tr: { borderBottom: '1px solid var(--color-border)' },
+  td: { padding: '16px', color: 'var(--color-text-base)', verticalAlign: 'middle' },
+  btnView: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', backgroundColor: 'rgba(49, 130, 206, 0.15)', color: '#3182ce', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' },
+  btnEdit: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', backgroundColor: 'rgba(128, 90, 213, 0.15)', color: '#805ad5', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' },
+  btnDelete: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', backgroundColor: 'rgba(229, 62, 62, 0.15)', color: '#e53e3e', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' },
   detailGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' },
   detailItem: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  detailLabel: { fontSize: '12px', fontWeight: '600', color: '#718096', textTransform: 'uppercase' },
-  detailValue: { fontSize: '14px', color: '#2d3748', fontWeight: '500' },
-  formInput: { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e0', fontSize: '14px', marginTop: '4px' }
+  detailLabel: { fontSize: '12px', fontWeight: '600', color: 'var(--color-text-muted)', textTransform: 'uppercase' },
+  detailValue: { fontSize: '14px', color: 'var(--color-text-base)', fontWeight: '500' },
+  formInput: { width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '14px', marginTop: '4px' }
 };

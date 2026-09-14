@@ -389,20 +389,20 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
               </div>
 
               {(!formData.academicHistory || formData.academicHistory.length === 0) ? (
-                <div style={{padding: '20px', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e0', color: '#718096', fontSize: '13px'}}>
+                <div style={{padding: '20px', textAlign: 'center', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px dashed var(--color-border)', color: 'var(--color-text-muted)', fontSize: '13px'}}>
                   Clique no botão acima para adicionar novo Nível Académico e preencher os passos.
                 </div>
               ) : (
                 <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
                   {formData.academicHistory.map((item, idx) => (
-                    <div key={item.id} style={{padding: '15px', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', position: 'relative'}}>
+                    <div key={item.id} style={{padding: '15px', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '8px', position: 'relative'}}>
                       <button type="button" onClick={() => removeAcademicHistory(item.id)} style={{position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px'}}>✕ Remover</button>
                       <h5 style={{margin: '0 0 15px 0', fontSize: '14px', color: 'var(--color-primary)'}}>Passo {idx + 1}: Preencher Dados do Nível</h5>
                       
                       <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px'}}>
                         <div>
-                          <label style={{display: 'block', fontSize: '12px', marginBottom: '5px', color: '#4a5568'}}>Nível Académico</label>
-                          <select value={item.level} onChange={(e) => updateAcademicHistory(item.id, 'level', e.target.value)} style={{width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', fontSize: '13px'}}>
+                          <label style={{display: 'block', fontSize: '12px', marginBottom: '5px', color: 'var(--color-text-muted)'}}>Nível Académico</label>
+                          <select value={item.level} onChange={(e) => updateAcademicHistory(item.id, 'level', e.target.value)} style={{width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13px'}}>
                             <option value="">-- Selecione --</option>
                             <option value="Médio">Médio</option>
                             <option value="Superior (Licenciatura)">Superior (Licenciatura)</option>
@@ -411,16 +411,16 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
                           </select>
                         </div>
                         <div>
-                          <label style={{display: 'block', fontSize: '12px', marginBottom: '5px', color: '#4a5568'}}>Área de Formação</label>
-                          <input type="text" value={item.formationArea} onChange={(e) => updateAcademicHistory(item.id, 'formationArea', e.target.value)} placeholder="Ex: Informática" style={{width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e0', fontSize: '13px'}} />
+                          <label style={{display: 'block', fontSize: '12px', marginBottom: '5px', color: 'var(--color-text-muted)'}}>Área de Formação</label>
+                          <input type="text" value={item.formationArea} onChange={(e) => updateAcademicHistory(item.id, 'formationArea', e.target.value)} placeholder="Ex: Informática" style={{width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13px'}} />
                         </div>
                       </div>
 
                       {item.level && (
-                        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', padding: '15px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e0'}}>
+                        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', padding: '15px', backgroundColor: 'var(--color-bg-base)', borderRadius: '6px', border: '1px dashed var(--color-border)'}}>
                           {/* CERTIFICADO */}
                           <div>
-                            <div style={{fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#4a5568'}}>Certificado do Nível {item.level}</div>
+                            <div style={{fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--color-text-muted)'}}>Certificado do Nível {item.level}</div>
                             {item.certB64 ? (
                               <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                 <span style={{color: 'green', fontSize: '12px'}}>✓ Anexado</span>
@@ -435,7 +435,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
                           {/* DIPLOMA (apenas se for superior a médio) */}
                           {['Superior (Licenciatura)', 'Mestrado', 'Doutoramento'].includes(item.level) && (
                             <div>
-                              <div style={{fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: '#4a5568'}}>Diploma de {item.level}</div>
+                              <div style={{fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--color-text-muted)'}}>Diploma de {item.level}</div>
                               {item.diplomaB64 ? (
                                 <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                   <span style={{color: 'green', fontSize: '12px'}}>✓ Anexado</span>

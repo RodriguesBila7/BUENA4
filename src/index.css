@@ -128,6 +128,81 @@
   background-color: #2D3D56 !important;
 }
 
+/* Sincronização e Normalização Global de Cores no Modo Escuro */
+[data-theme="dark"] .card-white,
+[data-theme="dark"] [style*="background-color: #fff"],
+[data-theme="dark"] [style*="background-color: #ffffff"],
+[data-theme="dark"] [style*="background-color: #FFFFFF"],
+[data-theme="dark"] [style*="background-color: rgb(255, 255, 255)"],
+[data-theme="dark"] [style*="background-color: white"],
+[data-theme="dark"] [style*="background: #fff"],
+[data-theme="dark"] [style*="background: #ffffff"],
+[data-theme="dark"] [style*="background: #FFFFFF"],
+[data-theme="dark"] [style*="background: white"] {
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-base) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] [style*="background-color: #f8fafc"],
+[data-theme="dark"] [style*="background-color: #F8FAFC"],
+[data-theme="dark"] [style*="background-color: #f1f5f9"],
+[data-theme="dark"] [style*="background-color: #F1F5F9"],
+[data-theme="dark"] [style*="background-color: #f9fafb"],
+[data-theme="dark"] [style*="background: #f8fafc"],
+[data-theme="dark"] [style*="background: #F8FAFC"],
+[data-theme="dark"] [style*="background: #f1f5f9"],
+[data-theme="dark"] [style*="background: #f9fafb"] {
+  background-color: var(--color-bg-base) !important;
+  color: var(--color-text-base) !important;
+  border-color: var(--color-border) !important;
+}
+
+[data-theme="dark"] [style*="color: #000"],
+[data-theme="dark"] [style*="color: #0f172a"],
+[data-theme="dark"] [style*="color: #0F172A"],
+[data-theme="dark"] [style*="color: #1e293b"],
+[data-theme="dark"] [style*="color: #1E293B"],
+[data-theme="dark"] [style*="color: #2d3748"],
+[data-theme="dark"] [style*="color: #2D3748"],
+[data-theme="dark"] [style*="color: #374151"],
+[data-theme="dark"] [style*="color: #111827"] {
+  color: var(--color-text-base) !important;
+}
+
+[data-theme="dark"] [style*="color: #4a5568"],
+[data-theme="dark"] [style*="color: #64748b"],
+[data-theme="dark"] [style*="color: #64748B"],
+[data-theme="dark"] [style*="color: #718096"],
+[data-theme="dark"] [style*="color: #475569"] {
+  color: var(--color-text-muted) !important;
+}
+
+[data-theme="dark"] [style*="border-color: #e2e8f0"],
+[data-theme="dark"] [style*="border-color: #E2E8F0"],
+[data-theme="dark"] [style*="border-color: #e5e7eb"],
+[data-theme="dark"] [style*="border-color: #E5E7EB"],
+[data-theme="dark"] [style*="border-color: #cbd5e0"],
+[data-theme="dark"] [style*="border-color: #cbd5e1"],
+[data-theme="dark"] [style*="border-color: #CBD5E1"],
+[data-theme="dark"] [style*="border: 1px solid #e2e8f0"],
+[data-theme="dark"] [style*="border: 1px solid #E2E8F0"],
+[data-theme="dark"] [style*="border: 1px solid #e5e7eb"],
+[data-theme="dark"] [style*="border: 1px solid #E5E7EB"],
+[data-theme="dark"] [style*="border: 1px solid #cbd5e0"],
+[data-theme="dark"] [style*="border: 1px solid #cbd5e1"] {
+  border-color: var(--color-border) !important;
+}
+
+/* Modais de Sistema */
+[data-theme="dark"] .system-modal-content,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] [class*="modal-container"] {
+  background-color: var(--color-bg-card) !important;
+  color: var(--color-text-base) !important;
+  border-color: var(--color-border) !important;
+}
+
 /* Estilos Globais */
 * {
   box-sizing: border-box;

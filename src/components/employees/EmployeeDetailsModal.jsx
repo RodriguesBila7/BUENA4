@@ -474,7 +474,7 @@ const styles = {
   nip: { margin: '0 0 12px 0', fontSize: '15px', color: 'var(--color-text-muted)' },
   badgeActive: { backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#059669', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600' },
   badgeInactive: { backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#DC2626', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600' },
-  badgeSaude: { backgroundColor: '#FFFBEB', color: '#B45309', border: '1px solid #FCD34D', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' },
+  badgeSaude: { backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' },
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' },
   card: {
     padding: '20px',

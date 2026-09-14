@@ -363,15 +363,15 @@ export default function ReservaReformaManager() {
 
 const styles = {
   container: { padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '20px' },
-  tabsContainer: { display: 'flex', borderBottom: '2px solid #E2E8F0', marginBottom: '10px' },
-  tab: { padding: '12px 24px', backgroundColor: 'transparent', border: 'none', color: '#64748B', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
-  activeTab: { padding: '12px 24px', backgroundColor: 'transparent', border: 'none', borderBottom: '2px solid #E11D48', marginBottom: '-2px', color: '#E11D48', fontSize: '15px', fontWeight: '700', cursor: 'pointer' },
+  tabsContainer: { display: 'flex', borderBottom: '2px solid var(--color-border)', marginBottom: '10px' },
+  tab: { padding: '12px 24px', backgroundColor: 'transparent', border: 'none', color: 'var(--color-text-muted)', fontSize: '15px', fontWeight: '600', cursor: 'pointer' },
+  activeTab: { padding: '12px 24px', backgroundColor: 'transparent', border: 'none', borderBottom: '2px solid var(--color-primary)', marginBottom: '-2px', color: 'var(--color-primary)', fontSize: '15px', fontWeight: '700', cursor: 'pointer' },
   toolbar: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  searchInput: { padding: '10px 16px', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '14px', width: '320px' },
-  btnAdd: { backgroundColor: '#C81E1E', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
-  btnExport: { backgroundColor: '#fff', color: '#334155', border: '1px solid #CBD5E1', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
-  tableContainer: { overflowX: 'auto', borderRadius: '12px', border: '1px solid #E2E8F0', backgroundColor: '#fff' },
-  empty: { padding: '30px', textAlign: 'center', color: '#64748B' },
+  searchInput: { padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '14px', width: '320px' },
+  btnAdd: { backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  btnExport: { backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-base)', border: '1px solid var(--color-border)', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+  tableContainer: { overflowX: 'auto', borderRadius: '12px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)' },
+  empty: { padding: '30px', textAlign: 'center', color: 'var(--color-text-muted)' },
   alertText: { fontSize: '11px', color: '#DC2626', fontWeight: '700', backgroundColor: '#FEE2E2', padding: '2px 6px', borderRadius: '4px' },
-  btnTransfer: { marginTop: '8px', padding: '6px 12px', backgroundColor: '#F3F4F6', color: '#1F2937', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }
+  btnTransfer: { marginTop: '8px', padding: '6px 12px', backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-base)', border: '1px solid var(--color-border)', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }
 };
