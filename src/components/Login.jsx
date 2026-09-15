@@ -371,9 +371,10 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
       <div style={s.header}>
         <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
-        <p style={{...s.instNome, color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.instNome.textShadow}}>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL</p>
-        <p style={{...s.sysTitleBold, color: bwMode === 'claro' ? '#1a252f' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleBold.textShadow}}>DIRECÇÃO DE RECURSOS HUMANOS</p>
-        <p style={{...s.sysTitleLine, color: bwMode === 'claro' ? '#34495e' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleLine.textShadow}}>SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS</p>
+        <p style={{...s.instNome, color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.instNome.textShadow, margin: '0 0 2px'}}>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL</p>
+        <p style={{...s.instNome, fontSize: '13px', fontWeight: '800', letterSpacing: '1px', color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.instNome.textShadow, margin: '0 0 4px'}}>{t('login_dg') || 'DIRECÇÃO GERAL'}</p>
+        <p style={{...s.sysTitleBold, color: bwMode === 'claro' ? '#1a252f' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleBold.textShadow}}>{t('login_drh') || 'DIRECÇÃO DE RECURSOS HUMANOS'}</p>
+        <p style={{...s.sysTitleLine, color: bwMode === 'claro' ? '#34495e' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleLine.textShadow}}>{t('login_system') || 'SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS'}</p>
       </div>
 
       {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
