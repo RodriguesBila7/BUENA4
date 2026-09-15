@@ -375,12 +375,12 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <p style={{...s.instNome, fontSize: '13px', fontWeight: '800', letterSpacing: '1px', color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.instNome.textShadow, margin: '0 0 4px'}}>{t('login_dg') || 'DIRECÇÃO GERAL'}</p>
         <p style={{...s.sysTitleBold, color: bwMode === 'claro' ? '#1a252f' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleBold.textShadow, margin: '0 0 0'}}>{t('login_drh') || 'DIRECÇÃO DE RECURSOS HUMANOS'}</p>
         
-        {/* Espaçamento antes do Sistema para descer o título e o card juntos */}
+        {/* Espaçamento de 1.5cm para puxar o texto do sistema e a barra/card para baixo */}
         <p style={{
           ...s.sysTitleLine, 
           color: bwMode === 'claro' ? '#34495e' : '#FFFFFF', 
           textShadow: bwMode === 'claro' ? 'none' : s.sysTitleLine.textShadow,
-          marginTop: '22px',
+          marginTop: '1.5cm',
           marginBottom: '0'
         }}>
           {t('login_system') || 'SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS'}
@@ -388,7 +388,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       </div>
 
       {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
-      <div style={{...s.card, marginTop: '28px'}}>
+      <div style={{...s.card, marginTop: '1.5cm'}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 
