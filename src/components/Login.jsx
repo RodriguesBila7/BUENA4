@@ -399,10 +399,20 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <button type="submit" style={{...s.btnPrimary, opacity: isLoading ? 0.7 : 1}} disabled={isLoading}>
                 {isLoading ? t('login_submit_loading') : t('login_submit')}
               </button>
-              <div style={s.linkRow}>
-                <button type="button" onClick={() => { setView('recover'); setError(''); setSuccessMsg(''); }} style={s.linkBtn}>{t('login_forgot')}</button>
-                <button type="button" onClick={() => { setView('register'); setError(''); setSuccessMsg(''); }} style={s.linkBtn}>{t('login_request_access')}</button>
-              </div>
+              <button
+                type="button"
+                onClick={() => { setView('recover'); setError(''); setSuccessMsg(''); }}
+                style={{ ...s.btnPrimary, marginTop: '12px', textTransform: 'uppercase' }}
+              >
+                {t('login_forgot')}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setView('register'); setError(''); setSuccessMsg(''); }}
+                style={{ ...s.btnPrimary, marginTop: '12px', textTransform: 'uppercase' }}
+              >
+                {t('login_request_access')}
+              </button>
             </form>
           </>
         )}
@@ -638,21 +648,6 @@ const s = {
     cursor: 'pointer',
     marginTop: '10px',
     transition: 'all 0.2s ease',
-  },
-  linkRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginTop: '16px',
-  },
-  linkBtn: {
-    background: 'none',
-    border: 'none',
-    color: 'var(--color-primary, #EF4444)',
-    fontSize: '13px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    textDecoration: 'none',
-    transition: 'opacity 0.2s ease',
   },
 
   /* ── Dropdown de Temas ── */
