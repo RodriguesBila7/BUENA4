@@ -373,12 +373,22 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
         <p style={{...s.instNome, color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.instNome.textShadow, margin: '0 0 2px'}}>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL</p>
         <p style={{...s.instNome, fontSize: '13px', fontWeight: '800', letterSpacing: '1px', color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.instNome.textShadow, margin: '0 0 4px'}}>{t('login_dg') || 'DIRECÇÃO GERAL'}</p>
-        <p style={{...s.sysTitleBold, color: bwMode === 'claro' ? '#1a252f' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleBold.textShadow}}>{t('login_drh') || 'DIRECÇÃO DE RECURSOS HUMANOS'}</p>
-        <p style={{...s.sysTitleLine, color: bwMode === 'claro' ? '#34495e' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleLine.textShadow}}>{t('login_system') || 'SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS'}</p>
+        <p style={{...s.sysTitleBold, color: bwMode === 'claro' ? '#1a252f' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleBold.textShadow, margin: '0 0 0'}}>{t('login_drh') || 'DIRECÇÃO DE RECURSOS HUMANOS'}</p>
+        
+        {/* Espaçamento antes do Sistema para descer o título e o card juntos */}
+        <p style={{
+          ...s.sysTitleLine, 
+          color: bwMode === 'claro' ? '#34495e' : '#FFFFFF', 
+          textShadow: bwMode === 'claro' ? 'none' : s.sysTitleLine.textShadow,
+          marginTop: '22px',
+          marginBottom: '0'
+        }}>
+          {t('login_system') || 'SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS'}
+        </p>
       </div>
 
       {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
-      <div style={s.card}>
+      <div style={{...s.card, marginTop: '28px'}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 
@@ -489,7 +499,7 @@ const s = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    marginBottom: '16px',
+    marginBottom: '0',
     textAlign: 'center',
   },
   logo: {
