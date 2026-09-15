@@ -542,8 +542,8 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
   };
 
   // Quick Register Modal Handlers
-  const handleOpenRegister = (emp) => {
-    setRegisteringEmp(emp);
+  const handleOpenRegister = (emp = null) => {
+    setRegisteringEmp(emp || { isNew: true });
     setNewType('Falta Justificada');
     const today = new Date().toISOString().split('T')[0];
     setNewStart(today);
@@ -977,7 +977,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                 <button onClick={exportToExcel} style={{...styles.btnGoToRegister, backgroundColor: '#107c41'}}>
                   📊 Exportar Excel
                 </button>
-                <button onClick={onGoToRegister} style={styles.btnGoToRegister}>
+                <button onClick={() => handleOpenRegister(null)} style={styles.btnGoToRegister}>
                   + Registar Falta
                 </button>
               </div>
@@ -1198,15 +1198,46 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
             <div style={styles.modalHeader}>
               <div>
                 <h4 style={{margin: 0, color: 'var(--color-primary)'}}>Registar Falta</h4>
-                <div style={{fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px'}}>
-                  {registeringEmp.name || registeringEmp.employeeName} (NUIT: {registeringEmp.nip || registeringEmp.employeeNip})
-                </div>
+                {(registeringEmp.name || registeringEmp.employeeName) && (
+                  <div style={{fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px'}}>
+                    {registeringEmp.name || registeringEmp.employeeName} (NUIT: {registeringEmp.nip || registeringEmp.employeeNip})
+                  </div>
+                )}
               </div>
               <button onClick={() => setRegisteringEmp(null)} style={styles.btnCloseDetail}>✕</button>
             </div>
 
             <form onSubmit={handleSaveRegister} style={{display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px'}}>
               {newError && <div style={{color: '#dc2626', fontSize: '12px'}}>{newError}</div>}
+
+              {(!registeringEmp.id && !registeringEmp.employeeId) && (
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Funcionário *</label>
+                  <select
+                    value={registeringEmp.employeeId || ''}
+                    onChange={(e) => {
+                      const chosen = employees.find(emp => String(emp.id) === String(e.target.value));
+                      if (chosen) {
+                        setRegisteringEmp({
+                          ...chosen,
+                          employeeId: chosen.id,
+                          employeeNip: chosen.nip || chosen.nuit,
+                          employeeName: chosen.name
+                        });
+                      }
+                    }}
+                    style={styles.input}
+                    required
+                  >
+                    <option value="">-- Selecione o Funcionário ({employees.length}) --</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} (NUIT: {emp.nip || emp.nuit || '-'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div style={styles.formGroup}>
                 <label style={styles.label}>Tipo de Falta</label>
@@ -1313,10 +1344,13 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
         message={confirmModal.message}
-        onConfirm={confirmModal.onConfirm}
+        onConfirm={() => {
+          if (confirmModal.onConfirm) confirmModal.onConfirm();
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
         hideCancel={confirmModal.hideCancel}
-        confirmText={confirmModal.confirmText}
+        confirmText={confirmModal.confirmText || 'OK'}
         isDestructive={confirmModal.isDestructive}
       />
     </div>

@@ -93,8 +93,26 @@ export default function ConfirmModal({
           )}
         </div>
         <div style={styles.footer}>
-          {!hideCancel && <button onClick={onCancel} style={styles.btnCancel}>{cancelText}</button>}
-          <button onClick={onConfirm} style={isDestructive ? styles.btnDestructive : styles.btnConfirm}>
+          {!hideCancel && (
+            <button 
+              type="button" 
+              onClick={onCancel} 
+              style={styles.btnCancel}
+            >
+              {cancelText}
+            </button>
+          )}
+          <button 
+            type="button"
+            onClick={() => {
+              if (onConfirm) {
+                onConfirm();
+              } else if (onCancel) {
+                onCancel();
+              }
+            }} 
+            style={isDestructive ? styles.btnDestructive : styles.btnConfirm}
+          >
             {confirmText}
           </button>
         </div>

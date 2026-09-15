@@ -657,10 +657,13 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
         message={confirmModal.message}
-        onConfirm={confirmModal.onConfirm}
+        onConfirm={() => {
+          if (confirmModal.onConfirm) confirmModal.onConfirm();
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        }}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
         hideCancel={confirmModal.hideCancel}
-        confirmText={confirmModal.confirmText}
+        confirmText={confirmModal.confirmText || 'OK'}
         isDestructive={confirmModal.isDestructive}
       />
     </div>
