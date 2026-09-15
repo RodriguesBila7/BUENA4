@@ -44,6 +44,7 @@ export default function DraggableTabs({ tabs, activeTab, onTabChange }) {
           <button
             key={tab.key || tab.id || index}
             type="button"
+            className={`module-tab ${isActive ? 'active' : ''}`}
             onClick={() => onTabChange(tab.id !== undefined ? tab.id : (tab.key !== undefined ? tab.key : index))}
             style={isActive ? styles.activeTab : styles.tab}
           >
@@ -52,7 +53,7 @@ export default function DraggableTabs({ tabs, activeTab, onTabChange }) {
             {tab.count !== undefined && (
               <span style={{
                 ...styles.badge,
-                backgroundColor: isActive ? 'var(--color-primary)' : 'var(--color-border)',
+                backgroundColor: isActive ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-border)',
                 color: isActive ? '#ffffff' : 'var(--color-text-muted)'
               }}>
                 {tab.count}
@@ -68,45 +69,45 @@ export default function DraggableTabs({ tabs, activeTab, onTabChange }) {
 const styles = {
   tabsContainer: {
     display: 'flex',
-    gap: '8px',
+    gap: '10px',
     borderBottom: '1px solid var(--color-border)',
+    paddingBottom: '10px',
     marginBottom: '20px',
     overflowX: 'auto',
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
     cursor: 'grab',
-    userSelect: 'none',
-    paddingBottom: '2px'
+    userSelect: 'none'
   },
   tab: {
-    padding: '10px 18px',
+    padding: '8px 16px',
     fontSize: '14px',
-    fontWeight: '500',
+    fontWeight: '600',
     color: 'var(--color-text-muted)',
     backgroundColor: 'transparent',
     border: 'none',
-    borderBottom: '3px solid transparent',
+    borderRadius: '6px',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     whiteSpace: 'nowrap',
     display: 'flex',
     alignItems: 'center',
-    borderRadius: '6px 6px 0 0'
+    outline: 'none'
   },
   activeTab: {
-    padding: '10px 18px',
+    padding: '8px 16px',
     fontSize: '14px',
     fontWeight: '600',
-    color: 'var(--color-primary)',
-    backgroundColor: 'rgba(27, 54, 93, 0.05)',
+    color: 'var(--color-accent, #ffffff)',
+    backgroundColor: 'var(--color-primary)',
     border: 'none',
-    borderBottom: '3px solid var(--color-primary)',
+    borderRadius: '6px',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     whiteSpace: 'nowrap',
     display: 'flex',
     alignItems: 'center',
-    borderRadius: '6px 6px 0 0'
+    outline: 'none'
   },
   badge: {
     marginLeft: '8px',

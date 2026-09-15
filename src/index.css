@@ -511,7 +511,8 @@ code {
   cursor: grabbing;
 }
 
-/* Abas de Avaliação (Tab styling) */
+/* Abas de Navegação / Indicador de Módulos (Estilo Pílula Padronizado) */
+.module-tab,
 .evaluation-tab {
   padding: 8px 16px;
   border: none;
@@ -523,19 +524,22 @@ code {
   border-radius: 6px;
   transition: all 0.2s;
   white-space: nowrap;
-  outline: none !important; /* Remove as marcas brancas/outline de foco */
+  outline: none !important;
   box-shadow: none !important;
 }
 
+.module-tab:hover,
 .evaluation-tab:hover {
   background-color: rgba(255, 255, 255, 0.08);
   color: var(--color-text-base);
 }
 
+[data-theme="light"] .module-tab:hover,
 [data-theme="light"] .evaluation-tab:hover {
   background-color: rgba(0, 0, 0, 0.05);
 }
 
+.module-tab.active,
 .evaluation-tab.active {
   background-color: var(--color-primary);
   color: var(--color-accent) !important;

@@ -10,18 +10,15 @@ import AdminActsAnalytics from '../adminActs/AdminActsAnalytics';
 import { calcPromoEligibility, calcProgEligibility } from './careerUtils';
 
 export default function CareerManager({ user }) {
-  const [activeSubTab, setActiveSubTab] = useState('promo'); // promo, prog, history
+  const [activeSubTab, setActiveSubTab] = useState('promo');
   const { employees } = useEmployeeData();
   const { data: orgData } = useOrgData();
   const { acts, registerAct, confirmAct, deleteAct, updateAct, fetchData } = useAdminActsData();
 
-  // Filter out inactive employees if needed, but normally we check active employees
   const activeEmployees = useMemo(() => employees.filter(e => e.isActive !== false), [employees]);
 
-  // Calculate elegibles
   const promoElegibles = useMemo(() => {
     return activeEmployees.map(emp => calcPromoEligibility(emp, acts)).filter(e => e.isEligible).sort((a,b) => {
-      // 1. Mais anos de atraso 2. Maior tempo na categoria 3. Mais antigo
       if (b.yearsInCategory !== a.yearsInCategory) return b.yearsInCategory - a.yearsInCategory;
       return new Date(a.emp.admissionDate || 0) - new Date(b.emp.admissionDate || 0);
     });
@@ -29,13 +26,11 @@ export default function CareerManager({ user }) {
 
   const progElegibles = useMemo(() => {
     return activeEmployees.map(emp => calcProgEligibility(emp, acts)).filter(e => e.isEligible).sort((a,b) => {
-      // 1. Maior tempo no nivel 2. Maior tempo na categoria
       if (b.yearsInLevel !== a.yearsInLevel) return b.yearsInLevel - a.yearsInLevel;
       return b.yearsInCategory - a.yearsInCategory;
     });
   }, [activeEmployees, acts]);
 
-  // Calcular tempo para todos os funcionarios para a nova aba
   const allServiceTimes = useMemo(() => {
     return activeEmployees.map(emp => {
       const promoData = calcPromoEligibility(emp, acts);
@@ -73,7 +68,6 @@ export default function CareerManager({ user }) {
         </div>
       )}
       
-      {/* Cards de Resumo */}
       <div style={styles.cardsGrid}>
         <div style={{...styles.card, borderLeft: '4px solid #10b981'}}>
           <div style={styles.cardContent}>
@@ -101,21 +95,40 @@ export default function CareerManager({ user }) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ ...styles.tabsContainer, flexWrap: 'wrap' }}>
-        <button onClick={() => setActiveSubTab('analytics')} style={activeSubTab === 'analytics' ? styles.tabActive : styles.tab}>
+      <div style={styles.tabsContainer}>
+        <button 
+          className={`module-tab ${activeSubTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('analytics')}
+          type="button"
+        >
           Estatística Analítica
         </button>
-        <button onClick={() => setActiveSubTab('promo')} style={activeSubTab === 'promo' ? styles.tabActive : styles.tab}>
+        <button 
+          className={`module-tab ${activeSubTab === 'promo' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('promo')}
+          type="button"
+        >
           Elegíveis para Promoção (≥ 6 Anos)
         </button>
-        <button onClick={() => setActiveSubTab('prog')} style={activeSubTab === 'prog' ? styles.tabActive : styles.tab}>
+        <button 
+          className={`module-tab ${activeSubTab === 'prog' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('prog')}
+          type="button"
+        >
           Elegíveis para Progressão (≥ 2 Anos)
         </button>
-        <button onClick={() => setActiveSubTab('time')} style={activeSubTab === 'time' ? styles.tabActive : styles.tab}>
+        <button 
+          className={`module-tab ${activeSubTab === 'time' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('time')}
+          type="button"
+        >
           Tempo de Serviço Geral
         </button>
-        <button onClick={() => setActiveSubTab('history')} style={activeSubTab === 'history' ? styles.tabActive : styles.tab}>
+        <button 
+          className={`module-tab ${activeSubTab === 'history' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('history')}
+          type="button"
+        >
           Histórico de Promoções / Progressões
         </button>
       </div>
@@ -139,8 +152,6 @@ const styles = {
   cardContent: { display: 'flex', flexDirection: 'column', gap: '8px' },
   cardLabel: { fontSize: '13px', fontWeight: 'bold', color: 'var(--color-text-muted)' },
   cardValue: { fontSize: '24px', fontWeight: 'bold', color: 'var(--color-text-main)' },
-  tabsContainer: { display: 'flex', gap: '10px', borderBottom: '1px solid var(--color-border)' },
-  tab: { padding: '12px 24px', cursor: 'pointer', backgroundColor: 'transparent', border: 'none', borderBottom: '3px solid transparent', fontSize: '15px', color: 'var(--color-text-muted)', fontWeight: '500' },
-  tabActive: { padding: '12px 24px', cursor: 'pointer', backgroundColor: 'transparent', border: 'none', borderBottom: '3px solid var(--color-primary)', fontSize: '15px', color: 'var(--color-primary)', fontWeight: 'bold' },
+  tabsContainer: { display: 'flex', gap: '10px', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px', overflowX: 'auto', flexWrap: 'wrap' },
   tabContent: { backgroundColor: 'var(--color-bg-card)', padding: '20px', borderRadius: '8px', border: '1px solid var(--color-border)' }
 };

@@ -185,19 +185,20 @@ export default function MudancaCarreiraManager({ actsInGroup }) {
     <div style={styles.container}>
       <div style={styles.header}>
         <h2 style={styles.title}>Módulo de Mudança de Carreira</h2>
-        <p style={styles.desc}>Avaliação automática de elegibilidade e gestão de processos de mudança de carreira.</p>
       </div>
 
       <div style={styles.tabsContainer}>
         <button 
+          className={`module-tab ${activeSubTab === 'avaliacao' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('avaliacao')} 
-          style={activeSubTab === 'avaliacao' ? styles.activeTab : styles.tab}
+          type="button"
         >
           Funcionários Elegíveis ({eligibleEmployees.length})
         </button>
         <button 
+          className={`module-tab ${activeSubTab === 'processos' ? 'active' : ''}`}
           onClick={() => setActiveSubTab('processos')} 
-          style={activeSubTab === 'processos' ? styles.activeTab : styles.tab}
+          type="button"
         >
           Processos e Histórico
         </button>
@@ -347,9 +348,7 @@ const styles = {
   header: { padding: '24px 30px', backgroundColor: 'var(--color-bg-card)', borderBottom: '1px solid var(--color-border)' },
   title: { margin: '0 0 8px 0', fontSize: '24px', fontWeight: '700', color: 'var(--color-primary)' },
   desc: { margin: 0, color: 'var(--color-text-muted)', fontSize: '15px' },
-  tabsContainer: { display: 'flex', gap: '4px', padding: '0 30px', backgroundColor: 'var(--color-bg-card)', borderBottom: '1px solid var(--color-border)' },
-  tab: { padding: '16px 24px', background: 'transparent', border: 'none', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: '600', cursor: 'pointer', borderBottom: '3px solid transparent' },
-  activeTab: { padding: '16px 24px', background: 'transparent', border: 'none', color: 'var(--color-primary)', fontSize: '14px', fontWeight: '600', cursor: 'pointer', borderBottom: '3px solid var(--color-primary)' },
+  tabsContainer: { display: 'flex', gap: '10px', padding: '12px 30px', backgroundColor: 'var(--color-bg-card)', borderBottom: '1px solid var(--color-border)', overflowX: 'auto' },
   content: { flex: 1, padding: '30px', overflowY: 'auto' },
   card: { backgroundColor: 'var(--color-bg-card)', borderRadius: '8px', border: '1px solid var(--color-border)', padding: '24px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' },
   cardTitle: { margin: '0 0 16px 0', fontSize: '18px', color: 'var(--color-primary)' },
