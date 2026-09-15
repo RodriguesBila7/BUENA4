@@ -201,8 +201,8 @@ export default function ProgressionTab({ elegibles = [], orgData, onProgress, on
             </select>
           </div>
 
-          <div style={styles.filterGroup}>
-            <label style={styles.label}>Repartição / Repartição Central</label>
+          <div style={{ ...styles.filterGroup, minWidth: '260px' }}>
+            <label style={{ ...styles.label, whiteSpace: 'nowrap' }}>Repartição / Repartição Central</label>
             <select 
               value={filterDivision} 
               onChange={e => { setFilterDivision(e.target.value); setCurrentPage(1); }} 
@@ -212,7 +212,7 @@ export default function ProgressionTab({ elegibles = [], orgData, onProgress, on
               <option value="">{filterDirectorate ? 'Todas as Repartições' : 'Selecione a Direcção primeiro'}</option>
               {availableDivisions.map(div => (
                 <option key={div.id} value={div.id}>
-                  {div.name} {!div.departmentId ? '(Central / Sem Dep.)' : ''}
+                  {div.name}{!div.departmentId ? ' (Repartição Central)' : ''}
                 </option>
               ))}
             </select>
@@ -409,8 +409,8 @@ const styles = {
   },
   filterGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '14px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '16px'
   },
   filterGroup: {
     display: 'flex',
@@ -422,7 +422,8 @@ const styles = {
     fontWeight: '700',
     color: 'var(--color-text-muted)',
     textTransform: 'uppercase',
-    letterSpacing: '0.3px'
+    letterSpacing: '0.3px',
+    whiteSpace: 'nowrap'
   },
   input: {
     padding: '9px 12px',

@@ -294,10 +294,10 @@ export default function EmployeeViewer({ employees, orgData, onEdit, onDelete, o
               name="divisionId" 
               value={filters.divisionId} 
               onChange={(e) => setFilters(p => ({...p, divisionId: e.target.value, sectionId: ''}))} 
-              style={styles.filterSelect} 
+              style={{ ...styles.filterSelect, minWidth: '240px' }} 
               disabled={!filters.departmentId && !filters.directorateId}
             >
-              <option value="">Selecione a Repartição...</option>
+              <option value="">Selecione a Repartição / Repartição Central...</option>
               {data.divisions.filter(d => {
                 if (filters.departmentId) return d.departmentId === filters.departmentId;
                 if (filters.directorateId) return d.directorateId === filters.directorateId || (d.departmentId && data.departments.some(dep => dep.id === d.departmentId && dep.directorateId === filters.directorateId));

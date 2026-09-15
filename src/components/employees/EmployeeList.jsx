@@ -87,8 +87,8 @@ export default function EmployeeList({ employees, orgData, onEdit, onDelete }) {
             {data.departments.filter(d => d.directorateId === filters.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
 
-          <select name="divisionId" value={filters.divisionId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.departmentId && !filters.directorateId}>
-            <option value="">Todas as Repartições</option>
+          <select name="divisionId" value={filters.divisionId} onChange={handleFilterChange} style={{ ...styles.filterSelect, minWidth: '240px' }} disabled={!filters.departmentId && !filters.directorateId}>
+            <option value="">Todas as Repartições / Repartições Centrais</option>
             {data.divisions.filter(d => {
               if (filters.departmentId) return d.departmentId === filters.departmentId;
               if (filters.directorateId) return d.directorateId === filters.directorateId || (d.departmentId && data.departments.some(dep => dep.id === d.departmentId && dep.directorateId === filters.directorateId));
@@ -196,7 +196,7 @@ const styles = {
   toolbar: { display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' },
   searchBox: { width: '100%', maxWidth: '400px' },
   searchInput: { width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '14px', outline: 'none' },
-  filtersGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' },
+  filtersGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' },
   filterSelect: { padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13px', outline: 'none' },
   statsBar: { fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--color-border)' },
   tableContainer: { overflowX: 'auto', backgroundColor: 'var(--color-bg-card)', borderRadius: '8px', border: '1px solid var(--color-border)' },

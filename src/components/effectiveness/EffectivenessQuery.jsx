@@ -919,8 +919,8 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
               </select>
             </div>
 
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Repartição / Repartição Central</label>
+            <div style={{ ...styles.formGroup, minWidth: '260px' }}>
+              <label style={{ ...styles.label, whiteSpace: 'nowrap' }}>Repartição / Repartição Central</label>
               <select 
                 value={divisionId} 
                 onChange={(e) => setDivisionId(e.target.value)} 
@@ -1472,10 +1472,10 @@ const styles = {
   cardHeaderWithInfo: { padding: '14px 18px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' },
   cardTitle: { margin: 0, fontSize: '15px', fontWeight: 'bold', color: 'var(--color-primary)' },
   cardBody: { padding: '16px' },
-  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' },
+  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '14px' },
   filterFooter: { display: 'flex', justifyContent: 'flex-end', marginTop: '14px' },
   formGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  label: { fontSize: '11.5px', fontWeight: '600', color: 'var(--color-text-muted)' },
+  label: { fontSize: '11.5px', fontWeight: '600', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' },
   input: { padding: '8px 10px', borderRadius: '5px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-main)', fontSize: '12.5px', outline: 'none' },
   btnReset: { padding: '6px 14px', borderRadius: '5px', border: '1px solid var(--color-border)', backgroundColor: 'transparent', color: 'var(--color-text-muted)', cursor: 'pointer', fontSize: '12px' },
   btnGoToRegister: { padding: '8px 14px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', fontWeight: 'bold', cursor: 'pointer', fontSize: '12.5px' },

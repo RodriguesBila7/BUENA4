@@ -142,8 +142,8 @@ export default function AdvancedFilters({ filters, setFilters, orgData }) {
           </select>
         </div>
 
-        <div style={styles.group}>
-          <label style={styles.label}>Repartição</label>
+        <div style={{ ...styles.group, minWidth: '250px' }}>
+          <label style={{ ...styles.label, whiteSpace: 'nowrap' }}>Repartição / Repartição Central</label>
           <select name="divisionId" value={filters.divisionId || ''} onChange={handleChange} style={styles.input} disabled={!filters.departmentId && !effectiveDirectorateId}>
             <option value="">Todas</option>
             {activeDivisions.map(d => (
@@ -180,8 +180,8 @@ const styles = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)' },
   title: { fontSize: '15px', fontWeight: '600', color: 'var(--color-text-base)', margin: 0 },
   resetBtn: { fontSize: '13px', color: '#e53e3e', background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: '600' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' },
+  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' },
   group: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '600', color: 'var(--color-text-muted)' },
+  label: { fontSize: '12px', fontWeight: '600', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' },
   input: { padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-base)', fontSize: '13px' }
 };
