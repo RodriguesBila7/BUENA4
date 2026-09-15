@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { exportToExcel } from '../../utils/excelExport';
 import ConfirmModal from '../ConfirmModal';
 import CrudActionButtons from '../common/CrudActionButtons';
 
-export default function CareerHistoryTab({ acts, employees, orgData, user, onConfirm, onDelete, onUpdate }) {
+export default function CareerHistoryTab({ acts = [], employees = [], orgData, user, onConfirm, onDelete, onUpdate }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterDirectorate, setFilterDirectorate] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterDivision, setFilterDivision] = useState('');
+  const [filterActType, setFilterActType] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null, hideCancel: false, isDestructive: false, hasInput: false, inputType: 'text', placeholder: '' });
@@ -21,15 +26,76 @@ export default function CareerHistoryTab({ acts, employees, orgData, user, onCon
     });
   };
   
-  // Filter only promotions, progressions, and career changes
-  const careerActs = acts.filter(a => a.type === 'promotion' || a.actType === 'Promoção' || a.type === 'progression' || a.actType === 'Progressão' || a.actType === 'Mudança de Carreira').sort((a,b) => new Date(b.date || b.actDate) - new Date(a.date || a.actDate));
+  const availableDepartments = useMemo(() => {
+    if (!filterDirectorate) return [];
+    return (orgData?.departments || []).filter(d => String(d.directorateId) === String(filterDirectorate));
+  }, [orgData?.departments, filterDirectorate]);
 
-  const filtered = careerActs.filter(a => {
-    if (!searchTerm) return true;
-    const emp = employees.find(e => e.id === a.employeeId);
-    if (!emp) return false;
-    return String(emp.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || String(emp.nip || emp.nuit || '').includes(searchTerm);
-  });
+  const availableDivisions = useMemo(() => {
+    if (!filterDirectorate) return [];
+    if (filterDepartment) {
+      return (orgData?.divisions || []).filter(div => String(div.departmentId) === String(filterDepartment));
+    }
+    const depIds = new Set(availableDepartments.map(d => String(d.id)));
+    return (orgData?.divisions || []).filter(div => 
+      String(div.directorateId) === String(filterDirectorate) || (div.departmentId && depIds.has(String(div.departmentId)))
+    );
+  }, [orgData?.divisions, filterDirectorate, filterDepartment, availableDepartments]);
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setFilterDirectorate('');
+    setFilterDepartment('');
+    setFilterDivision('');
+    setFilterActType('');
+    setFilterStatus('');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = Boolean(
+    searchTerm || filterDirectorate || filterDepartment || filterDivision || filterActType || filterStatus
+  );
+
+  const careerActs = useMemo(() => {
+    return (acts || []).filter(a => a.type === 'promotion' || a.actType === 'Promoção' || a.type === 'progression' || a.actType === 'Progressão' || a.actType === 'Mudança de Carreira').sort((a,b) => new Date(b.date || b.actDate) - new Date(a.date || a.actDate));
+  }, [acts]);
+
+  const filtered = useMemo(() => {
+    return careerActs.filter(a => {
+      const emp = (employees || []).find(e => e.id === a.employeeId);
+      if (!emp) return false;
+
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        if (!String(emp.name || '').toLowerCase().includes(term) && !String(emp.nip || emp.nuit || '').includes(term)) {
+          return false;
+        }
+      }
+
+      if (filterDirectorate && String(emp.directorateId) !== String(filterDirectorate)) {
+        return false;
+      }
+      if (filterDepartment && String(emp.departmentId) !== String(filterDepartment)) {
+        return false;
+      }
+      if (filterDivision && String(emp.divisionId) !== String(filterDivision)) {
+        return false;
+      }
+
+      if (filterActType) {
+        const actType = a.actType || a.type;
+        if (actType !== filterActType) return false;
+      }
+
+      if (filterStatus) {
+        const isPending = a.status === 'Pendente' || a.details?.status === 'Pendente';
+        if (filterStatus === 'Pendente' && !isPending) return false;
+        if (filterStatus === 'Confirmado' && isPending) return false;
+      }
+
+      return true;
+    });
+  }, [careerActs, employees, searchTerm, filterDirectorate, filterDepartment, filterDivision, filterActType, filterStatus]);
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const currentData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -204,19 +270,132 @@ export default function CareerHistoryTab({ acts, employees, orgData, user, onCon
   const isSuperAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(user?.roleId || user?.role) || user?.username === 'admin';
 
   return (
-    <div>
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between' }}>
-        <input 
-          type="text" 
-          placeholder="Pesquisar por Nome ou NUIT..." 
-          value={searchTerm} 
-          onChange={e => setSearchTerm(e.target.value)} 
-          style={styles.searchInput}
-        />
-        <button onClick={handleExportExcel} style={styles.exportBtn}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Exportar Excel
-        </button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={styles.filterCard}>
+        <div style={styles.filterCardHeader}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '18px' }}>🔍</span>
+            <h4 style={styles.filterCardTitle}>Filtros do Histórico de Carreira</h4>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {hasActiveFilters && (
+              <button 
+                type="button" 
+                onClick={handleClearFilters}
+                style={styles.btnClearFilters}
+                title="Limpar todos os filtros"
+              >
+                ✕ Limpar Filtros
+              </button>
+            )}
+            <button onClick={handleExportExcel} style={styles.exportBtn}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Exportar Excel
+            </button>
+          </div>
+        </div>
+
+        <div style={styles.filterGrid}>
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Pesquisa por Nome ou NUIT</label>
+            <input 
+              type="text" 
+              placeholder="Digite o NUIT ou Nome..." 
+              value={searchTerm} 
+              onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} 
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Direcção / Unidade Orgânica</label>
+            <select 
+              value={filterDirectorate} 
+              onChange={e => { 
+                setFilterDirectorate(e.target.value); 
+                setFilterDepartment('');
+                setFilterDivision('');
+                setCurrentPage(1); 
+              }} 
+              style={styles.select}
+            >
+              <option value="">Todas as Direcções</option>
+              {(orgData?.directorates || []).map(d => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Departamento</label>
+            <select 
+              value={filterDepartment} 
+              onChange={e => { 
+                setFilterDepartment(e.target.value); 
+                setFilterDivision('');
+                setCurrentPage(1); 
+              }} 
+              style={styles.select}
+              disabled={!filterDirectorate}
+            >
+              <option value="">{filterDirectorate ? 'Todos os Departamentos' : 'Selecione a Direcção primeiro'}</option>
+              {availableDepartments.map(dep => (
+                <option key={dep.id} value={dep.id}>{dep.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Repartição / Repartição Central</label>
+            <select 
+              value={filterDivision} 
+              onChange={e => { setFilterDivision(e.target.value); setCurrentPage(1); }} 
+              style={styles.select}
+              disabled={!filterDirectorate}
+            >
+              <option value="">{filterDirectorate ? 'Todas as Repartições' : 'Selecione a Direcção primeiro'}</option>
+              {availableDivisions.map(div => (
+                <option key={div.id} value={div.id}>
+                  {div.name} {!div.departmentId ? '(Central / Sem Dep.)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Tipo de Acto</label>
+            <select 
+              value={filterActType} 
+              onChange={e => { setFilterActType(e.target.value); setCurrentPage(1); }} 
+              style={styles.select}
+            >
+              <option value="">Todos os Tipos</option>
+              <option value="Promoção">Promoção</option>
+              <option value="Progressão">Progressão</option>
+              <option value="Mudança de Carreira">Mudança de Carreira</option>
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Estado do Acto</label>
+            <select 
+              value={filterStatus} 
+              onChange={e => { setFilterStatus(e.target.value); setCurrentPage(1); }} 
+              style={styles.select}
+            >
+              <option value="">Todos os Estados</option>
+              <option value="Confirmado">Confirmado / Efectivo</option>
+              <option value="Pendente">Pendente de Homologação</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={styles.filterFooter}>
+          <span style={styles.resultsBadge}>
+            📊 <strong>{filtered.length}</strong> {filtered.length === 1 ? 'registo encontrado' : 'registos encontrados'}
+          </span>
+        </div>
       </div>
 
       <table className="premium-table">
@@ -349,8 +528,104 @@ export default function CareerHistoryTab({ acts, employees, orgData, user, onCon
 }
 
 const styles = {
-  searchInput: { padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: '4px', width: '300px' },
-  exportBtn: { display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
+  filterCard: {
+    backgroundColor: 'var(--color-bg-card)',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border)',
+    padding: '18px 20px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+  },
+  filterCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+    paddingBottom: '10px',
+    borderBottom: '1px solid var(--color-border)',
+    flexWrap: 'wrap',
+    gap: '10px'
+  },
+  filterCardTitle: {
+    margin: 0,
+    fontSize: '15px',
+    fontWeight: '700',
+    color: 'var(--color-primary)'
+  },
+  btnClearFilters: {
+    padding: '6px 12px',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    border: '1px solid rgba(239, 68, 68, 0.25)',
+    color: '#dc2626',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.15s'
+  },
+  exportBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 14px',
+    backgroundColor: '#059669',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '12px'
+  },
+  filterGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '14px'
+  },
+  filterGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  label: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: 'var(--color-text-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px'
+  },
+  input: {
+    padding: '9px 12px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-base)',
+    color: 'var(--color-text-base)',
+    outline: 'none',
+    fontSize: '13px'
+  },
+  select: {
+    padding: '9px 12px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-base)',
+    color: 'var(--color-text-base)',
+    outline: 'none',
+    fontSize: '13px',
+    cursor: 'pointer'
+  },
+  filterFooter: {
+    marginTop: '14px',
+    paddingTop: '10px',
+    borderTop: '1px solid var(--color-border)',
+    display: 'flex',
+    justifyContent: 'flex-start'
+  },
+  resultsBadge: {
+    fontSize: '12px',
+    color: 'var(--color-text-muted)',
+    backgroundColor: 'var(--color-bg-base)',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border)'
+  },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px', backgroundColor: 'var(--color-bg-base)' },
   th: { padding: '12px', textAlign: 'left', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)' },
   td: { padding: '12px', borderBottom: '1px solid var(--color-border)' },

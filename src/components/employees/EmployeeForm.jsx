@@ -605,7 +605,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
                     disabled={(!formData.departmentId && !formData.directorateId) || activeDivisions.length === 0}
                   >
                     <option value="">-- Nenhuma / Sem Repartição --</option>
-                    {activeDivisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    {activeDivisions.map(d => <option key={d.id} value={d.id}>{d.name}{!d.departmentId ? ' (Repartição Central)' : ''}</option>)}
                   </select>
                 </div>
               </>

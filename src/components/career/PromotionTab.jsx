@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { exportToExcel } from '../../utils/excelExport';
 import AdminActWizard from '../employees/acts/AdminActWizard';
 
-export default function PromotionTab({ elegibles, orgData, onPromote, onRefresh }) {
+export default function PromotionTab({ elegibles = [], orgData, onPromote, onRefresh }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterDirectorate, setFilterDirectorate] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterDivision, setFilterDivision] = useState('');
+  const [filterCareer, setFilterCareer] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterDelay, setFilterDelay] = useState('');
   const [selectedEmp, setSelectedEmp] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -14,26 +20,110 @@ export default function PromotionTab({ elegibles, orgData, onPromote, onRefresh 
   };
 
   const getStatusColor = (years) => {
-    if (years > 6) return '#ef4444'; // Red
-    if (years >= 5) return '#f59e0b'; // Yellow
-    return '#10b981'; // Green
+    if (years > 6) return '#ef4444';
+    if (years >= 5) return '#f59e0b';
+    return '#10b981';
   };
 
-  const filtered = elegibles.filter(e => 
-    String(e.emp.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-    String(e.emp.nip || e.emp.nuit || '').includes(searchTerm)
+  const availableDepartments = useMemo(() => {
+    if (!filterDirectorate) return [];
+    return (orgData?.departments || []).filter(d => String(d.directorateId) === String(filterDirectorate));
+  }, [orgData?.departments, filterDirectorate]);
+
+  const availableDivisions = useMemo(() => {
+    if (!filterDirectorate) return [];
+    if (filterDepartment) {
+      return (orgData?.divisions || []).filter(div => String(div.departmentId) === String(filterDepartment));
+    }
+    const depIds = new Set(availableDepartments.map(d => String(d.id)));
+    return (orgData?.divisions || []).filter(div => 
+      String(div.directorateId) === String(filterDirectorate) || (div.departmentId && depIds.has(String(div.departmentId)))
+    );
+  }, [orgData?.divisions, filterDirectorate, filterDepartment, availableDepartments]);
+
+  const availableCategories = useMemo(() => {
+    const list = orgData?.categories || [];
+    if (!filterCareer) return list;
+    return list.filter(c => String(c.careerId) === String(filterCareer));
+  }, [orgData?.categories, filterCareer]);
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setFilterDirectorate('');
+    setFilterDepartment('');
+    setFilterDivision('');
+    setFilterCareer('');
+    setFilterCategory('');
+    setFilterDelay('');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = Boolean(
+    searchTerm || filterDirectorate || filterDepartment || filterDivision || filterCareer || filterCategory || filterDelay
   );
 
+  const filtered = useMemo(() => {
+    return elegibles.filter(e => {
+      if (!e || !e.emp) return false;
+
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        const name = String(e.emp.name || '').toLowerCase();
+        const nip = String(e.emp.nip || e.emp.nuit || '').toLowerCase();
+        if (!name.includes(term) && !nip.includes(term)) return false;
+      }
+
+      if (filterDirectorate && String(e.emp.directorateId) !== String(filterDirectorate)) {
+        return false;
+      }
+
+      if (filterDepartment && String(e.emp.departmentId) !== String(filterDepartment)) {
+        return false;
+      }
+
+      if (filterDivision && String(e.emp.divisionId) !== String(filterDivision)) {
+        return false;
+      }
+
+      if (filterCareer && String(e.emp.careerId) !== String(filterCareer)) {
+        return false;
+      }
+
+      if (filterCategory && String(e.emp.categoryId) !== String(filterCategory)) {
+        return false;
+      }
+
+      if (filterDelay === 'delayed' && e.yearsInCategory <= 6) {
+        return false;
+      }
+
+      if (filterDelay === 'near' && (e.yearsInCategory < 5 || e.yearsInCategory > 6)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [elegibles, searchTerm, filterDirectorate, filterDepartment, filterDivision, filterCareer, filterCategory, filterDelay]);
+
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const currentData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const currentData = useMemo(() => {
+    return filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [filtered, currentPage, itemsPerPage]);
 
   const handleExportExcel = () => {
     const dataToExport = filtered.map(e => {
       const career = orgData?.careers?.find(c => c.id === e.emp.careerId)?.name || '-';
       const category = orgData?.categories?.find(c => c.id === e.emp.categoryId)?.name || '-';
+      const dirName = orgData?.directorates?.find(d => d.id === e.emp.directorateId)?.name || '-';
+      const depName = orgData?.departments?.find(d => d.id === e.emp.departmentId)?.name || '-';
+      const divName = orgData?.divisions?.find(d => d.id === e.emp.divisionId)?.name || '-';
+
       return {
         'NUIT': e.emp.nip || e.emp.nuit || '-',
         'Nome': e.emp.name || 'Sem Nome',
+        'Direcção': dirName,
+        'Departamento': depName,
+        'Repartição': divName,
         'Carreira': career,
         'Categoria Actual': `${category} ${e.emp.step ? `(Nível ${e.emp.step})` : ''}`,
         'Última Promoção': e.lastPromoDate ? e.lastPromoDate.toLocaleDateString() : 'Não registada',
@@ -45,73 +135,205 @@ export default function PromotionTab({ elegibles, orgData, onPromote, onRefresh 
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <input 
-          type="text" 
-          placeholder="Pesquisar por Nome ou NUIT..." 
-          value={searchTerm} 
-          onChange={e => setSearchTerm(e.target.value)} 
-          style={styles.searchInput}
-        />
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <span style={{ padding: '6px 12px', backgroundColor: '#ef4444', color: '#fff', borderRadius: '4px', fontSize: '12px' }}>Mais de 6 anos</span>
-          <span style={{ padding: '6px 12px', backgroundColor: '#f59e0b', color: '#fff', borderRadius: '4px', fontSize: '12px' }}>5 a 6 anos</span>
-          <button onClick={handleExportExcel} style={styles.exportBtn}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Exportar
-          </button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={styles.filterCard}>
+        <div style={styles.filterCardHeader}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '18px' }}>🔍</span>
+            <h4 style={styles.filterCardTitle}>Filtros de Elegíveis para Promoção</h4>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {hasActiveFilters && (
+              <button 
+                type="button" 
+                onClick={handleClearFilters}
+                style={styles.btnClearFilters}
+                title="Limpar todos os filtros"
+              >
+                ✕ Limpar Filtros
+              </button>
+            )}
+            <button onClick={handleExportExcel} style={styles.exportBtn}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Exportar Excel
+            </button>
+          </div>
+        </div>
+
+        <div style={styles.filterGrid}>
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Pesquisa por Nome ou NUIT</label>
+            <input 
+              type="text" 
+              placeholder="Digite o NUIT ou Nome..." 
+              value={searchTerm} 
+              onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} 
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Direcção / Unidade Orgânica</label>
+            <select 
+              value={filterDirectorate} 
+              onChange={e => { 
+                setFilterDirectorate(e.target.value); 
+                setFilterDepartment('');
+                setFilterDivision('');
+                setCurrentPage(1); 
+              }} 
+              style={styles.select}
+            >
+              <option value="">Todas as Direcções</option>
+              {(orgData?.directorates || []).map(d => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Departamento</label>
+            <select 
+              value={filterDepartment} 
+              onChange={e => { 
+                setFilterDepartment(e.target.value); 
+                setFilterDivision('');
+                setCurrentPage(1); 
+              }} 
+              style={styles.select}
+              disabled={!filterDirectorate}
+            >
+              <option value="">{filterDirectorate ? 'Todos os Departamentos' : 'Selecione a Direcção primeiro'}</option>
+              {availableDepartments.map(dep => (
+                <option key={dep.id} value={dep.id}>{dep.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Repartição / Repartição Central</label>
+            <select 
+              value={filterDivision} 
+              onChange={e => { setFilterDivision(e.target.value); setCurrentPage(1); }} 
+              style={styles.select}
+              disabled={!filterDirectorate}
+            >
+              <option value="">{filterDirectorate ? 'Todas as Repartições' : 'Selecione a Direcção primeiro'}</option>
+              {availableDivisions.map(div => (
+                <option key={div.id} value={div.id}>
+                  {div.name} {!div.departmentId ? '(Central / Sem Dep.)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Carreira Profissional</label>
+            <select 
+              value={filterCareer} 
+              onChange={e => { 
+                setFilterCareer(e.target.value); 
+                setFilterCategory(''); 
+                setCurrentPage(1); 
+              }} 
+              style={styles.select}
+            >
+              <option value="">Todas as Carreiras</option>
+              {(orgData?.careers || []).map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Categoria Profissional</label>
+            <select 
+              value={filterCategory} 
+              onChange={e => { setFilterCategory(e.target.value); setCurrentPage(1); }} 
+              style={styles.select}
+            >
+              <option value="">Todas as Categorias</option>
+              {availableCategories.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Situação do Tempo na Categoria</label>
+            <select 
+              value={filterDelay} 
+              onChange={e => { setFilterDelay(e.target.value); setCurrentPage(1); }} 
+              style={styles.select}
+            >
+              <option value="">Todas as Situações</option>
+              <option value="delayed">Mais de 6 anos (Atrasado)</option>
+              <option value="near">5 a 6 anos (Próximo do limite)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style={styles.filterFooter}>
+          <span style={styles.resultsBadge}>
+            📊 <strong>{filtered.length}</strong> {filtered.length === 1 ? 'funcionário elegível' : 'funcionários elegíveis'}
+          </span>
         </div>
       </div>
 
-      <table className="premium-table">
-        <thead>
-          <tr>
-            <th>NUIT</th>
-            <th>Nome</th>
-            <th>Carreira</th>
-            <th>Categoria Actual</th>
-            <th>Última Promoção</th>
-            <th>Tempo na Categoria</th>
-            <th>Estado</th>
-            <th>Acções</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentData.length === 0 && (
-            <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Nenhum funcionário elegível encontrado.</td></tr>
-          )}
-          {currentData.map(e => {
-            const career = orgData?.careers?.find(c => c.id === e.emp.careerId)?.name || '-';
-            const category = orgData?.categories?.find(c => c.id === e.emp.categoryId)?.name || '-';
-            
-            return (
-              <tr key={e.emp.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                <td>{e.emp.nip || e.emp.nuit || '-'}</td>
-                <td><strong>{e.emp.name || 'Sem Nome'}</strong></td>
-                <td>{career}</td>
-                <td>{category} {e.emp.step ? `(Nível ${e.emp.step})` : ''}</td>
-                <td>{e.lastPromoDate ? e.lastPromoDate.toLocaleDateString() : 'Não registada'}</td>
-                <td>
-                  <span style={{ fontWeight: 'bold', color: '#059669' }}>
-                    {e.exactTime.formatted}
-                  </span>
-                </td>
-                <td>
-                  <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '12px', backgroundColor: getStatusColor(e.yearsInCategory), color: '#fff' }}>
-                    {e.yearsInCategory > 6 ? 'Atrasado' : 'Elegível'}
-                  </span>
-                </td>
-                <td>
-                  <button onClick={() => handlePromoteClick(e)} style={styles.actionBtn}>Promover</button>
+      <div style={styles.tableContainer}>
+        <table className="premium-table">
+          <thead>
+            <tr>
+              <th>NUIT</th>
+              <th>Nome</th>
+              <th>Carreira</th>
+              <th>Categoria Actual</th>
+              <th>Última Promoção</th>
+              <th>Tempo na Categoria</th>
+              <th>Estado</th>
+              <th style={{ textAlign: 'center' }}>Acções</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentData.length === 0 && (
+              <tr>
+                <td colSpan="8" style={styles.empty}>
+                  Nenhum funcionário elegível encontrado com os critérios selecionados.
                 </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            )}
+            {currentData.map(e => {
+              const career = orgData?.careers?.find(c => c.id === e.emp.careerId)?.name || '-';
+              const category = orgData?.categories?.find(c => c.id === e.emp.categoryId)?.name || '-';
+              
+              return (
+                <tr key={e.emp.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <td><strong>{e.emp.nip || e.emp.nuit || '-'}</strong></td>
+                  <td><strong>{e.emp.name || 'Sem Nome'}</strong></td>
+                  <td>{career}</td>
+                  <td>{category} {e.emp.step ? `(Nível ${e.emp.step})` : ''}</td>
+                  <td>{e.lastPromoDate ? e.lastPromoDate.toLocaleDateString() : 'Não registada'}</td>
+                  <td>
+                    <span style={{ fontWeight: 'bold', color: '#059669' }}>
+                      {e.exactTime.formatted}
+                    </span>
+                  </td>
+                  <td>
+                    <span style={{ padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', backgroundColor: getStatusColor(e.yearsInCategory), color: '#fff' }}>
+                      {e.yearsInCategory > 6 ? 'Atrasado' : 'Elegível'}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <button onClick={() => handlePromoteClick(e)} style={styles.actionBtn}>Promover</button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
-      {/* Paginação */}
       {totalPages > 1 && (
         <div style={styles.pagination}>
           <button 
@@ -121,7 +343,9 @@ export default function PromotionTab({ elegibles, orgData, onPromote, onRefresh 
           >
             Anterior
           </button>
-          <span>Página {currentPage} de {totalPages}</span>
+          <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+            Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong>
+          </span>
           <button 
             disabled={currentPage === totalPages} 
             onClick={() => setCurrentPage(p => p + 1)}
@@ -148,20 +372,143 @@ export default function PromotionTab({ elegibles, orgData, onPromote, onRefresh 
 }
 
 const styles = {
-  searchInput: { padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: '4px', width: '300px' },
-  exportBtn: { display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px', backgroundColor: 'var(--color-bg-base)' },
-  th: { padding: '12px', textAlign: 'left', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)' },
-  td: { padding: '12px', borderBottom: '1px solid var(--color-border)' },
-  actionBtn: { padding: '6px 12px', backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' },
-  pagination: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '20px', padding: '10px' },
-  pageBtn: { padding: '6px 12px', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '4px', cursor: 'pointer' },
-  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modalContent: { backgroundColor: 'var(--color-bg-card, #fff)', color: 'var(--color-text-base)', border: '1px solid var(--color-border)', padding: '24px', borderRadius: '8px', width: '450px', maxHeight: '90vh', overflowY: 'auto' },
-  formGroup: { marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '5px' },
-  label: { fontSize: '13px', fontWeight: 'bold', color: 'var(--color-text-base)' },
-  input: { padding: '8px', border: '1px solid var(--color-border, #d1d5db)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', borderRadius: '4px', outline: 'none' },
-  inputDisabled: { padding: '8px', border: '1px solid var(--color-border, #d1d5db)', borderRadius: '4px', backgroundColor: 'var(--color-bg-subtle, #f3f4f6)', color: 'var(--color-text-muted, #6b7280)' },
-  cancelBtn: { padding: '8px 16px', backgroundColor: 'transparent', border: '1px solid var(--color-border, #d1d5db)', color: 'var(--color-text-base)', borderRadius: '4px', cursor: 'pointer' },
-  confirmBtn: { padding: '8px 16px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }
+  filterCard: {
+    backgroundColor: 'var(--color-bg-card)',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border)',
+    padding: '18px 20px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+  },
+  filterCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+    paddingBottom: '10px',
+    borderBottom: '1px solid var(--color-border)',
+    flexWrap: 'wrap',
+    gap: '10px'
+  },
+  filterCardTitle: {
+    margin: 0,
+    fontSize: '15px',
+    fontWeight: '700',
+    color: 'var(--color-primary)'
+  },
+  btnClearFilters: {
+    padding: '6px 12px',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    border: '1px solid rgba(239, 68, 68, 0.25)',
+    color: '#dc2626',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.15s'
+  },
+  exportBtn: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 14px',
+    backgroundColor: '#059669',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '12px'
+  },
+  filterGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '14px'
+  },
+  filterGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  label: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: 'var(--color-text-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px'
+  },
+  input: {
+    padding: '9px 12px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-base)',
+    color: 'var(--color-text-base)',
+    outline: 'none',
+    fontSize: '13px'
+  },
+  select: {
+    padding: '9px 12px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-base)',
+    color: 'var(--color-text-base)',
+    outline: 'none',
+    fontSize: '13px',
+    cursor: 'pointer'
+  },
+  filterFooter: {
+    marginTop: '14px',
+    paddingTop: '10px',
+    borderTop: '1px solid var(--color-border)',
+    display: 'flex',
+    justifyContent: 'flex-start'
+  },
+  resultsBadge: {
+    fontSize: '12px',
+    color: 'var(--color-text-muted)',
+    backgroundColor: 'var(--color-bg-base)',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border)'
+  },
+  tableContainer: {
+    overflowX: 'auto',
+    backgroundColor: 'var(--color-bg-card)',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border)',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+  },
+  empty: {
+    padding: '35px',
+    textAlign: 'center',
+    color: 'var(--color-text-muted)',
+    fontSize: '13.5px'
+  },
+  actionBtn: {
+    padding: '4px 12px',
+    backgroundColor: 'var(--color-primary)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    fontWeight: '700'
+  },
+  pagination: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '15px',
+    marginTop: '10px',
+    padding: '10px'
+  },
+  pageBtn: {
+    padding: '6px 14px',
+    backgroundColor: 'var(--color-bg-card)',
+    border: '1px solid var(--color-border)',
+    color: 'var(--color-text-base)',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '12.5px',
+    fontWeight: '600'
+  }
 };

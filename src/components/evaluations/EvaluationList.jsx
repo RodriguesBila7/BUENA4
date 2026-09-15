@@ -25,7 +25,25 @@ export default function EvaluationList({ user }) {
   const [filterClass, setFilterClass] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterDirectorate, setFilterDirectorate] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('');
+  const [filterDivision, setFilterDivision] = useState('');
   const [filterCareer, setFilterCareer] = useState('');
+
+  const availableDepartments = useMemo(() => {
+    if (!filterDirectorate) return [];
+    return (orgData?.departments || []).filter(d => String(d.directorateId) === String(filterDirectorate));
+  }, [orgData?.departments, filterDirectorate]);
+
+  const availableDivisions = useMemo(() => {
+    if (!filterDirectorate) return [];
+    if (filterDepartment) {
+      return (orgData?.divisions || []).filter(div => String(div.departmentId) === String(filterDepartment));
+    }
+    const depIds = new Set(availableDepartments.map(d => String(d.id)));
+    return (orgData?.divisions || []).filter(div => 
+      String(div.directorateId) === String(filterDirectorate) || (div.departmentId && depIds.has(String(div.departmentId)))
+    );
+  }, [orgData?.divisions, filterDirectorate, filterDepartment, availableDepartments]);
 
   // Modais
   const [viewingEval, setViewingEval] = useState(null);
@@ -69,12 +87,26 @@ export default function EvaluationList({ user }) {
       // Filtro por Estado
       if (filterStatus && String(e.status || '').toLowerCase() !== filterStatus.toLowerCase()) return false;
 
+      const emp = (employees || []).find(empItem => String(empItem.id) === String(e.employeeId));
+
       // Filtro por Direcção
-      if (filterDirectorate && String(e.directorateId) !== String(filterDirectorate)) return false;
+      if (filterDirectorate) {
+        const dirId = e.directorateId || emp?.directorateId;
+        if (String(dirId) !== String(filterDirectorate)) return false;
+      }
+
+      // Filtro por Departamento
+      if (filterDepartment) {
+        if (!emp || String(emp.departmentId) !== String(filterDepartment)) return false;
+      }
+
+      // Filtro por Repartição / Repartição Central
+      if (filterDivision) {
+        if (!emp || String(emp.divisionId) !== String(filterDivision)) return false;
+      }
 
       // Filtro por Carreira (cruzando com cadastro de funcionário se necessário)
       if (filterCareer) {
-        const emp = (employees || []).find(empItem => String(empItem.id) === String(e.employeeId));
         if (!emp || String(emp.careerId) !== String(filterCareer)) return false;
       }
 
@@ -92,7 +124,7 @@ export default function EvaluationList({ user }) {
       const dateB = b?.createdAt || b?.evaluationDate || '';
       return dateB.localeCompare(dateA);
     });
-  }, [evaluations, user, orgData, employees, searchTerm, filterYear, filterClass, filterStatus, filterDirectorate, filterCareer]);
+  }, [evaluations, user, orgData, employees, searchTerm, filterYear, filterClass, filterStatus, filterDirectorate, filterDepartment, filterDivision, filterCareer]);
 
   // Limpar todos os filtros
   const handleClearFilters = () => {
@@ -101,10 +133,14 @@ export default function EvaluationList({ user }) {
     setFilterClass('');
     setFilterStatus('');
     setFilterDirectorate('');
+    setFilterDepartment('');
+    setFilterDivision('');
     setFilterCareer('');
   };
 
-  const hasActiveFilters = Boolean(searchTerm || filterYear || filterClass || filterStatus || filterDirectorate || filterCareer);
+  const hasActiveFilters = Boolean(
+    searchTerm || filterYear || filterClass || filterStatus || filterDirectorate || filterDepartment || filterDivision || filterCareer
+  );
 
   // Abertura do Modal de Edição
   const handleOpenEdit = (ev) => {
@@ -510,10 +546,53 @@ export default function EvaluationList({ user }) {
 
           <div style={styles.filterGroup}>
             <label style={styles.label}>Direcção / Unidade Orgânica</label>
-            <select value={filterDirectorate} onChange={(e) => setFilterDirectorate(e.target.value)} style={styles.select}>
+            <select 
+              value={filterDirectorate} 
+              onChange={(e) => {
+                setFilterDirectorate(e.target.value);
+                setFilterDepartment('');
+                setFilterDivision('');
+              }} 
+              style={styles.select}
+            >
               <option value="">Todas as Direcções</option>
               {(orgData?.directorates || []).map(d => (
                 <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Departamento</label>
+            <select 
+              value={filterDepartment} 
+              onChange={(e) => {
+                setFilterDepartment(e.target.value);
+                setFilterDivision('');
+              }} 
+              style={styles.select}
+              disabled={!filterDirectorate}
+            >
+              <option value="">{filterDirectorate ? 'Todos os Departamentos' : 'Selecione a Direcção primeiro'}</option>
+              {availableDepartments.map(dep => (
+                <option key={dep.id} value={dep.id}>{dep.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Repartição / Repartição Central</label>
+            <select 
+              value={filterDivision} 
+              onChange={(e) => setFilterDivision(e.target.value)} 
+              style={styles.select}
+              disabled={!filterDirectorate}
+            >
+              <option value="">{filterDirectorate ? 'Todas as Repartições' : 'Selecione a Direcção primeiro'}</option>
+              {availableDivisions.map(div => (
+                <option key={div.id} value={div.id}>
+                  {div.name} {!div.departmentId ? '(Central / Sem Dep.)' : ''}
+                </option>
               ))}
             </select>
           </div>

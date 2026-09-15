@@ -42,8 +42,8 @@ export default function AdvancedFilters({ filters, setFilters, orgData }) {
   // Repartições
   const activeDivisions = filters.departmentId
     ? (data?.divisions || []).filter(d => String(d.departmentId) === String(filters.departmentId))
-    : (filters.directorateId
-        ? (data?.divisions || []).filter(d => String(d.directorateId) === String(filters.directorateId) || (d.departmentId && data?.departments?.some(dep => dep.id === d.departmentId && String(dep.directorateId) === String(filters.directorateId))))
+    : (effectiveDirectorateId
+        ? (data?.divisions || []).filter(d => String(d.directorateId) === String(effectiveDirectorateId) || (d.departmentId && data?.departments?.some(dep => dep.id === d.departmentId && String(dep.directorateId) === String(effectiveDirectorateId))))
         : (data?.divisions || []));
 
   // Secções
@@ -144,9 +144,13 @@ export default function AdvancedFilters({ filters, setFilters, orgData }) {
 
         <div style={styles.group}>
           <label style={styles.label}>Repartição</label>
-          <select name="divisionId" value={filters.divisionId || ''} onChange={handleChange} style={styles.input} disabled={!filters.departmentId}>
+          <select name="divisionId" value={filters.divisionId || ''} onChange={handleChange} style={styles.input} disabled={!filters.departmentId && !effectiveDirectorateId}>
             <option value="">Todas</option>
-            {activeDivisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            {activeDivisions.map(d => (
+              <option key={d.id} value={d.id}>
+                {d.name}{!d.departmentId ? ' (Repartição Central)' : ''}
+              </option>
+            ))}
           </select>
         </div>
 

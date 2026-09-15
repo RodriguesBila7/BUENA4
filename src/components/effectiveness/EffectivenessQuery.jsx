@@ -109,6 +109,28 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
   const selectedProvinceData = mozambiqueStructure.find(p => p.province === provinceId);
   const availableDistricts = selectedProvinceData ? selectedProvinceData.districts : [];
 
+  const empMap = useMemo(() => {
+    const m = new Map();
+    (employees || []).forEach(e => m.set(String(e.id), e));
+    return m;
+  }, [employees]);
+
+  const availableDepartments = useMemo(() => {
+    if (!directorateId) return [];
+    return (orgData?.departments || []).filter(dep => String(dep.directorateId) === String(directorateId));
+  }, [orgData?.departments, directorateId]);
+
+  const availableDivisions = useMemo(() => {
+    if (!directorateId) return [];
+    if (departmentId) {
+      return (orgData?.divisions || []).filter(div => String(div.departmentId) === String(departmentId));
+    }
+    const depIds = new Set(availableDepartments.map(d => String(d.id)));
+    return (orgData?.divisions || []).filter(div => 
+      String(div.directorateId) === String(directorateId) || (div.departmentId && depIds.has(String(div.departmentId)))
+    );
+  }, [orgData?.divisions, directorateId, departmentId, availableDepartments]);
+
   // Scoped records base
   const scopedRecords = useMemo(() => {
     if (!isCentral && userDirId) {
@@ -145,21 +167,26 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
         if (!empName.includes(term) && !empNip.includes(term)) return false;
       }
 
+      const emp = empMap.get(String(rec.employeeId));
+      const rDir = String(rec.directorateId || rec.registeredByDirectorateId || emp?.directorateId || '');
+      const rDep = String(rec.departmentId || emp?.departmentId || '');
+      const rDiv = String(rec.divisionId || emp?.divisionId || '');
+
       // Structure filters
       if (provinceId && rec.provinceId !== provinceId) return false;
       if (districtId && rec.districtId !== districtId) return false;
-      if (directorateId && String(rec.directorateId || rec.registeredByDirectorateId || '') !== String(directorateId)) return false;
-      if (departmentId && String(rec.departmentId || '') !== String(departmentId)) return false;
-      if (divisionId && String(rec.divisionId || '') !== String(divisionId)) return false;
-      if (sectionId && String(rec.sectionId || '') !== String(sectionId)) return false;
+      if (directorateId && rDir !== String(directorateId)) return false;
+      if (departmentId && rDep !== String(departmentId)) return false;
+      if (divisionId && rDiv !== String(divisionId)) return false;
+      if (sectionId && String(rec.sectionId || emp?.sectionId || '') !== String(sectionId)) return false;
 
       // RH filters
-      if (careerId && String(rec.careerId || '') !== String(careerId)) return false;
-      if (categoryId && String(rec.categoryId || '') !== String(categoryId)) return false;
+      if (careerId && String(rec.careerId || emp?.careerId || '') !== String(careerId)) return false;
+      if (categoryId && String(rec.categoryId || emp?.categoryId || '') !== String(categoryId)) return false;
       if (absenceType && rec.type !== absenceType) return false;
 
       if (roleFilter) {
-        const role = (rec.jobPosition || '').toLowerCase();
+        const role = (rec.jobPosition || emp?.role || '').toLowerCase();
         if (!role.includes(roleFilter.toLowerCase())) return false;
       }
 
@@ -180,7 +207,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
 
       return true;
     });
-  }, [scopedRecords, searchTerm, provinceId, districtId, directorateId, departmentId, divisionId, sectionId, careerId, categoryId, roleFilter, absenceType, dateFrom, dateTo, yearFilter, monthFilter]);
+  }, [scopedRecords, searchTerm, provinceId, districtId, directorateId, departmentId, divisionId, sectionId, careerId, categoryId, roleFilter, absenceType, dateFrom, dateTo, yearFilter, monthFilter, empMap]);
 
   // Group absences by employee to build the "Funcionários Faltosos" view
   const faltososList = useMemo(() => {
@@ -844,6 +871,76 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
               <select value={districtId} onChange={(e) => setDistrictId(e.target.value)} style={styles.input} disabled={!provinceId}>
                 <option value="">Todos</option>
                 {availableDistricts.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+
+            {isCentral ? (
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Direcção / Unidade Orgânica</label>
+                <select 
+                  value={directorateId} 
+                  onChange={(e) => { 
+                    setDirectorateId(e.target.value); 
+                    setDepartmentId(''); 
+                    setDivisionId(''); 
+                  }} 
+                  style={styles.input}
+                >
+                  <option value="">Todas as Direcções</option>
+                  {(orgData?.directorates || []).map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Direcção / Unidade Orgânica</label>
+                <select value={directorateId} disabled style={styles.input}>
+                  <option value={directorateId}>{userDirObj?.name || 'Minha Direcção'}</option>
+                </select>
+              </div>
+            )}
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Departamento</label>
+              <select 
+                value={departmentId} 
+                onChange={(e) => { 
+                  setDepartmentId(e.target.value); 
+                  setDivisionId(''); 
+                }} 
+                style={styles.input}
+                disabled={!directorateId}
+              >
+                <option value="">{directorateId ? 'Todos os Departamentos' : 'Selecione a Direcção primeiro'}</option>
+                {availableDepartments.map(dep => (
+                  <option key={dep.id} value={dep.id}>{dep.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Repartição / Repartição Central</label>
+              <select 
+                value={divisionId} 
+                onChange={(e) => setDivisionId(e.target.value)} 
+                style={styles.input}
+                disabled={!directorateId}
+              >
+                <option value="">
+                  {!directorateId 
+                    ? 'Selecione a Direcção primeiro' 
+                    : (departmentId ? 'Todas as Repartições do Departamento' : 'Todas as Repartições (incluindo Centrais)')
+                  }
+                </option>
+                {availableDivisions.map(div => {
+                  const isCentralDiv = !div.departmentId;
+                  return (
+                    <option key={div.id} value={div.id}>
+                      {div.name}{isCentralDiv ? ' (Repartição Central)' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 

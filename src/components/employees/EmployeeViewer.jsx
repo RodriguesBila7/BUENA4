@@ -302,7 +302,7 @@ export default function EmployeeViewer({ employees, orgData, onEdit, onDelete, o
                 if (filters.departmentId) return d.departmentId === filters.departmentId;
                 if (filters.directorateId) return d.directorateId === filters.directorateId || (d.departmentId && data.departments.some(dep => dep.id === d.departmentId && dep.directorateId === filters.directorateId));
                 return true;
-              }).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              }).map(d => <option key={d.id} value={d.id}>{d.name}{!d.departmentId ? ' (Repartição Central)' : ''}</option>)}
             </select>
           </div>
         </div>

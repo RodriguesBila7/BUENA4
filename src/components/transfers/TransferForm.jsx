@@ -494,9 +494,16 @@ export default function TransferForm({ employees = [], orgData, initialData, onS
 
                       <div style={styles.formGroup}>
                         <label style={styles.labelCompact}>Repartição</label>
-                        <select name="toDivisionId" value={formData.toDivisionId} onChange={handleChange} style={styles.inputCompact} disabled={!formData.toDepartmentId}>
+                        <select name="toDivisionId" value={formData.toDivisionId} onChange={handleChange} style={styles.inputCompact} disabled={!formData.toDirectorateId}>
                           <option value="">Nenhuma</option>
-                          {data.divisions.filter(d => d.departmentId === formData.toDepartmentId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                          {data.divisions.filter(d => {
+                            if (formData.toDepartmentId) return d.departmentId === formData.toDepartmentId;
+                            return d.directorateId === formData.toDirectorateId || (d.departmentId && data.departments.some(dep => dep.id === d.departmentId && dep.directorateId === formData.toDirectorateId));
+                          }).map(d => (
+                            <option key={d.id} value={d.id}>
+                              {d.name}{!d.departmentId ? ' (Repartição Central)' : ''}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
