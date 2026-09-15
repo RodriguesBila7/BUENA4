@@ -24,7 +24,6 @@ export default function EvaluationManager({ user }) {
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}>Gestão de Desempenho Individual</h2>
-          <p style={styles.subtitle}>Gestão de Desempenho Individual e Histórico (Decreto n.º 22/2018)</p>
         </div>
       </div>
 
