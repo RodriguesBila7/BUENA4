@@ -20,6 +20,16 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
   const isPrincipal = isPrimaryCentralAdmin(user) || isCentralUser(user);
 
   const handlePrintAllNational = () => {
+    if (!records || records.length === 0) {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Aviso',
+        message: 'Não existem registos de faltas no sistema para imprimir.',
+        hideCancel: true,
+        confirmText: 'OK'
+      });
+      return;
+    }
     printAllAbsencesNationalMap({
       records,
       employees: allEmployees,
@@ -212,8 +222,11 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
     }
 
     const titleData = [
+      ["REPÚBLICA DE MOÇAMBIQUE"],
+      ["MINISTÉRIO DO INTERIOR"],
       ["SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)"],
-      ["Direcção de Recursos Humanos"],
+      ["DIRECÇÃO GERAL"],
+      ["DIRECÇÃO DE RECURSOS HUMANOS"],
       ["RELATÓRIO INSTITUCIONAL DE EFETIVIDADE E ASSIDUIDADE"],
       [""],
       [`Unidade / Âmbito Territorial: ${summary.unitName}`],
@@ -257,20 +270,23 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
     // Header
     doc.setFontSize(10);
     doc.setFont("helvetica", "bold");
-    doc.text("REPÚBLICA DE MOÇAMBIQUE", 14, 15);
+    doc.text("REPÚBLICA DE MOÇAMBIQUE", 14, 14);
     doc.setFont("helvetica", "normal");
-    doc.text("MINISTÉRIO DO INTERIOR", 14, 20);
-    doc.text("SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)", 14, 25);
-    doc.text("DIRECÇÃO DE RECURSOS HUMANOS", 14, 30);
+    doc.text("MINISTÉRIO DO INTERIOR", 14, 19);
+    doc.text("SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)", 14, 24);
+    doc.setFont("helvetica", "bold");
+    doc.text("DIRECÇÃO GERAL", 14, 29);
+    doc.setFont("helvetica", "normal");
+    doc.text("DIRECÇÃO DE RECURSOS HUMANOS", 14, 34);
     
     doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
-    doc.text(`MAPA DE EFETIVIDADE E ASSIDUIDADE - ${summary.unitName.toUpperCase()}`, 14, 40);
+    doc.text(`MAPA DE EFETIVIDADE E ASSIDUIDADE - ${summary.unitName.toUpperCase()}`, 14, 43);
     
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`Período de Referência: ${summary.periodStr} | Emissão: ${summary.issueDate}`, 14, 46);
-    doc.text(`Efectivos Faltosos: ${summary.faltososUnique} | Total de Dias: ${summary.totalDays} (${summary.justifiedDays} Just. / ${summary.unjustifiedDays} Injust.)`, 14, 51);
+    doc.text(`Período de Referência: ${summary.periodStr} | Emissão: ${summary.issueDate}`, 14, 49);
+    doc.text(`Efectivos Faltosos: ${summary.faltososUnique} | Total de Dias: ${summary.totalDays} (${summary.justifiedDays} Just. / ${summary.unjustifiedDays} Injust.)`, 14, 54);
 
     const headers = ["NUIT/NIP", "Nome Completo", "Tipo de Falta", "Dias", "Datas", "Direcção Provincial", "Motivo", "Registado Por"];
     const rows = reportData.map(r => [
@@ -344,8 +360,9 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
             <h2>REPÚBLICA DE MOÇAMBIQUE</h2>
             <h3>MINISTÉRIO DO INTERIOR</h3>
             <h4>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)</h4>
-            <div style="font-weight: 700; font-size: 11px; color: #1B365D;">DIRECÇÃO DE RECURSOS HUMANOS</div>
-            <div style="margin-top: 4px; font-size: 12px; font-weight: 800; text-transform: uppercase;">
+            <div style="font-weight: 800; font-size: 11.5px; color: #1B365D; text-transform: uppercase;">DIRECÇÃO GERAL</div>
+            <div style="font-weight: 700; font-size: 11px; color: #1B365D; text-transform: uppercase;">DIRECÇÃO DE RECURSOS HUMANOS</div>
+            <div style="margin-top: 4px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #1B365D;">
               MAPA OFICIAL DE EFETIVIDADE E ASSIDUIDADE DE PESSOAL
             </div>
           </div>

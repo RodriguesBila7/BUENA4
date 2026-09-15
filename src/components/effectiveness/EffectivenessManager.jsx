@@ -8,9 +8,11 @@ import useEmployeeData from '../../hooks/useEmployeeData';
 import useOrgData from '../../hooks/useOrgData';
 import { isPrimaryCentralAdmin, isCentralUser } from '../../utils/scopeUtils';
 import { printAllAbsencesNationalMap } from './printAllEffectiveness';
+import ConfirmModal from '../ConfirmModal';
 
 export default function EffectivenessManager({ user, orgData, employeesData }) {
   const [activeTab, setActiveTab] = useState('query');
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '' });
   const { records = [] } = useEffectivenessData();
   const { employees = [] } = useEmployeeData();
   const { data: hookOrgData } = useOrgData();
@@ -21,6 +23,16 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
   const isPrincipal = isPrimaryCentralAdmin(user) || isCentralUser(user);
 
   const handlePrintAll = () => {
+    if (!records || records.length === 0) {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Aviso',
+        message: 'Não existem registos de faltas no sistema para imprimir.',
+        hideCancel: true,
+        confirmText: 'OK'
+      });
+      return;
+    }
     printAllAbsencesNationalMap({
       records,
       employees: finalEmployees,
@@ -99,6 +111,17 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
           />
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        hideCancel={confirmModal.hideCancel}
+        confirmText={confirmModal.confirmText || 'OK'}
+        isDestructive={confirmModal.isDestructive}
+      />
     </div>
   );
 }

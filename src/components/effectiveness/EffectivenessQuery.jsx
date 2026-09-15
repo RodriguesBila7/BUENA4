@@ -18,6 +18,16 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
   const isPrincipal = isPrimaryCentralAdmin(user) || isCentralUser(user);
 
   const handlePrintAllNational = () => {
+    if (!records || records.length === 0) {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Aviso',
+        message: 'Não existem registos de faltas no sistema para imprimir.',
+        hideCancel: true,
+        confirmText: 'OK'
+      });
+      return;
+    }
     printAllAbsencesNationalMap({
       records,
       employees: allEmployees,
@@ -363,8 +373,9 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
             <h2>REPÚBLICA DE MOÇAMBIQUE</h2>
             <h3>MINISTÉRIO DO INTERIOR</h3>
             <h4>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)</h4>
-            <div style="font-weight: 700; font-size: 12px; color: #1B365D;">DIRECÇÃO DE RECURSOS HUMANOS</div>
-            <div style="margin-top: 6px; font-size: 13px; font-weight: 800; text-transform: uppercase;">
+            <div style="font-weight: 800; font-size: 11.5px; color: #1B365D; text-transform: uppercase;">DIRECÇÃO GERAL</div>
+            <div style="font-weight: 700; font-size: 11px; color: #1B365D; text-transform: uppercase;">DIRECÇÃO DE RECURSOS HUMANOS</div>
+            <div style="margin-top: 6px; font-size: 12.5px; font-weight: 800; text-transform: uppercase; color: #1B365D;">
               MAPA OFICIAL DE EFETIVIDADE E ASSIDUIDADE DE PESSOAL
             </div>
           </div>

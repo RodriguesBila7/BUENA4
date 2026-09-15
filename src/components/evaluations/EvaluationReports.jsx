@@ -6,11 +6,13 @@ import { filterByProvincialScope } from '../../utils/scopeUtils';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import ConfirmModal from '../ConfirmModal';
 
 export default function EvaluationReports({ user }) {
   const { evaluations = [] } = useEvaluationData();
   const { data: orgData } = useOrgData();
 
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '' });
   const [filterYear, setFilterYear] = useState(new Date().getFullYear().toString());
   const [filterClass, setFilterClass] = useState('');
 
@@ -39,7 +41,13 @@ export default function EvaluationReports({ user }) {
     }));
 
     if (data.length === 0) {
-      alert('Nenhum dado encontrado para exportação com os filtros selecionados.');
+      setConfirmModal({
+        isOpen: true,
+        title: 'Aviso',
+        message: 'Nenhum dado encontrado para exportação com os filtros selecionados.',
+        hideCancel: true,
+        confirmText: 'OK'
+      });
       return;
     }
 
@@ -53,7 +61,13 @@ export default function EvaluationReports({ user }) {
   const exportPDF = () => {
     const data = getFilteredData();
     if (data.length === 0) {
-      alert('Nenhum dado encontrado para exportação com os filtros selecionados.');
+      setConfirmModal({
+        isOpen: true,
+        title: 'Aviso',
+        message: 'Nenhum dado encontrado para exportação com os filtros selecionados.',
+        hideCancel: true,
+        confirmText: 'OK'
+      });
       return;
     }
 
@@ -132,6 +146,17 @@ export default function EvaluationReports({ user }) {
       <div style={styles.infoBox}>
         <strong>Nota:</strong> A exportação respeita as regras de negócio vigentes no sistema e inclui os metadados de auditoria. Para uma impressão individual com a declaração oficial anexada, aceda ao histórico individual na listagem de avaliações.
       </div>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        onConfirm={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        hideCancel={confirmModal.hideCancel}
+        confirmText={confirmModal.confirmText || 'OK'}
+        isDestructive={confirmModal.isDestructive}
+      />
     </div>
   );
 }

@@ -6,7 +6,6 @@
 
 export function printAllAbsencesNationalMap({ records = [], employees = [], orgData = {}, user = null }) {
   if (!records || records.length === 0) {
-    alert('Não existem registos de faltas no sistema para imprimir.');
     return;
   }
 
@@ -91,11 +90,9 @@ export function printAllAbsencesNationalMap({ records = [], employees = [], orgD
 
   const issueDateTime = new Date().toLocaleDateString('pt-PT') + ' às ' + new Date().toLocaleTimeString('pt-PT');
   const gestorName = user?.name || user?.username || 'Administrador Principal Central';
-  const gestorRole = user?.roleName || user?.roleDetails?.name || 'Direcção de Recursos Humanos (DRH)';
 
   const printWin = window.open('', '_blank', 'width=1100,height=750');
   if (!printWin) {
-    alert('Por favor permita pop-ups no seu navegador para abrir a impressão.');
     return;
   }
 
@@ -115,47 +112,55 @@ export function printAllAbsencesNationalMap({ records = [], employees = [], orgD
             font-family: 'Segoe UI', Arial, sans-serif;
             color: #0F172A;
             margin: 0;
-            padding: 12px;
+            padding: 14px;
             font-size: 10.5px;
             line-height: 1.4;
           }
           .header {
             text-align: center;
-            border-bottom: 2.5px solid #DC2626;
+            border-bottom: 2.5px solid #1B365D;
             padding-bottom: 8px;
             margin-bottom: 12px;
           }
           .header h2 {
             margin: 0 0 2px 0;
-            font-size: 13px;
+            font-size: 13.5px;
             text-transform: uppercase;
-            color: #1E293B;
+            color: #1B365D;
             letter-spacing: 0.5px;
           }
           .header h3 {
             margin: 0 0 2px 0;
-            font-size: 11px;
+            font-size: 11.5px;
             font-weight: 600;
             color: #475569;
           }
           .header h4 {
-            margin: 0 0 4px 0;
-            font-size: 12.5px;
+            margin: 0 0 3px 0;
+            font-size: 13px;
             color: #DC2626;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
           }
+          .dg-sub {
+            font-weight: 800;
+            font-size: 11px;
+            color: #1B365D;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+          }
           .drh-sub {
             font-weight: 700;
             font-size: 11px;
-            color: #1E293B;
+            color: #1B365D;
+            text-transform: uppercase;
           }
           .doc-badge {
             display: inline-block;
-            margin-top: 4px;
-            padding: 3px 12px;
-            background-color: #DC2626;
+            margin-top: 5px;
+            padding: 4px 14px;
+            background-color: #1B365D;
             color: #FFFFFF;
             font-size: 11px;
             font-weight: 800;
@@ -170,7 +175,7 @@ export function printAllAbsencesNationalMap({ records = [], employees = [], orgD
             background-color: #F8FAFC;
             padding: 10px 14px;
             border: 1px solid #E2E8F0;
-            border-left: 4px solid #DC2626;
+            border-left: 4px solid #1B365D;
             border-radius: 6px;
             margin-bottom: 14px;
           }
@@ -255,12 +260,13 @@ export function printAllAbsencesNationalMap({ records = [], employees = [], orgD
       </head>
       <body onload="window.print();">
         <div class="header">
-          <h2>República de Moçambique</h2>
-          <h3>Ministério do Interior</h3>
-          <h4>Serviço Nacional de Investigação Criminal (SERNIC)</h4>
-          <div class="drh-sub">Direcção de Recursos Humanos — Administração Central</div>
+          <h2>REPÚBLICA DE MOÇAMBIQUE</h2>
+          <h3>MINISTÉRIO DO INTERIOR</h3>
+          <h4>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)</h4>
+          <div class="dg-sub">DIRECÇÃO GERAL</div>
+          <div class="drh-sub">DIRECÇÃO DE RECURSOS HUMANOS</div>
           <div class="doc-badge">
-            Mapa Geral de Efetividade e Assiduidade — Consolidado Nacional (Todas as Direcções e Unidades)
+            MAPA GERAL DE EFETIVIDADE E ASSIDUIDADE — CONSOLIDADO NACIONAL
           </div>
         </div>
 
