@@ -404,11 +404,6 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 <button type="button" onClick={() => { setView('register'); setError(''); setSuccessMsg(''); }} style={s.linkBtn}>{t('login_request_access')}</button>
               </div>
             </form>
-            <div style={s.testBox}>
-              <p style={s.testLabel}>{t('login_test_label')}</p>
-              <button type="button" onClick={() => { setUsername('admin'); setPassword('admin123'); }} style={s.testBtn}>{t('login_test_admin')}</button>
-              <button type="button" onClick={() => { setUsername('user'); setPassword('user123'); }} style={s.testBtn}>{t('login_test_user')}</button>
-            </div>
           </>
         )}
 
@@ -658,33 +653,6 @@ const s = {
     cursor: 'pointer',
     textDecoration: 'none',
     transition: 'opacity 0.2s ease',
-  },
-
-  /* ── Credenciais de teste ── */
-  testBox: {
-    marginTop: '18px',
-    paddingTop: '14px',
-    borderTop: '1px dashed var(--color-border, #3A4A66)',
-  },
-  testLabel: {
-    fontSize: '11px',
-    color: 'var(--color-text-muted, #A8B7CD)',
-    fontWeight: '600',
-    margin: '0 0 7px',
-  },
-  testBtn: {
-    display: 'block',
-    width: '100%',
-    textAlign: 'left',
-    padding: '8px 12px',
-    background: 'var(--color-bg-base, #1C2433)',
-    border: '1px solid var(--color-border, #3A4A66)',
-    borderRadius: '6px',
-    fontSize: '12px',
-    color: 'var(--color-text-base, #F8FAFC)',
-    cursor: 'pointer',
-    marginBottom: '6px',
-    transition: 'all 0.15s',
   },
 
   /* ── Dropdown de Temas ── */
