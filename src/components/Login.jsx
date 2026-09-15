@@ -187,7 +187,26 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const aplicarTema = (cor) => {
     setBwMode('theme');
     if (updateSettings) {
-      updateSettings({ ...settings, cor_principal: cor, usuario_responsavel: 'Selecção de Tema (Login)' });
+      updateSettings({ 
+        ...settings, 
+        cor_principal: cor, 
+        cores_aleatorias: false,
+        usuario_responsavel: 'Selecção de Tema (Login)' 
+      });
+    }
+  };
+
+  const toggleCoresAleatorias = () => {
+    const nextVal = !settings.cores_aleatorias;
+    setBwMode('theme');
+    const randomTema = nextVal ? TEMAS[Math.floor(Math.random() * TEMAS.length)].cor : settings.cor_principal;
+    if (updateSettings) {
+      updateSettings({
+        ...settings,
+        cores_aleatorias: nextVal,
+        cor_principal: randomTema,
+        usuario_responsavel: 'Modo Cores Aleatórias (Login)'
+      });
     }
   };
 
@@ -362,6 +381,62 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 <label htmlFor="custom-color-picker" style={s.colorPickerLabel}>
                   {t('themes_pick')}
                 </label>
+              </div>
+
+              {/* Separador + Opção de Cores Aleatórias ao Entrar / Refresh */}
+              <div style={s.dropdownDivider} />
+              <div
+                onClick={toggleCoresAleatorias}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '6px 2px 2px',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  gap: '8px'
+                }}
+                title={t('themes_random_desc') || 'Muda de cor aleatoriamente sempre que entrar ou recarregar a página'}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '15px' }}>🎲</span>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: bwMode === 'claro' ? '#2c3e50' : 'var(--color-text-base, #F8FAFC)',
+                      letterSpacing: '0.2px'
+                    }}>
+                      {t('themes_random_mode') || 'Cores Aleatórias'}
+                    </span>
+                    <span style={{ fontSize: '9px', color: 'var(--color-text-muted, #94A3B8)' }}>
+                      {t('themes_random_desc') || 'Ao entrar ou atualizar'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Switch estilo toggle moderno */}
+                <div style={{
+                  width: '32px',
+                  height: '18px',
+                  backgroundColor: settings.cores_aleatorias ? 'var(--color-primary, #EF4444)' : (bwMode === 'claro' ? '#CBD5E1' : '#475569'),
+                  borderRadius: '10px',
+                  position: 'relative',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0
+                }}>
+                  <div style={{
+                    width: '14px',
+                    height: '14px',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    top: '2px',
+                    left: settings.cores_aleatorias ? '16px' : '2px',
+                    transition: 'left 0.2s ease',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.35)'
+                  }} />
+                </div>
               </div>
             </div>
           )}

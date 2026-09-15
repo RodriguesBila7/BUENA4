@@ -12,9 +12,16 @@ const DEFAULT_SETTINGS = {
   cor_secundaria: '#2D3748',
   cor_destaque: '#FFFFFF',
   modo_tema: 'light',
+  cores_aleatorias: false,
   data_atualizacao: new Date().toISOString(),
   usuario_responsavel: 'Sistema (Padrão)'
 };
+
+const CORES_PALETA = [
+  '#1B365D', '#0D1B4B', '#1565C0', '#0277BD', '#1B5E20', '#00695C',
+  '#33691E', '#B71C1C', '#C62828', '#880E4F', '#4A148C', '#6A1B9A',
+  '#212121', '#37474F', '#BF360C', '#F57F17', '#004D40', '#01579B'
+];
 
 import { useAuth } from './contexts/AuthContext';
 import useSecuritySettings from './hooks/useSecuritySettings';
@@ -30,7 +37,14 @@ export default function App() {
     const saved = localStorage.getItem('sernic_identity_settings');
     if (saved) {
       try {
-        setSettings(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        // Se a opção de cores aleatórias estiver ativa, sorteia uma cor ao iniciar/recarregar a página
+        if (parsed.cores_aleatorias) {
+          const randomCor = CORES_PALETA[Math.floor(Math.random() * CORES_PALETA.length)];
+          parsed.cor_principal = randomCor;
+          localStorage.setItem('sernic_identity_settings', JSON.stringify(parsed));
+        }
+        setSettings(parsed);
       } catch (e) {
         console.error("Erro ao carregar configurações salvas, usando padrão.", e);
         setSettings(DEFAULT_SETTINGS);

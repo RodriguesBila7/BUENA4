@@ -18,6 +18,8 @@ const translations = {
     login_drh: 'DIRECÇÃO DE RECURSOS HUMANOS',
     login_dg: 'DIRECÇÃO GERAL',
     login_system: 'SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS',
+    themes_random_mode: 'Cores Aleatórias',
+    themes_random_desc: 'Ao entrar ou atualizar a página',
     login_footer: 'Copyright © 2026 –',
     login_footer_rights: '. Todos os direitos reservados. | Versão: 05.01.00',
 
@@ -234,6 +236,8 @@ const translations = {
     login_drh: 'HUMAN RESOURCES DIRECTORATE',
     login_dg: 'DIRECTORATE GENERAL',
     login_system: 'HUMAN RESOURCES INFORMATION AND MANAGEMENT SYSTEM',
+    themes_random_mode: 'Random Colors',
+    themes_random_desc: 'On page load or refresh',
     login_footer: 'Copyright © 2026 –',
     login_footer_rights: '. All rights reserved. | Version: 01.00.00',
 
