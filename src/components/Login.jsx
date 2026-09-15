@@ -375,10 +375,13 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <p style={{...s.instNome, fontSize: '13px', fontWeight: '800', letterSpacing: '1px', color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.instNome.textShadow, margin: '0 0 4px'}}>{t('login_dg') || 'DIRECÇÃO GERAL'}</p>
         <p style={{...s.sysTitleBold, color: bwMode === 'claro' ? '#1a252f' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleBold.textShadow, margin: '0 0 0'}}>{t('login_drh') || 'DIRECÇÃO DE RECURSOS HUMANOS'}</p>
         
-        {/* Espaçamento de 1.5cm para puxar o texto do sistema e a barra/card para baixo */}
+        {/* Espaçamento de 1.5cm antes do Sistema e aproximação ao quadro de login */}
         <p style={{
           ...s.sysTitleLine, 
-          color: bwMode === 'claro' ? '#34495e' : '#FFFFFF', 
+          fontSize: '14px',
+          fontWeight: '700',
+          letterSpacing: '0.8px',
+          color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', 
           textShadow: bwMode === 'claro' ? 'none' : s.sysTitleLine.textShadow,
           marginTop: '1.5cm',
           marginBottom: '0'
@@ -387,8 +390,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         </p>
       </div>
 
-      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
-      <div style={{...s.card, marginTop: '1.5cm'}}>
+      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR (Aproximado ao texto acima) ══════════════ */}
+      <div style={{...s.card, marginTop: '14px'}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 
@@ -521,12 +524,12 @@ const s = {
   },
   sysTitleLine: {
     color: '#FFFFFF',
-    fontSize: '11px',
-    fontWeight: '600',
-    letterSpacing: '0.6px',
-    margin: '0 0 3px',
+    fontSize: '14px',
+    fontWeight: '700',
+    letterSpacing: '0.8px',
+    margin: '0',
     textShadow: '0 1px 3px rgba(0,0,0,0.4)',
-    opacity: 0.92,
+    opacity: 0.95,
   },
   sysTitleBold: {
     color: '#FFFFFF',
