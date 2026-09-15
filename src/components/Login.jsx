@@ -396,23 +396,17 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                   userSelect: 'none',
                   gap: '8px'
                 }}
-                title={t('themes_random_desc') || 'Muda de cor aleatoriamente sempre que entrar ou recarregar a página'}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '15px' }}>🎲</span>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      color: bwMode === 'claro' ? '#2c3e50' : 'var(--color-text-base, #F8FAFC)',
-                      letterSpacing: '0.2px'
-                    }}>
-                      {t('themes_random_mode') || 'Cores Aleatórias'}
-                    </span>
-                    <span style={{ fontSize: '9px', color: 'var(--color-text-muted, #94A3B8)' }}>
-                      {t('themes_random_desc') || 'Ao entrar ou atualizar'}
-                    </span>
-                  </div>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: bwMode === 'claro' ? '#2c3e50' : 'var(--color-text-base, #F8FAFC)',
+                    letterSpacing: '0.2px'
+                  }}>
+                    {t('themes_random_mode') || 'Cores Aleatórias'}
+                  </span>
                 </div>
 
                 {/* Switch estilo toggle moderno */}

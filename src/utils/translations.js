@@ -12,14 +12,10 @@ const translations = {
     login_submit_loading: 'A ENTRAR...',
     login_forgot: 'Esqueceu a Senha?',
     login_request_access: 'Solicitar Acesso',
-    login_test_label: '⚡ Credenciais de teste:',
-    login_test_admin: 'Super Admin: admin / admin123',
-    login_test_user: 'Utilizador: user / user123',
     login_drh: 'DIRECÇÃO DE RECURSOS HUMANOS',
     login_dg: 'DIRECÇÃO GERAL',
     login_system: 'SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS',
     themes_random_mode: 'Cores Aleatórias',
-    themes_random_desc: 'Ao entrar ou atualizar a página',
     login_footer: 'Copyright © 2026 –',
     login_footer_rights: '. Todos os direitos reservados. | Versão: 05.01.00',
 
@@ -128,12 +124,12 @@ const translations = {
     form_reset: 'Restaurar Padrões',
 
     /* ── Tabela BD ── */
-    db_table_title: 'Tabela no Banco de Dados:',
-    db_table_desc: 'Simulação da tabela no banco de dados e os registros atuais gravados.',
+    db_table_title: 'Tabela na Base de Dados:',
+    db_table_desc: 'Estrutura da tabela na base de dados institucional e registos actuais.',
     db_col_column: 'Coluna',
     db_col_type: 'Tipo',
     db_col_value: 'Valor Actual',
-    db_null_logo: 'NULL (Usando Padrão)',
+    db_null_logo: 'Padrão Institucional',
 
     /* ── Relatórios ── */
     reports_title: 'Módulo de Relatórios Institucionais',
@@ -230,14 +226,10 @@ const translations = {
     login_submit_loading: 'SIGNING IN...',
     login_forgot: 'Forgot Password?',
     login_request_access: 'Request Access',
-    login_test_label: '⚡ Test credentials:',
-    login_test_admin: 'Super Admin: admin / admin123',
-    login_test_user: 'User: user / user123',
     login_drh: 'HUMAN RESOURCES DIRECTORATE',
     login_dg: 'DIRECTORATE GENERAL',
     login_system: 'HUMAN RESOURCES INFORMATION AND MANAGEMENT SYSTEM',
     themes_random_mode: 'Random Colors',
-    themes_random_desc: 'On page load or refresh',
     login_footer: 'Copyright © 2026 –',
     login_footer_rights: '. All rights reserved. | Version: 01.00.00',
 
@@ -347,11 +339,11 @@ const translations = {
 
     /* ── DB Table ── */
     db_table_title: 'Database Table:',
-    db_table_desc: 'Database table simulation showing current stored records.',
+    db_table_desc: 'Institutional database structure and current records.',
     db_col_column: 'Column',
     db_col_type: 'Type',
     db_col_value: 'Current Value',
-    db_null_logo: 'NULL (Using Default)',
+    db_null_logo: 'Institutional Default',
 
     /* ── Reports ── */
     reports_title: 'Institutional Reports Module',
