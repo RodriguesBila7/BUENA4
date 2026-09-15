@@ -14,6 +14,18 @@ const styles = {
 
 export default function AccountSecurity({ t }) {
   const [twoFactor, setTwoFactor] = useState(false);
+  const [currentPass, setCurrentPass] = useState('');
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+
+  // Ao desmontar (sair da aba ou voltar ao menu principal), limpar credenciais imediatamente
+  React.useEffect(() => {
+    return () => {
+      setCurrentPass('');
+      setNewPass('');
+      setConfirmPass('');
+    };
+  }, []);
 
   return (
     <div className="animate-fade-in" style={styles.container}>
@@ -24,17 +36,54 @@ export default function AccountSecurity({ t }) {
         
         <div style={styles.formGroup}>
           <label style={styles.label}>Palavra-passe atual</label>
-          <input type="password" style={styles.input} />
+          <input 
+            type="password" 
+            style={styles.input} 
+            value={currentPass} 
+            onChange={(e) => setCurrentPass(e.target.value)} 
+            autoComplete="new-password"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+          />
         </div>
         <div style={styles.formGroup}>
           <label style={styles.label}>Nova Palavra-passe</label>
-          <input type="password" style={styles.input} />
+          <input 
+            type="password" 
+            style={styles.input} 
+            value={newPass} 
+            onChange={(e) => setNewPass(e.target.value)} 
+            autoComplete="new-password"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+          />
         </div>
         <div style={styles.formGroup}>
           <label style={styles.label}>Confirmar Nova Palavra-passe</label>
-          <input type="password" style={styles.input} />
+          <input 
+            type="password" 
+            style={styles.input} 
+            value={confirmPass} 
+            onChange={(e) => setConfirmPass(e.target.value)} 
+            autoComplete="new-password"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+          />
         </div>
-        <button style={styles.button}>Atualizar Palavra-passe</button>
+        <button 
+          style={styles.button}
+          onClick={() => {
+            alert('Palavra-passe atualizada com sucesso.');
+            setCurrentPass('');
+            setNewPass('');
+            setConfirmPass('');
+          }}
+        >
+          Atualizar Palavra-passe
+        </button>
       </div>
 
       <div style={styles.section}>

@@ -87,6 +87,10 @@ export default function ConfirmModal({
                 value={inputValue}
                 onChange={(e) => onInputChange && onInputChange(e.target.value)}
                 placeholder={placeholder}
+                autoComplete={inputType === 'password' ? 'new-password' : 'off'}
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
                 style={{...styles.modalInput, minHeight: '40px'}}
               />
             )

@@ -23,6 +23,21 @@ export default function StartVacationModal({ request, onClose, onStart }) {
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
+  useEffect(() => {
+    return () => {
+      setPassword('');
+      setFile(null);
+      setFileBase64('');
+    };
+  }, []);
+
+  const handleClose = () => {
+    setPassword('');
+    setFile(null);
+    setFileBase64('');
+    if (onClose) onClose();
+  };
+
   if (!request) return null;
 
   const handleFileChange = (e) => {
@@ -128,11 +143,12 @@ export default function StartVacationModal({ request, onClose, onStart }) {
             >
               {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
             </button>
-            <button onClick={onClose} style={styles.closeBtn}>✕</button>
+            <button onClick={handleClose} style={styles.closeBtn}>✕</button>
           </div>
         </div>
 
-        <form onSubmit={handleConfirm} style={styles.body}>
+        <form onSubmit={handleConfirm} style={styles.body} autoComplete="off">
+          <input type="password" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
           <div style={styles.infoBox}>
             <strong>Período:</strong> {request.startDate} a {request.endDate} <br />
             <strong>Dias:</strong> {request.daysCount}
@@ -163,12 +179,16 @@ export default function StartVacationModal({ request, onClose, onStart }) {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Sua senha..."
               style={styles.input}
+              autoComplete="new-password"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
               required
             />
           </div>
 
           <div style={styles.actions}>
-            <button type="button" onClick={onClose} style={styles.cancelBtn} disabled={isVerifying}>
+            <button type="button" onClick={handleClose} style={styles.cancelBtn} disabled={isVerifying}>
               Cancelar
             </button>
             <button type="submit" style={styles.confirmBtn} disabled={isVerifying}>

@@ -27,7 +27,11 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    return () => {
+      setMounted(false);
+      setAdminCode('');
+      setReactivateDispatch('');
+    };
   }, []);
 
   const renderStep = () => {
@@ -61,12 +65,16 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
                   value={adminCode} 
                   onChange={e => setAdminCode(e.target.value)} 
                   placeholder="Insira o PIN"
+                  autoComplete="new-password"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   style={styles.input} 
                 />
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                <button onClick={() => setIsReactivating(false)} style={styles.btnCancel}>Cancelar</button>
+                <button onClick={() => { setAdminCode(''); setIsReactivating(false); }} style={styles.btnCancel}>Cancelar</button>
                 <button 
                   disabled={!reactivateDispatch || !adminCode}
                   onClick={() => {

@@ -109,6 +109,25 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     }
   };
 
+  const clearCredentials = () => {
+    setUsername('');
+    setPassword('');
+    setRegName('');
+    setRegEmail('');
+    setShowPassword(false);
+    setError('');
+  };
+
+  // Garante que ao montar, ao trocar de aba de login ou ao sair do programa, as credenciais sejam limpas
+  React.useEffect(() => {
+    clearCredentials();
+    const timer = setTimeout(clearCredentials, 50);
+    return () => {
+      clearTimeout(timer);
+      clearCredentials();
+    };
+  }, [view]);
+
   /* ── Autenticação e Registo ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -126,7 +145,9 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       
       if (result && result.success) {
         logAction('Login', 'Sistema', `Login com sucesso: ${username}`);
-        onLogin(result.user);
+        const userObj = result.user;
+        clearCredentials();
+        onLogin(userObj);
       } else {
         logAction('Login', 'Sistema', `Falha na autenticação: ${username}`);
         setError(result?.error || t('msg_wrong_credentials'));
@@ -157,10 +178,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       }
       logAction('Registo', 'Utilizadores', `Novo utilizador registado na página de login: ${username}`);
       setSuccessMsg(t('msg_register_success'));
+      clearCredentials();
       setView('login');
-      setPassword('');
-      setRegName('');
-      setRegEmail('');
     } catch (err) {
       setIsLoading(false);
       setError(t('msg_user_exists'));
@@ -179,8 +198,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     setTimeout(() => {
       setIsLoading(false);
       setSuccessMsg(t('msg_recover_sent'));
+      clearCredentials();
       setView('login');
-      setRegEmail('');
     }, 1000);
   };
 
@@ -467,14 +486,37 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         {view === 'login' && (
           <>
             <h2 style={s.cardTitle}>{t('login_title')}</h2>
-            <form onSubmit={handleSubmit} style={s.form}>
+            <form onSubmit={handleSubmit} style={s.form} autoComplete="off">
+              {/* Armadilhas ocultas para impedir preenchimento automático indesejado pelo navegador */}
+              <input type="text" name="fake_user_prevent" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+              <input type="password" name="fake_pass_prevent" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                <input type="text" placeholder={t('login_username_placeholder')} value={username} onChange={e => setUsername(e.target.value)} style={s.field} />
+                <input 
+                  type="text" 
+                  name="username"
+                  autoComplete="off" 
+                  autoCorrect="off" 
+                  autoCapitalize="off" 
+                  spellCheck="false"
+                  placeholder={t('login_username_placeholder')} 
+                  value={username} 
+                  onChange={e => setUsername(e.target.value)} 
+                  style={s.field} 
+                />
               </div>
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-                <input type={showPassword ? 'text' : 'password'} placeholder={t('login_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} style={s.field} />
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  name="password"
+                  autoComplete="new-password"
+                  placeholder={t('login_password_placeholder')} 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  style={s.field} 
+                />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} style={s.eyeBtn} tabIndex={-1}>
                   {showPassword ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                 </button>
@@ -484,14 +526,14 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               </button>
               <button
                 type="button"
-                onClick={() => { setView('recover'); setError(''); setSuccessMsg(''); }}
+                onClick={() => { clearCredentials(); setView('recover'); }}
                 style={{ ...s.btnPrimary, marginTop: '12px', textTransform: 'uppercase' }}
               >
                 {t('login_forgot')}
               </button>
               <button
                 type="button"
-                onClick={() => { setView('register'); setError(''); setSuccessMsg(''); }}
+                onClick={() => { clearCredentials(); setView('register'); }}
                 style={{ ...s.btnPrimary, marginTop: '12px', textTransform: 'uppercase' }}
               >
                 {t('login_request_access')}
@@ -503,27 +545,30 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         {view === 'register' && (
           <>
             <h2 style={s.cardTitle}>{t('register_title')}</h2>
-            <form onSubmit={handleRegister} style={s.form}>
+            <form onSubmit={handleRegister} style={s.form} autoComplete="off">
+              <input type="text" name="fake_user_prevent2" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+              <input type="password" name="fake_pass_prevent2" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                <input type="text" placeholder={t('register_name_placeholder')} value={regName} onChange={e => setRegName(e.target.value)} style={s.field} />
+                <input type="text" name="regName" autoComplete="off" placeholder={t('register_name_placeholder')} value={regName} onChange={e => setRegName(e.target.value)} style={s.field} />
               </div>
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-                <input type="text" placeholder={t('login_username_placeholder')} value={username} onChange={e => setUsername(e.target.value)} style={s.field} />
+                <input type="text" name="username" autoComplete="off" placeholder={t('login_username_placeholder')} value={username} onChange={e => setUsername(e.target.value)} style={s.field} />
               </div>
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
-                <input type="email" placeholder={t('register_email_placeholder')} value={regEmail} onChange={e => setRegEmail(e.target.value)} style={s.field} />
+                <input type="email" name="email" autoComplete="off" placeholder={t('register_email_placeholder')} value={regEmail} onChange={e => setRegEmail(e.target.value)} style={s.field} />
               </div>
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-                <input type="password" placeholder={t('register_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} style={s.field} />
+                <input type="password" name="password" autoComplete="new-password" placeholder={t('register_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} style={s.field} />
               </div>
               <button type="submit" style={{...s.btnPrimary, opacity: isLoading ? 0.7 : 1}} disabled={isLoading}>
                 {isLoading ? t('register_submit_loading') : t('register_submit')}
               </button>
-              <button type="button" onClick={() => { setView('login'); setError(''); setSuccessMsg(''); }} style={s.btnSecondary}>{t('register_back')}</button>
+              <button type="button" onClick={() => { clearCredentials(); setView('login'); }} style={s.btnSecondary}>{t('register_back')}</button>
             </form>
           </>
         )}
@@ -531,15 +576,15 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         {view === 'recover' && (
           <>
             <h2 style={s.cardTitle}>{t('recover_title')}</h2>
-            <form onSubmit={handleRecuperarSubmit} style={s.form}>
+            <form onSubmit={handleRecuperarSubmit} style={s.form} autoComplete="off">
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
-                <input type="email" placeholder={t('register_email_placeholder')} value={regEmail} onChange={e => setRegEmail(e.target.value)} style={s.field} />
+                <input type="email" name="email" autoComplete="off" placeholder={t('register_email_placeholder')} value={regEmail} onChange={e => setRegEmail(e.target.value)} style={s.field} />
               </div>
               <button type="submit" style={{...s.btnPrimary, opacity: isLoading ? 0.7 : 1}} disabled={isLoading}>
                 {isLoading ? t('recover_submit_loading') : t('recover_submit')}
               </button>
-              <button type="button" onClick={() => { setView('login'); setError(''); setSuccessMsg(''); }} style={s.btnSecondary}>{t('recover_back')}</button>
+              <button type="button" onClick={() => { clearCredentials(); setView('login'); }} style={s.btnSecondary}>{t('recover_back')}</button>
             </form>
           </>
         )}

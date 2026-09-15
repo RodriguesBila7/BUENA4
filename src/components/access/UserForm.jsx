@@ -286,8 +286,21 @@ export default function UserForm({ initialData, onSave, onCancel }) {
     setFormData(prev => ({ ...prev, password: pass, confirmPassword: pass }));
   };
 
+  useEffect(() => {
+    return () => {
+      setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+    };
+  }, []);
+
+  const handleCancel = () => {
+    setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
+    if (onCancel) onCancel();
+  };
+
   return (
-    <form onSubmit={handleSubmit} style={styles.container}>
+    <form onSubmit={handleSubmit} style={styles.container} autoComplete="off">
+      <input type="text" name="fake_user_prevent" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+      <input type="password" name="fake_pass_prevent" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
       <h3 style={{ marginTop: 0 }}>{initialData ? 'Editar Utilizador' : 'Novo Utilizador'}</h3>
 
       {/* Seletor Profissional de Categoria do Perfil (Apenas ao Cadastrar Nova Conta) */}
@@ -522,11 +535,11 @@ export default function UserForm({ initialData, onSave, onCancel }) {
           <>
             <div style={styles.formGroup}>
               <label style={styles.label}>Palavra-passe <span style={{ color: '#e53e3e' }}>*</span> <button type="button" onClick={generatePassword} style={{marginLeft: '10px', fontSize: '11px', cursor: 'pointer'}}>Gerar Aleatória</button></label>
-              <input required type="text" style={styles.input} name="password" value={formData.password} onChange={handleChange} />
+              <input required type="password" autoComplete="new-password" style={styles.input} name="password" value={formData.password} onChange={handleChange} />
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Confirmar Palavra-passe <span style={{ color: '#e53e3e' }}>*</span></label>
-              <input required type="text" style={styles.input} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
+              <input required type="password" autoComplete="new-password" style={styles.input} name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
             </div>
           </>
         )}
@@ -639,7 +652,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
       </div>
 
       <div style={styles.btnRow}>
-        <button type="button" style={styles.btnSecondary} onClick={onCancel}>Cancelar</button>
+        <button type="button" style={styles.btnSecondary} onClick={handleCancel}>Cancelar</button>
         <button type="submit" style={styles.btnPrimary}>Guardar Utilizador</button>
       </div>
 

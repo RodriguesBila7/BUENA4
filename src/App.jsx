@@ -92,6 +92,8 @@ export default function App() {
     localStorage.setItem('sernic_identity_settings', JSON.stringify(resetValues));
   };
 
+  const [loginSessionKey, setLoginSessionKey] = useState(() => Date.now());
+
   const handleLogin = (userData) => {
     login(userData);
     
@@ -103,6 +105,10 @@ export default function App() {
 
   const handleLogout = () => {
     logout();
+    setLoginSessionKey(Date.now());
+    localStorage.removeItem('sernic_logged_user');
+    localStorage.removeItem('sernic_last_activity');
+    localStorage.setItem('sernic_active_tab', 'home');
   };
 
   const [alertModal, setAlertModal] = useState({ isOpen: false, message: '' });
@@ -179,6 +185,7 @@ export default function App() {
         />
       ) : (
         <Login 
+          key={loginSessionKey}
           settings={settings} 
           onLogin={handleLogin}
           updateSettings={updateSettings}
