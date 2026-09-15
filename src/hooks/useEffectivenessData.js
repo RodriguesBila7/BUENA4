@@ -51,7 +51,9 @@ export default function useEffectivenessData() {
 
   const updateRecord = async (id, updates) => {
     try {
-      await api('PUT', `/${id}`, { ...updates, id, updatedAt: new Date().toISOString() });
+      const current = records.find(r => r.id === id) || {};
+      const fullPayload = { ...current, ...updates, id, updatedAt: new Date().toISOString() };
+      await api('PUT', `/${id}`, fullPayload);
       await fetchData();
       return { success: true };
     } catch (e) {
@@ -77,10 +79,29 @@ export default function useEffectivenessData() {
     }
   };
 
+  const deleteEmployeeAbsences = async (employeeId) => {
+    try {
+      const toDelete = records.filter(r => String(r.employeeId) === String(employeeId));
+      for (const rec of toDelete) {
+        await api('DELETE', `/${rec.id}`).catch(() => {});
+      }
+      await fetchData();
+      return { success: true };
+    } catch (e) {
+      const current = getFallbackEffectiveness();
+      const updated = current.filter(r => String(r.employeeId) !== String(employeeId));
+      saveFallbackEffectiveness(updated);
+      setRecords(updated);
+      return { success: true };
+    }
+  };
+
   return {
     records,
+    fetchData,
     addRecord,
     updateRecord,
-    deleteRecord
+    deleteRecord,
+    deleteEmployeeAbsences
   };
 }

@@ -55,7 +55,15 @@ export function createGenericRouter(tableName) {
   router.put('/:id', (req, res) => {
     try {
       const db = getDb();
-      db.prepare(`UPDATE ${tableName} SET data = ?, updated_at = datetime('now') WHERE id = ?`).run(JSON.stringify(req.body), req.params.id);
+      const existingRow = db.prepare(`SELECT data FROM ${tableName} WHERE id = ?`).get(req.params.id);
+      let dataToSave = req.body;
+      if (existingRow) {
+        try {
+          const oldData = JSON.parse(existingRow.data);
+          dataToSave = { ...oldData, ...req.body };
+        } catch (_) {}
+      }
+      db.prepare(`UPDATE ${tableName} SET data = ?, updated_at = datetime('now') WHERE id = ?`).run(JSON.stringify(dataToSave), req.params.id);
       res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
   });

@@ -205,12 +205,6 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
     e.preventDefault();
     setErrorMessage('');
 
-    const currentDay = new Date().getDate();
-    if (currentDay < 25 || currentDay > 31) {
-      setErrorMessage('Atenção: O registo de faltas só é permitido entre os dias 25 e 31 de cada mês.');
-      return;
-    }
-
     if (calculatedDays <= 0) {
       setErrorMessage("Deve adicionar pelo menos um dia de falta!");
       return;

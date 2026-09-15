@@ -10,7 +10,7 @@ import { printAllAbsencesNationalMap } from './printAllEffectiveness';
 
 export default function EffectivenessQuery({ onGoToRegister, user, orgData: passedOrgData, employeesData }) {
   const { employees: allEmployees } = useEmployeeData();
-  const { records, updateRecord, deleteRecord } = useEffectivenessData();
+  const { records, addRecord, updateRecord, deleteRecord, deleteEmployeeAbsences } = useEffectivenessData();
   const { data: hookOrgData } = useOrgData();
 
   const orgData = passedOrgData?.data || passedOrgData || hookOrgData || { directorates: [], departments: [], divisions: [], sections: [], careers: [], categories: [] };
@@ -72,6 +72,16 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
   const [editReason, setEditReason] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editError, setEditError] = useState('');
+
+  // Quick Register Modal State
+  const [registeringEmp, setRegisteringEmp] = useState(null);
+  const [newType, setNewType] = useState('Falta Justificada');
+  const [newStart, setNewStart] = useState('');
+  const [newEnd, setNewEnd] = useState('');
+  const [newReason, setNewReason] = useState('');
+  const [newNotes, setNewNotes] = useState('');
+  const [newError, setNewError] = useState('');
+
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, hideCancel: false });
 
   const getName = (list, id) => list?.find(item => String(item.id) === String(id))?.name || '-';
@@ -471,23 +481,48 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
     setEditingAbsence(abs);
     setEditType(abs.type);
     setEditStart(abs.startDate);
-    setEditEnd(abs.endDate);
-    setEditReason(abs.reason);
+    setEditEnd(abs.endDate || abs.startDate);
+    setEditReason(abs.reason || '');
     setEditNotes(abs.notes || '');
     setEditError('');
   };
 
-  // Submit Edit
+  // Submit Edit com recálculo automático de datas e dias
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     setEditError('');
 
+    if (!editStart) {
+      setEditError('Por favor informe a data inicial.');
+      return;
+    }
+
+    const startDate = editStart;
+    const endDate = editEnd || editStart;
+    if (endDate < startDate) {
+      setEditError('A data final não pode ser anterior à data inicial.');
+      return;
+    }
+
+    let datesList = [];
+    let cur = new Date(startDate);
+    const end = new Date(endDate);
+    while (cur <= end) {
+      datesList.push(cur.toISOString().split('T')[0]);
+      cur.setDate(cur.getDate() + 1);
+    }
+    const daysCount = datesList.length || 1;
+
     const res = await updateRecord(editingAbsence.id, {
+      ...editingAbsence,
       type: editType,
-      startDate: editStart,
-      endDate: editEnd,
+      startDate: startDate,
+      endDate: endDate,
+      dates: datesList,
+      daysCount: daysCount,
       reason: editReason,
-      notes: editNotes
+      notes: editNotes,
+      updatedAt: new Date().toISOString()
     });
 
     if (res.success) {
@@ -502,8 +537,118 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
         }
       });
     } else {
-      setEditError(res.error);
+      setEditError(res.error || 'Erro ao atualizar falta.');
     }
+  };
+
+  // Quick Register Modal Handlers
+  const handleOpenRegister = (emp) => {
+    setRegisteringEmp(emp);
+    setNewType('Falta Justificada');
+    const today = new Date().toISOString().split('T')[0];
+    setNewStart(today);
+    setNewEnd(today);
+    setNewReason('');
+    setNewNotes('');
+    setNewError('');
+  };
+
+  const handleSaveRegister = async (e) => {
+    e.preventDefault();
+    setNewError('');
+
+    if (!newStart) {
+      setNewError('Por favor informe a data inicial.');
+      return;
+    }
+
+    const startDate = newStart;
+    const endDate = newEnd || newStart;
+    if (endDate < startDate) {
+      setNewError('A data final não pode ser anterior à data inicial.');
+      return;
+    }
+
+    let datesList = [];
+    let cur = new Date(startDate);
+    const end = new Date(endDate);
+    while (cur <= end) {
+      datesList.push(cur.toISOString().split('T')[0]);
+      cur.setDate(cur.getDate() + 1);
+    }
+    const daysCount = datesList.length || 1;
+
+    const empObj = employees.find(e => String(e.id) === String(registeringEmp.employeeId || registeringEmp.id)) || registeringEmp;
+    const dirObj = (orgData?.directorates || []).find(d => String(d.id) === String(empObj.directorateId));
+
+    const payload = {
+      employeeId: empObj.id || registeringEmp.employeeId,
+      employeeNip: empObj.nip || empObj.nuit || registeringEmp.nip || '-',
+      employeeName: empObj.name || registeringEmp.name || 'Funcionário',
+      gender: empObj.gender || registeringEmp.gender,
+      type: newType,
+      dates: datesList,
+      daysCount: daysCount,
+      startDate: startDate,
+      endDate: endDate,
+      reason: newReason,
+      notes: newNotes,
+      provinceId: empObj.provinceId || registeringEmp.provinceId || dirObj?.province || '',
+      districtId: empObj.districtId || registeringEmp.districtId || '',
+      directorateId: empObj.directorateId || registeringEmp.directorateId || userDirId || '',
+      directorateName: dirObj?.name || registeringEmp.directorate || 'Direcção Geral',
+      departmentId: empObj.departmentId || registeringEmp.departmentId || '',
+      divisionId: empObj.divisionId || registeringEmp.divisionId || '',
+      sectionId: empObj.sectionId || registeringEmp.sectionId || '',
+      careerId: empObj.careerId || registeringEmp.careerId || '',
+      categoryId: empObj.categoryId || registeringEmp.categoryId || '',
+      jobPosition: empObj.role || registeringEmp.role || 'Investigador',
+      registeredBy: user?.username || 'Utilizador',
+      registeredByName: user?.name || user?.username || 'Utilizador RH',
+      registeredByRole: user?.roleName || user?.roleId || 'Operador',
+      registeredByDirectorateId: user?.directorateId || empObj.directorateId || '',
+      registeredAt: new Date().toISOString()
+    };
+
+    const res = await addRecord(payload);
+    if (res.success) {
+      setConfirmModal({
+        isOpen: true,
+        title: 'Sucesso',
+        message: `Falta registada com sucesso para ${payload.employeeName}!`,
+        hideCancel: true,
+        confirmText: 'OK',
+        onConfirm: () => {
+          setRegisteringEmp(null);
+        }
+      });
+    } else {
+      setNewError(res.error || 'Erro ao registar falta.');
+    }
+  };
+
+  // Anular todas as faltas do funcionário
+  const handleDeleteAllForEmployee = (empId, empName) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Confirmar Anulação Total',
+      message: `Pretende anular e remover todas as faltas registadas de ${empName}? Esta operação não pode ser desfeita.`,
+      isDestructive: true,
+      hideCancel: false,
+      onConfirm: async () => {
+        const res = await deleteEmployeeAbsences(empId);
+        if (res.success) {
+          if (selectedEmpId === empId) setSelectedEmpId(null);
+          setConfirmModal({
+            isOpen: true,
+            title: 'Sucesso',
+            message: 'Todas as faltas do funcionário foram anuladas com sucesso.',
+            hideCancel: true,
+            confirmText: 'OK'
+          });
+        }
+      }
+    });
   };
 
   return (
@@ -527,10 +672,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
             <span style={{ fontSize: '20px' }}>🏛️</span>
             <div>
               <div style={{ fontSize: '13.5px', fontWeight: 'bold', color: 'var(--color-primary, #1B365D)' }}>
-                Visão por Perfil Secundário / Direcção Provincial de RH:
-              </div>
-              <div style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
-                Consulte faltas de cada delegação provincial de forma independente ou em visão nacional consolidada.
+                Direcção Provincial de RH:
               </div>
             </div>
           </div>
@@ -905,15 +1047,38 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                             {emp.lastAbsenceDate ? emp.lastAbsenceDate.split('-').reverse().join('/') : '-'}
                           </td>
                           <td style={{textAlign: 'right'}}>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedEmpId(emp.employeeId === selectedEmpId ? null : emp.employeeId);
-                              }}
-                              style={styles.btnViewDetails}
-                            >
-                              {selectedEmpId === emp.employeeId ? 'Fechar Detalhes' : 'Ver Histórico'}
-                            </button>
+                            <div style={{display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center'}}>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedEmpId(emp.employeeId === selectedEmpId ? null : emp.employeeId);
+                                }}
+                                style={styles.btnViewDetails}
+                                title="Ver histórico de faltas"
+                              >
+                                {selectedEmpId === emp.employeeId ? 'Fechar' : '👁️ Histórico'}
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenRegister(emp);
+                                }}
+                                style={{...styles.btnViewDetails, borderColor: '#059669', color: '#059669'}}
+                                title="Registar nova falta para este funcionário"
+                              >
+                                ➕ Falta
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteAllForEmployee(emp.employeeId, emp.name);
+                                }}
+                                style={{...styles.btnViewDetails, borderColor: '#ef4444', color: '#ef4444'}}
+                                title="Anular todas as faltas deste funcionário"
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -944,6 +1109,45 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                   <div><strong>Total:</strong> {selectedEmpDetails.totalDays} Dias</div>
                   <div><strong>Justificadas:</strong> {selectedEmpDetails.totalJustified} Dias</div>
                   <div><strong>Injustificadas:</strong> {selectedEmpDetails.totalUnjustified} Dias</div>
+                </div>
+
+                <div style={{marginTop: '10px', display: 'flex', gap: '8px'}}>
+                  <button
+                    onClick={() => handleOpenRegister(selectedEmpDetails)}
+                    style={{
+                      flex: 1,
+                      padding: '7px 10px',
+                      backgroundColor: 'var(--color-primary, #1B365D)',
+                      color: 'var(--color-accent, #EAAA00)',
+                      border: 'none',
+                      borderRadius: '5px',
+                      fontSize: '11.5px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    ➕ Registar Falta
+                  </button>
+                  <button
+                    onClick={() => handleDeleteAllForEmployee(selectedEmpDetails.employeeId, selectedEmpDetails.name)}
+                    style={{
+                      padding: '7px 10px',
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      color: '#dc2626',
+                      border: '1px solid #dc2626',
+                      borderRadius: '5px',
+                      fontSize: '11.5px',
+                      fontWeight: '700',
+                      cursor: 'pointer'
+                    }}
+                    title="Anular todas as faltas deste funcionário"
+                  >
+                    🗑️ Anular Todas
+                  </button>
                 </div>
 
                 <div style={{display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px'}}>
@@ -984,6 +1188,73 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
             </div>
           )}
 
+        </div>
+      )}
+
+      {/* MODAL DE NOVO REGISTO DE FALTA DIRETO */}
+      {registeringEmp && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <div style={styles.modalHeader}>
+              <div>
+                <h4 style={{margin: 0, color: 'var(--color-primary)'}}>Registar Falta</h4>
+                <div style={{fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px'}}>
+                  {registeringEmp.name || registeringEmp.employeeName} (NUIT: {registeringEmp.nip || registeringEmp.employeeNip})
+                </div>
+              </div>
+              <button onClick={() => setRegisteringEmp(null)} style={styles.btnCloseDetail}>✕</button>
+            </div>
+
+            <form onSubmit={handleSaveRegister} style={{display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px'}}>
+              {newError && <div style={{color: '#dc2626', fontSize: '12px'}}>{newError}</div>}
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Tipo de Falta</label>
+                <select value={newType} onChange={(e) => setNewType(e.target.value)} style={styles.input}>
+                  <option value="Falta Justificada">Falta Justificada</option>
+                  <option value="Falta Injustificada">Falta Injustificada</option>
+                </select>
+              </div>
+
+              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px'}}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Data Inicial</label>
+                  <input type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} style={styles.input} required />
+                </div>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Data Final</label>
+                  <input type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} style={styles.input} required />
+                </div>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Motivo / Justificação</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Motivo de saúde, comparência judicial, ausência sem aviso..."
+                  value={newReason}
+                  onChange={(e) => setNewReason(e.target.value)}
+                  style={styles.input}
+                  required
+                />
+              </div>
+
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Notas / Observações</label>
+                <textarea
+                  placeholder="Observações adicionais ou despacho..."
+                  value={newNotes}
+                  onChange={(e) => setNewNotes(e.target.value)}
+                  style={{...styles.input, minHeight: '60px'}}
+                />
+              </div>
+
+              <div style={{display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px'}}>
+                <button type="button" onClick={() => setRegisteringEmp(null)} style={styles.btnReset}>Cancelar</button>
+                <button type="submit" style={styles.btnGoToRegister}>Gravar Registo</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

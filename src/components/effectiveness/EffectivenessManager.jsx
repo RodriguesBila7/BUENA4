@@ -41,7 +41,6 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
       <div style={styles.header}>
         <div>
           <h2 style={styles.title}>Módulo de Efetividade (Gestão de Faltas)</h2>
-          <p style={styles.desc}>Controlo territorial, registo descentralizado e relatórios oficiais de assiduidade do SERNIC.</p>
         </div>
         {isPrincipal && (
           <button 
@@ -49,7 +48,6 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
             style={styles.btnPrintAll}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
-            title="Imprimir mapa consolidado de faltas de todas as direcções e unidades do SERNIC"
           >
             🖨️ Imprimir Todas as Faltas (Todas as Direcções)
           </button>
