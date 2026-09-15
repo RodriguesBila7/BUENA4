@@ -506,8 +506,8 @@ const s = {
     textAlign: 'center',
   },
   logo: {
-    width: '130px',
-    height: '130px',
+    width: '150px',
+    height: '150px',
     objectFit: 'contain',
     marginBottom: '12px',
     filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.35))',
@@ -556,7 +556,7 @@ const s = {
     backgroundColor: 'var(--color-bg-card, #243044)',
     border: '1px solid var(--color-border, #3A4A66)',
     borderRadius: '16px',
-    padding: '34px 30px 26px',
+    padding: '34px 30px calc(26px + 1.6cm)',
     boxShadow: '0 20px 60px rgba(0,0,0,0.45)',
     boxSizing: 'border-box'
   },
