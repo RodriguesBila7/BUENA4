@@ -7,7 +7,6 @@ import ConfirmModal from '../ConfirmModal';
 import CrudActionButtons from '../common/CrudActionButtons';
 import { exportToExcel } from '../../utils/excelExport';
 
-// Função utilitária para formatar datas (DD/MM/AAAA)
 const formatDate = (dateStr) => {
   if (!dateStr) return 'N/D';
   const parts = dateStr.split('-');
@@ -26,7 +25,6 @@ const formatDate = (dateStr) => {
   }
 };
 
-// Cálculo do estado automático e contagem regressiva precisa
 const computeVacationCountdown = (startDateStr, endDateStr, manualStatus, now) => {
   if (manualStatus === 'Cancelada') {
     return {
@@ -77,7 +75,6 @@ const computeVacationCountdown = (startDateStr, endDateStr, manualStatus, now) =
   const startMs = start.getTime();
   const endMs = end.getTime();
 
-  // 1. Agendadas (Início no futuro)
   if (nowMs < startMs) {
     const msUntilStart = startMs - nowMs;
     const daysUntilStart = Math.ceil(msUntilStart / (1000 * 60 * 60 * 24));
@@ -100,7 +97,6 @@ const computeVacationCountdown = (startDateStr, endDateStr, manualStatus, now) =
     };
   }
 
-  // 2. Concluídas (Já ultrapassou a data de término)
   if (nowMs > endMs) {
     return {
       computedStatus: 'Concluídas',
@@ -121,7 +117,6 @@ const computeVacationCountdown = (startDateStr, endDateStr, manualStatus, now) =
     };
   }
 
-  // 3. Em curso (Decorrendo agora)
   const diffMs = endMs - nowMs;
   const remainingDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const remainingHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -131,8 +126,6 @@ const computeVacationCountdown = (startDateStr, endDateStr, manualStatus, now) =
   const elapsedMs = nowMs - startMs;
   const elapsedDays = Math.min(totalDurationDays, Math.floor(elapsedMs / (1000 * 60 * 60 * 24)) + 1);
   const progressPercent = Math.min(100, Math.max(0, Math.round((elapsedMs / totalDurationMs) * 100)));
-
-  // Alerta de proximidade (faltam 5 dias ou menos)
   const isEndingSoon = remainingDays <= 5;
 
   let countdownText = '';
@@ -168,7 +161,6 @@ export default function VacationManagement() {
   const { employees } = useEmployeeData();
   const { data: orgData } = useOrgData();
 
-  // Relógio em tempo real que atualiza a contagem decrescente a cada segundo
   const [currentTime, setCurrentTime] = useState(() => new Date());
   useEffect(() => {
     const timer = setInterval(() => {
@@ -177,7 +169,6 @@ export default function VacationManagement() {
     return () => clearInterval(timer);
   }, []);
 
-  // ─── ESTADOS DE FILTRO ──────────────────────────────────────────────────
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDirectorate, setFilterDirectorate] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('');
@@ -187,17 +178,14 @@ export default function VacationManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // ─── MODAIS E AÇÕES CRUD ─────────────────────────────────────────────────
   const [viewingRecord, setViewingRecord] = useState(null);
   const [editingRecord, setEditingRecord] = useState(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
-  // Modais redimensionáveis com useResizableModal
   const viewModal = useResizableModal({ defaultWidth: '780px', minWidth: 420, minHeight: 460 });
   const formModal = useResizableModal({ defaultWidth: '720px', minWidth: 420, minHeight: 480 });
 
-  // Departamentos e Repartições em cascata
   const availableDepartments = useMemo(() => {
     if (!filterDirectorate) return [];
     return (orgData?.departments || []).filter(d => String(d.directorateId) === String(filterDirectorate));
@@ -214,7 +202,6 @@ export default function VacationManagement() {
     );
   }, [orgData?.divisions, filterDirectorate, filterDepartment, availableDepartments]);
 
-  // Lista enriquecida com dados do funcionário e cálculo de contagem regressiva
   const enrichedRequests = useMemo(() => {
     return (requests || []).map(req => {
       const emp = (employees || []).find(e => 
@@ -248,10 +235,8 @@ export default function VacationManagement() {
     });
   }, [requests, employees, orgData, currentTime]);
 
-  // Filtragem
   const filteredRequests = useMemo(() => {
     return enrichedRequests.filter(item => {
-      // Busca textual
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         const empName = (item.emp?.name || item.employeeName || '').toLowerCase();
@@ -262,27 +247,22 @@ export default function VacationManagement() {
         }
       }
 
-      // Direcção
       if (filterDirectorate && String(item.emp?.directorateId) !== String(filterDirectorate)) {
         return false;
       }
 
-      // Departamento
       if (filterDepartment && String(item.emp?.departmentId) !== String(filterDepartment)) {
         return false;
       }
 
-      // Repartição
       if (filterDivision && String(item.emp?.divisionId) !== String(filterDivision)) {
         return false;
       }
 
-      // Estado automático
       if (filterStatus && item.countdown.computedStatus !== filterStatus) {
         return false;
       }
 
-      // Apenas alertas de término próximo
       if (filterAlertOnly && !item.countdown.isEndingSoon) {
         return false;
       }
@@ -291,7 +271,6 @@ export default function VacationManagement() {
     });
   }, [enrichedRequests, searchTerm, filterDirectorate, filterDepartment, filterDivision, filterStatus, filterAlertOnly]);
 
-  // Métricas / KPIs
   const stats = useMemo(() => {
     let total = enrichedRequests.length;
     let ongoing = 0;
@@ -309,7 +288,6 @@ export default function VacationManagement() {
     return { total, ongoing, scheduled, endingSoon, completed };
   }, [enrichedRequests]);
 
-  // Paginação
   const totalPages = Math.ceil(filteredRequests.length / itemsPerPage) || 1;
   const paginatedRequests = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
@@ -326,7 +304,6 @@ export default function VacationManagement() {
     setCurrentPage(1);
   };
 
-  // Excluir Registo
   const handleDelete = (record) => {
     setConfirmModal({
       isOpen: true,
@@ -340,7 +317,6 @@ export default function VacationManagement() {
     });
   };
 
-  // Exportar Excel
   const handleExportExcel = () => {
     const dataToExport = filteredRequests.map(r => ({
       'ID Registo': r.id,
@@ -364,35 +340,6 @@ export default function VacationManagement() {
 
   return (
     <div style={styles.container}>
-      {/* ─── TOPO DO MÓDULO ─── */}
-      <div style={styles.topBar}>
-        <div>
-          <h2 style={styles.mainTitle}>🌴 Gestão de Férias e Licenças</h2>
-          <p style={styles.subtitle}>
-            Acompanhamento em tempo real do gozo de férias com contagem decrescente em dias e horas, alertas de regresso e histórico funcional.
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button 
-            type="button" 
-            onClick={handleExportExcel} 
-            style={styles.btnSecondary}
-            title="Exportar listagem completa em formato Microsoft Excel"
-          >
-            📥 Exportar Excel
-          </button>
-          <button 
-            type="button" 
-            onClick={() => { setEditingRecord(null); setIsNewModalOpen(true); }} 
-            style={styles.btnPrimary}
-            title="Registar nova marcação de férias para funcionário"
-          >
-            ➕ Novo Agendamento de Férias
-          </button>
-        </div>
-      </div>
-
-      {/* ─── CARDS DE INDICADORES (KPIS) ─── */}
       <div style={styles.kpiGrid}>
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid var(--color-primary, #1B365D)' }}>
           <div style={styles.kpiHeader}>
@@ -422,7 +369,7 @@ export default function VacationManagement() {
             <span style={styles.kpiIcon}>⚠️</span>
           </div>
           <div style={{ ...styles.kpiValue, color: '#DC2626' }}>{stats.endingSoon}</div>
-          <div style={styles.kpiDesc}>Alertas para preparação de regresso</div>
+          <div style={styles.kpiDesc}>Alertas para regresso ao serviço</div>
         </div>
 
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid #2563EB' }}>
@@ -444,7 +391,6 @@ export default function VacationManagement() {
         </div>
       </div>
 
-      {/* ─── FILTROS HIERÁRQUICOS SERNIC ─── */}
       <div style={styles.filterContainer}>
         <div style={styles.filterTitleRow}>
           <span style={styles.filterHeaderTitle}>🔍 Filtros de Selecção e Pesquisa Operacional</span>
@@ -456,7 +402,6 @@ export default function VacationManagement() {
         </div>
 
         <div style={styles.filterGrid}>
-          {/* Campo de Pesquisa Textual */}
           <div style={styles.filterGroup}>
             <label style={styles.filterLabel}>Pesquisar Funcionário (Nome / NUIT / NIP)</label>
             <input 
@@ -468,7 +413,6 @@ export default function VacationManagement() {
             />
           </div>
 
-          {/* Direcção / Unidade Provincial */}
           <div style={styles.filterGroup}>
             <label style={styles.filterLabel}>Direcção / Unidade</label>
             <select 
@@ -488,7 +432,6 @@ export default function VacationManagement() {
             </select>
           </div>
 
-          {/* Departamento */}
           <div style={styles.filterGroup}>
             <label style={styles.filterLabel}>Departamento</label>
             <select 
@@ -508,7 +451,6 @@ export default function VacationManagement() {
             </select>
           </div>
 
-          {/* Repartição / Repartição Central - Mantida na mesma linha com whiteSpace: 'nowrap' */}
           <div style={{ ...styles.filterGroup, minWidth: '260px' }}>
             <label style={{ ...styles.filterLabel, whiteSpace: 'nowrap' }}>Repartição / Repartição Central</label>
             <select 
@@ -526,7 +468,6 @@ export default function VacationManagement() {
             </select>
           </div>
 
-          {/* Estado Automático */}
           <div style={styles.filterGroup}>
             <label style={styles.filterLabel}>Estado Automático</label>
             <select 
@@ -542,7 +483,6 @@ export default function VacationManagement() {
             </select>
           </div>
 
-          {/* Filtro Rápido de Alertas de Término Próximo */}
           <div style={{ ...styles.filterGroup, justifyContent: 'flex-end' }}>
             <label 
               style={{
@@ -571,14 +511,34 @@ export default function VacationManagement() {
         </div>
       </div>
 
-      {/* ─── TABELA DE GESTÃO E CONTAGEM REGRESSIVA ─── */}
       <div style={styles.tableCard}>
         <div style={styles.tableHeaderBar}>
-          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-primary)' }}>
-            📋 Lista Nominal de Funcionários e Contagem Regressiva ({filteredRequests.length} registos encontrados)
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-primary)' }}>
+              Lista Nominal de Funcionários e Contagem Regressiva ({filteredRequests.length})
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+              ⏱️ {currentTime.toLocaleTimeString()}
+            </span>
           </div>
-          <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-            ⏱️ Atualização em tempo real: {currentTime.toLocaleTimeString()}
+
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button 
+              type="button" 
+              onClick={handleExportExcel} 
+              style={styles.btnSecondary}
+              title="Exportar listagem completa em formato Excel"
+            >
+              📥 Exportar Excel
+            </button>
+            <button 
+              type="button" 
+              onClick={() => { setEditingRecord(null); setIsNewModalOpen(true); }} 
+              style={styles.btnPrimary}
+              title="Registar nova marcação de férias para funcionário"
+            >
+              ➕ Novo Agendamento de Férias
+            </button>
           </div>
         </div>
 
@@ -612,7 +572,6 @@ export default function VacationManagement() {
 
                   return (
                     <tr key={r.id} style={styles.tr}>
-                      {/* Funcionário */}
                       <td style={styles.td}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <div style={styles.avatar}>
@@ -634,7 +593,6 @@ export default function VacationManagement() {
                         </div>
                       </td>
 
-                      {/* Período */}
                       <td style={styles.td}>
                         <div style={{ fontWeight: '600', color: 'var(--color-text-main)' }}>
                           {formatDate(r.startDate)} ➔ {formatDate(r.endDate)}
@@ -644,25 +602,21 @@ export default function VacationManagement() {
                         </div>
                       </td>
 
-                      {/* Duração Total */}
                       <td style={styles.td}>
                         <span style={styles.badgeDays}>
                           {r.daysCount || countdown.totalDurationDays} dias
                         </span>
                       </td>
 
-                      {/* Estado Automático */}
                       <td style={styles.td}>
                         <span style={getStatusBadgeStyle(countdown.computedStatus)}>
                           {countdown.computedStatus}
                         </span>
                       </td>
 
-                      {/* Contagem Decrescente em Dias e Horas */}
                       <td style={styles.td}>
                         {countdown.isOngoing ? (
                           <div>
-                            {/* Alerta se faltar <= 5 dias */}
                             {countdown.isEndingSoon && (
                               <div style={styles.alertEndingSoon}>
                                 ⚠️ Férias terminam em breve!
@@ -677,7 +631,6 @@ export default function VacationManagement() {
                               </span>
                             </div>
 
-                            {/* Barra de Progresso Decrescente */}
                             <div style={styles.progressBarBg}>
                               <div 
                                 style={{
@@ -708,7 +661,6 @@ export default function VacationManagement() {
                         )}
                       </td>
 
-                      {/* Férias Terminam Em */}
                       <td style={styles.td}>
                         <div style={{ fontWeight: '700', color: 'var(--color-text-main)' }}>
                           {countdown.endDateFormatted}
@@ -720,7 +672,6 @@ export default function VacationManagement() {
                         )}
                       </td>
 
-                      {/* Ações */}
                       <td style={{ ...styles.td, textAlign: 'right' }}>
                         <CrudActionButtons 
                           onView={() => setViewingRecord(r)}
@@ -739,7 +690,6 @@ export default function VacationManagement() {
           </table>
         </div>
 
-        {/* Paginação */}
         {totalPages > 1 && (
           <div style={styles.paginationRow}>
             <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
@@ -770,7 +720,6 @@ export default function VacationManagement() {
         )}
       </div>
 
-      {/* ─── MODAL DE VISUALIZAÇÃO DETALHADA E HISTÓRICO ─── */}
       {viewingRecord && (
         <div style={styles.modalOverlay} onClick={viewModal.getOverlayProps(() => setViewingRecord(null)).onClick}>
           <div 
@@ -798,7 +747,6 @@ export default function VacationManagement() {
             </div>
 
             <div style={styles.modalBody}>
-              {/* CARTÃO DE DESTAQUE DO CRONÓMETRO REGRESSIVO */}
               {viewingRecord.countdown.isOngoing ? (
                 <div style={styles.liveCountdownCard}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
@@ -817,7 +765,6 @@ export default function VacationManagement() {
                     )}
                   </div>
 
-                  {/* 4 Blocos de Tempo */}
                   <div style={styles.timerBlocksGrid}>
                     <div style={styles.timerBlock}>
                       <div style={styles.timerNumber}>{viewingRecord.countdown.remainingDays}</div>
@@ -837,7 +784,6 @@ export default function VacationManagement() {
                     </div>
                   </div>
 
-                  {/* Barra de Progresso com Contagem Decrescente */}
                   <div style={{ marginTop: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#1B365D' }}>
                       <span>Início: {formatDate(viewingRecord.startDate)} ({viewingRecord.countdown.elapsedDays} dias gozados)</span>
@@ -874,7 +820,6 @@ export default function VacationManagement() {
                 </div>
               )}
 
-              {/* DADOS DO FUNCIONÁRIO */}
               <div style={styles.sectionHeader}>👤 Dados Cadastrais do Funcionário</div>
               <div style={styles.infoGrid}>
                 <div style={styles.infoItem}>
@@ -911,7 +856,6 @@ export default function VacationManagement() {
                 </div>
               </div>
 
-              {/* HISTÓRICO DE FÉRIAS DO FUNCIONÁRIO */}
               <div style={styles.sectionHeader}>📜 Histórico Completo de Férias e Licenças deste Funcionário</div>
               <div style={{ overflowX: 'auto', marginTop: '10px' }}>
                 <table className="premium-table" style={{ width: '100%', fontSize: '12px' }}>
@@ -972,7 +916,6 @@ export default function VacationManagement() {
         </div>
       )}
 
-      {/* ─── MODAL DE NOVO AGENDAMENTO / EDIÇÃO ─── */}
       {isNewModalOpen && (
         <VacationFormModal 
           isOpen={isNewModalOpen}
@@ -993,7 +936,6 @@ export default function VacationManagement() {
         />
       )}
 
-      {/* ─── MODAL DE CONFIRMAÇÃO DE APAGAR ─── */}
       <ConfirmModal 
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
@@ -1006,7 +948,6 @@ export default function VacationManagement() {
   );
 }
 
-// ─── SUB-COMPONENTE: MODAL DE FORMULÁRIO (NOVO / EDIÇÃO) ───
 function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, onSave, modalProps }) {
   const [employeeId, setEmployeeId] = useState(initialData?.employeeId || '');
   const [employeeName, setEmployeeName] = useState(initialData?.employeeName || '');
@@ -1020,7 +961,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
   const [notes, setNotes] = useState(initialData?.notes || '');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Ao selecionar funcionário da lista
   const handleSelectEmployee = (id) => {
     setEmployeeId(id);
     const found = (employees || []).find(e => String(e.id) === String(id));
@@ -1030,7 +970,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
     }
   };
 
-  // Calcular dias automaticamente quando as datas mudam
   useEffect(() => {
     if (startDate && endDate) {
       const s = new Date(startDate);
@@ -1107,7 +1046,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
           <div style={styles.modalBody}>
             {errorMsg && <div style={styles.errorBanner}>⚠️ {errorMsg}</div>}
 
-            {/* SELEÇÃO DO FUNCIONÁRIO */}
             <div style={styles.formGroupModal}>
               <label style={styles.filterLabel}>Funcionário SERNIC <span style={{ color: '#DC2626' }}>*</span></label>
               <select 
@@ -1126,7 +1064,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-              {/* TIPO DE FÉRIAS / LICENÇA */}
               <div style={styles.formGroupModal}>
                 <label style={styles.filterLabel}>Tipo de Férias / Licença <span style={{ color: '#DC2626' }}>*</span></label>
                 <select value={type} onChange={e => setType(e.target.value)} style={styles.select}>
@@ -1141,7 +1078,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
                 </select>
               </div>
 
-              {/* ANO DE REFERÊNCIA */}
               <div style={styles.formGroupModal}>
                 <label style={styles.filterLabel}>Ano de Referência <span style={{ color: '#DC2626' }}>*</span></label>
                 <input 
@@ -1155,7 +1091,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px' }}>
-              {/* DATA INÍCIO */}
               <div style={styles.formGroupModal}>
                 <label style={styles.filterLabel}>Data de Início <span style={{ color: '#DC2626' }}>*</span></label>
                 <input 
@@ -1167,7 +1102,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
                 />
               </div>
 
-              {/* DATA TÉRMINO */}
               <div style={styles.formGroupModal}>
                 <label style={styles.filterLabel}>Data de Término <span style={{ color: '#DC2626' }}>*</span></label>
                 <input 
@@ -1179,7 +1113,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
                 />
               </div>
 
-              {/* QUANTIDADE DE DIAS */}
               <div style={styles.formGroupModal}>
                 <label style={styles.filterLabel}>Total de Dias</label>
                 <input 
@@ -1194,7 +1127,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '14px' }}>
-              {/* ESTADO MANUAL / CONTROLO */}
               <div style={styles.formGroupModal}>
                 <label style={styles.filterLabel}>Regime / Estado Administrativo</label>
                 <select value={status} onChange={e => setStatus(e.target.value)} style={styles.select}>
@@ -1206,7 +1138,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
                 </div>
               </div>
 
-              {/* OBSERVAÇÕES */}
               <div style={styles.formGroupModal}>
                 <label style={styles.filterLabel}>Notas e Observações</label>
                 <textarea 
@@ -1233,7 +1164,6 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
   );
 }
 
-// ─── ESTILIZAÇÃO DO BADGE DE ESTADO ───
 const getStatusBadgeStyle = (status) => {
   const base = {
     padding: '4px 10px',
@@ -1261,55 +1191,34 @@ const getStatusBadgeStyle = (status) => {
   }
 };
 
-// ─── FOLHA DE ESTILOS CSS-IN-JS COMPATÍVEL COM SERNIC DESIGN SYSTEM ───
 const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
+    gap: '16px',
     width: '100%'
   },
-  topBar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '15px'
-  },
-  mainTitle: {
-    fontSize: '22px',
-    fontWeight: '800',
-    color: 'var(--color-primary, #1B365D)',
-    margin: '0 0 4px 0'
-  },
-  subtitle: {
-    fontSize: '13px',
-    color: 'var(--color-text-muted)',
-    margin: 0,
-    maxWidth: '800px'
-  },
   btnPrimary: {
-    padding: '10px 18px',
+    padding: '8px 16px',
     backgroundColor: 'var(--color-primary, #1B365D)',
     color: '#fff',
     border: 'none',
     borderRadius: '6px',
     fontWeight: '700',
-    fontSize: '13px',
+    fontSize: '12px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+    gap: '6px'
   },
   btnSecondary: {
-    padding: '10px 16px',
+    padding: '8px 14px',
     backgroundColor: 'var(--color-bg-card)',
     color: 'var(--color-primary, #1B365D)',
     border: '1px solid var(--color-border)',
     borderRadius: '6px',
     fontWeight: '600',
-    fontSize: '13px',
+    fontSize: '12px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
@@ -1317,18 +1226,17 @@ const styles = {
   },
   kpiGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '14px'
+    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+    gap: '12px'
   },
   kpiCard: {
     backgroundColor: 'var(--color-bg-card)',
     borderRadius: '8px',
-    padding: '16px',
+    padding: '14px',
     border: '1px solid var(--color-border)',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px'
+    gap: '4px'
   },
   kpiHeader: {
     display: 'flex',
@@ -1336,17 +1244,17 @@ const styles = {
     alignItems: 'center'
   },
   kpiTitle: {
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: '700',
     color: 'var(--color-text-muted)',
     textTransform: 'uppercase',
     letterSpacing: '0.4px'
   },
   kpiIcon: {
-    fontSize: '18px'
+    fontSize: '16px'
   },
   kpiValue: {
-    fontSize: '28px',
+    fontSize: '24px',
     fontWeight: '800',
     color: 'var(--color-primary, #1B365D)'
   },
@@ -1356,12 +1264,12 @@ const styles = {
   },
   filterContainer: {
     backgroundColor: 'var(--color-bg-card)',
-    padding: '18px',
+    padding: '16px',
     borderRadius: '8px',
     border: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '14px'
+    gap: '12px'
   },
   filterTitleRow: {
     display: 'flex',
@@ -1380,20 +1288,20 @@ const styles = {
     fontSize: '12px',
     fontWeight: '700',
     cursor: 'pointer',
-    padding: '4px 8px',
+    padding: '2px 6px',
     borderRadius: '4px'
   },
   filterGrid: {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: '14px',
+    gap: '12px',
     alignItems: 'flex-end'
   },
   filterGroup: {
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
-    flex: '1 1 200px',
+    flex: '1 1 190px',
     minWidth: '180px'
   },
   formGroupModal: {
@@ -1408,7 +1316,7 @@ const styles = {
     color: 'var(--color-text-muted)'
   },
   input: {
-    padding: '9px 12px',
+    padding: '8px 12px',
     borderRadius: '6px',
     border: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-bg-base)',
@@ -1419,7 +1327,7 @@ const styles = {
     boxSizing: 'border-box'
   },
   select: {
-    padding: '9px 12px',
+    padding: '8px 12px',
     borderRadius: '6px',
     border: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-bg-base)',
@@ -1437,7 +1345,7 @@ const styles = {
     overflow: 'hidden'
   },
   tableHeaderBar: {
-    padding: '14px 18px',
+    padding: '12px 16px',
     borderBottom: '1px solid var(--color-border)',
     display: 'flex',
     justifyContent: 'space-between',
@@ -1451,9 +1359,9 @@ const styles = {
     borderBottom: '2px solid var(--color-border)'
   },
   th: {
-    padding: '12px 16px',
+    padding: '10px 14px',
     textAlign: 'left',
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: '700',
     color: 'var(--color-primary)',
     textTransform: 'uppercase',
@@ -1465,19 +1373,19 @@ const styles = {
     transition: 'background 0.15s'
   },
   td: {
-    padding: '12px 16px',
-    fontSize: '13px',
+    padding: '11px 14px',
+    fontSize: '12px',
     color: 'var(--color-text-main)',
     verticalAlign: 'middle'
   },
   avatar: {
-    width: '36px',
-    height: '36px',
+    width: '32px',
+    height: '32px',
     borderRadius: '50%',
     backgroundColor: 'rgba(27, 54, 93, 0.15)',
     color: 'var(--color-primary)',
     fontWeight: '800',
-    fontSize: '14px',
+    fontSize: '13px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1489,24 +1397,24 @@ const styles = {
     backgroundColor: 'var(--color-bg-base)',
     border: '1px solid var(--color-border)',
     borderRadius: '4px',
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: '700',
     color: 'var(--color-text-main)'
   },
   alertEndingSoon: {
     display: 'inline-block',
-    fontSize: '11px',
+    fontSize: '10px',
     fontWeight: '800',
     color: '#DC2626',
     backgroundColor: 'rgba(220, 38, 38, 0.12)',
     padding: '2px 6px',
     borderRadius: '4px',
-    marginBottom: '4px'
+    marginBottom: '3px'
   },
   progressBarBg: {
     width: '100%',
-    maxWidth: '220px',
-    height: '6px',
+    maxWidth: '180px',
+    height: '5px',
     backgroundColor: 'var(--color-border)',
     borderRadius: '3px',
     overflow: 'hidden'
@@ -1517,7 +1425,7 @@ const styles = {
     transition: 'width 0.3s'
   },
   paginationRow: {
-    padding: '12px 18px',
+    padding: '10px 16px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1526,11 +1434,11 @@ const styles = {
     gap: '10px'
   },
   pageBtn: {
-    padding: '6px 12px',
+    padding: '5px 10px',
     backgroundColor: 'var(--color-bg-base)',
     border: '1px solid var(--color-border)',
     borderRadius: '4px',
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: '600',
     cursor: 'pointer',
     color: 'var(--color-text-main)'
@@ -1558,7 +1466,7 @@ const styles = {
     overflow: 'hidden'
   },
   modalHeader: {
-    padding: '14px 20px',
+    padding: '12px 18px',
     borderBottom: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-bg-base)',
     display: 'flex',
@@ -1568,7 +1476,7 @@ const styles = {
     userSelect: 'none'
   },
   modalTitle: {
-    fontSize: '16px',
+    fontSize: '15px',
     fontWeight: '700',
     color: 'var(--color-primary)',
     margin: 0
@@ -1577,7 +1485,7 @@ const styles = {
     background: 'none',
     border: '1px solid var(--color-border)',
     borderRadius: '4px',
-    padding: '4px 8px',
+    padding: '3px 7px',
     fontSize: '11px',
     cursor: 'pointer',
     color: 'var(--color-text-muted)'
@@ -1585,94 +1493,92 @@ const styles = {
   closeBtn: {
     background: 'none',
     border: 'none',
-    fontSize: '18px',
+    fontSize: '16px',
     cursor: 'pointer',
     color: 'var(--color-text-muted)',
     padding: '0 4px'
   },
   modalBody: {
-    padding: '20px',
+    padding: '16px 20px',
     overflowY: 'auto',
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px'
+    gap: '14px'
   },
   modalFooter: {
-    padding: '14px 20px',
+    padding: '12px 18px',
     borderTop: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-bg-base)',
     display: 'flex',
     justifyContent: 'flex-end',
-    gap: '10px'
+    gap: '8px'
   },
   liveCountdownCard: {
     backgroundColor: 'rgba(27, 54, 93, 0.05)',
     border: '2px solid var(--color-primary)',
     borderRadius: '8px',
-    padding: '18px'
+    padding: '16px'
   },
   pulseAlertBadge: {
     backgroundColor: '#DC2626',
     color: '#fff',
-    padding: '6px 12px',
+    padding: '5px 10px',
     borderRadius: '6px',
-    fontSize: '12px',
-    fontWeight: '800',
-    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.3)'
+    fontSize: '11px',
+    fontWeight: '800'
   },
   timerBlocksGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '12px',
-    marginTop: '16px'
+    gap: '10px',
+    marginTop: '14px'
   },
   timerBlock: {
     backgroundColor: 'var(--color-bg-card)',
     border: '1px solid var(--color-border)',
-    borderRadius: '8px',
-    padding: '12px',
-    textAlign: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+    borderRadius: '6px',
+    padding: '10px',
+    textAlign: 'center'
   },
   timerNumber: {
-    fontSize: '28px',
+    fontSize: '24px',
     fontWeight: '900',
     color: 'var(--color-primary, #1B365D)'
   },
   timerLabel: {
-    fontSize: '10px',
+    fontSize: '9px',
     fontWeight: '700',
     color: 'var(--color-text-muted)',
     letterSpacing: '0.5px'
   },
   progressBarBgBig: {
     width: '100%',
-    height: '10px',
+    height: '8px',
     backgroundColor: 'var(--color-border)',
-    borderRadius: '5px',
+    borderRadius: '4px',
     overflow: 'hidden'
   },
   progressBarFillBig: {
     height: '100%',
-    borderRadius: '5px',
+    borderRadius: '4px',
     transition: 'width 0.3s'
   },
   sectionHeader: {
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: '700',
     color: 'var(--color-primary)',
     borderBottom: '1px solid var(--color-border)',
-    paddingBottom: '6px',
-    marginTop: '6px'
+    paddingBottom: '5px',
+    marginTop: '4px'
   },
   infoGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '12px',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: '10px',
     backgroundColor: 'var(--color-bg-base)',
-    padding: '14px',
-    borderRadius: '8px',
+    padding: '12px',
+    borderRadius: '6px',
     border: '1px solid var(--color-border)'
   },
   infoItem: {
@@ -1686,18 +1592,18 @@ const styles = {
     fontWeight: '600'
   },
   infoVal: {
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: '700',
     color: 'var(--color-text-main)'
   },
   errorBanner: {
-    padding: '10px 14px',
+    padding: '8px 12px',
     backgroundColor: 'rgba(220, 38, 38, 0.1)',
     border: '1px solid #DC2626',
     borderRadius: '6px',
     color: '#DC2626',
     fontSize: '12px',
     fontWeight: '700',
-    marginBottom: '10px'
+    marginBottom: '8px'
   }
 };

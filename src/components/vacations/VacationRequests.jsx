@@ -16,7 +16,6 @@ export default function VacationRequests() {
   const [startModalReq, setStartModalReq] = useState(null);
 
   const handleStatusChange = async (id, currentStatus) => {
-    // Flow: Submetida -> Em análise -> Aprovada -> Em gozo -> Concluída
     const flow = {
       'Rascunho': 'Submetida',
       'Submetida': 'Em análise',
@@ -52,12 +51,8 @@ export default function VacationRequests() {
   };
 
   const handleStartVacation = async (reqId, base64File) => {
-    // 1. Update request status to 'Em gozo'
     await updateRequestStatus(reqId, 'Em gozo', 'Admin', 'Início de férias validado com senha e guia submetida');
-    // 2. We can save the file in the request if the API supports it, using updateRequest.
-    // Assuming we have access to updateRequest from useVacationData
     await updateRequest(reqId, { guia_inicio: base64File });
-    
     setStartModalReq(null);
   };
 

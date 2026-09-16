@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-// Chave para armazenar os dados no localStorage
 const STORAGE_KEY = 'buena3_vacations_data';
+const EVENT_KEY = 'buena3_vacations_updated';
 
-// Dados iniciais de demonstração (se localStorage estiver vazio)
 const getInitialVacations = () => {
   const now = new Date();
   const formatD = (d) => {
@@ -13,19 +12,15 @@ const getInitialVacations = () => {
     return `${y}-${m}-${day}`;
   };
 
-  // 1. Férias em curso (iniciou há 12 dias, faltam 18 dias de um total de 30)
   const ongoingStart = new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000);
   const ongoingEnd = new Date(now.getTime() + 18 * 24 * 60 * 60 * 1000);
 
-  // 2. Férias em curso PRÓXIMAS DE TERMINAR (iniciou há 26 dias, faltam apenas 4 dias!)
   const endingSoonStart = new Date(now.getTime() - 26 * 24 * 60 * 60 * 1000);
   const endingSoonEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
-  // 3. Férias Agendadas (iniciam daqui a 14 dias)
   const scheduledStart = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
   const scheduledEnd = new Date(now.getTime() + 44 * 24 * 60 * 60 * 1000);
 
-  // 4. Férias Concluídas (terminaram há 15 dias)
   const completedStart = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000);
   const completedEnd = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
 
@@ -122,173 +117,203 @@ const getInitialVacations = () => {
   ];
 };
 
-const initialVacations = getInitialVacations();
-
-// Configurações Globais Iniciais
 const initialSettings = {
   annualDays: 30,
   minMonthsForEligibility: 12,
   allowAccumulation: true,
   maxAccumulatedDays: 60,
   approvalFlow: ['Chefe Direto', 'Direção', 'Recursos Humanos'],
-  holidayOffset: true // Descontar feriados
+  holidayOffset: true
+};
+
+let _sharedRequests = null;
+let _sharedSettings = initialSettings;
+const _subscribers = new Set();
+
+const loadStoredData = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      _sharedRequests = parsed.requests || [];
+      _sharedSettings = parsed.settings || initialSettings;
+    } else {
+      _sharedRequests = getInitialVacations();
+      _sharedSettings = initialSettings;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ requests: _sharedRequests, settings: _sharedSettings }));
+    }
+  } catch (e) {
+    _sharedRequests = getInitialVacations();
+    _sharedSettings = initialSettings;
+  }
+  return { requests: _sharedRequests, settings: _sharedSettings };
+};
+
+const persistAndBroadcast = (requests, settings) => {
+  _sharedRequests = requests;
+  _sharedSettings = settings;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ requests, settings }));
+  } catch (e) {
+    console.warn(e);
+  }
+  _subscribers.forEach(cb => cb({ requests, settings }));
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(EVENT_KEY, { detail: { requests, settings } }));
+  }
 };
 
 export default function useVacationData() {
-  const [requests, setRequests] = useState([]);
-  const [settings, setSettings] = useState(initialSettings);
-  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState(() => {
+    if (_sharedRequests) return { requests: _sharedRequests, settings: _sharedSettings };
+    return loadStoredData();
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Carregar dados iniciais
   useEffect(() => {
-    try {
-      const storedData = localStorage.getItem(STORAGE_KEY);
-      if (storedData) {
-        const parsed = JSON.parse(storedData);
-        setRequests(parsed.requests || []);
-        setSettings(parsed.settings || initialSettings);
-      } else {
-        // Inicializar com mocks
-        setRequests(initialVacations);
-        saveToStorage(initialVacations, initialSettings);
+    const handleUpdate = (updated) => {
+      setData({ requests: updated.requests, settings: updated.settings });
+    };
+
+    _subscribers.add(handleUpdate);
+
+    const handleCustomEvent = (e) => {
+      if (e.detail) {
+        setData({ requests: e.detail.requests, settings: e.detail.settings });
       }
-    } catch (e) {
-      console.error("Erro ao carregar dados de Férias:", e);
-      setRequests(initialVacations);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    const handleStorage = (e) => {
+      if (e.key === STORAGE_KEY) {
+        const freshlyLoaded = loadStoredData();
+        _subscribers.forEach(cb => cb(freshlyLoaded));
+      }
+    };
+
+    window.addEventListener(EVENT_KEY, handleCustomEvent);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      _subscribers.delete(handleUpdate);
+      window.removeEventListener(EVENT_KEY, handleCustomEvent);
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
-  // Função utilitária para salvar no localStorage
-  const saveToStorage = (reqs, sets) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ requests: reqs, settings: sets }));
-  };
-
-  // Adicionar um pedido de férias
-  const addRequest = async (payload) => {
+  const addRequest = useCallback(async (payload) => {
     return new Promise((resolve) => {
       setTimeout(() => {
+        const cur = _sharedRequests || loadStoredData().requests;
         const newRequest = {
           ...payload,
           id: `VAC-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
-          status: 'Submetida',
+          status: payload.status || 'Submetida',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           history: [{ action: 'Submetida', date: new Date().toISOString(), user: payload.createdBy || 'Sistema', notes: payload.notes || '' }]
         };
-        const updated = [...requests, newRequest];
-        setRequests(updated);
-        saveToStorage(updated, settings);
+        const updated = [newRequest, ...cur];
+        persistAndBroadcast(updated, _sharedSettings);
         resolve({ success: true, data: newRequest });
-      }, 500);
+      }, 200);
     });
-  };
+  }, []);
 
-  // Atualizar estado / aprovação de um pedido
-  const updateRequestStatus = async (id, newStatus, user, notes = '') => {
+  const updateRequestStatus = useCallback(async (id, newStatus, user, notes = '') => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const updated = requests.map(req => {
+        const cur = _sharedRequests || loadStoredData().requests;
+        const updated = cur.map(req => {
           if (req.id === id) {
             return {
               ...req,
               status: newStatus,
               updatedAt: new Date().toISOString(),
-              history: [...req.history, { action: newStatus, date: new Date().toISOString(), user, notes }]
+              history: [...(req.history || []), { action: newStatus, date: new Date().toISOString(), user, notes }]
             };
           }
           return req;
         });
-        setRequests(updated);
-        saveToStorage(updated, settings);
+        persistAndBroadcast(updated, _sharedSettings);
         resolve({ success: true });
-      }, 500);
+      }, 200);
     });
-  };
+  }, []);
 
-  // Modificar um pedido (ex: alteração de datas)
-  const updateRequest = async (id, changes, user, reason) => {
+  const updateRequest = useCallback(async (id, changes, user, reason) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const updated = requests.map(req => {
+        const cur = _sharedRequests || loadStoredData().requests;
+        const updated = cur.map(req => {
           if (req.id === id) {
             return {
               ...req,
               ...changes,
               updatedAt: new Date().toISOString(),
-              history: [...req.history, { action: 'Alteração', date: new Date().toISOString(), user, notes: reason }]
+              history: [...(req.history || []), { action: 'Alteração', date: new Date().toISOString(), user: user || 'Sistema', notes: reason || '' }]
             };
           }
           return req;
         });
-        setRequests(updated);
-        saveToStorage(updated, settings);
+        persistAndBroadcast(updated, _sharedSettings);
         resolve({ success: true });
-      }, 500);
+      }, 200);
     });
-  };
+  }, []);
 
-  // Cancelar / Eliminar
-  const cancelRequest = async (id, user, reason) => {
+  const cancelRequest = useCallback(async (id, user, reason) => {
     return updateRequestStatus(id, 'Cancelada', user, reason);
-  };
+  }, [updateRequestStatus]);
 
-  const removeRequest = async (id) => {
+  const removeRequest = useCallback(async (id) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const updated = requests.filter(r => r.id !== id);
-        setRequests(updated);
-        saveToStorage(updated, settings);
+        const cur = _sharedRequests || loadStoredData().requests;
+        const updated = cur.filter(r => r.id !== id);
+        persistAndBroadcast(updated, _sharedSettings);
         resolve({ success: true });
-      }, 500);
+      }, 200);
     });
-  };
+  }, []);
 
-  const updateSettings = async (newSettings) => {
+  const updateSettings = useCallback(async (newSettings) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const updated = { ...settings, ...newSettings };
-        setSettings(updated);
-        saveToStorage(requests, updated);
+        const updatedSets = { ..._sharedSettings, ...newSettings };
+        persistAndBroadcast(_sharedRequests || [], updatedSets);
         resolve({ success: true });
-      }, 400);
+      }, 200);
     });
-  };
+  }, []);
 
-  // Cálculo de Saldo Disponível de um funcionário
-  const calculateEmployeeBalance = (employeeId, admissionDate) => {
-    let entitledDays = 0;
+  const calculateEmployeeBalance = useCallback((employeeId, admissionDate) => {
+    const cur = _sharedRequests || [];
+    let entitledDays = _sharedSettings.annualDays;
     if (admissionDate) {
       const adm = new Date(admissionDate);
       const now = new Date();
       const diffTime = Math.abs(now - adm);
       const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30));
-      
-      if (diffMonths >= settings.minMonthsForEligibility) {
-        entitledDays = settings.annualDays;
-      } else {
-        entitledDays = diffMonths * (settings.annualDays / 12);
+      if (diffMonths < _sharedSettings.minMonthsForEligibility) {
+        entitledDays = diffMonths * (_sharedSettings.annualDays / 12);
       }
-    } else {
-      entitledDays = settings.annualDays; 
     }
 
     const currentYear = new Date().getFullYear().toString();
-    const usedDays = requests
+    const usedDays = cur
       .filter(r => r.employeeId === employeeId && r.year === currentYear && ['Submetida', 'Em análise', 'Aprovada', 'Em gozo', 'Concluída'].includes(r.status))
-      .reduce((sum, req) => sum + req.daysCount, 0);
+      .reduce((sum, req) => sum + (Number(req.daysCount) || 0), 0);
 
     return {
       entitled: Math.floor(entitledDays),
       used: usedDays,
       balance: Math.floor(entitledDays) - usedDays
     };
-  };
+  }, []);
 
   return {
-    requests,
-    settings,
+    requests: data.requests,
+    settings: data.settings,
     isLoading,
     addRequest,
     updateRequestStatus,
