@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import VacationManagement from './VacationManagement';
 import VacationDashboard from './VacationDashboard';
 import VacationPlan from './VacationPlan';
 import VacationRequests from './VacationRequests';
@@ -7,9 +8,10 @@ import VacationSettings from './VacationSettings';
 import DraggableTabs from '../common/DraggableTabs';
 
 export default function VacationManager() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('management');
 
   const tabs = [
+    { id: 'management', label: 'Gestão de Férias' },
     { id: 'dashboard', label: 'Dashboard Geral' },
     { id: 'plan', label: 'Plano Anual' },
     { id: 'requests', label: 'Solicitações / Aprovações' },
@@ -22,6 +24,7 @@ export default function VacationManager() {
       <DraggableTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div style={styles.contentArea}>
+        {activeTab === 'management' && <VacationManagement />}
         {activeTab === 'dashboard' && <VacationDashboard />}
         {activeTab === 'plan' && <VacationPlan />}
         {activeTab === 'requests' && <VacationRequests />}
