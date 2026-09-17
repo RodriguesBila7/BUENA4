@@ -391,30 +391,38 @@ export default function VacationManagement() {
         </div>
       </div>
 
+      {/* ─── FILTROS DE PESQUISA SUAVES E ELEGANTES ─── */}
       <div style={styles.filterContainer}>
         <div style={styles.filterTitleRow}>
-          <span style={styles.filterHeaderTitle}>🔍 Filtros de Selecção e Pesquisa Operacional</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-main)' }}>
+              Filtros e Pesquisa
+            </span>
+            <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+              ({filteredRequests.length} registos encontrados)
+            </span>
+          </div>
           {(searchTerm || filterDirectorate || filterDepartment || filterDivision || filterStatus || filterAlertOnly) && (
             <button type="button" onClick={handleClearFilters} style={styles.btnClearFilters}>
-              ✕ Limpar Filtros
+              ✕ Limpar filtros
             </button>
           )}
         </div>
 
         <div style={styles.filterGrid}>
           <div style={styles.filterGroup}>
-            <label style={styles.filterLabel}>Pesquisar Funcionário (Nome / NUIT / NIP)</label>
+            <label style={styles.filterLabel}>Pesquisar</label>
             <input 
               type="text" 
               value={searchTerm} 
               onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }} 
-              placeholder="Digite o nome, NUIT ou NIP..." 
+              placeholder="Nome, NUIT ou NIP..." 
               style={styles.input} 
             />
           </div>
 
           <div style={styles.filterGroup}>
-            <label style={styles.filterLabel}>Direcção / Unidade</label>
+            <label style={styles.filterLabel}>Direcção</label>
             <select 
               value={filterDirectorate} 
               onChange={e => {
@@ -444,90 +452,100 @@ export default function VacationManagement() {
               style={styles.select}
               disabled={!filterDirectorate}
             >
-              <option value="">{filterDirectorate ? 'Todos os Departamentos' : 'Selecione a Direcção primeiro'}</option>
+              <option value="">{filterDirectorate ? 'Todos os Departamentos' : 'Selecione a Direcção'}</option>
               {availableDepartments.map(dep => (
                 <option key={dep.id} value={dep.id}>{dep.name}</option>
               ))}
             </select>
           </div>
 
-          <div style={{ ...styles.filterGroup, minWidth: '260px' }}>
-            <label style={{ ...styles.filterLabel, whiteSpace: 'nowrap' }}>Repartição / Repartição Central</label>
+          <div style={{ ...styles.filterGroup, minWidth: '220px' }}>
+            <label style={{ ...styles.filterLabel, whiteSpace: 'nowrap' }}>Repartição / Central</label>
             <select 
               value={filterDivision} 
               onChange={e => { setFilterDivision(e.target.value); setCurrentPage(1); }} 
               style={styles.select}
               disabled={!filterDirectorate}
             >
-              <option value="">{filterDirectorate ? 'Todas as Repartições' : 'Selecione a Direcção primeiro'}</option>
+              <option value="">{filterDirectorate ? 'Todas as Repartições' : 'Selecione a Direcção'}</option>
               {availableDivisions.map(div => (
                 <option key={div.id} value={div.id}>
-                  {div.name}{!div.departmentId ? ' (Repartição Central)' : ''}
+                  {div.name}{!div.departmentId ? ' (Central)' : ''}
                 </option>
               ))}
             </select>
           </div>
 
           <div style={styles.filterGroup}>
-            <label style={styles.filterLabel}>Estado Automático</label>
+            <label style={styles.filterLabel}>Estado</label>
             <select 
               value={filterStatus} 
               onChange={e => { setFilterStatus(e.target.value); setCurrentPage(1); }} 
               style={styles.select}
             >
               <option value="">Todos os Estados</option>
-              <option value="Em curso">Em curso (Gozando agora)</option>
-              <option value="Agendadas">Agendadas (Futuras)</option>
+              <option value="Em curso">Em curso</option>
+              <option value="Agendadas">Agendadas</option>
               <option value="Concluídas">Concluídas</option>
               <option value="Canceladas">Canceladas</option>
             </select>
           </div>
 
-          <div style={{ ...styles.filterGroup, justifyContent: 'flex-end' }}>
-            <label 
+          {/* Botão Pill para Alerta Rápido */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', height: '100%', marginBottom: '1px' }}>
+            <button 
+              type="button" 
+              onClick={() => { setFilterAlertOnly(!filterAlertOnly); setCurrentPage(1); }}
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
-                padding: '9px 12px',
-                borderRadius: '6px',
-                backgroundColor: filterAlertOnly ? 'rgba(220, 38, 38, 0.12)' : 'var(--color-bg-base)',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '8px',
                 border: filterAlertOnly ? '1px solid #DC2626' : '1px solid var(--color-border)',
-                cursor: 'pointer',
+                backgroundColor: filterAlertOnly ? 'rgba(220, 38, 38, 0.08)' : 'var(--color-bg-base)',
+                color: filterAlertOnly ? '#DC2626' : 'var(--color-text-muted)',
                 fontSize: '12px',
                 fontWeight: '600',
-                color: filterAlertOnly ? '#DC2626' : 'var(--color-text-main)',
-                transition: 'all 0.2s'
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
+                height: '38px',
+                boxSizing: 'border-box'
               }}
+              title="Filtrar férias que terminam em 5 dias ou menos"
             >
-              <input 
-                type="checkbox" 
-                checked={filterAlertOnly} 
-                onChange={e => { setFilterAlertOnly(e.target.checked); setCurrentPage(1); }} 
-              />
-              <span>⚠️ Apenas Próximas de Terminar (≤ 5 dias)</span>
-            </label>
+              <span>⚠️ A terminar breve (≤ 5 dias)</span>
+            </button>
           </div>
         </div>
       </div>
 
+      {/* ─── TABELA DE FÉRIAS LIMPA E ELEGANTE ─── */}
       <div style={styles.tableCard}>
         <div style={styles.tableHeaderBar}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-primary)' }}>
-              Lista Nominal de Funcionários e Contagem Regressiva ({filteredRequests.length})
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-main)' }}>
+              Lista Nominal de Férias
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-              ⏱️ {currentTime.toLocaleTimeString()}
+            <span style={{ 
+              fontSize: '11px', 
+              fontWeight: '600', 
+              backgroundColor: 'rgba(27, 54, 93, 0.06)', 
+              color: 'var(--color-primary, #1B365D)',
+              padding: '2px 8px',
+              borderRadius: '12px'
+            }}>
+              {filteredRequests.length} funcionários
             </span>
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button 
               type="button" 
               onClick={handleExportExcel} 
               style={styles.btnSecondary}
-              title="Exportar listagem completa em formato Excel"
+              title="Exportar listagem em formato Excel"
             >
               📥 Exportar Excel
             </button>
@@ -538,20 +556,18 @@ export default function VacationManagement() {
           <table className="premium-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={styles.tableHeaderRow}>
-                <th style={styles.th}>Funcionário / Lotação</th>
-                <th style={styles.th}>Período de Férias</th>
-                <th style={styles.th}>Duração Total</th>
+                <th style={styles.th}>Funcionário</th>
+                <th style={styles.th}>Período & Duração</th>
                 <th style={styles.th}>Estado</th>
-                <th style={styles.th}>Contagem Decrescente (Dias e Horas)</th>
-                <th style={styles.th}>Férias Terminam Em</th>
+                <th style={styles.th}>Contagem Regressiva & Término</th>
                 <th style={{ ...styles.th, textAlign: 'right' }}>Ações</th>
               </tr>
             </thead>
             <tbody>
               {paginatedRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: 'var(--color-text-muted)' }}>
-                    Nenhum registo de férias encontrado com os filtros aplicados.
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-muted)', fontSize: '13px' }}>
+                    Nenhum registo de férias encontrado para os filtros selecionados.
                   </td>
                 </tr>
               ) : (
@@ -559,68 +575,66 @@ export default function VacationManagement() {
                   const { countdown } = r;
                   const empName = r.emp?.name || r.employeeName || 'Funcionário';
                   const empNuit = r.emp?.nuit || 'N/A';
-                  const empNip = r.emp?.nip || r.employeeNip || 'N/A';
-                  const cargo = r.emp?.cargo || 'Técnico';
+                  const locacao = r.directorateName ? r.directorateName.replace(/^Direcção\s+(Provincial\s+de\s+|da\s+)?/i, '') : 'Central';
 
                   return (
                     <tr key={r.id} style={styles.tr}>
+                      {/* Coluna 1: Funcionário */}
                       <td style={styles.td}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <div style={styles.avatar}>
                             {r.emp?.photo ? (
                               <img src={r.emp.photo} alt={empName} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
                             ) : (
-                              <span>{empName.charAt(0)}</span>
+                              <span>{empName.charAt(0).toUpperCase()}</span>
                             )}
                           </div>
                           <div>
-                            <div style={{ fontWeight: '700', color: 'var(--color-primary)' }}>{empName}</div>
-                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                              NUIT: <strong>{empNuit}</strong> | NIP: {empNip}
+                            <div style={{ fontWeight: '600', fontSize: '13px', color: 'var(--color-text-base)' }}>
+                              {empName}
                             </div>
-                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                              {cargo} • {r.directorateName}
+                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                              NUIT: {empNuit} • {locacao}
                             </div>
                           </div>
                         </div>
                       </td>
 
+                      {/* Coluna 2: Período & Duração */}
                       <td style={styles.td}>
-                        <div style={{ fontWeight: '600', color: 'var(--color-text-main)' }}>
-                          {formatDate(r.startDate)} ➔ {formatDate(r.endDate)}
+                        <div style={{ fontWeight: '600', fontSize: '12.5px', color: 'var(--color-text-base)' }}>
+                          {formatDate(r.startDate)} — {formatDate(r.endDate)}
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                          {r.type || 'Férias Anuais'} ({r.year || new Date().getFullYear()})
+                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                          {r.type || 'Férias Anuais'} • <strong style={{ color: 'var(--color-text-base)', fontWeight: '600' }}>{r.daysCount || countdown.totalDurationDays} dias</strong>
                         </div>
                       </td>
 
-                      <td style={styles.td}>
-                        <span style={styles.badgeDays}>
-                          {r.daysCount || countdown.totalDurationDays} dias
-                        </span>
-                      </td>
-
+                      {/* Coluna 3: Estado */}
                       <td style={styles.td}>
                         <span style={getStatusBadgeStyle(countdown.computedStatus)}>
                           {countdown.computedStatus}
                         </span>
                       </td>
 
+                      {/* Coluna 4: Contagem Regressiva & Término (Integrada, sem redundâncias) */}
                       <td style={styles.td}>
                         {countdown.isOngoing ? (
-                          <div>
-                            {countdown.isEndingSoon && (
-                              <div style={styles.alertEndingSoon}>
-                                ⚠️ Férias terminam em breve!
-                              </div>
-                            )}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                              <span style={{ fontSize: '14px', fontWeight: '800', color: countdown.isEndingSoon ? '#DC2626' : '#059669' }}>
+                          <div style={{ maxWidth: '240px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                              <span style={{ 
+                                fontSize: '13px', 
+                                fontWeight: '700', 
+                                color: countdown.isEndingSoon ? '#DC2626' : '#059669' 
+                              }}>
                                 {countdown.remainingDays} dias restantes
                               </span>
                               <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
                                 ({countdown.remainingHours}h {countdown.remainingMinutes}m)
                               </span>
+                              {countdown.isEndingSoon && (
+                                <span style={styles.alertEndingSoon}>Termina breve</span>
+                              )}
                             </div>
 
                             <div style={styles.progressBarBg}>
@@ -628,49 +642,40 @@ export default function VacationManagement() {
                                 style={{
                                   ...styles.progressBarFill,
                                   width: `${countdown.progressPercent}%`,
-                                  backgroundColor: countdown.isEndingSoon ? '#DC2626' : 'var(--color-primary)'
+                                  backgroundColor: countdown.isEndingSoon ? '#DC2626' : '#059669'
                                 }} 
                               />
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                              <span>Dia {countdown.elapsedDays} de {countdown.totalDurationDays}</span>
-                              <span>{countdown.displayText}</span>
+                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '3px' }}>
+                              Termina a <strong style={{ color: 'var(--color-text-base)', fontWeight: '600' }}>{countdown.endDateFormatted}</strong> • Dia {countdown.elapsedDays} de {countdown.totalDurationDays}
                             </div>
                           </div>
                         ) : countdown.isScheduled ? (
                           <div>
-                            <div style={{ fontWeight: '600', color: '#2563EB', fontSize: '12px' }}>
-                              {countdown.displayText}
-                            </div>
-                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                            <div style={{ fontWeight: '600', color: '#2563EB', fontSize: '12.5px' }}>
                               Início a {formatDate(r.startDate)}
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                              {countdown.displayText}
                             </div>
                           </div>
                         ) : (
-                          <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                            {countdown.displayText}
+                          <div>
+                            <div style={{ fontSize: '12px', fontWeight: '500', color: 'var(--color-text-muted)' }}>
+                              Concluídas a {countdown.endDateFormatted}
+                            </div>
                           </div>
                         )}
                       </td>
 
-                      <td style={styles.td}>
-                        <div style={{ fontWeight: '700', color: 'var(--color-text-main)' }}>
-                          {countdown.endDateFormatted}
-                        </div>
-                        {countdown.isOngoing && (
-                          <div style={{ fontSize: '11px', color: countdown.isEndingSoon ? '#DC2626' : '#059669', fontWeight: '600' }}>
-                            {countdown.displayText}
-                          </div>
-                        )}
-                      </td>
-
+                      {/* Coluna 5: Ações */}
                       <td style={{ ...styles.td, textAlign: 'right' }}>
                         <CrudActionButtons 
                           onView={() => setViewingRecord(r)}
                           onEdit={() => { setEditingRecord(r); setIsNewModalOpen(true); }}
                           onDelete={() => handleDelete(r)}
                           viewTitle="Visualizar Ficha e Histórico Completo de Férias"
-                          editTitle="Editar Agendamento e Período de Férias"
+                          editTitle="Editar Período de Férias"
                           deleteTitle="Apagar Registo de Férias"
                         />
                       </td>
@@ -1158,28 +1163,27 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
 
 const getStatusBadgeStyle = (status) => {
   const base = {
-    padding: '4px 10px',
-    borderRadius: '12px',
+    padding: '3px 9px',
+    borderRadius: '6px',
     fontSize: '11px',
-    fontWeight: '700',
+    fontWeight: '600',
     display: 'inline-flex',
     alignItems: 'center',
     gap: '4px',
-    textTransform: 'uppercase',
-    letterSpacing: '0.3px'
+    letterSpacing: '0.2px'
   };
 
   switch (status) {
     case 'Em curso':
-      return { ...base, backgroundColor: 'rgba(5, 150, 105, 0.15)', color: '#059669', border: '1px solid rgba(5, 150, 105, 0.3)' };
+      return { ...base, backgroundColor: 'rgba(5, 150, 105, 0.08)', color: '#059669', border: '1px solid rgba(5, 150, 105, 0.2)' };
     case 'Agendadas':
-      return { ...base, backgroundColor: 'rgba(37, 99, 235, 0.15)', color: '#2563EB', border: '1px solid rgba(37, 99, 235, 0.3)' };
+      return { ...base, backgroundColor: 'rgba(37, 99, 235, 0.08)', color: '#2563EB', border: '1px solid rgba(37, 99, 235, 0.2)' };
     case 'Concluídas':
-      return { ...base, backgroundColor: 'rgba(100, 116, 139, 0.15)', color: '#64748B', border: '1px solid rgba(100, 116, 139, 0.3)' };
+      return { ...base, backgroundColor: 'rgba(100, 116, 139, 0.08)', color: '#64748B', border: '1px solid rgba(100, 116, 139, 0.2)' };
     case 'Canceladas':
-      return { ...base, backgroundColor: 'rgba(220, 38, 38, 0.15)', color: '#DC2626', border: '1px solid rgba(220, 38, 38, 0.3)' };
+      return { ...base, backgroundColor: 'rgba(220, 38, 38, 0.08)', color: '#DC2626', border: '1px solid rgba(220, 38, 38, 0.2)' };
     default:
-      return { ...base, backgroundColor: 'rgba(27, 54, 93, 0.1)', color: 'var(--color-primary)' };
+      return { ...base, backgroundColor: 'rgba(27, 54, 93, 0.06)', color: 'var(--color-primary)' };
   }
 };
 
@@ -1196,17 +1200,17 @@ const styles = {
     color: '#fff',
     border: 'none',
     borderRadius: '6px',
-    fontWeight: '700',
-    fontSize: '12px',
+    fontWeight: '600',
+    fontSize: '12.5px',
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
     gap: '6px'
   },
   btnSecondary: {
-    padding: '8px 14px',
-    backgroundColor: 'var(--color-bg-card)',
-    color: 'var(--color-primary, #1B365D)',
+    padding: '7px 13px',
+    backgroundColor: 'var(--color-bg-base)',
+    color: 'var(--color-text-main)',
     border: '1px solid var(--color-border)',
     borderRadius: '6px',
     fontWeight: '600',
@@ -1214,7 +1218,8 @@ const styles = {
     cursor: 'pointer',
     display: 'flex',
     alignItems: 'center',
-    gap: '6px'
+    gap: '6px',
+    transition: 'all 0.15s ease'
   },
   kpiGrid: {
     display: 'grid',
@@ -1223,12 +1228,13 @@ const styles = {
   },
   kpiCard: {
     backgroundColor: 'var(--color-bg-card)',
-    borderRadius: '8px',
-    padding: '14px',
+    borderRadius: '10px',
+    padding: '14px 16px',
     border: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '4px'
+    gap: '4px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
   },
   kpiHeader: {
     display: 'flex',
@@ -1237,7 +1243,7 @@ const styles = {
   },
   kpiTitle: {
     fontSize: '11px',
-    fontWeight: '700',
+    fontWeight: '600',
     color: 'var(--color-text-muted)',
     textTransform: 'uppercase',
     letterSpacing: '0.4px'
@@ -1246,9 +1252,9 @@ const styles = {
     fontSize: '16px'
   },
   kpiValue: {
-    fontSize: '24px',
-    fontWeight: '800',
-    color: 'var(--color-primary, #1B365D)'
+    fontSize: '22px',
+    fontWeight: '700',
+    color: 'var(--color-text-main)'
   },
   kpiDesc: {
     fontSize: '11px',
@@ -1256,12 +1262,13 @@ const styles = {
   },
   filterContainer: {
     backgroundColor: 'var(--color-bg-card)',
-    padding: '16px',
-    borderRadius: '8px',
+    padding: '14px 16px',
+    borderRadius: '10px',
     border: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px'
+    gap: '12px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
   },
   filterTitleRow: {
     display: 'flex',
@@ -1270,15 +1277,15 @@ const styles = {
   },
   filterHeaderTitle: {
     fontSize: '13px',
-    fontWeight: '700',
-    color: 'var(--color-primary)'
+    fontWeight: '600',
+    color: 'var(--color-text-main)'
   },
   btnClearFilters: {
     background: 'none',
     border: 'none',
     color: '#DC2626',
-    fontSize: '12px',
-    fontWeight: '700',
+    fontSize: '11.5px',
+    fontWeight: '600',
     cursor: 'pointer',
     padding: '2px 6px',
     borderRadius: '4px'
@@ -1292,9 +1299,9 @@ const styles = {
   filterGroup: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '6px',
-    flex: '1 1 190px',
-    minWidth: '180px'
+    gap: '5px',
+    flex: '1 1 180px',
+    minWidth: '170px'
   },
   formGroupModal: {
     display: 'flex',
@@ -1303,28 +1310,28 @@ const styles = {
     marginBottom: '10px'
   },
   filterLabel: {
-    fontSize: '12px',
+    fontSize: '11.5px',
     fontWeight: '600',
     color: 'var(--color-text-muted)'
   },
   input: {
-    padding: '8px 12px',
+    padding: '7px 11px',
     borderRadius: '6px',
     border: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-bg-base)',
     color: 'var(--color-text-main)',
-    fontSize: '13px',
+    fontSize: '12.5px',
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box'
   },
   select: {
-    padding: '8px 12px',
+    padding: '7px 11px',
     borderRadius: '6px',
     border: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-bg-base)',
     color: 'var(--color-text-main)',
-    fontSize: '13px',
+    fontSize: '12.5px',
     outline: 'none',
     width: '100%',
     cursor: 'pointer',
@@ -1332,12 +1339,13 @@ const styles = {
   },
   tableCard: {
     backgroundColor: 'var(--color-bg-card)',
-    borderRadius: '8px',
+    borderRadius: '10px',
     border: '1px solid var(--color-border)',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
   },
   tableHeaderBar: {
-    padding: '12px 16px',
+    padding: '10px 16px',
     borderBottom: '1px solid var(--color-border)',
     display: 'flex',
     justifyContent: 'space-between',
@@ -1348,25 +1356,25 @@ const styles = {
   },
   tableHeaderRow: {
     backgroundColor: 'var(--color-bg-base)',
-    borderBottom: '2px solid var(--color-border)'
+    borderBottom: '1px solid var(--color-border)'
   },
   th: {
     padding: '10px 14px',
     textAlign: 'left',
     fontSize: '11px',
-    fontWeight: '700',
-    color: 'var(--color-primary)',
+    fontWeight: '600',
+    color: 'var(--color-text-muted)',
     textTransform: 'uppercase',
-    letterSpacing: '0.4px',
+    letterSpacing: '0.5px',
     whiteSpace: 'nowrap'
   },
   tr: {
     borderBottom: '1px solid var(--color-border)',
-    transition: 'background 0.15s'
+    transition: 'background 0.12s ease'
   },
   td: {
     padding: '11px 14px',
-    fontSize: '12px',
+    fontSize: '12.5px',
     color: 'var(--color-text-main)',
     verticalAlign: 'middle'
   },
@@ -1374,10 +1382,10 @@ const styles = {
     width: '32px',
     height: '32px',
     borderRadius: '50%',
-    backgroundColor: 'rgba(27, 54, 93, 0.15)',
+    backgroundColor: 'rgba(27, 54, 93, 0.08)',
     color: 'var(--color-primary)',
-    fontWeight: '800',
-    fontSize: '13px',
+    fontWeight: '700',
+    fontSize: '12.5px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1385,36 +1393,38 @@ const styles = {
   },
   badgeDays: {
     display: 'inline-block',
-    padding: '3px 8px',
+    padding: '2px 7px',
     backgroundColor: 'var(--color-bg-base)',
     border: '1px solid var(--color-border)',
     borderRadius: '4px',
     fontSize: '11px',
-    fontWeight: '700',
+    fontWeight: '600',
     color: 'var(--color-text-main)'
   },
   alertEndingSoon: {
     display: 'inline-block',
     fontSize: '10px',
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#DC2626',
-    backgroundColor: 'rgba(220, 38, 38, 0.12)',
-    padding: '2px 6px',
-    borderRadius: '4px',
-    marginBottom: '3px'
+    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+    border: '1px solid rgba(220, 38, 38, 0.2)',
+    padding: '1px 5px',
+    borderRadius: '4px'
   },
   progressBarBg: {
     width: '100%',
     maxWidth: '180px',
-    height: '5px',
+    height: '4px',
     backgroundColor: 'var(--color-border)',
     borderRadius: '3px',
-    overflow: 'hidden'
+    overflow: 'hidden',
+    marginTop: '3px',
+    marginBottom: '2px'
   },
   progressBarFill: {
     height: '100%',
     borderRadius: '3px',
-    transition: 'width 0.3s'
+    transition: 'width 0.4s ease'
   },
   paginationRow: {
     padding: '10px 16px',
