@@ -466,30 +466,54 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         </div>
       </div>
 
-      {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
+      {/* ══════════════ CABEÇALHO INSTITUCIONAL ELEGANTE E MINIMALISTA ══════════════ */}
       <div style={s.header}>
-        <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
-        <p style={{...s.instNome, color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.instNome.textShadow, margin: '0 0 2px'}}>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL</p>
-        <p style={{...s.instNome, fontSize: '13px', fontWeight: '800', letterSpacing: '1px', color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.instNome.textShadow, margin: '0 0 4px'}}>{t('login_dg') || 'DIRECÇÃO GERAL'}</p>
-        <p style={{...s.sysTitleBold, color: bwMode === 'claro' ? '#1a252f' : '#FFFFFF', textShadow: bwMode === 'claro' ? 'none' : s.sysTitleBold.textShadow, margin: '0 0 0'}}>{t('login_drh') || 'DIRECÇÃO DE RECURSOS HUMANOS'}</p>
-        
-        {/* Espaçamento de 1.5cm antes do Sistema e aproximação ao quadro de login */}
-        <p style={{
-          ...s.sysTitleLine, 
-          fontSize: '14px',
-          fontWeight: '700',
-          letterSpacing: '0.8px',
-          color: bwMode === 'claro' ? '#2c3e50' : '#FFFFFF', 
-          textShadow: bwMode === 'claro' ? 'none' : s.sysTitleLine.textShadow,
-          marginTop: '1.5cm',
-          marginBottom: '0'
+        <div style={s.logoContainer}>
+          <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
+        </div>
+        <h1 style={{
+          ...s.instNome, 
+          color: bwMode === 'claro' ? '#1e293b' : '#FFFFFF', 
+          textShadow: bwMode === 'claro' ? 'none' : '0 2px 8px rgba(0,0,0,0.4)',
+          margin: '0 0 6px'
         }}>
-          {t('login_system') || 'SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS'}
+          SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL
+        </h1>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '3px 12px',
+          borderRadius: '9999px',
+          backgroundColor: bwMode === 'claro' ? 'rgba(30, 41, 59, 0.06)' : 'rgba(255, 255, 255, 0.12)',
+          backdropFilter: 'blur(8px)',
+          border: bwMode === 'claro' ? '1px solid rgba(30, 41, 59, 0.12)' : '1px solid rgba(255, 255, 255, 0.2)',
+          marginBottom: '8px'
+        }}>
+          <span style={{
+            fontSize: '11px',
+            fontWeight: '700',
+            letterSpacing: '0.8px',
+            textTransform: 'uppercase',
+            color: bwMode === 'claro' ? '#334155' : '#FFFFFF'
+          }}>
+            {t('login_drh') || 'DIRECÇÃO DE RECURSOS HUMANOS'}
+          </span>
+        </div>
+        <p style={{
+          fontSize: '12.5px',
+          fontWeight: '500',
+          letterSpacing: '0.3px',
+          color: bwMode === 'claro' ? '#475569' : 'rgba(255,255,255,0.85)',
+          margin: '0',
+          textShadow: bwMode === 'claro' ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+        }}>
+          {t('login_system') || 'Sistema de Informação e Gestão de Recursos Humanos'}
         </p>
       </div>
 
-      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR (Aproximado ao texto acima) ══════════════ */}
-      <div style={{...s.card, marginTop: '14px'}}>
+      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
+      <div style={{...s.card, marginTop: '16px'}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 
@@ -630,20 +654,26 @@ const s = {
     marginBottom: '0',
     textAlign: 'center',
   },
+  logoContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: '10px',
+  },
   logo: {
-    width: '150px',
-    height: '150px',
+    width: '92px',
+    height: '92px',
     objectFit: 'contain',
-    marginBottom: '12px',
-    filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.35))',
+    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.28))',
+    transition: 'transform 0.2s ease',
   },
   instNome: {
     color: '#FFFFFF',
-    fontSize: '14px',
+    fontSize: '15px',
     fontWeight: '800',
-    letterSpacing: '0.8px',
+    letterSpacing: '1px',
     textAlign: 'center',
-    lineHeight: '1.5',
+    lineHeight: '1.4',
     margin: '0 0 6px',
     textShadow: '0 1px 4px rgba(0,0,0,0.5)',
   },

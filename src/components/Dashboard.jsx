@@ -1292,7 +1292,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
               </span>
             </button>
 
-            {/* Perfil do Administrador Moderno e Sofisticado */}
+            {/* Perfil do Administrador Moderno, Elegante e Minimalista */}
             <div style={{ position: 'relative' }} ref={profileMenuRef}>
               <button
                 type="button"
@@ -1300,201 +1300,180 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
+                  gap: '9px',
                   backgroundColor: 'var(--color-bg-base)',
-                  padding: '4px 14px 4px 6px',
-                  borderRadius: '30px',
-                  border: showProfileMenu ? '1.5px solid var(--color-primary, #1B365D)' : '1px solid var(--color-border)',
+                  padding: '3px 12px 3px 4px',
+                  borderRadius: '9999px',
+                  border: showProfileMenu 
+                    ? '1px solid var(--color-primary, #1B365D)' 
+                    : '1px solid var(--color-border)',
                   boxShadow: showProfileMenu 
-                    ? '0 0 0 3px rgba(27, 54, 93, 0.12), 0 4px 12px rgba(0,0,0,0.06)' 
-                    : '0 2px 6px rgba(0,0,0,0.03)',
+                    ? '0 0 0 3px rgba(27, 54, 93, 0.1), 0 2px 8px rgba(0,0,0,0.04)' 
+                    : '0 1px 3px rgba(0,0,0,0.03)',
                   cursor: 'pointer',
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'all 0.18s ease',
                   outline: 'none',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = 'var(--color-primary, #1B365D)';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
+                  e.currentTarget.style.boxShadow = '0 3px 10px rgba(0,0,0,0.06)';
                 }}
                 onMouseLeave={(e) => {
                   if (!showProfileMenu) {
                     e.currentTarget.style.borderColor = 'var(--color-border)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.03)';
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)';
                   }
                 }}
                 title="Perfil do Utilizador"
               >
-                {/* Foto / Avatar com Status Indicator */}
-                <div style={{ position: 'relative', width: '36px', height: '36px', flexShrink: 0 }}>
+                {/* Avatar com Indicador Discreto */}
+                <div style={{ position: 'relative', width: '34px', height: '34px', flexShrink: 0 }}>
                   {profilePhoto ? (
                     <img 
                       src={profilePhoto} 
                       alt="Foto de Perfil" 
                       style={{
-                        width: '36px',
-                        height: '36px',
+                        width: '34px',
+                        height: '34px',
                         borderRadius: '50%',
                         objectFit: 'cover',
-                        border: '2px solid var(--color-primary, #1B365D)',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        border: '1.5px solid var(--color-border)',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.08)'
                       }} 
                     />
                   ) : (
                     <div style={{
-                      width: '36px',
-                      height: '36px',
+                      width: '34px',
+                      height: '34px',
                       borderRadius: '50%',
                       background: isSuperAdmin 
                         ? 'linear-gradient(135deg, #1B365D 0%, #2563eb 100%)' 
-                        : 'linear-gradient(135deg, #374151 0%, #4b5563 100%)',
+                        : 'linear-gradient(135deg, #475569 0%, #64748b 100%)',
                       color: '#ffffff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontWeight: '800',
-                      fontSize: '14px',
-                      letterSpacing: '0.5px',
-                      boxShadow: '0 2px 5px rgba(27, 54, 93, 0.25)',
-                      border: '1.5px solid rgba(255,255,255,0.7)'
+                      fontWeight: '700',
+                      fontSize: '13.5px',
+                      letterSpacing: '0.3px',
+                      boxShadow: '0 1px 3px rgba(27, 54, 93, 0.2)'
                     }}>
                       {userDisplayName.charAt(0).toUpperCase()}
                     </div>
                   )}
 
-                  {/* Indicador Activo com Brilho Suave */}
+                  {/* Ponto de Status Online Minimalista */}
                   <span style={{
                     position: 'absolute',
-                    bottom: '-1px',
-                    right: '-1px',
-                    width: '10px',
-                    height: '10px',
+                    bottom: '0px',
+                    right: '0px',
+                    width: '8px',
+                    height: '8px',
                     borderRadius: '50%',
                     backgroundColor: '#10B981',
-                    border: '2px solid var(--color-bg-base, #ffffff)',
-                    boxShadow: '0 0 6px rgba(16, 185, 129, 0.8)'
+                    border: '1.5px solid var(--color-bg-base, #ffffff)'
                   }}></span>
                 </div>
 
-                {/* Nome e Cargo / Função */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: '1.2' }}>
-                  <div style={{ 
-                    fontSize: '12.5px', 
-                    fontWeight: '700', 
+                {/* Nome e Cargo / Nível Conciso e Elegante (Sem poluição redundante) */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: '1.25' }}>
+                  <span style={{ 
+                    fontSize: '13px', 
+                    fontWeight: '600', 
                     color: 'var(--color-text-base)', 
-                    maxWidth: '160px',
+                    maxWidth: '150px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap'
                   }}>
                     {userDisplayName}
-                  </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '5px', 
-                    marginTop: '2px'
+                  </span>
+                  <span style={{
+                    color: 'var(--color-text-muted)',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    maxWidth: '150px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
                   }}>
-                    <span style={{
-                      fontSize: '9px',
-                      padding: '1px 6px',
-                      borderRadius: '10px',
-                      backgroundColor: isSuperAdmin ? 'rgba(16, 185, 129, 0.12)' : 'rgba(27, 54, 93, 0.08)',
-                      color: isSuperAdmin ? '#047857' : 'var(--color-primary, #1B365D)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.4px',
-                      fontWeight: '800'
-                    }}>
-                      {isSuperAdmin ? 'SUPER ADMIN' : 'USER'}
-                    </span>
-                    <span style={{
-                      color: 'var(--color-text-muted)',
-                      fontSize: '11px',
-                      fontWeight: '500',
-                      maxWidth: '140px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {userRoleDisplay}
-                    </span>
-                  </div>
+                    {isSuperAdmin ? 'Super Administrador' : (user?.roleName || user?.role || 'Utilizador')}
+                  </span>
                 </div>
 
-                {/* Seta / Chevron */}
+                {/* Seta / Chevron Minimalista */}
                 <svg 
-                  width="13" 
-                  height="13" 
+                  width="12" 
+                  height="12" 
                   viewBox="0 0 24 24" 
                   fill="none" 
                   stroke="currentColor" 
-                  strokeWidth="2.5" 
+                  strokeWidth="2.2" 
                   strokeLinecap="round" 
                   strokeLinejoin="round"
                   style={{
                     color: 'var(--color-text-muted)',
-                    transition: 'transform 0.2s ease',
+                    transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                     transform: showProfileMenu ? 'rotate(180deg)' : 'rotate(0deg)',
-                    marginLeft: '4px'
+                    marginLeft: '2px',
+                    opacity: 0.7
                   }}
                 >
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               </button>
 
-              {/* Menu Dropdown Sofisticado */}
+              {/* Menu Dropdown Sofisticado e Limpo */}
               {showProfileMenu && (
                 <div style={{
                   position: 'absolute',
                   top: 'calc(100% + 8px)',
                   right: '0',
-                  width: '290px',
+                  width: '280px',
                   backgroundColor: 'var(--color-bg-card)',
                   borderRadius: '16px',
-                  padding: '18px',
-                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0,0,0,0.06)',
-                  border: '1px solid var(--color-border)',
+                  padding: '16px',
+                  boxShadow: '0 16px 36px -6px rgba(0, 0, 0, 0.13), 0 0 0 1px var(--color-border)',
                   zIndex: 1000,
-                  backdropFilter: 'blur(10px)',
-                  animation: 'fadeIn 0.2s ease-out'
+                  backdropFilter: 'blur(12px)',
+                  animation: 'fadeIn 0.18s ease-out'
                 }}>
-                  {/* Cabeçalho do Perfil com Avatar Grande e Troca de Foto */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px', paddingBottom: '14px', borderBottom: '1px solid var(--color-border)' }}>
-                    <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
+                  {/* Cabeçalho do Perfil com Avatar e Edição Discreta */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--color-border)' }}>
+                    <div style={{ position: 'relative', width: '48px', height: '48px', flexShrink: 0 }}>
                       {profilePhoto ? (
                         <img 
                           src={profilePhoto} 
                           alt="Foto" 
-                          style={{ width: '52px', height: '52px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-primary, #1B365D)' }} 
+                          style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--color-border)' }} 
                         />
                       ) : (
                         <div style={{
-                          width: '52px',
-                          height: '52px',
+                          width: '48px',
+                          height: '48px',
                           borderRadius: '50%',
                           background: 'linear-gradient(135deg, #1B365D 0%, #2563eb 100%)',
                           color: '#ffffff',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontWeight: '800',
-                          fontSize: '20px'
+                          fontWeight: '700',
+                          fontSize: '18px'
                         }}>
                           {userDisplayName.charAt(0).toUpperCase()}
                         </div>
                       )}
-                      {/* Botão de Upload com Ícone de Câmara */}
+                      {/* Botão de Upload Discreto */}
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        title="Carregar nova foto"
+                        title="Alterar foto de perfil"
                         style={{
                           position: 'absolute',
                           bottom: '-2px',
                           right: '-2px',
-                          width: '22px',
-                          height: '22px',
+                          width: '20px',
+                          height: '20px',
                           borderRadius: '50%',
                           backgroundColor: 'var(--color-primary, #1B365D)',
                           color: '#ffffff',
@@ -1503,21 +1482,34 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           alignItems: 'center',
                           justifyContent: 'center',
                           cursor: 'pointer',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                          transition: 'transform 0.15s ease'
                         }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                       >
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
                       </button>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: '14px', fontWeight: '700', color: 'var(--color-text-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--color-text-base)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {userDisplayName}
                       </span>
-                      <span style={{ fontSize: '11.5px', fontWeight: '600', color: isSuperAdmin ? '#059669' : 'var(--color-primary, #1B365D)', marginTop: '2px' }}>
-                        {userRoleDisplay}
-                      </span>
-                      <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', marginTop: '3px' }}>
+                        <span style={{ 
+                          fontSize: '10px', 
+                          fontWeight: '700', 
+                          color: isSuperAdmin ? '#059669' : 'var(--color-primary, #1B365D)',
+                          backgroundColor: isSuperAdmin ? 'rgba(16, 185, 129, 0.08)' : 'rgba(27, 54, 93, 0.06)',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          border: `1px solid ${isSuperAdmin ? 'rgba(16, 185, 129, 0.2)' : 'rgba(27, 54, 93, 0.12)'}`
+                        }}>
+                          {userRoleDisplay}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '3px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {userDirectorateDisplay}
                       </span>
                     </div>
@@ -1532,58 +1524,66 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     style={{ display: 'none' }} 
                   />
 
-                  {/* Detalhes Institucionais */}
-                  <div style={{ backgroundColor: 'var(--color-bg-base)', borderRadius: '10px', padding: '10px 12px', marginBottom: '14px', fontSize: '11.5px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {/* Detalhes Institucionais Concisos */}
+                  <div style={{ 
+                    backgroundColor: 'var(--color-bg-base)', 
+                    borderRadius: '10px', 
+                    padding: '8px 12px', 
+                    marginBottom: '12px', 
+                    fontSize: '11.5px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '5px',
+                    border: '1px solid var(--color-border)'
+                  }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: 'var(--color-text-muted)' }}>Utilizador / NUIT:</span>
+                      <span style={{ color: 'var(--color-text-muted)' }}>Utilizador / NUIT</span>
                       <span style={{ fontWeight: '600', color: 'var(--color-text-base)' }}>{user?.username || 'admin'}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: 'var(--color-text-muted)' }}>Sessão de Acesso:</span>
+                      <span style={{ color: 'var(--color-text-muted)' }}>Sessão</span>
                       <span style={{ fontWeight: '600', color: '#10B981', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
-                        Protegida & Activa
+                        <span style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: '#10B981' }}></span>
+                        Activa
                       </span>
                     </div>
                   </div>
 
                   {/* Ação de Logout */}
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowProfileMenu(false);
-                        onLogout();
-                      }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        width: '100%',
-                        padding: '10px 14px',
-                        borderRadius: '10px',
-                        border: 'none',
-                        backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                        color: '#EF4444',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'all 0.15s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.08)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                      {t('menu_logout')}
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowProfileMenu(false);
+                      onLogout();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(239, 68, 68, 0.15)',
+                      backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                      color: '#EF4444',
+                      fontSize: '12.5px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.12)';
+                      e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.25)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.05)';
+                      e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.15)';
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    {t('menu_logout')}
+                  </button>
                 </div>
               )}
             </div>
