@@ -531,14 +531,6 @@ export default function VacationManagement() {
             >
               📥 Exportar Excel
             </button>
-            <button 
-              type="button" 
-              onClick={() => { setEditingRecord(null); setIsNewModalOpen(true); }} 
-              style={styles.btnPrimary}
-              title="Registar nova marcação de férias para funcionário"
-            >
-              ➕ Novo Agendamento de Férias
-            </button>
           </div>
         </div>
 
