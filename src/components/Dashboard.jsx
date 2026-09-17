@@ -21,6 +21,7 @@ import CareerManager from './career/CareerManager';
 import TransferManager from './transfers/TransferManager';
 import VacationManager from './vacations/VacationManager';
 import ErrorBoundary from './common/ErrorBoundary';
+import KeyboardShortcutsModal from './common/KeyboardShortcutsModal';
 import { isPrimaryCentralAdmin, isCentralUser, filterByProvincialScope } from '../utils/scopeUtils';
 
 const getDynamicGroupIcon = (groupName) => {
@@ -539,6 +540,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   };
 
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', action: null, isDestructive: false });
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   React.useEffect(() => {
     const handleClickOutside = (event) => {
@@ -555,20 +557,151 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     };
   }, []);
 
-  // Atalhos de teclado: Alt+← (voltar) / Alt+→ (avançar)
+  // Lista sequencial de módulos para navegação por teclado (Setas Cima / Baixo)
+  const MAIN_NAV_TABS = React.useMemo(() => [
+    'home',
+    'reports',
+    'disciplinary',
+    'effectiveness',
+    'evaluations',
+    'vacations',
+    'transfers',
+    'admin_acts_dashboard',
+    'emp_list',
+    'settings_system'
+  ], []);
+
+  const navigateToAdjacentTab = React.useCallback((direction) => {
+    let currentIndex = MAIN_NAV_TABS.indexOf(activeTab);
+    if (currentIndex === -1) {
+      if (activeTab.startsWith('emp_')) currentIndex = MAIN_NAV_TABS.indexOf('emp_list');
+      else if (activeTab.startsWith('settings_') || activeTab === 'identity' || activeTab === 'org_structure') currentIndex = MAIN_NAV_TABS.indexOf('settings_system');
+      else currentIndex = 0;
+    }
+    const nextIndex = (currentIndex + direction + MAIN_NAV_TABS.length) % MAIN_NAV_TABS.length;
+    handleTabChange(MAIN_NAV_TABS[nextIndex]);
+  }, [activeTab, MAIN_NAV_TABS]);
+
+  // Detector seguro para verificar se o utilizador está a escrever num campo de formulário
+  const isEditingText = (target) => {
+    if (!target) return false;
+    const tagName = target.tagName ? target.tagName.toUpperCase() : '';
+    const isInput = tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'color'].includes(target.type?.toLowerCase());
+    const isTextArea = tagName === 'TEXTAREA';
+    const isSelect = tagName === 'SELECT';
+    const isContentEditable = target.isContentEditable || target.getAttribute?.('contenteditable') === 'true';
+    return isInput || isTextArea || isSelect || isContentEditable;
+  };
+
+  // Navegação Executiva por Teclado e Atalhos Globais
   React.useEffect(() => {
     const handleKeyDown = (e) => {
+      // 1. F1 ou "?" para abrir/fechar guia de atalhos
+      if (e.key === 'F1' || (e.shiftKey && e.key === '?')) {
+        e.preventDefault();
+        setShowShortcutsModal(prev => !prev);
+        return;
+      }
+
+      // 2. Escape: fechar modais, menus ou cancelar foco
+      if (e.key === 'Escape') {
+        if (showShortcutsModal) {
+          e.preventDefault();
+          setShowShortcutsModal(false);
+          return;
+        }
+        if (showProfileMenu) {
+          e.preventDefault();
+          setShowProfileMenu(false);
+          return;
+        }
+        if (showLangMenu) {
+          e.preventDefault();
+          setShowLangMenu(false);
+          return;
+        }
+        if (confirmModal.isOpen) {
+          e.preventDefault();
+          setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          return;
+        }
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+        return;
+      }
+
+      // 3. Ctrl+B ou Alt+B: Alternar barra lateral
+      if ((e.ctrlKey || e.altKey) && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault();
+        setIsSidebarOpen(prev => !prev);
+        return;
+      }
+
+      // 4. Ctrl+K ou "/" (quando fora de digitação): Focar no campo de pesquisa
+      if (((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) || (!isEditingText(e.target) && e.key === '/')) {
+        const searchInput = document.querySelector('input[type="search"], input[placeholder*="Pesquisar"], input[placeholder*="Buscar"], input[placeholder*="pesquisar"], input[placeholder*="buscar"]');
+        if (searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select?.();
+          return;
+        }
+      }
+
+      // 5. Enter em diálogo de confirmação aberto
+      if (e.key === 'Enter' && confirmModal.isOpen && !isEditingText(e.target)) {
+        e.preventDefault();
+        if (typeof confirmModal.action === 'function') {
+          confirmModal.action();
+        }
+        return;
+      }
+
+      // 6. Navegação com combinação Alt + Setas (Funciona sempre)
       if (e.altKey && e.key === 'ArrowLeft') {
         e.preventDefault();
         handleNavBack();
-      } else if (e.altKey && e.key === 'ArrowRight') {
+        return;
+      }
+      if (e.altKey && e.key === 'ArrowRight') {
         e.preventDefault();
         handleNavForward();
+        return;
+      }
+      if (e.altKey && e.key === 'ArrowUp') {
+        e.preventDefault();
+        navigateToAdjacentTab(-1);
+        return;
+      }
+      if (e.altKey && e.key === 'ArrowDown') {
+        e.preventDefault();
+        navigateToAdjacentTab(1);
+        return;
+      }
+
+      // 7. Navegação Direcional Nativa por Setas (Cima, Baixo, Esquerda, Direita)
+      // Preserva a digitação em inputs/textareas e evita conflito quando modais estão abertos
+      if (!isEditingText(e.target) && !confirmModal.isOpen && !showShortcutsModal) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          handleNavBack();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          handleNavForward();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          navigateToAdjacentTab(-1);
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          navigateToAdjacentTab(1);
+        }
       }
     };
+
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [canGoBack, canGoForward, navIndex, navHistory]);
+  }, [canGoBack, canGoForward, navIndex, navHistory, activeTab, confirmModal, showShortcutsModal, showProfileMenu, showLangMenu, navigateToAdjacentTab]);
 
 
 
@@ -1290,6 +1423,28 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
               <span style={{ fontSize: '13px', fontWeight: '500' }}>
                 {t('theme_mode')}: {settings.modo_tema === 'dark' ? t('theme_dark') : t('theme_light')}
               </span>
+            </button>
+
+            {/* Botão Guia de Atalhos de Teclado (F1) */}
+            <button 
+              type="button"
+              onClick={() => setShowShortcutsModal(true)}
+              style={styles.keyboardShortcutsBtn}
+              title="Atalhos do Teclado e Navegação (F1)"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                <line x1="6" y1="8" x2="6" y2="8"></line>
+                <line x1="10" y1="8" x2="10" y2="8"></line>
+                <line x1="14" y1="8" x2="14" y2="8"></line>
+                <line x1="18" y1="8" x2="18" y2="8"></line>
+                <line x1="6" y1="12" x2="6" y2="12"></line>
+                <line x1="10" y1="12" x2="10" y2="12"></line>
+                <line x1="14" y1="12" x2="14" y2="12"></line>
+                <line x1="18" y1="12" x2="18" y2="12"></line>
+                <line x1="7" y1="16" x2="17" y2="16"></line>
+              </svg>
+              <span style={{ fontSize: '11px', fontWeight: '800', padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--color-bg-muted, rgba(0,0,0,0.06))', border: '1px solid var(--color-border)', color: 'var(--color-text-base)' }}>F1</span>
             </button>
 
             {/* Perfil do Administrador Moderno, Elegante e Minimalista */}
@@ -3757,6 +3912,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         onConfirm={confirmModal.action}
         onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
+
+      <KeyboardShortcutsModal
+        isOpen={showShortcutsModal}
+        onClose={() => setShowShortcutsModal(false)}
+      />
     </div>
   );
 }
@@ -3974,6 +4134,18 @@ const styles = {
     gap: '8px',
     padding: '8px 12px',
     borderRadius: 'var(--radius-sm)',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-base)',
+    color: 'var(--color-text-base)',
+    cursor: 'pointer',
+    transition: 'all var(--transition-fast)',
+  },
+  keyboardShortcutsBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '7px 10px',
+    borderRadius: 'var(--radius-sm, 6px)',
     border: '1px solid var(--color-border)',
     backgroundColor: 'var(--color-bg-base)',
     color: 'var(--color-text-base)',
