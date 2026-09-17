@@ -4001,11 +4001,12 @@ const styles = {
     color: 'var(--color-text-base)',
   },
   contentArea: {
-    padding: '30px',
+    padding: '24px 28px',
     flex: 1,
   },
   tabContainer: {
-    maxWidth: '1200px',
+    maxWidth: '1500px',
+    width: '100%',
     margin: '0 auto',
   },
   welcomeBanner: {

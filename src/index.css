@@ -210,14 +210,19 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-family);
-  /* background-color gerida dinamicamente pelo Login ou Dashboard */
   color: var(--color-text-base);
   min-height: 100vh;
-  transition: background-color var(--transition-normal), color var(--transition-normal);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 button, input, select, textarea {
@@ -226,75 +231,90 @@ button, input, select, textarea {
 
 button {
   cursor: pointer;
-  transition: transform var(--transition-fast), filter var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+  transition: transform 0.14s cubic-bezier(0.2, 0, 0, 1), 
+              background-color 0.14s ease, 
+              border-color 0.14s ease, 
+              box-shadow 0.14s ease, 
+              opacity 0.14s ease;
 }
 
 button:hover:not(:disabled) {
   transform: translateY(-1px);
-  filter: brightness(0.95);
 }
 
 button:active:not(:disabled) {
-  transform: translateY(1px);
-  filter: brightness(0.9);
+  transform: scale(0.985);
 }
 
 [data-theme="dark"] button:hover:not(:disabled) {
-  filter: brightness(1.15);
+  filter: brightness(1.1);
 }
 
 [data-theme="dark"] button:active:not(:disabled) {
-  filter: brightness(1.05);
+  filter: brightness(1.02);
 }
 
 a {
   color: var(--color-primary);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: color 0.14s ease;
 }
 
 a:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.15);
 }
 
-/* Scrollbar Personalizada */
+/* Scrollbar Personalizada e Fluida */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-bg-base);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: 9999px;
+  transition: background-color 0.15s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-light);
 }
 
-/* Animações de Hover e Micro-interações */
+/* Animações de Navegação Fluida e Instantânea */
 .btn-animate {
   position: relative;
   overflow: hidden;
-  transition: all var(--transition-fast);
+  transition: all 0.14s cubic-bezier(0.2, 0, 0, 1);
 }
 .btn-animate:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
 .btn-animate:active {
-  transform: translateY(1px);
+  transform: scale(0.985);
 }
 
-/* Animação Fade-In */
+/* Animação Fade-In Leve e Sem Atrasos */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translate3d(0, 4px, 0); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translate3d(0, 0, 0); 
+  }
 }
 
 .animate-fade-in {
-  animation: fadeIn var(--transition-normal) forwards;
+  animation: fadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
 }
 
 /* Glassmorphism Classes */
