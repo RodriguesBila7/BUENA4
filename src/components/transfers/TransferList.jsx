@@ -177,17 +177,17 @@ export default function TransferList({
       case 'Pendente':
       case 'Submetida':
       case 'Em análise':
-        return <span className="ui-badge ui-badge-warning">🟡 {status}</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(245, 158, 11, 0.12)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)' }}>🟡 {status}</span>;
       case 'Aprovada':
-        return <span className="ui-badge ui-badge-success">✓ Aprovada</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(16, 185, 129, 0.12)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.3)' }}>✅ Aprovada</span>;
       case 'Concluída':
-        return <span className="ui-badge ui-badge-info">✓ Concluída</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed', border: '1px solid rgba(139, 92, 246, 0.3)' }}>🟣 Concluída</span>;
       case 'Rejeitada':
-        return <span className="ui-badge ui-badge-danger">✕ Rejeitada</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(239, 68, 68, 0.12)', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.3)' }}>🔴 Rejeitada</span>;
       case 'Cancelada':
-        return <span className="ui-badge ui-badge-neutral">Cancelada</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(100, 116, 139, 0.12)', color: '#475569', border: '1px solid rgba(100, 116, 139, 0.3)' }}>⚫ Cancelada</span>;
       default:
-        return <span className="ui-badge ui-badge-neutral">{status}</span>;
+        return <span style={styles.badge}>{status}</span>;
     }
   };
 
@@ -198,48 +198,42 @@ export default function TransferList({
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={styles.container}>
       
       {/* Filtros de Pesquisa */}
-      <div className="ui-card" style={{ padding: '16px 20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-text-main)' }}>
-            Filtros de Movimentação
-          </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '12.5px', color: 'var(--color-text-muted)', fontWeight: '500' }}>
-              Total: <strong style={{ color: 'var(--color-text-main)' }}>{filteredTransfers.length}</strong> processo(s)
-            </span>
-            <button type="button" onClick={handleExportExcel} className="ui-btn ui-btn-secondary" style={{ padding: '5px 12px', fontSize: '12px' }}>
-              📊 Excel
-            </button>
-            <button type="button" onClick={handleExportPDF} className="ui-btn ui-btn-secondary" style={{ padding: '5px 12px', fontSize: '12px' }}>
-              📄 PDF
-            </button>
+      <div style={styles.filtersCard}>
+        <div style={styles.filtersHeader}>
+          <h4 style={styles.filtersTitle}>
+            🔍 Filtros Avançados de Movimentação
+          </h4>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <span style={styles.resultsCount}>{filteredTransfers.length} processo(s) encontrado(s)</span>
+            <button onClick={handleExportExcel} style={styles.btnTool}>📊 Excel</button>
+            <button onClick={handleExportPDF} style={styles.btnTool}>📄 PDF</button>
           </div>
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11.5px', fontWeight: '500', color: 'var(--color-text-muted)' }}>Pesquisa</label>
+        <div style={styles.filtersGrid}>
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Pesquisa Global</label>
             <input 
               type="text" 
-              placeholder="Nome, NIP, Nº Despacho..." 
+              placeholder="Nome, NUIT/NIP, Nº Despacho..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="ui-input"
+              style={styles.searchInput}
             />
           </div>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11.5px', fontWeight: '500', color: 'var(--color-text-muted)' }}>Estado</label>
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Estado do Processo</label>
             <select 
               value={statusFilter} 
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 if (onStatusFilterChange) onStatusFilterChange(e.target.value);
               }} 
-              className="ui-select"
+              style={styles.selectInput}
             >
               <option value="">Todos os Estados</option>
               <option value="Pendente">Pendentes / Em Análise</option>
@@ -248,40 +242,39 @@ export default function TransferList({
             </select>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11.5px', fontWeight: '500', color: 'var(--color-text-muted)' }}>Tipo</label>
-            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="ui-select">
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Tipo de Movimentação</label>
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} style={styles.selectInput}>
               <option value="">Todos os Tipos</option>
               {availableTypes.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11.5px', fontWeight: '500', color: 'var(--color-text-muted)' }}>Data Decisão (De)</label>
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="ui-input" />
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Data Decisão (De)</label>
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={styles.selectInput} />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <label style={{ fontSize: '11.5px', fontWeight: '500', color: 'var(--color-text-muted)' }}>Data Decisão (Até)</label>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="ui-input" />
+          <div style={styles.filterGroup}>
+            <label style={styles.label}>Data Decisão (Até)</label>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={styles.selectInput} />
           </div>
         </div>
       </div>
 
       {/* Tabela de Registos Directa */}
-      <div className="ui-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table className="ui-table">
-            <thead>
-              <tr>
-                <th style={{ width: '160px' }}>Processo / Despacho</th>
-                <th>Funcionário</th>
-                <th>Movimentação & Destino</th>
-                <th style={{ width: '150px' }}>Datas</th>
-                <th style={{ width: '130px' }}>Estado</th>
-                <th style={{ textAlign: 'right', width: '130px' }}>Ações</th>
-              </tr>
-            </thead>
+      <div style={styles.tableContainer}>
+        <table className="premium-table">
+          <thead>
+            <tr>
+              <th>PROCESSO / DESPACHO</th>
+              <th>FUNCIONÁRIO</th>
+              <th>MOVIMENTAÇÃO & DESTINO</th>
+              <th>DATAS</th>
+              <th>ESTADO</th>
+              <th style={{ textAlign: 'right' }}>AÇÕES CRUD</th>
+            </tr>
+          </thead>
           <tbody>
             {filteredTransfers.length === 0 ? (
               <tr>
@@ -415,7 +408,6 @@ export default function TransferList({
             )}
           </tbody>
         </table>
-        </div>
       </div>
 
       {/* Modal Ficha Completa do Processo de Transferência */}

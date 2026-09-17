@@ -133,9 +133,10 @@ const styles = {
     userSelect: 'none'
   },
   title: {
-    fontSize: '17px',
+    fontSize: '16px',
     fontWeight: '700',
-    color: 'var(--color-primary, #1B365D)',
+    color: 'var(--color-text-base)',
+    letterSpacing: '-0.2px',
     margin: 0
   },
   expandBtn: {

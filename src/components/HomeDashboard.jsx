@@ -16,11 +16,21 @@ const COLORS = ['#1B365D', '#4A5568', '#718096', '#A0AEC0', '#E2E8F0'];
 
 const KPICard = ({ title, data, t }) => (
   <div style={styles.kpiCard}>
-    <h3 style={styles.kpiTitle}>{title}</h3>
+    <div style={styles.kpiHeader}>
+      <span style={styles.kpiTitle}>{title}</span>
+    </div>
     <div style={styles.kpiTotal}>{data.total}</div>
     <div style={styles.kpiDetails}>
-      <span style={styles.kpiActive}>● {data.active} {t('org_active') || 'Activos'}</span>
-      <span style={styles.kpiInactive}>● {data.inactive} {t('org_inactive') || 'Inactivos'}</span>
+      <span style={styles.kpiBadgeActive}>
+        <span style={styles.kpiDotActive}></span>
+        {data.active} {t('org_active') || 'Activos'}
+      </span>
+      {data.inactive !== undefined && data.inactive > 0 && (
+        <span style={styles.kpiBadgeInactive}>
+          <span style={styles.kpiDotInactive}></span>
+          {data.inactive} {t('org_inactive') || 'Inactivos'}
+        </span>
+      )}
     </div>
   </div>
 );
@@ -242,113 +252,262 @@ export default function HomeDashboard({ t, onTabChange }) {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <div>
-          <h2 style={styles.title}>
-            {t('dash_overview') || 'Visão Geral'}
-          </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h2 style={styles.title}>
+              {t('dash_overview') || 'Visão Geral'}
+            </h2>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+              Acompanhamento integrado de efetivos, atos, estruturas e processos
+            </p>
+          </div>
+          {provincialRoleTag && (
+            <span style={{ 
+              fontSize: '11px', 
+              fontWeight: '600', 
+              padding: '4px 10px', 
+              borderRadius: '6px', 
+              backgroundColor: 'var(--color-bg-card)', 
+              border: '1px solid var(--color-border)', 
+              color: 'var(--color-text-muted)' 
+            }}>
+              {provincialRoleTag}
+            </span>
+          )}
         </div>
       </div>
 
+      {/* Alertas Inteligentes e Concisos */}
       {pendingObitosCount > 0 && (
         <div 
-          style={{ padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          style={{ 
+            padding: '14px 18px', 
+            backgroundColor: 'rgba(239, 68, 68, 0.06)', 
+            border: '1px solid rgba(239, 68, 68, 0.22)', 
+            borderRadius: '10px', 
+            marginBottom: '16px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            gap: '14px', 
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
           onClick={() => handleAlertClick(pendingObitosActs, 'admin_acts_dynamic_Saúde_e_Óbitos')}
-          title="Ver Detalhes"
+          title="Clique para aceder ao módulo de Saúde e Óbitos"
         >
-          <span style={{ fontSize: '20px' }}>⚠️</span>
-          <div style={{ color: '#EF4444' }}>
-            <strong>Atenção:</strong> Existem <strong>{pendingObitosCount}</strong> processo(s) de Óbito pendente(s) de conclusão. Por favor, aceda ao Módulo de Saúde e Óbitos para os finalizar.
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '8px', 
+              backgroundColor: 'rgba(239, 68, 68, 0.12)', 
+              color: '#EF4444', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            </span>
+            <div>
+              <div style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-base)' }}>Processos de Óbito Pendentes</div>
+              <div style={{ fontSize: '12.5px', color: 'var(--color-text-muted)' }}>Existem <strong>{pendingObitosCount}</strong> processo(s) a aguardar conclusão no Módulo de Saúde e Óbitos.</div>
+            </div>
           </div>
+          <span style={{ fontSize: '12px', fontWeight: '600', color: '#EF4444' }}>Ver &rarr;</span>
         </div>
       )}
 
       {retirementAlerts.byService.length > 0 && (
         <div 
-          style={{ padding: '16px', backgroundColor: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          style={{ 
+            padding: '14px 18px', 
+            backgroundColor: 'rgba(59, 130, 246, 0.06)', 
+            border: '1px solid rgba(59, 130, 246, 0.22)', 
+            borderRadius: '10px', 
+            marginBottom: '16px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            gap: '14px', 
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
           onClick={() => handleAlertClick(retirementAlerts.byService, 'admin_acts_dynamic_Reserva_e_Reforma')}
-          title="Ver Detalhes"
+          title="Clique para aceder a Reserva e Reforma"
         >
-          <span style={{ fontSize: '20px' }}>ℹ️</span>
-          <div style={{ color: '#60A5FA' }}>
-            <strong>Alerta de Reforma (Tempo de Serviço):</strong> Existem <strong>{retirementAlerts.byService.length}</strong> funcionário(s) que já completaram 35 anos de serviço e devem ser passados à Reserva ou Reforma.
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '8px', 
+              backgroundColor: 'rgba(59, 130, 246, 0.12)', 
+              color: '#3B82F6', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            </span>
+            <div>
+              <div style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-base)' }}>Reforma por Tempo de Serviço</div>
+              <div style={{ fontSize: '12.5px', color: 'var(--color-text-muted)' }}>Existem <strong>{retirementAlerts.byService.length}</strong> funcionário(s) elegíveis com 35 anos de serviço cumpridos.</div>
+            </div>
           </div>
+          <span style={{ fontSize: '12px', fontWeight: '600', color: '#3B82F6' }}>Ver &rarr;</span>
         </div>
       )}
 
       {retirementAlerts.byAge.length > 0 && (
         <div 
-          style={{ padding: '16px', backgroundColor: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          style={{ 
+            padding: '14px 18px', 
+            backgroundColor: 'rgba(245, 158, 11, 0.06)', 
+            border: '1px solid rgba(245, 158, 11, 0.22)', 
+            borderRadius: '10px', 
+            marginBottom: '16px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            gap: '14px', 
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
           onClick={() => handleAlertClick(retirementAlerts.byAge, 'admin_acts_dynamic_Reserva_e_Reforma')}
-          title="Ver Detalhes"
+          title="Clique para aceder a Reserva e Reforma"
         >
-          <span style={{ fontSize: '20px' }}>🔔</span>
-          <div style={{ color: '#F59E0B' }}>
-            <strong>Alerta de Reforma (Por Idade):</strong> Existem <strong>{retirementAlerts.byAge.length}</strong> funcionário(s) que já atingiram a idade limite obrigatória para passagem à Reserva/Reforma.
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '8px', 
+              backgroundColor: 'rgba(245, 158, 11, 0.12)', 
+              color: '#F59E0B', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </span>
+            <div>
+              <div style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-base)' }}>Reforma por Idade Limite</div>
+              <div style={{ fontSize: '12.5px', color: 'var(--color-text-muted)' }}>Existem <strong>{retirementAlerts.byAge.length}</strong> funcionário(s) que atingiram a idade limite para passagem à Reserva/Reforma.</div>
+            </div>
           </div>
+          <span style={{ fontSize: '12px', fontWeight: '600', color: '#F59E0B' }}>Ver &rarr;</span>
         </div>
       )}
 
       {retirementAlerts.byMedical.length > 0 && (
         <div 
-          style={{ padding: '16px', backgroundColor: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+          style={{ 
+            padding: '14px 18px', 
+            backgroundColor: 'rgba(239, 68, 68, 0.06)', 
+            border: '1px solid rgba(239, 68, 68, 0.22)', 
+            borderRadius: '10px', 
+            marginBottom: '16px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between', 
+            gap: '14px', 
+            cursor: 'pointer',
+            transition: 'all 0.15s ease'
+          }}
           onClick={() => handleAlertClick(retirementAlerts.byMedical, 'admin_acts_dynamic_Reserva_e_Reforma')}
-          title="Ver Detalhes"
+          title="Clique para aceder a Reserva e Reforma"
         >
-          <span style={{ fontSize: '20px' }}>🚨</span>
-          <div style={{ color: '#EF4444' }}>
-            <strong>Alerta de Reforma Compulsiva (Doença/Inaptidão):</strong> Existem <strong>{retirementAlerts.byMedical.length}</strong> funcionário(s) considerados Inaptos pela Junta Médica que devem ser passados à Reforma ou Reserva Compulsiva.
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ 
+              width: '32px', 
+              height: '32px', 
+              borderRadius: '8px', 
+              backgroundColor: 'rgba(239, 68, 68, 0.12)', 
+              color: '#EF4444', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            </span>
+            <div>
+              <div style={{ fontSize: '13.5px', fontWeight: '600', color: 'var(--color-text-base)' }}>Reforma por Inaptidão Médica</div>
+              <div style={{ fontSize: '12.5px', color: 'var(--color-text-muted)' }}>Existem <strong>{retirementAlerts.byMedical.length}</strong> funcionário(s) com parecer desfavorável da Junta de Saúde.</div>
+            </div>
           </div>
+          <span style={{ fontSize: '12px', fontWeight: '600', color: '#EF4444' }}>Ver &rarr;</span>
         </div>
       )}
 
-      {/* Relatório Completo dos Módulos */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+      {/* Grade de Indicadores dos Módulos */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         
         <div style={styles.kpiCard}>
-          <h3 style={styles.kpiTitle}>Funcionários</h3>
+          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Funcionários</span></div>
           <div style={styles.kpiTotal}>{sysStats.employees.total}</div>
           <div style={styles.kpiDetails}>
-            <span style={styles.kpiActive}>● {sysStats.employees.active} Ativos</span>
+            <span style={styles.kpiBadgeActive}>
+              <span style={styles.kpiDotActive}></span>
+              {sysStats.employees.active} Ativos
+            </span>
           </div>
         </div>
 
         <div style={styles.kpiCard}>
-          <h3 style={styles.kpiTitle}>Actos Administrativos</h3>
+          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Actos Administrativos</span></div>
           <div style={styles.kpiTotal}>{sysStats.acts.total}</div>
           <div style={styles.kpiDetails}>
-            <span style={{ color: 'var(--color-primary)' }}>● {sysStats.acts.recent} nos últimos 30 dias</span>
+            <span style={{ ...styles.kpiBadgeActive, backgroundColor: 'rgba(59, 130, 246, 0.08)', color: '#2563EB' }}>
+              <span style={{ ...styles.kpiDotActive, backgroundColor: '#3B82F6' }}></span>
+              {sysStats.acts.recent} nos últimos 30d
+            </span>
           </div>
         </div>
 
         <div style={styles.kpiCard}>
-          <h3 style={styles.kpiTitle}>Colocações e Transferências</h3>
+          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Colocações / Transf.</span></div>
           <div style={styles.kpiTotal}>{sysStats.transfers.total}</div>
           <div style={styles.kpiDetails}>
-            <span style={styles.kpiInactive}>● {sysStats.transfers.pending} Pendentes</span>
+            <span style={styles.kpiBadgeInactive}>
+              <span style={styles.kpiDotInactive}></span>
+              {sysStats.transfers.pending} Pendentes
+            </span>
           </div>
         </div>
 
         <div style={styles.kpiCard}>
-          <h3 style={styles.kpiTitle}>Gestão de Desempenho Individual</h3>
+          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Desempenho Individual</span></div>
           <div style={styles.kpiTotal}>{sysStats.evaluations.total}</div>
           <div style={styles.kpiDetails}>
-            <span style={styles.kpiActive}>● Média: {sysStats.evaluations.avg}</span>
+            <span style={styles.kpiBadgeActive}>
+              <span style={styles.kpiDotActive}></span>
+              Média: {sysStats.evaluations.avg}
+            </span>
           </div>
         </div>
 
         <div style={styles.kpiCard}>
-          <h3 style={styles.kpiTitle}>Contencioso Laboral</h3>
+          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Contencioso Laboral</span></div>
           <div style={styles.kpiTotal}>{sysStats.disciplinary.total}</div>
           <div style={styles.kpiDetails}>
-            <span style={styles.kpiInactive}>● {sysStats.disciplinary.active} Em Curso</span>
+            <span style={styles.kpiBadgeInactive}>
+              <span style={styles.kpiDotInactive}></span>
+              {sysStats.disciplinary.active} Em Curso
+            </span>
           </div>
         </div>
 
         <div style={styles.kpiCard}>
-          <h3 style={styles.kpiTitle}>Efectividade (Faltas)</h3>
+          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Efectividade (Faltas)</span></div>
           <div style={styles.kpiTotal}>{sysStats.effectiveness.total}</div>
           <div style={styles.kpiDetails}>
-            <span style={{ color: 'var(--color-danger, #e53e3e)' }}>● {sysStats.effectiveness.unjustified} Injustificadas</span>
+            <span style={{ ...styles.kpiBadgeActive, backgroundColor: 'rgba(239, 68, 68, 0.08)', color: '#DC2626' }}>
+              <span style={{ ...styles.kpiDotActive, backgroundColor: '#EF4444' }}></span>
+              {sysStats.effectiveness.unjustified} Injustificadas
+            </span>
           </div>
         </div>
 
@@ -463,8 +622,8 @@ export default function HomeDashboard({ t, onTabChange }) {
 
 const styles = {
   container: {
-    padding: '30px',
-    animation: 'fadeIn 0.4s ease-out',
+    padding: '28px',
+    animation: 'fadeIn 0.35s ease-out',
   },
   header: {
     marginBottom: '24px',
@@ -472,65 +631,105 @@ const styles = {
   title: {
     fontSize: '22px',
     fontWeight: '700',
-    color: 'var(--color-text-main)',
+    color: 'var(--color-text-base)',
     letterSpacing: '-0.3px',
-    marginBottom: '4px',
+    marginBottom: '2px',
   },
   kpiGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
     gap: '16px',
-    marginBottom: '20px',
+    marginBottom: '24px',
   },
   kpiCard: {
     backgroundColor: 'var(--color-bg-card)',
     padding: '18px 20px',
     borderRadius: '12px',
     border: '1px solid var(--color-border)',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-    transition: 'all 0.15s ease',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+  kpiHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '8px',
   },
   kpiTitle: {
-    fontSize: '12px',
+    fontSize: '11.5px',
     color: 'var(--color-text-muted)',
     fontWeight: '600',
+    letterSpacing: '0.4px',
     textTransform: 'uppercase',
-    letterSpacing: '0.3px',
-    marginBottom: '8px',
   },
   kpiTotal: {
     fontSize: '28px',
     fontWeight: '700',
-    color: 'var(--color-text-main)',
+    color: 'var(--color-text-base)',
     lineHeight: '1.2',
     marginBottom: '10px',
   },
   kpiDetails: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    fontSize: '12px',
-    fontWeight: '500',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '8px',
   },
-  kpiActive: { color: '#10b981' },
-  kpiInactive: { color: '#94a3b8' },
+  kpiBadgeActive: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '3px 9px',
+    borderRadius: '9999px',
+    fontSize: '11.5px',
+    fontWeight: '600',
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    color: '#059669',
+  },
+  kpiDotActive: {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: '#10B981',
+  },
+  kpiBadgeInactive: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '3px 9px',
+    borderRadius: '9999px',
+    fontSize: '11.5px',
+    fontWeight: '600',
+    backgroundColor: 'rgba(148, 163, 184, 0.12)',
+    color: 'var(--color-text-muted)',
+  },
+  kpiDotInactive: {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: '#94A3B8',
+  },
   chartsRow: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: '20px',
-    marginBottom: '20px',
+    gap: '24px',
+    marginBottom: '24px',
   },
   chartCard: {
     backgroundColor: 'var(--color-bg-card)',
-    padding: '20px',
+    padding: '24px',
     borderRadius: '12px',
     border: '1px solid var(--color-border)',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
   },
   cardTitle: {
     fontSize: '15px',
     fontWeight: '600',
-    color: 'var(--color-text-main)',
+    color: 'var(--color-text-base)',
+    letterSpacing: '-0.2px',
     marginBottom: '16px',
   },
   chartWrapper: {

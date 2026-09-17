@@ -505,104 +505,99 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
       )}
 
       {/* BARRA DE FERRAMENTAS */}
-      <div className="ui-card" style={{ padding: '16px 20px', marginBottom: '16px' }}>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <button 
-            type="button"
-            onClick={() => handleOpenNew()} 
-            className="ui-btn ui-btn-primary"
-          >
-            <span>+</span> Novo Processo Disciplinar
-          </button>
+      <div style={styles.toolbar}>
+        <button 
+          onClick={() => handleOpenNew()} 
+          style={styles.btnAddProcess}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+        >
+          <span style={{ fontSize: '16px', fontWeight: 'bold' }}>+</span> Novo Processo Disciplinar
+        </button>
 
-          <input 
-            type="text" 
-            placeholder="Pesquisar funcionário, NIP, nº processo ou despacho..." 
-            value={filters.searchTerm}
-            onChange={(e) => setFilters(p => ({ ...p, searchTerm: e.target.value }))}
-            className="ui-input"
-            style={{ flex: 1, minWidth: '240px' }}
-          />
-          <select value={filters.type} onChange={(e) => setFilters(p => ({ ...p, type: e.target.value }))} className="ui-select" style={{ width: 'auto' }}>
-            <option value="">Todas as Sanções</option>
-            <option value="Advertência">Advertência</option>
-            <option value="Repreensão Pública">Repreensão Pública</option>
-            <option value="Multa">Multa</option>
-            <option value="Despromoção">Despromoção</option>
-            <option value="Demissão">Demissão (Cessação)</option>
-            <option value="Expulsão">Expulsão (Cessação)</option>
-            <option value="Absolvição / Arquivamento">Absolvição / Arquivamento</option>
-          </select>
-          <select value={filters.status} onChange={(e) => setFilters(p => ({ ...p, status: e.target.value }))} className="ui-select" style={{ width: 'auto' }}>
-            <option value="">Todos os Estados</option>
-            <option value="Em Instrução">Em Instrução (Pendente Despacho)</option>
-            <option value="Aberto">Aberto</option>
-            <option value="Concluído">Concluído (Despacho Aplicado)</option>
-            <option value="Arquivado">Arquivado</option>
-            <option value="Suspenso">Suspenso</option>
-          </select>
-          
-          <button type="button" onClick={exportExcel} className="ui-btn ui-btn-secondary">
-            📊 Exportar Excel
-          </button>
-        </div>
+        <input 
+          type="text" 
+          placeholder="Pesquisar funcionário, NIP, nº processo ou despacho..." 
+          value={filters.searchTerm}
+          onChange={(e) => setFilters(p => ({ ...p, searchTerm: e.target.value }))}
+          style={styles.searchInput}
+        />
+        <select value={filters.type} onChange={(e) => setFilters(p => ({ ...p, type: e.target.value }))} style={styles.select}>
+          <option value="">Todas as Sanções</option>
+          <option value="Advertência">Advertência</option>
+          <option value="Repreensão Pública">Repreensão Pública</option>
+          <option value="Multa">Multa</option>
+          <option value="Despromoção">Despromoção</option>
+          <option value="Demissão">Demissão (Cessação)</option>
+          <option value="Expulsão">Expulsão (Cessação)</option>
+          <option value="Absolvição / Arquivamento">Absolvição / Arquivamento</option>
+        </select>
+        <select value={filters.status} onChange={(e) => setFilters(p => ({ ...p, status: e.target.value }))} style={styles.select}>
+          <option value="">Todos os Estados</option>
+          <option value="Em Instrução">Em Instrução (Pendente Despacho)</option>
+          <option value="Aberto">Aberto</option>
+          <option value="Concluído">Concluído (Despacho Aplicado)</option>
+          <option value="Arquivado">Arquivado</option>
+          <option value="Suspenso">Suspenso</option>
+        </select>
+        
+        <button onClick={exportExcel} style={styles.btnExport}>
+          📊 Exportar Excel
+        </button>
       </div>
 
       {/* TABELA DE PROCESSOS */}
-      <div className="ui-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table className="ui-table">
-            <thead>
+      <div style={styles.tableContainer}>
+        <table className="premium-table">
+          <thead>
+            <tr>
+              <th>Nº Processo</th>
+              <th>Funcionário</th>
+              <th>Direcção</th>
+              <th>Sanção / Decisão</th>
+              <th>Despacho Final</th>
+              <th>Estado</th>
+              <th style={{ textAlign: 'right' }}>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {groupedEmployees.length === 0 ? (
               <tr>
-                <th style={{ width: '160px' }}>Nº Processo</th>
-                <th>Funcionário</th>
-                <th>Direcção</th>
-                <th>Sanção / Decisão</th>
-                <th>Despacho Final</th>
-                <th style={{ width: '130px' }}>Estado</th>
-                <th style={{ textAlign: 'right', width: '120px' }}>Ações</th>
+                <td colSpan="7" style={styles.empty}>
+                  Nenhum processo disciplinar encontrado para os critérios selecionados.
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {groupedEmployees.length === 0 ? (
-                <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '36px', color: 'var(--color-text-muted)' }}>
-                    Nenhum processo disciplinar encontrado para os critérios selecionados.
-                  </td>
-                </tr>
-              ) : (
-                groupedEmployees.map(emp => (
-                  <React.Fragment key={emp.employeeId}>
-                    <tr 
-                      style={{ backgroundColor: 'var(--color-bg-subtle)', cursor: 'pointer' }}
-                      onClick={() => toggleRow(emp.employeeId)}
-                    >
-                      <td colSpan="7" style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <strong style={{ color: 'var(--color-text-main)', fontSize: '13.5px' }}>{emp.employeeName}</strong>
-                            <span style={{ color: 'var(--color-text-muted)', fontSize: '12.5px' }}>
-                              (NIP: {emp.employeeNip}) • {emp.directorate}
+            ) : (
+              groupedEmployees.map(emp => (
+                <React.Fragment key={emp.employeeId}>
+                  <tr 
+                    style={{ ...styles.tr, backgroundColor: 'rgba(0,0,0,0.02)', cursor: 'pointer' }}
+                    onClick={() => toggleRow(emp.employeeId)}
+                  >
+                    <td colSpan="7" style={styles.td}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <strong style={{ color: 'var(--color-primary)' }}>{emp.employeeName}</strong>
+                          <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>
+                            (NIP: {emp.employeeNip}) • {emp.directorate}
+                          </span>
+                          {emp.employeeStatus && ['Expulso', 'Demitido'].includes(emp.employeeStatus) && (
+                            <span style={{ padding: '2px 8px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>
+                              ⛔ {emp.employeeStatus}
                             </span>
-                            {emp.employeeStatus && ['Expulso', 'Demitido'].includes(emp.employeeStatus) && (
-                              <span className="ui-badge ui-badge-danger" style={{ fontSize: '11px' }}>
-                                ⛔ {emp.employeeStatus}
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); handleOpenNew(emp.employeeId); }}
-                              className="ui-btn ui-btn-ghost"
-                              style={{ padding: '3px 8px', fontSize: '11.5px' }}
-                              title="Instaurar Novo Processo a este Funcionário"
-                            >
-                              + Novo Processo
-                            </button>
-                            <span className="ui-badge ui-badge-neutral" style={{ fontWeight: '600', fontSize: '11.5px' }}>
-                              {emp.processes.length} Processo{emp.processes.length > 1 ? 's' : ''}
-                            </span>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleOpenNew(emp.employeeId); }}
+                            style={styles.btnQuickAdd}
+                            title="Instaurar Novo Processo a este Funcionário"
+                          >
+                            + Novo Processo
+                          </button>
+                          <span style={{ fontSize: '12px', padding: '4px 10px', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', borderRadius: '12px', fontWeight: 'bold' }}>
+                            {emp.processes.length} Processo{emp.processes.length > 1 ? 's' : ''}
+                          </span>
                           <span style={{ transform: expandedRows[emp.employeeId] ? 'rotate(180deg)' : 'none', transition: '0.2s', fontSize: '12px' }}>▼</span>
                         </div>
                       </div>
@@ -615,7 +610,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                     return (
                       <tr key={p.id} style={{ ...styles.tr, backgroundColor: 'var(--color-bg-base)' }}>
                         <td style={{ ...styles.td, paddingLeft: '32px' }}>
-                          <strong style={{ color: 'var(--color-text-main)' }}>{p.processNumber}</strong>
+                          <strong style={{ color: 'var(--color-primary)' }}>{p.processNumber}</strong>
                           <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
                             Abertura: {p.openDate || '-'}
                           </div>
@@ -623,7 +618,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                         <td>-</td>
                         <td>-</td>
                         <td>
-                          <strong style={{ color: 'var(--color-text-main)' }}>{p.despachoDecisao || p.type}</strong>
+                          <strong>{p.despachoDecisao || p.type}</strong>
                           {p.despachoDecisao === 'Multa' && p.despachoMultaDays && (
                             <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
                               {p.despachoMultaDays} dias ({p.despachoMultaPercentage}%)
@@ -633,7 +628,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                         <td>
                           {p.despachoNumero ? (
                             <div>
-                              <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-text-main)' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
                                 📜 {p.despachoNumero}
                               </span>
                               <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
@@ -641,7 +636,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                               </div>
                             </div>
                           ) : (
-                            <span style={{ color: '#d97706', fontSize: '12px', fontStyle: 'italic', fontWeight: '500' }}>
+                            <span style={{ color: '#d97706', fontSize: '12px', fontStyle: 'italic', fontWeight: '600' }}>
                               ⏳ Pendente de Despacho
                             </span>
                           )}
@@ -730,7 +725,6 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
             )}
           </tbody>
         </table>
-        </div>
       </div>
 
       {/* MODAL 1: REGISTO / EDIÇÃO DE PROCESSO DISCIPLINAR */}
@@ -1305,28 +1299,28 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
 }
 
 const styles = {
-  toolbar: { display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' },
-  btnAddProcess: { padding: '8px 16px', backgroundColor: 'var(--color-primary, #dc2626)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', transition: 'all 0.15s ease' },
-  btnQuickAdd: { padding: '4px 10px', backgroundColor: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)', borderRadius: '6px', fontSize: '11px', fontWeight: '500', cursor: 'pointer' },
-  searchInput: { flex: 1, minWidth: '240px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px' },
-  select: { padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px' },
-  btnExport: { padding: '8px 14px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' },
-  tableContainer: { overflowX: 'auto', backgroundColor: 'var(--color-bg-card)', borderRadius: '10px', border: '1px solid var(--color-border)' },
-  td: { padding: '12px 16px', color: 'var(--color-text-main)', fontSize: '13px' },
+  toolbar: { display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' },
+  btnAddProcess: { padding: '10px 18px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)', transition: 'all 0.2s ease' },
+  btnQuickAdd: { padding: '4px 10px', backgroundColor: 'transparent', border: '1px solid #dc2626', color: '#dc2626', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' },
+  searchInput: { flex: 1, minWidth: '240px', padding: '9px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px' },
+  select: { padding: '9px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px' },
+  btnExport: { padding: '9px 16px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+  tableContainer: { overflowX: 'auto', backgroundColor: 'var(--color-bg-card)', borderRadius: '8px', border: '1px solid var(--color-border)' },
+  td: { padding: '12px 16px', color: 'var(--color-text-main)' },
   tr: { borderBottom: '1px solid var(--color-border)' },
-  empty: { textAlign: 'center', padding: '36px', color: 'var(--color-text-muted)', fontStyle: 'italic' },
-  btnActionView: { padding: '5px 10px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'transparent', color: 'var(--color-text-main)', cursor: 'pointer', fontSize: '11.5px', fontWeight: '500' },
-  btnActionEdit: { padding: '5px 8px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'transparent', color: 'var(--color-text-main)', cursor: 'pointer', fontSize: '11.5px' },
-  btnActionDelete: { padding: '5px 8px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)', backgroundColor: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '11.5px' },
-  btnActionDespachoPending: { padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(217, 119, 6, 0.3)', backgroundColor: 'rgba(217, 119, 6, 0.08)', color: '#b45309', cursor: 'pointer', fontSize: '11.5px', fontWeight: '600' },
-  btnActionDespachoDone: { padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(5, 150, 105, 0.3)', backgroundColor: 'rgba(5, 150, 105, 0.08)', color: '#059669', cursor: 'pointer', fontSize: '11.5px', fontWeight: '600' },
-  btnExecuteSanction: { padding: '3px 8px', borderRadius: '6px', border: 'none', backgroundColor: '#dc2626', color: '#fff', cursor: 'pointer', fontSize: '11px', fontWeight: '600' },
+  empty: { textAlign: 'center', padding: '30px', color: 'var(--color-text-muted)', fontStyle: 'italic' },
+  btnActionView: { padding: '5px 10px', borderRadius: '4px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', cursor: 'pointer', fontSize: '11.5px', fontWeight: '600' },
+  btnActionEdit: { padding: '5px 8px', borderRadius: '4px', border: '1px solid var(--color-border)', backgroundColor: 'transparent', color: 'var(--color-text-main)', cursor: 'pointer', fontSize: '11.5px' },
+  btnActionDelete: { padding: '5px 8px', borderRadius: '4px', border: '1px solid #ef4444', backgroundColor: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '11.5px' },
+  btnActionDespachoPending: { padding: '5px 12px', borderRadius: '6px', border: '1px solid #d97706', backgroundColor: 'rgba(217, 119, 6, 0.1)', color: '#b45309', cursor: 'pointer', fontSize: '11.5px', fontWeight: '700' },
+  btnActionDespachoDone: { padding: '5px 12px', borderRadius: '6px', border: '1px solid #059669', backgroundColor: 'rgba(5, 150, 105, 0.08)', color: '#059669', cursor: 'pointer', fontSize: '11.5px', fontWeight: '700' },
+  btnExecuteSanction: { padding: '3px 8px', borderRadius: '6px', border: 'none', backgroundColor: '#dc2626', color: '#fff', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
   grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' },
   formGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
-  label: { fontSize: '12px', fontWeight: '500', color: 'var(--color-text-muted)' },
-  input: { padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px', outline: 'none' },
-  textarea: { padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px', minHeight: '70px', resize: 'vertical', outline: 'none' },
-  btnCancelModal: { padding: '7px 14px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'transparent', color: 'var(--color-text-main)', cursor: 'pointer', fontSize: '13px', fontWeight: '500' },
-  btnSaveModal: { padding: '7px 16px', borderRadius: '8px', border: 'none', backgroundColor: 'var(--color-primary, #dc2626)', color: '#ffffff', cursor: 'pointer', fontWeight: '600', fontSize: '13px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }
+  label: { fontSize: '12px', fontWeight: '600', color: 'var(--color-text-main)' },
+  input: { padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px', outline: 'none' },
+  textarea: { padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px', minHeight: '70px', resize: 'vertical', outline: 'none' },
+  btnCancelModal: { padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'transparent', color: 'var(--color-text-main)', cursor: 'pointer', fontSize: '13px' },
+  btnSaveModal: { padding: '8px 18px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }
 };

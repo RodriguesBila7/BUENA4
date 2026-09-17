@@ -684,12 +684,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
   const getNavItemStyle = (isActive, isSub = false) => ({
     ...styles.navItem,
-    backgroundColor: isActive ? 'rgba(27, 54, 93, 0.08)' : 'transparent',
-    color: isActive ? 'var(--color-primary, #1B365D)' : 'var(--color-text-base)',
-    fontWeight: isActive ? '700' : '500',
-    borderLeft: isActive ? '3.5px solid var(--color-primary, #1B365D)' : '3.5px solid transparent',
-    paddingLeft: isSub ? '36px' : '14px',
-    boxShadow: isActive ? '0 2px 6px rgba(0,0,0,0.03)' : 'none',
+    backgroundColor: isActive ? 'rgba(220, 38, 38, 0.08)' : 'transparent',
+    color: isActive ? 'var(--color-primary)' : 'var(--color-text-base)',
+    fontWeight: isActive ? '600' : '500',
+    borderLeft: isActive ? '3px solid var(--color-primary)' : '3px solid transparent',
+    paddingLeft: isSub ? '34px' : '14px',
+    borderRadius: '8px',
   });
 
   return (
