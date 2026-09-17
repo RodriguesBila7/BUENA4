@@ -481,7 +481,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <div style={s.sysTitleBold}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
-        <div style={{ marginTop: '22px', marginBottom: 'calc(12px + 1.5cm)' }}>
+        <div style={{ marginTop: 'calc(18px + 1.5cm)', marginBottom: '10px' }}>
           <p style={s.sysTitleSub}>
             SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
           </p>
@@ -489,7 +489,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       </div>
 
       {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
-      <div style={{...s.card, marginTop: '10px'}}>
+      <div style={{...s.card, marginTop: '4px'}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 
@@ -658,8 +658,8 @@ const s = {
     marginBottom: '14px',
   },
   logo: {
-    width: '135px',
-    height: '135px',
+    width: '160px',
+    height: '160px',
     objectFit: 'contain',
     filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.25))',
     transition: 'transform 0.2s ease',
