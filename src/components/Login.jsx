@@ -481,7 +481,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <div style={s.sysTitleBold}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
-        <div style={{ marginTop: 'calc(18px + 1.5cm)', marginBottom: '10px' }}>
+        <div style={{ marginTop: 'calc(18px + 1.0cm)', marginBottom: '10px' }}>
           <p style={s.sysTitleSub}>
             SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
           </p>
