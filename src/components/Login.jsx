@@ -90,7 +90,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const bgColor =
     bwMode === 'noite' ? '#1C2433' :
     bwMode === 'claro' ? '#F8FAFC' :
-    (settings.cor_principal || '#1C2433');
+    (settings.cor_principal && settings.cor_principal !== '#1B365D' ? settings.cor_principal : '#B71C1C');
 
   /* ciclo: theme → noite → claro → theme */
   const toggleBwMode = () => {
@@ -467,66 +467,42 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       </div>
 
       {/* ══════════════ CABEÇALHO INSTITUCIONAL ELEGANTE E MINIMALISTA ══════════════ */}
+      {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
       <div style={s.header}>
         <div style={s.logoContainer}>
           <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
         </div>
-        <h1 style={{
-          ...s.instNome, 
-          color: bwMode === 'claro' ? '#1e293b' : '#FFFFFF', 
-          textShadow: bwMode === 'claro' ? 'none' : '0 2px 8px rgba(0,0,0,0.4)',
-          margin: '0 0 6px'
-        }}>
+        <h1 style={s.instNome}>
           SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL
         </h1>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '6px',
-          padding: '3px 12px',
-          borderRadius: '9999px',
-          backgroundColor: bwMode === 'claro' ? 'rgba(30, 41, 59, 0.06)' : 'rgba(255, 255, 255, 0.12)',
-          backdropFilter: 'blur(8px)',
-          border: bwMode === 'claro' ? '1px solid rgba(30, 41, 59, 0.12)' : '1px solid rgba(255, 255, 255, 0.2)',
-          marginBottom: '8px'
-        }}>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: '700',
-            letterSpacing: '0.8px',
-            textTransform: 'uppercase',
-            color: bwMode === 'claro' ? '#334155' : '#FFFFFF'
-          }}>
-            {t('login_drh') || 'DIRECÇÃO DE RECURSOS HUMANOS'}
-          </span>
+        <div style={s.sysTitleBold}>
+          DIRECÇÃO GERAL
         </div>
-        <p style={{
-          fontSize: '12.5px',
-          fontWeight: '500',
-          letterSpacing: '0.3px',
-          color: bwMode === 'claro' ? '#475569' : 'rgba(255,255,255,0.85)',
-          margin: '0',
-          textShadow: bwMode === 'claro' ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
-        }}>
-          {t('login_system') || 'Sistema de Informação e Gestão de Recursos Humanos'}
-        </p>
+        <div style={s.sysTitleBold}>
+          DIRECÇÃO DE RECURSOS HUMANOS
+        </div>
+        <div style={{ marginTop: '22px', marginBottom: '8px' }}>
+          <p style={s.sysTitleSub}>
+            SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
+          </p>
+        </div>
       </div>
 
       {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
-      <div style={{...s.card, marginTop: '16px'}}>
+      <div style={{...s.card, marginTop: '18px'}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 
         {view === 'login' && (
           <>
-            <h2 style={s.cardTitle}>{t('login_title')}</h2>
+            <h2 style={s.cardTitle}>Entrar</h2>
             <form onSubmit={handleSubmit} style={s.form} autoComplete="off">
               {/* Armadilhas ocultas para impedir preenchimento automático indesejado pelo navegador */}
               <input type="text" name="fake_user_prevent" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
               <input type="password" name="fake_pass_prevent" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
 
               <div style={s.fieldWrap}>
-                <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+                <span style={s.fieldIcon}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                 <input 
                   type="text" 
                   name="username"
@@ -534,44 +510,65 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                   autoCorrect="off" 
                   autoCapitalize="off" 
                   spellCheck="false"
-                  placeholder={t('login_username_placeholder')} 
+                  placeholder={t('login_username_placeholder') || 'Nome de Utilizador / NUIT'} 
                   value={username} 
                   onChange={e => setUsername(e.target.value)} 
                   style={s.field} 
                 />
               </div>
               <div style={s.fieldWrap}>
-                <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+                <span style={s.fieldIcon}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
                 <input 
                   ref={passwordInputRef}
                   type={showPassword ? 'text' : 'password'} 
                   name="password"
                   autoComplete="new-password"
-                  placeholder={t('login_password_placeholder')} 
+                  placeholder={t('login_password_placeholder') || 'Palavra-passe'} 
                   value={password} 
                   onChange={e => setPassword(e.target.value)} 
                   style={s.field} 
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} style={s.eyeBtn} tabIndex={-1}>
-                  {showPassword ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                  {showPassword ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                 </button>
               </div>
-              <button type="submit" style={{...s.btnPrimary, opacity: isLoading ? 0.7 : 1}} disabled={isLoading}>
-                {isLoading ? t('login_submit_loading') : t('login_submit')}
+              <button 
+                type="submit" 
+                style={{
+                  ...s.btnPrimary, 
+                  backgroundColor: isLoading ? '#CE6767' : '#C0262B',
+                  boxShadow: '0 4px 14px rgba(192, 38, 43, 0.35)',
+                  marginTop: '6px'
+                }} 
+                disabled={isLoading}
+              >
+                {isLoading ? (t('login_submit_loading') || 'A ENTRAR...') : (t('login_submit') || 'ENTRAR')}
               </button>
               <button
                 type="button"
                 onClick={() => { clearCredentials(); setView('recover'); }}
-                style={{ ...s.btnPrimary, marginTop: '12px', textTransform: 'uppercase' }}
+                style={{ 
+                  ...s.btnPrimary, 
+                  backgroundColor: '#BA1B1D', 
+                  marginTop: '12px', 
+                  textTransform: 'uppercase',
+                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)'
+                }}
               >
-                {t('login_forgot')}
+                {t('login_forgot') || 'ESQUECEU A SENHA?'}
               </button>
               <button
                 type="button"
                 onClick={() => { clearCredentials(); setView('register'); }}
-                style={{ ...s.btnPrimary, marginTop: '12px', textTransform: 'uppercase' }}
+                style={{ 
+                  ...s.btnPrimary, 
+                  backgroundColor: '#BA1B1D', 
+                  marginTop: '12px', 
+                  textTransform: 'uppercase',
+                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)'
+                }}
               >
-                {t('login_request_access')}
+                {t('login_request_access') || 'SOLICITAR ACESSO'}
               </button>
             </form>
           </>
@@ -625,8 +622,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         )}
       </div>
 
-      {/* ══════════════ RODÁPÉ ══════════════ */}
-      <footer style={{...s.footer, color: bwMode === 'claro' ? '#7f8c8d' : 'rgba(255,255,255,0.7)'}}>
+      {/* ══════════════ RODAPÉ ══════════════ */}
+      <footer style={{...s.footer, color: bwMode === 'claro' ? '#64748B' : 'rgba(255,255,255,0.85)', fontSize: '11.5px', marginTop: '26px'}}>
         <p>Copyright © 2026 – Serviço Nacional de Investigação Criminal (SERNIC). Todos os direitos reservados. | Versão: 05.01.00</p>
       </footer>
     </div>
@@ -658,81 +655,70 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '10px',
+    marginBottom: '14px',
   },
   logo: {
-    width: '92px',
-    height: '92px',
+    width: '110px',
+    height: '110px',
     objectFit: 'contain',
-    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.28))',
+    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.25))',
     transition: 'transform 0.2s ease',
   },
   instNome: {
     color: '#FFFFFF',
-    fontSize: '15px',
+    fontSize: '15.5px',
     fontWeight: '800',
-    letterSpacing: '1px',
-    textAlign: 'center',
-    lineHeight: '1.4',
-    margin: '0 0 6px',
-    textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-  },
-  sysTitleLine: {
-    color: '#FFFFFF',
-    fontSize: '14px',
-    fontWeight: '700',
     letterSpacing: '0.8px',
-    margin: '0',
-    textShadow: '0 1px 3px rgba(0,0,0,0.4)',
-    opacity: 0.95,
+    textAlign: 'center',
+    lineHeight: '1.35',
+    margin: '0 0 3px',
+    textShadow: '0 1px 4px rgba(0,0,0,0.35)',
   },
   sysTitleBold: {
     color: '#FFFFFF',
     fontSize: '15px',
     fontWeight: '800',
-    letterSpacing: '1.2px',
-    margin: '4px 0 2px',
-    textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+    letterSpacing: '0.8px',
+    margin: '2px 0',
+    textShadow: '0 1px 3px rgba(0,0,0,0.35)',
   },
   sysTitleSub: {
     color: '#FFFFFF',
-    fontSize: '12px',
-    fontWeight: '600',
-    letterSpacing: '0.5px',
+    fontSize: '13.5px',
+    fontWeight: '700',
+    letterSpacing: '0.6px',
     margin: 0,
-    opacity: 0.85,
-    textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+    textShadow: '0 1px 3px rgba(0,0,0,0.35)',
   },
 
   /* ── Card ── */
   card: {
     width: '100%',
-    maxWidth: '400px',
-    backgroundColor: 'var(--color-bg-card, #243044)',
-    border: '1px solid var(--color-border, #3A4A66)',
-    borderRadius: '16px',
-    padding: '34px 30px calc(26px + 1.6cm)',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.45)',
+    maxWidth: '430px',
+    backgroundColor: '#FFFFFF',
+    border: 'none',
+    borderRadius: '20px',
+    padding: '38px 34px 34px',
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
     boxSizing: 'border-box'
   },
   cardTitle: {
-    fontSize: '24px',
+    fontSize: '26px',
     fontWeight: '800',
-    color: 'var(--color-text-base, #F8FAFC)',
+    color: '#0A192F',
     textAlign: 'center',
-    margin: '0 0 22px',
+    margin: '0 0 24px',
     letterSpacing: '-0.3px'
   },
   errorMsg: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-    color: '#EF4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    color: '#DC2626',
     padding: '10px 14px',
     borderRadius: '8px',
     fontSize: '13px',
     marginBottom: '14px',
     textAlign: 'center',
-    borderLeft: '4px solid #EF4444',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
+    border: '1px solid rgba(239, 68, 68, 0.25)',
   },
   form: {
     display: 'flex',
@@ -745,9 +731,9 @@ const s = {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    border: '1px solid var(--color-border, #3A4A66)',
-    borderRadius: '8px',
-    backgroundColor: 'var(--color-bg-base, #1C2433)',
+    border: '1px solid #E2E8F0',
+    borderRadius: '10px',
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     transition: 'border-color 0.2s, box-shadow 0.2s',
   },
@@ -755,8 +741,8 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '40px',
-    color: 'var(--color-text-muted, #A8B7CD)',
+    width: '42px',
+    color: '#64748B',
     flexShrink: 0,
   },
   field: {
@@ -765,7 +751,7 @@ const s = {
     background: 'transparent',
     padding: '13px 8px',
     fontSize: '14px',
-    color: 'var(--color-text-base, #F8FAFC)',
+    color: '#0F172A',
     outline: 'none',
   },
   fieldIconRight: {
@@ -791,29 +777,29 @@ const s = {
   /* ── Botões ── */
   btnPrimary: {
     width: '100%',
-    padding: '13px',
-    backgroundColor: 'var(--color-primary, #DC2626)',
+    padding: '13.5px',
+    backgroundColor: '#BA1B1D',
     color: '#FFFFFF',
     border: 'none',
     borderRadius: '8px',
-    fontSize: '14px',
+    fontSize: '13.5px',
     fontWeight: '700',
-    letterSpacing: '1px',
+    letterSpacing: '0.8px',
     cursor: 'pointer',
     marginTop: '6px',
     transition: 'all 0.2s ease',
-    boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)',
+    boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)',
   },
   btnSecondary: {
     width: '100%',
     padding: '13px',
     backgroundColor: 'transparent',
-    color: 'var(--color-text-base, #F8FAFC)',
-    border: '1px solid var(--color-border, #3A4A66)',
+    color: '#64748B',
+    border: '1px solid #E2E8F0',
     borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '700',
-    letterSpacing: '1px',
+    fontSize: '13.5px',
+    fontWeight: '600',
+    letterSpacing: '0.8px',
     cursor: 'pointer',
     marginTop: '10px',
     transition: 'all 0.2s ease',
