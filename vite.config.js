@@ -5,9 +5,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // Todas as chamadas /api/* sao redirecionadas para o servidor Express
+      // Todas as chamadas /api/* sao redirecionadas para o servidor Express (127.0.0.1 evita latência IPv6 no Windows)
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
         secure: false,
       }

@@ -25,16 +25,25 @@ function notifyAll(users, roles) {
 }
 
 async function api(method, path, body) {
-  const res = await fetch(`/api/auth${path}`, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3500);
+  try {
+    const res = await fetch(`/api/auth${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || res.statusText);
+    }
+    return res.json();
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
   }
-  return res.json();
 }
 
 async function fetchData() {
@@ -110,15 +119,16 @@ export default function useAuthData() {
     }
   }, []);
 
-  // ─── Autenticacao ───────────────────────────────────────────────────────
   const authenticate = useCallback(async (username, password, policies) => {
     try {
       const res = await api('POST', '/login', { username, password });
       return { success: true, user: { ...res.user, roleDetails: res.user.permissions ? { permissions: res.user.permissions } : null } };
     } catch (e) {
-      if (e.message === 'invalid_credentials') return { success: false, error: 'Credenciais invalidas.' };
-      // Fallback offline (ex: na Vercel ou quando o servidor não está a correr)
-      console.warn('[useAuthData] API falhou, a tentar autenticação de demonstração/offline...');
+      if (e.message === 'invalid_credentials') {
+        const offlineCheck = authenticateOffline(username, password);
+        if (offlineCheck && offlineCheck.success) return offlineCheck;
+        return { success: false, error: 'Credenciais inválidas. Verifique o utilizador ou a palavra-passe.' };
+      }
       return authenticateOffline(username, password);
     }
   }, []);

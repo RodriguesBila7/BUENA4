@@ -109,6 +109,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     }
   };
 
+  const passwordInputRef = React.useRef(null);
+
   const clearCredentials = () => {
     setUsername('');
     setPassword('');
@@ -118,14 +120,13 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     setError('');
   };
 
-  // Garante que ao montar, ao trocar de aba de login ou ao sair do programa, as credenciais sejam limpas
+  // Limpa campos apenas quando o utilizador alterna intencionalmente de vista (Login <-> Pedir Acesso <-> Recuperar)
+  const prevViewRef = React.useRef(view);
   React.useEffect(() => {
-    clearCredentials();
-    const timer = setTimeout(clearCredentials, 50);
-    return () => {
-      clearTimeout(timer);
+    if (prevViewRef.current !== view) {
       clearCredentials();
-    };
+      prevViewRef.current = view;
+    }
   }, [view]);
 
   /* ── Autenticação e Registo ── */
@@ -140,22 +141,31 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     setIsLoading(true);
     
     try {
-      const result = await authenticate(username, password, policies);
+      const result = await authenticate(username.trim(), password, policies);
       setIsLoading(false);
       
       if (result && result.success) {
-        logAction('Login', 'Sistema', `Login com sucesso: ${username}`);
+        logAction('Login', 'Sistema', `Login com sucesso: ${username}`).catch(() => {});
         const userObj = result.user;
         clearCredentials();
         onLogin(userObj);
       } else {
-        logAction('Login', 'Sistema', `Falha na autenticação: ${username}`);
+        logAction('Login', 'Sistema', `Falha na autenticação: ${username}`).catch(() => {});
         setError(result?.error || t('msg_wrong_credentials'));
+        // Preserva o username preenchido e limpa apenas a senha incorreta
+        setPassword('');
+        setTimeout(() => {
+          passwordInputRef.current?.focus();
+        }, 50);
       }
     } catch (err) {
       setIsLoading(false);
-      logAction('Login', 'Sistema', `Falha na autenticação: ${username}`);
+      logAction('Login', 'Sistema', `Falha na autenticação: ${username}`).catch(() => {});
       setError(t('msg_wrong_credentials'));
+      setPassword('');
+      setTimeout(() => {
+        passwordInputRef.current?.focus();
+      }, 50);
     }
   };
 
@@ -509,6 +519,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
                 <input 
+                  ref={passwordInputRef}
                   type={showPassword ? 'text' : 'password'} 
                   name="password"
                   autoComplete="new-password"
