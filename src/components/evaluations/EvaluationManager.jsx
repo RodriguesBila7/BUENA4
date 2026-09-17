@@ -97,10 +97,10 @@ export default function EvaluationManager({ user }) {
 }
 
 const styles = {
-  container: { display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' },
+  container: { display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { margin: 0, fontSize: '24px', color: 'var(--color-primary)' },
-  subtitle: { margin: '5px 0 0 0', color: 'var(--color-text-muted)', fontSize: '14px' },
-  tabs: { display: 'flex', gap: '10px', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px', overflowX: 'auto' },
+  title: { margin: 0, fontSize: '22px', fontWeight: '700', color: 'var(--color-text-main)', letterSpacing: '-0.3px' },
+  subtitle: { margin: '4px 0 0 0', color: 'var(--color-text-muted)', fontSize: '13.5px' },
+  tabs: { display: 'flex', gap: '8px', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px', overflowX: 'auto' },
   content: { flex: 1, backgroundColor: 'var(--color-bg-base)', borderRadius: '12px', minHeight: '400px' }
 };
