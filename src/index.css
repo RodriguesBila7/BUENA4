@@ -545,3 +545,236 @@ code {
   color: var(--color-accent) !important;
 }
 
+/* ════════════════════════════════════════════════════════════════════════════
+   SISTEMA DE DESIGN GLOBAL SERNIC (Padrão Visual Unificado, Limpo e Moderno)
+════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Cartões e Painéis ── */
+.ui-card {
+  background-color: var(--color-bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ui-card-header {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justifyContent: space-between;
+  gap: 12px;
+  background-color: var(--color-bg-base);
+}
+
+.ui-card-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-text-base);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-card-subtitle {
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.ui-card-body {
+  padding: 16px 18px;
+}
+
+/* ── Formulários e Entradas ── */
+.ui-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.ui-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.2px;
+}
+
+.ui-input,
+.ui-select,
+.ui-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-base);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.ui-input:focus,
+.ui-select:focus,
+.ui-textarea:focus {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.ui-input::placeholder,
+.ui-textarea::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+/* ── Botões Padronizados ── */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+  outline: none;
+}
+
+.ui-btn-primary {
+  background-color: var(--color-primary);
+  color: #FFFFFF;
+}
+
+.ui-btn-primary:hover:not(:disabled) {
+  opacity: 0.92;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.ui-btn-secondary {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-base);
+  border-color: var(--color-border);
+}
+
+.ui-btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-bg-card);
+  border-color: var(--color-border-hover);
+}
+
+.ui-btn-danger {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #DC2626;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.ui-btn-danger:hover:not(:disabled) {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: #DC2626;
+}
+
+.ui-btn-ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: none;
+}
+
+.ui-btn-ghost:hover:not(:disabled) {
+  color: var(--color-text-base);
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .ui-btn-ghost:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Tabelas Padronizadas Suaves ── */
+.ui-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ui-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg-base);
+  white-space: nowrap;
+}
+
+.ui-table td {
+  padding: 11px 14px;
+  font-size: 12.5px;
+  color: var(--color-text-base);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.ui-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+.ui-table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.015);
+}
+
+[data-theme="dark"] .ui-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.025);
+}
+
+/* ── Badges e Estados ── */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.ui-badge-success {
+  background-color: rgba(16, 185, 129, 0.08);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.ui-badge-info {
+  background-color: rgba(37, 99, 235, 0.08);
+  color: #2563EB;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.ui-badge-warning {
+  background-color: rgba(245, 158, 11, 0.08);
+  color: #D97706;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.ui-badge-danger {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #DC2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.ui-badge-neutral {
+  background-color: rgba(100, 116, 139, 0.08);
+  color: #64748B;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+

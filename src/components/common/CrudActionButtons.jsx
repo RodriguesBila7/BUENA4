@@ -81,23 +81,31 @@ export default function CrudActionButtons({
 
 const styles = {
   btnView: { 
-    display: 'flex', alignItems: 'center', justifyContent: 'center', 
-    padding: '8px', backgroundColor: '#ebf4ff', color: '#3182ce', 
-    border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' 
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', 
+    width: '32px', height: '32px', padding: 0,
+    backgroundColor: 'rgba(59, 130, 246, 0.08)', color: '#2563eb', 
+    border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '7px', 
+    cursor: 'pointer', transition: 'all 0.15s ease' 
   },
   btnProceed: {
-    display: 'flex', alignItems: 'center', justifyContent: 'center', 
-    padding: '8px', backgroundColor: '#e6fffa', color: '#319795', 
-    border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' 
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', 
+    width: '32px', height: '32px', padding: 0,
+    backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#059669', 
+    border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '7px', 
+    cursor: 'pointer', transition: 'all 0.15s ease' 
   },
   btnEdit: { 
-    display: 'flex', alignItems: 'center', justifyContent: 'center', 
-    padding: '8px', backgroundColor: '#faf5ff', color: '#805ad5', 
-    border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' 
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', 
+    width: '32px', height: '32px', padding: 0,
+    backgroundColor: 'rgba(139, 92, 246, 0.08)', color: '#7c3aed', 
+    border: '1px solid rgba(139, 92, 246, 0.2)', borderRadius: '7px', 
+    cursor: 'pointer', transition: 'all 0.15s ease' 
   },
   btnDelete: { 
-    display: 'flex', alignItems: 'center', justifyContent: 'center', 
-    padding: '8px', backgroundColor: '#fff5f5', color: '#e53e3e', 
-    border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.2s' 
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', 
+    width: '32px', height: '32px', padding: 0,
+    backgroundColor: 'rgba(239, 68, 68, 0.08)', color: '#dc2626', 
+    border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '7px', 
+    cursor: 'pointer', transition: 'all 0.15s ease' 
   }
 };

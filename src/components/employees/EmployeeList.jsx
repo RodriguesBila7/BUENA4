@@ -63,124 +63,147 @@ export default function EmployeeList({ employees, orgData, onEdit, onDelete }) {
   const getName = (list, id) => list.find(item => item.id === id)?.name || '-';
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {/* TOOLBAR & FILTERS */}
-      <div style={styles.toolbar}>
-        <div style={styles.searchBox}>
-          <input 
-            type="text" 
-            placeholder="Pesquisar por Nome ou NUIT..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={styles.searchInput}
-          />
+      <div className="ui-card" style={{ padding: '16px 20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div style={{ width: '100%', maxWidth: '380px' }}>
+              <input 
+                type="text" 
+                placeholder="Pesquisar por nome ou NUIT / NIP..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="ui-input"
+              />
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', fontWeight: '500' }}>
+              Total: <strong style={{ color: 'var(--color-text-main)' }}>{filteredEmployees.length}</strong> funcionário(s)
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+            <select name="directorateId" value={filters.directorateId} onChange={handleFilterChange} className="ui-select">
+              <option value="">Todas as Direcções</option>
+              {data.directorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+            
+            <select name="departmentId" value={filters.departmentId} onChange={handleFilterChange} className="ui-select" disabled={!filters.directorateId}>
+              <option value="">Todos os Departamentos / Distritos</option>
+              {data.departments.filter(d => d.directorateId === filters.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+
+            <select name="divisionId" value={filters.divisionId} onChange={handleFilterChange} className="ui-select" disabled={!filters.departmentId && !filters.directorateId}>
+              <option value="">Todas as Repartições</option>
+              {data.divisions.filter(d => {
+                if (filters.departmentId) return d.departmentId === filters.departmentId;
+                if (filters.directorateId) return d.directorateId === filters.directorateId || (d.departmentId && data.departments.some(dep => dep.id === d.departmentId && dep.directorateId === filters.directorateId));
+                return true;
+              }).map(d => <option key={d.id} value={d.id}>{d.name}{!d.departmentId ? ' (Central)' : ''}</option>)}
+            </select>
+
+            <select name="sectionId" value={filters.sectionId} onChange={handleFilterChange} className="ui-select" disabled={!filters.departmentId && !filters.divisionId && !filters.directorateId}>
+              <option value="">Todas as Secções</option>
+              {data.sections.filter(s => {
+                if (filters.divisionId) return s.divisionId === filters.divisionId;
+                if (filters.departmentId) return s.departmentId === filters.departmentId;
+                if (filters.directorateId) {
+                  const secDiv = s.divisionId ? data.divisions.find(d => d.id === s.divisionId) : null;
+                  if (secDiv && (secDiv.directorateId === filters.directorateId || (secDiv.departmentId && data.departments.some(dep => dep.id === secDiv.departmentId && dep.directorateId === filters.directorateId)))) return true;
+                  if (s.departmentId && data.departments.some(dep => dep.id === s.departmentId && dep.directorateId === filters.directorateId)) return true;
+                  return false;
+                }
+                return true;
+              }).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+
+            <select name="careerId" value={filters.careerId} onChange={handleFilterChange} className="ui-select">
+              <option value="">Todas as Carreiras</option>
+              {(data.careers || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+
+            <select name="categoryId" value={filters.categoryId} onChange={handleFilterChange} className="ui-select" disabled={!filters.careerId}>
+              <option value="">Todas as Categorias</option>
+              {data.categories.filter(c => c.careerId === filters.careerId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
         </div>
-
-        <div style={styles.filtersGrid}>
-          <select name="directorateId" value={filters.directorateId} onChange={handleFilterChange} style={styles.filterSelect}>
-            <option value="">Todas as Direcções</option>
-            {data.directorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-          
-          <select name="departmentId" value={filters.departmentId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.directorateId}>
-            <option value="">Todos os Departamentos / Distritos</option>
-            {data.departments.filter(d => d.directorateId === filters.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-          </select>
-
-          <select name="divisionId" value={filters.divisionId} onChange={handleFilterChange} style={{ ...styles.filterSelect, minWidth: '240px' }} disabled={!filters.departmentId && !filters.directorateId}>
-            <option value="">Todas as Repartições / Repartições Centrais</option>
-            {data.divisions.filter(d => {
-              if (filters.departmentId) return d.departmentId === filters.departmentId;
-              if (filters.directorateId) return d.directorateId === filters.directorateId || (d.departmentId && data.departments.some(dep => dep.id === d.departmentId && dep.directorateId === filters.directorateId));
-              return true;
-            }).map(d => <option key={d.id} value={d.id}>{d.name}{!d.departmentId ? ' (Repartição Central)' : ''}</option>)}
-          </select>
-
-          <select name="sectionId" value={filters.sectionId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.departmentId && !filters.divisionId && !filters.directorateId}>
-            <option value="">Todas as Secções</option>
-            {data.sections.filter(s => {
-              if (filters.divisionId) return s.divisionId === filters.divisionId;
-              if (filters.departmentId) return s.departmentId === filters.departmentId;
-              if (filters.directorateId) {
-                const secDiv = s.divisionId ? data.divisions.find(d => d.id === s.divisionId) : null;
-                if (secDiv && (secDiv.directorateId === filters.directorateId || (secDiv.departmentId && data.departments.some(dep => dep.id === secDiv.departmentId && dep.directorateId === filters.directorateId)))) return true;
-                if (s.departmentId && data.departments.some(dep => dep.id === s.departmentId && dep.directorateId === filters.directorateId)) return true;
-                return false;
-              }
-              return true;
-            }).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-
-          <select name="careerId" value={filters.careerId} onChange={handleFilterChange} style={styles.filterSelect}>
-            <option value="">Todas as Carreiras</option>
-            {(data.careers || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-
-          <select name="categoryId" value={filters.categoryId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.careerId}>
-            <option value="">Todas as Categorias</option>
-            {data.categories.filter(c => c.careerId === filters.careerId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-      </div>
-
-      <div style={styles.statsBar}>
-        Total Encontrado: <strong>{filteredEmployees.length}</strong> funcionário(s)
       </div>
 
       {/* TABLE */}
-      <div style={styles.tableContainer}>
-        <table className="premium-table">
-          <thead>
-            <tr>
-              <th>NUIT</th>
-              <th>Nome</th>
-              <th>Patente</th>
-              <th>Direcção</th>
-              <th>Departamento / Distrito</th>
-              <th>Status</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEmployees.length === 0 ? (
+      <div className="ui-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="ui-table">
+            <thead>
               <tr>
-                <td colSpan="7" style={styles.empty}>Nenhum funcionário encontrado.</td>
+                <th style={{ width: '130px' }}>NUIT / NIP</th>
+                <th>Nome</th>
+                <th>Patente / Carreira</th>
+                <th>Direcção</th>
+                <th>Departamento / Distrito</th>
+                <th style={{ width: '120px' }}>Estado</th>
+                <th style={{ width: '100px', textAlign: 'right' }}>Ações</th>
               </tr>
-            ) : (
-              filteredEmployees.map(emp => (
-                <tr key={emp.id} style={styles.tr}>
-                  <td><strong>{emp.nip}</strong></td>
-                  <td>{emp.name}</td>
-                  <td>{emp.rank || '-'}</td>
-                  <td>{getName(data.directorates, emp.directorateId)}</td>
-                  <td>{getName(data.departments, emp.departmentId)}</td>
-                  <td>
-                    <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
-                      <span style={emp.isActive ? styles.badgeActive : styles.badgeInactive}>
-                        {emp.isActive ? 'Ativo' : 'Inativo'}
-                      </span>
-                      {emp.healthStatus === 'Baixa Médica' && (
-                        <span style={styles.badgeSaude} title="Em Baixa / Junta Médica">🌡️ Doente</span>
-                      )}
-                    </div>
-                  </td>
-                  <td style={styles.tdActions}>
-                    <CrudActionButtons 
-                      onEdit={() => onEdit(emp.id)}
-                      onDelete={() => setConfirmModal({ isOpen: true, empId: emp.id })}
-                    />
+            </thead>
+            <tbody>
+              {filteredEmployees.length === 0 ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '36px', color: 'var(--color-text-muted)' }}>
+                    Nenhum funcionário encontrado com os filtros aplicados.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                filteredEmployees.map(emp => (
+                  <tr key={emp.id}>
+                    <td>
+                      <span style={{ fontWeight: '600', color: 'var(--color-text-main)', fontSize: '13px' }}>
+                        {emp.nip || '-'}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: '500', color: 'var(--color-text-main)' }}>{emp.name}</div>
+                    </td>
+                    <td>
+                      <span style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>
+                        {emp.rank || '-'}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '13px' }}>{getName(data.directorates, emp.directorateId)}</span>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{getName(data.departments, emp.departmentId)}</span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                        <span className={`ui-badge ${emp.isActive ? 'ui-badge-success' : 'ui-badge-neutral'}`}>
+                          {emp.isActive ? 'Ativo' : 'Inativo'}
+                        </span>
+                        {emp.healthStatus === 'Baixa Médica' && (
+                          <span className="ui-badge ui-badge-warning" title="Em Baixa / Junta Médica">
+                            Junta
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <CrudActionButtons 
+                        onEdit={() => onEdit(emp.id)}
+                        onDelete={() => setConfirmModal({ isOpen: true, empId: emp.id })}
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title="Confirmar Eliminação"
-        message="Apagar funcionário definitivamente?"
+        message="Deseja eliminar este funcionário definitivamente do sistema?"
         isDestructive={true}
         onConfirm={() => {
           onDelete(confirmModal.empId);
@@ -191,22 +214,3 @@ export default function EmployeeList({ employees, orgData, onEdit, onDelete }) {
     </div>
   );
 }
-
-const styles = {
-  toolbar: { display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '20px' },
-  searchBox: { width: '100%', maxWidth: '400px' },
-  searchInput: { width: '100%', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '14px', outline: 'none' },
-  filtersGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' },
-  filterSelect: { padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13px', outline: 'none' },
-  statsBar: { fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--color-border)' },
-  tableContainer: { overflowX: 'auto', backgroundColor: 'var(--color-bg-card)', borderRadius: '8px', border: '1px solid var(--color-border)' },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '14px' },
-  th: { textAlign: 'left', padding: '14px 16px', backgroundColor: 'var(--color-bg-base)', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)', fontWeight: '600' },
-  tr: { borderBottom: '1px solid var(--color-border)' },
-  td: { padding: '14px 16px', color: 'var(--color-text-base)' },
-  tdActions: { padding: '14px 16px', display: 'flex', gap: '12px' },
-  btnIcon: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', color: 'var(--color-text-muted)', padding: '4px', transition: 'color 0.2s' },
-  badgeActive: { backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#059669', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' },
-  badgeInactive: { backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#DC2626', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' },
-  badgeSaude: { backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '4px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '700' }
-};

@@ -69,10 +69,10 @@ export default function DraggableTabs({ tabs, activeTab, onTabChange }) {
 const styles = {
   tabsContainer: {
     display: 'flex',
-    gap: '10px',
+    gap: '6px',
     borderBottom: '1px solid var(--color-border)',
-    paddingBottom: '10px',
-    marginBottom: '20px',
+    paddingBottom: '8px',
+    marginBottom: '16px',
     overflowX: 'auto',
     scrollbarWidth: 'none',
     msOverflowStyle: 'none',
@@ -80,40 +80,40 @@ const styles = {
     userSelect: 'none'
   },
   tab: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    fontWeight: '600',
+    padding: '7px 15px',
+    fontSize: '13.5px',
+    fontWeight: '500',
     color: 'var(--color-text-muted)',
     backgroundColor: 'transparent',
-    border: 'none',
-    borderRadius: '6px',
+    border: '1px solid transparent',
+    borderRadius: '8px',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.15s ease',
     whiteSpace: 'nowrap',
     display: 'flex',
     alignItems: 'center',
     outline: 'none'
   },
   activeTab: {
-    padding: '8px 16px',
-    fontSize: '14px',
+    padding: '7px 15px',
+    fontSize: '13.5px',
     fontWeight: '600',
-    color: 'var(--color-accent, #ffffff)',
-    backgroundColor: 'var(--color-primary)',
-    border: 'none',
-    borderRadius: '6px',
+    color: 'var(--color-primary, #dc2626)',
+    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+    border: '1px solid rgba(220, 38, 38, 0.22)',
+    borderRadius: '8px',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.15s ease',
     whiteSpace: 'nowrap',
     display: 'flex',
     alignItems: 'center',
     outline: 'none'
   },
   badge: {
-    marginLeft: '8px',
-    padding: '2px 8px',
+    marginLeft: '6px',
+    padding: '1px 6px',
     borderRadius: '10px',
     fontSize: '11px',
-    fontWeight: '700'
+    fontWeight: '600'
   }
 };

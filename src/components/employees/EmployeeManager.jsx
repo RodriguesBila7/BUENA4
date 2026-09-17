@@ -89,12 +89,12 @@ export default function EmployeeManager({ t, currentView, onViewChange }) {
 }
 
 const styles = {
-  container: { padding: '30px', animation: 'fadeIn 0.4s ease-out' },
-  header: { marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: '24px', fontWeight: '700', color: 'var(--color-primary)', marginBottom: '8px' },
-  desc: { color: 'var(--color-text-muted)', fontSize: '15px' },
-  tabsContainer: { display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap' },
-  tab: { padding: '12px 20px', background: 'transparent', border: 'none', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: '600', cursor: 'pointer', borderBottom: '3px solid transparent', transition: 'all 0.2s' },
-  activeTab: { padding: '12px 20px', background: 'transparent', border: 'none', color: 'var(--color-primary)', fontSize: '14px', fontWeight: '600', cursor: 'pointer', borderBottom: '3px solid var(--color-primary)', transition: 'all 0.2s' },
-  contentArea: { backgroundColor: 'var(--color-bg-card)', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', minHeight: '500px' },
+  container: { padding: '24px 30px', animation: 'fadeIn 0.3s ease-out' },
+  header: { marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  title: { fontSize: '22px', fontWeight: '700', color: 'var(--color-text-main)', letterSpacing: '-0.3px', marginBottom: '4px' },
+  desc: { color: 'var(--color-text-muted)', fontSize: '13.5px' },
+  tabsContainer: { display: 'flex', gap: '6px', marginBottom: '20px', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap' },
+  tab: { padding: '10px 18px', background: 'transparent', border: 'none', color: 'var(--color-text-muted)', fontSize: '13.5px', fontWeight: '500', cursor: 'pointer', borderBottom: '2px solid transparent', transition: 'all 0.15s ease' },
+  activeTab: { padding: '10px 18px', background: 'transparent', border: 'none', color: 'var(--color-primary, #dc2626)', fontSize: '13.5px', fontWeight: '600', cursor: 'pointer', borderBottom: '2px solid var(--color-primary, #dc2626)', transition: 'all 0.15s ease' },
+  contentArea: { backgroundColor: 'var(--color-bg-card)', padding: '20px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.02)', minHeight: '500px' },
 };
