@@ -508,15 +508,15 @@ export default function OrgStructureManager({ t }) {
       </div>
 
       {/* Tabs */}
-      <div style={styles.tabsContainer}>
-        <button onClick={() => handleTabChange('dir')} style={activeTab === 'dir' ? styles.activeTab : styles.tab}>{t('org_tab_dir')}</button>
-        <button onClick={() => handleTabChange('dep')} style={activeTab === 'dep' ? styles.activeTab : styles.tab}>{t('org_tab_dep')}</button>
-        <button onClick={() => handleTabChange('rep')} style={activeTab === 'rep' ? styles.activeTab : styles.tab}>{t('org_tab_rep')}</button>
-        <button onClick={() => handleTabChange('sec')} style={activeTab === 'sec' ? styles.activeTab : styles.tab}>{t('org_tab_sec')}</button>
-        <button onClick={() => handleTabChange('dist_dir')} style={activeTab === 'dist_dir' ? styles.activeTab : styles.tab}>Direcções Distritais</button>
-        <button onClick={() => handleTabChange('car')} style={activeTab === 'car' ? styles.activeTab : styles.tab}>{t('org_tab_car')}</button>
-        <button onClick={() => handleTabChange('cat')} style={activeTab === 'cat' ? styles.activeTab : styles.tab}>{t('org_tab_cat')}</button>
-        <button onClick={() => handleTabChange('dist_dash')} style={activeTab === 'dist_dash' ? styles.activeTab : styles.tab}>Estatística Organizacional</button>
+      <div style={styles.tabsContainer} className="tabs-container-standard">
+        <button type="button" onClick={() => handleTabChange('dir')} className={`module-tab ${activeTab === 'dir' ? 'active' : ''}`}>{t('org_tab_dir')}</button>
+        <button type="button" onClick={() => handleTabChange('dep')} className={`module-tab ${activeTab === 'dep' ? 'active' : ''}`}>{t('org_tab_dep')}</button>
+        <button type="button" onClick={() => handleTabChange('rep')} className={`module-tab ${activeTab === 'rep' ? 'active' : ''}`}>{t('org_tab_rep')}</button>
+        <button type="button" onClick={() => handleTabChange('sec')} className={`module-tab ${activeTab === 'sec' ? 'active' : ''}`}>{t('org_tab_sec')}</button>
+        <button type="button" onClick={() => handleTabChange('dist_dir')} className={`module-tab ${activeTab === 'dist_dir' ? 'active' : ''}`}>Direcções Distritais</button>
+        <button type="button" onClick={() => handleTabChange('car')} className={`module-tab ${activeTab === 'car' ? 'active' : ''}`}>{t('org_tab_car')}</button>
+        <button type="button" onClick={() => handleTabChange('cat')} className={`module-tab ${activeTab === 'cat' ? 'active' : ''}`}>{t('org_tab_cat')}</button>
+        <button type="button" onClick={() => handleTabChange('dist_dash')} className={`module-tab ${activeTab === 'dist_dash' ? 'active' : ''}`}>Estatística Organizacional</button>
       </div>
 
       <div style={{ ...styles.contentArea, gridTemplateColumns: activeTab === 'dist_dash' ? '1fr' : '350px 1fr' }}>

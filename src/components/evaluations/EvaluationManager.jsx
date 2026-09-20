@@ -27,9 +27,9 @@ export default function EvaluationManager({ user }) {
         </div>
       </div>
 
-      <div style={styles.tabs}>
+      <div style={styles.tabs} className="tabs-container-standard">
         <button 
-          className={`evaluation-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
+          className={`module-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => setActiveTab('dashboard')}
           type="button"
         >
@@ -37,7 +37,7 @@ export default function EvaluationManager({ user }) {
         </button>
         {canCreate && (
           <button 
-            className={`evaluation-tab ${activeTab === 'new' ? 'active' : ''}`}
+            className={`module-tab ${activeTab === 'new' ? 'active' : ''}`}
             onClick={() => setActiveTab('new')}
             type="button"
           >
@@ -45,35 +45,35 @@ export default function EvaluationManager({ user }) {
           </button>
         )}
         <button 
-          className={`evaluation-tab ${activeTab === 'list' ? 'active' : ''}`}
+          className={`module-tab ${activeTab === 'list' ? 'active' : ''}`}
           onClick={() => setActiveTab('list')}
           type="button"
         >
           Avaliações Anuais
         </button>
         <button 
-          className={`evaluation-tab ${activeTab === 'history' ? 'active' : ''}`}
+          className={`module-tab ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
           type="button"
         >
           Histórico
         </button>
         <button 
-          className={`evaluation-tab ${activeTab === 'stats' ? 'active' : ''}`}
+          className={`module-tab ${activeTab === 'stats' ? 'active' : ''}`}
           onClick={() => setActiveTab('stats')}
           type="button"
         >
           Estatísticas
         </button>
         <button 
-          className={`evaluation-tab ${activeTab === 'reports' ? 'active' : ''}`}
+          className={`module-tab ${activeTab === 'reports' ? 'active' : ''}`}
           onClick={() => setActiveTab('reports')}
           type="button"
         >
           Relatórios
         </button>
         <button 
-          className={`evaluation-tab ${activeTab === 'settings' ? 'active' : ''}`}
+          className={`module-tab ${activeTab === 'settings' ? 'active' : ''}`}
           onClick={() => setActiveTab('settings')}
           type="button"
         >

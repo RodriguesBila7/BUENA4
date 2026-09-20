@@ -10,28 +10,32 @@ export default function DistrictOrgManager({ data, t }) {
   return (
     <div style={styles.container}>
       {/* Sub Tabs */}
-      <div style={styles.subTabsContainer}>
+      <div style={styles.subTabsContainer} className="tabs-container-standard">
         <button 
+          type="button"
           onClick={() => setActiveSubTab('dashboard')} 
-          style={activeSubTab === 'dashboard' ? styles.activeSubTab : styles.subTab}
+          className={`module-tab ${activeSubTab === 'dashboard' ? 'active' : ''}`}
         >
           📊 Dashboard Distrital
         </button>
         <button 
+          type="button"
           onClick={() => setActiveSubTab('list')} 
-          style={activeSubTab === 'list' ? styles.activeSubTab : styles.subTab}
+          className={`module-tab ${activeSubTab === 'list' ? 'active' : ''}`}
         >
           📍 Direções Distritais & Secções
         </button>
         <button 
+          type="button"
           onClick={() => setActiveSubTab('queries')} 
-          style={activeSubTab === 'queries' ? styles.activeSubTab : styles.subTab}
+          className={`module-tab ${activeSubTab === 'queries' ? 'active' : ''}`}
         >
           🔍 Consultas & Pesquisa
         </button>
         <button 
+          type="button"
           onClick={() => setActiveSubTab('organogram')} 
-          style={activeSubTab === 'organogram' ? styles.activeSubTab : styles.subTab}
+          className={`module-tab ${activeSubTab === 'organogram' ? 'active' : ''}`}
         >
           🌳 Organograma Interativo
         </button>

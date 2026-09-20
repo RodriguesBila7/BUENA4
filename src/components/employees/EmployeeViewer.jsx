@@ -273,9 +273,9 @@ export default function EmployeeViewer({ employees, orgData, onEdit, onDelete, o
 
   return (
     <div className="employee-viewer-container">
-      <div style={styles.tabsContainer}>
-        <button onClick={() => { setActiveTab('all'); setFilters({...filters, directorateId: '', departmentId: '', divisionId: '', sectionId: ''}); }} style={activeTab === 'all' ? styles.activeTab : styles.tab}>Todos os Funcionários</button>
-        <button onClick={() => setActiveTab('org')} style={activeTab === 'org' ? styles.activeTab : styles.tab}>Por Estrutura Organizacional</button>
+      <div style={styles.tabsContainer} className="tabs-container-standard">
+        <button type="button" onClick={() => { setActiveTab('all'); setFilters({...filters, directorateId: '', departmentId: '', divisionId: '', sectionId: ''}); }} className={`module-tab ${activeTab === 'all' ? 'active' : ''}`}>Todos os Funcionários</button>
+        <button type="button" onClick={() => setActiveTab('org')} className={`module-tab ${activeTab === 'org' ? 'active' : ''}`}>Por Estrutura Organizacional</button>
       </div>
 
       {activeTab === 'org' && (

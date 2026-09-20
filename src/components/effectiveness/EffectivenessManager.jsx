@@ -67,12 +67,13 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
       </div>
 
       {/* Navegação interna do módulo */}
-      <div style={styles.tabsContainer}>
+      <div style={styles.tabsContainer} className="tabs-container-standard">
         {tabs.map(tab => (
           <button 
             key={tab.id}
+            type="button"
+            className={`module-tab ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)} 
-            style={activeTab === tab.id ? styles.activeTab : styles.tab}
           >
             {tab.label}
           </button>

@@ -190,15 +190,17 @@ export default function ReservaReformaManager() {
 
   return (
     <div style={styles.container}>
-      <div style={styles.tabsContainer}>
+      <div style={styles.tabsContainer} className="tabs-container-standard">
         <button 
-          style={activeTab === 'Reserva' ? styles.activeTab : styles.tab} 
+          type="button"
+          className={`module-tab ${activeTab === 'Reserva' ? 'active' : ''}`}
           onClick={() => setActiveTab('Reserva')}
         >
           Reserva
         </button>
         <button 
-          style={activeTab === 'Reforma' ? styles.activeTab : styles.tab} 
+          type="button"
+          className={`module-tab ${activeTab === 'Reforma' ? 'active' : ''}`}
           onClick={() => setActiveTab('Reforma')}
         >
           Reforma
