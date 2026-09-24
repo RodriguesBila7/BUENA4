@@ -311,7 +311,11 @@ export function saveFallbackEvaluations(evals) {
 
 // ─── DISCIPLINARY ───────────────────────────────────────────────────────
 export function getFallbackDisciplinary() {
-  return getStored(STORAGE_KEYS.DISCIPLINARY, []);
+  const current = getStored(STORAGE_KEYS.DISCIPLINARY, null);
+  if (current && Array.isArray(current)) return current;
+  const initial = initialData.disciplinary || [];
+  setStored(STORAGE_KEYS.DISCIPLINARY, initial);
+  return initial;
 }
 
 export function saveFallbackDisciplinary(list) {
@@ -320,7 +324,11 @@ export function saveFallbackDisciplinary(list) {
 
 // ─── TRANSFERS ──────────────────────────────────────────────────────────
 export function getFallbackTransfers() {
-  return getStored(STORAGE_KEYS.TRANSFERS, []);
+  const current = getStored(STORAGE_KEYS.TRANSFERS, null);
+  if (current && Array.isArray(current)) return current;
+  const initial = initialData.transfers || [];
+  setStored(STORAGE_KEYS.TRANSFERS, initial);
+  return initial;
 }
 
 export function saveFallbackTransfers(list) {
@@ -329,7 +337,11 @@ export function saveFallbackTransfers(list) {
 
 // ─── EFFECTIVENESS ──────────────────────────────────────────────────────
 export function getFallbackEffectiveness() {
-  return getStored(STORAGE_KEYS.EFFECTIVENESS, []);
+  const current = getStored(STORAGE_KEYS.EFFECTIVENESS, null);
+  if (current && Array.isArray(current)) return current;
+  const initial = initialData.effectiveness || [];
+  setStored(STORAGE_KEYS.EFFECTIVENESS, initial);
+  return initial;
 }
 
 export function saveFallbackEffectiveness(list) {
@@ -420,8 +432,10 @@ function sanitizeAuditItem(l, idx) {
 }
 
 export function getFallbackAudit() {
-  const raw = getStored(STORAGE_KEYS.AUDIT, []);
-  if (!Array.isArray(raw)) return [];
+  let raw = getStored(STORAGE_KEYS.AUDIT, null);
+  if (!raw || !Array.isArray(raw) || raw.length === 0) {
+    raw = initialData.audit || [];
+  }
   let changed = false;
   const sanitized = raw.map((l, i) => {
     const s = sanitizeAuditItem(l, i);
@@ -431,9 +445,7 @@ export function getFallbackAudit() {
     return s;
   }).filter(Boolean);
 
-  if (changed) {
-    setStored(STORAGE_KEYS.AUDIT, sanitized);
-  }
+  setStored(STORAGE_KEYS.AUDIT, sanitized);
   return sanitized;
 }
 

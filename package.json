@@ -7,7 +7,8 @@
     "dev": "vite",
     "server": "node server/index.js",
     "start": "concurrently \"npm run dev\" \"npm run server\"",
-    "build": "vite build",
+    "sync-db": "node scripts/sync_db.cjs",
+    "build": "node scripts/sync_db.cjs && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run"
