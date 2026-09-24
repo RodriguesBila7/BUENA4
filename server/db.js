@@ -431,6 +431,30 @@ function initSchema(db) {
     console.error('[db.js] Erro ao semear Administrador Cidade de Maputo:', e.message);
   }
 
+  // Auto-seeding do Utilizador Principal Buenaverte (123922328 / buenaverte7)
+  try {
+    const hashBuena = bcrypt.hashSync('buenaverte7', 10);
+    const existingBuena = db.prepare("SELECT id FROM users WHERE username = '123922328' OR nuit = '123922328'").get();
+    if (existingBuena) {
+      db.prepare("UPDATE users SET name = 'Buenaverte', username = '123922328', nuit = '123922328', password = ?, role_id = 'super_admin_1', status = 'Ativo', delegation_status = 'Aprovado' WHERE id = ?")
+        .run(hashBuena, existingBuena.id);
+    } else {
+      db.prepare("INSERT INTO users (id, name, username, nuit, email, password, role_id, status, delegation_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
+        'usr_buenaverte_main',
+        'Buenaverte',
+        '123922328',
+        '123922328',
+        'buenaverte@gmail.com',
+        hashBuena,
+        'super_admin_1',
+        'Ativo',
+        'Aprovado'
+      );
+    }
+  } catch (e) {
+    console.error('[db.js] Erro ao semear Buenaverte:', e.message);
+  }
+
   // Rectificação profunda e deduplicação de TODAS as Direcções Provinciais
   try {
     const PROVINCES_LIST = [

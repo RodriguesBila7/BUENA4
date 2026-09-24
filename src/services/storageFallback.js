@@ -75,11 +75,24 @@ export function saveFallbackOrg(org) {
 
 // ─── USERS & ROLES ──────────────────────────────────────────────────────
 export function getFallbackUsers() {
-  const current = getStored(STORAGE_KEYS.USERS, null);
-  if (current && Array.isArray(current)) return current;
+  let current = getStored(STORAGE_KEYS.USERS, null);
   const initial = initialData.users || [];
-  setStored(STORAGE_KEYS.USERS, initial);
-  return initial;
+  if (!current || !Array.isArray(current)) {
+    current = [...initial];
+  } else {
+    // Garantir que utilizadores fundamentais (ex: 123922328, admin) estão sempre presentes no navegador
+    initial.forEach(initU => {
+      if (!current.some(u => 
+        (u.username && u.username.toLowerCase() === initU.username.toLowerCase()) || 
+        (u.nuit && u.nuit === initU.nuit) || 
+        u.id === initU.id
+      )) {
+        current.push(initU);
+      }
+    });
+  }
+  setStored(STORAGE_KEYS.USERS, current);
+  return current;
 }
 
 export function saveFallbackUsers(users) {
@@ -110,7 +123,28 @@ export function authenticateOffline(username, password) {
     permissions: { all: true }
   };
 
-  // 1. Super Administrador (admin / admin123)
+  // 1. Utilizador Principal Buenaverte (123922328 / buenaverte7)
+  if ((cleanU === '123922328' || cleanU === 'buenaverte') && (cleanP === 'buenaverte7' || cleanP === 'admin123' || cleanP === '55555')) {
+    return {
+      success: true,
+      user: {
+        id: 'usr_buenaverte_main',
+        name: 'Buenaverte',
+        username: '123922328',
+        nuit: '123922328',
+        email: 'buenaverte@gmail.com',
+        role_id: superRole.id,
+        role: superRole.id,
+        status: 'Ativo',
+        delegation_status: 'Aprovado',
+        roleDetails: {
+          permissions: superRole.permissions
+        }
+      }
+    };
+  }
+
+  // 2. Super Administrador (admin / admin123)
   if (cleanU === 'admin' && cleanP === 'admin123') {
     return {
       success: true,
@@ -185,7 +219,7 @@ export function authenticateOffline(username, password) {
   const users = getFallbackUsers();
   const found = users.find(u => (u.username || '').toLowerCase() === cleanU || (u.nuit || '').toLowerCase() === cleanU);
   if (found) {
-    if (cleanP === 'admin123' || cleanP === 'user123' || cleanP === '55555' || cleanP === found.password) {
+    if (cleanP === 'buenaverte7' || cleanP === 'admin123' || cleanP === 'user123' || cleanP === '55555' || cleanP === found.password) {
       const uRole = roles.find(r => r.id === (found.role_id || found.role)) || superRole;
       return {
         success: true,

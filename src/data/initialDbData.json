@@ -17181,12 +17181,26 @@
       "name": "Buenaverte",
       "username": "Buenaverte",
       "nuit": "256487895555",
-      "role_id": "usuario_admin",
-      "role": "usuario_admin",
-      "directorate_id": "mr4qxp1r-ra1twh",
+      "role_id": "super_admin_1",
+      "role": "super_admin_1",
+      "directorate_id": null,
       "status": "Ativo",
       "delegation_status": "Aprovado",
+      "password": "buenaverte7",
       "created_at": "2026-09-08 10:27:26"
+    },
+    {
+      "id": "usr_buenaverte_main",
+      "name": "Buenaverte",
+      "username": "123922328",
+      "nuit": "123922328",
+      "role_id": "super_admin_1",
+      "role": "super_admin_1",
+      "directorate_id": null,
+      "status": "Ativo",
+      "delegation_status": "Aprovado",
+      "password": "buenaverte7",
+      "created_at": "2026-09-24 23:00:00"
     }
   ],
   "roles": [
