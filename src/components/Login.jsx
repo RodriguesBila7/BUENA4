@@ -240,7 +240,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   };
 
   return (
-    <div style={{ ...s.page, backgroundColor: bgColor, transition: 'background-color 0.35s ease' }}>
+    <div className="login-page-root" style={{ ...s.page, backgroundColor: bgColor, transition: 'background-color 0.35s ease' }}>
 
       {/* ══════════════ MENU TOPO DIREITO (TEMAS + IDIOMA) ══════════════ */}
       <div style={s.topRightMenu}>
@@ -489,7 +489,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       </div>
 
       {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
-      <div style={{...s.card, marginTop: '4px'}}>
+      <div className="login-card" style={{...s.card, marginTop: '4px'}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 

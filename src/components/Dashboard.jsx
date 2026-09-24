@@ -60,6 +60,15 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     return val !== null ? val : '';
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  // Fechar sidebar mobile ao rodar o ecrã para landscape
+  React.useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => { if (!e.matches) setIsMobileSidebarOpen(false); };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // ─── HISTÓRICO DE NAVEGAÇÃO ────────────────────────────────────────────────
   const [navHistory, setNavHistory] = useState(() => [localStorage.getItem('sernic_active_tab') || 'home']);
@@ -469,6 +478,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     localStorage.setItem('sernic_active_tab', tab);
+    // Fechar sidebar mobile ao navegar
+    setIsMobileSidebarOpen(false);
     // Registar no histórico de navegação (descarta o futuro ao navegar para nova tab)
     setNavHistory(prev => {
       const newHistory = [...prev.slice(0, navIndex + 1), tab];
@@ -826,9 +837,20 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   });
 
   return (
-    <div style={styles.appContainer}>
+    <div className="app-container" style={styles.appContainer}>
+
+      {/* OVERLAY MOBILE — fundo escuro ao abrir sidebar */}
+      <div
+        className={`sidebar-mobile-overlay${isMobileSidebarOpen ? ' visible' : ''}`}
+        onClick={() => setIsMobileSidebarOpen(false)}
+        aria-hidden="true"
+      />
+
       {/* SIDEBAR LATERAL (Oculta na impressão) */}
-      <aside className="no-print" style={{ ...styles.sidebar, marginLeft: isSidebarOpen ? '0' : '-260px' }}>
+      <aside
+        className={`no-print sidebar-desktop${isMobileSidebarOpen ? ' sidebar-mobile-open' : ''}`}
+        style={{ ...styles.sidebar, marginLeft: isSidebarOpen ? '0' : '-260px' }}
+      >
         <div style={styles.sidebarHeader}>
           {settings.logotipo ? (
             <img src={settings.logotipo} alt="Logo SERNIC" style={styles.sidebarLogo} />
@@ -1258,8 +1280,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           </button>
         </div>
 
-        {/* BOTAO FLUTUANTE NA LINHA */}
+        {/* BOTAO FLUTUANTE NA LINHA (apenas desktop) */}
         <button 
+          className="sidebar-collapse-btn"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           style={{
             position: 'absolute',
@@ -1295,9 +1318,24 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       </aside>
 
       {/* CONTEÚDO PRINCIPAL DA APLICAÇÃO */}
-      <main style={styles.mainContent}>
+      <main className="app-main-content" style={styles.mainContent}>
         {/* NAVBAR SUPERIOR (Oculta na impressão) */}
-        <header className="no-print" style={styles.header}>
+        <header className="no-print app-header" style={styles.header}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* BOTÃO HAMBURGER — apenas visível em mobile */}
+            <button
+              className="btn-hamburger"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              title="Abrir Menu"
+              aria-label="Abrir Menu de Navegação"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={styles.headerTitle}>
               {settings.logotipo ? (

@@ -880,3 +880,269 @@ button.evaluation-tab.active:focus,
   box-shadow: 0 2px 8px rgba(183, 28, 28, 0.3) !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVIDADE MÓVEL — SISTEMA SERNIC DRH
+   Suporte profissional para telemóveis e tablets
+   Breakpoints: tablet (≤ 1024px) | mobile (≤ 768px) | pequeno (≤ 480px)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Overlay escuro quando sidebar está aberta em mobile ── */
+.sidebar-mobile-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 39;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: fadeInOverlay 0.25s ease;
+}
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Botão hamburger (só visível em mobile) ── */
+.btn-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-base);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.btn-hamburger:hover {
+  background: var(--color-bg-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── TABLET (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  .sidebar-desktop {
+    width: 220px !important;
+  }
+  .app-header {
+    padding: 8px 16px !important;
+  }
+  table {
+    min-width: 600px;
+  }
+  .table-responsive-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+  }
+}
+
+/* ── MOBILE (≤ 768px) ── */
+@media (max-width: 768px) {
+
+  /* LOGIN */
+  .login-page-root {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100dvh;
+    padding: 20px 0 40px !important;
+    align-items: flex-start !important;
+  }
+  .login-card {
+    width: calc(100% - 32px) !important;
+    max-width: 100% !important;
+    margin: 0 16px !important;
+    padding: 28px 22px 32px !important;
+    border-radius: 16px !important;
+  }
+
+  /* DASHBOARD — sidebar como overlay */
+  .sidebar-desktop {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 280px !important;
+    z-index: 40 !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin-left: 0 !important;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18) !important;
+  }
+  .sidebar-desktop.sidebar-mobile-open {
+    transform: translateX(0) !important;
+  }
+  .sidebar-mobile-overlay.visible {
+    display: block !important;
+  }
+  .sidebar-collapse-btn {
+    display: none !important;
+  }
+  .btn-hamburger {
+    display: flex !important;
+  }
+
+  /* Header compacto */
+  .app-header {
+    padding: 8px 14px !important;
+    min-height: 60px !important;
+    gap: 10px !important;
+  }
+  .header-institution-full {
+    display: none !important;
+  }
+  .header-institution-short {
+    display: block !important;
+  }
+  .header-actions {
+    gap: 8px !important;
+  }
+
+  /* Conteúdo principal */
+  .page-content {
+    padding: 14px !important;
+  }
+  .stats-grid,
+  .cards-grid,
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Tabelas */
+  table {
+    min-width: 540px;
+    font-size: 12px;
+  }
+  .table-responsive-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+    margin: 0 -14px;
+    padding: 0 14px;
+  }
+  th, td {
+    padding: 8px 10px !important;
+  }
+
+  /* Botões de ação */
+  .action-buttons-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .action-buttons-row button,
+  .action-buttons-row a {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Modals como sheet vindo de baixo */
+  .modal-overlay {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+  .modal-box,
+  [class*="modal"] > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+  }
+
+  /* Abas com scroll horizontal */
+  .tabs-container-standard {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 8px !important;
+    gap: 4px !important;
+    scrollbar-width: none;
+  }
+  .tabs-container-standard::-webkit-scrollbar { display: none; }
+  .module-tab, .evaluation-tab {
+    padding: 7px 12px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Formulários */
+  .form-grid-2,
+  .form-grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Filtros */
+  .filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .filter-bar input,
+  .filter-bar select,
+  .filter-bar button {
+    width: 100% !important;
+  }
+
+  /* Safe area (notch / barra home) */
+  .app-container {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  /* Touch targets mínimos */
+  button, a, [role="button"] {
+    min-height: 40px;
+  }
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Evitar zoom automático ao focar inputs (iOS) */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── MOBILE PEQUENO (≤ 480px) ── */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 24px 16px 28px !important;
+  }
+  .app-header {
+    padding: 6px 10px !important;
+  }
+  .module-tab, .evaluation-tab {
+    padding: 6px 10px !important;
+    font-size: 11px !important;
+  }
+  table {
+    font-size: 11px;
+  }
+  th, td {
+    padding: 6px 8px !important;
+  }
+}
+
+/* ── Impressão: nunca afetada pelo responsivo ── */
+@media print {
+  .sidebar-desktop,
+  .app-header,
+  .btn-hamburger,
+  .sidebar-mobile-overlay,
+  .no-print {
+    display: none !important;
+  }
+}
