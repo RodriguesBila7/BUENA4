@@ -183,8 +183,8 @@ export default function UserManager() {
                 <tr key={u.id}>
                   <td style={styles.td}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      {u.photo ? (
-                        <img src={u.photo} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--color-border)', flexShrink: 0 }} alt="" />
+                      {(u.photo || u.avatar) ? (
+                        <img src={u.photo || u.avatar} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--color-border)', flexShrink: 0 }} alt="" />
                       ) : (
                         <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--color-bg-card)', border: '1.5px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: 'bold', flexShrink: 0 }}>
                           👤

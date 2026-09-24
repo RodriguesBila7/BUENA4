@@ -99,6 +99,30 @@ export function saveFallbackUsers(users) {
   setStored(STORAGE_KEYS.USERS, users);
 }
 
+/**
+ * Substitui diretamente a fotografia do utilizador na base de dados local fallback
+ */
+export function updateFallbackUserPhoto(userIdOrUsername, photoBase64) {
+  const users = getFallbackUsers();
+  const clean = String(userIdOrUsername || '').toLowerCase();
+  let updatedAny = false;
+  const updated = users.map(u => {
+    if (
+      String(u.id || '').toLowerCase() === clean || 
+      String(u.username || '').toLowerCase() === clean || 
+      String(u.nuit || '').toLowerCase() === clean
+    ) {
+      updatedAny = true;
+      return { ...u, avatar: photoBase64, photo: photoBase64 };
+    }
+    return u;
+  });
+  if (updatedAny) {
+    saveFallbackUsers(updated);
+  }
+  return updated;
+}
+
 export function getFallbackRoles() {
   const current = getStored(STORAGE_KEYS.ROLES, null);
   if (current && Array.isArray(current)) return current;
@@ -123,8 +147,11 @@ export function authenticateOffline(username, password) {
     permissions: { all: true }
   };
 
+  const getSavedPhoto = (key) => localStorage.getItem('sernic_user_photo_' + key) || null;
+
   // 1. Utilizador Principal Buenaverte (123922328 / buenaverte7)
   if ((cleanU === '123922328' || cleanU === 'buenaverte') && (cleanP === 'buenaverte7' || cleanP === 'admin123' || cleanP === '55555')) {
+    const photo = getSavedPhoto('123922328') || getSavedPhoto('buenaverte');
     return {
       success: true,
       user: {
@@ -137,6 +164,8 @@ export function authenticateOffline(username, password) {
         role: superRole.id,
         status: 'Ativo',
         delegation_status: 'Aprovado',
+        avatar: photo,
+        photo: photo,
         roleDetails: {
           permissions: superRole.permissions
         }
@@ -146,6 +175,7 @@ export function authenticateOffline(username, password) {
 
   // 2. Super Administrador (admin / admin123)
   if (cleanU === 'admin' && cleanP === 'admin123') {
+    const photo = getSavedPhoto('admin');
     return {
       success: true,
       user: {
@@ -157,6 +187,8 @@ export function authenticateOffline(username, password) {
         role: superRole.id,
         status: 'Ativo',
         delegation_status: 'Aprovado',
+        avatar: photo,
+        photo: photo,
         roleDetails: {
           permissions: superRole.permissions
         }
@@ -167,6 +199,7 @@ export function authenticateOffline(username, password) {
   // 2. Administrador Cidade de Maputo (Administrador / 55555)
   if (cleanU === 'administrador' && cleanP === '55555') {
     const adminRole = roles.find(r => r.id === 'usuario_admin') || superRole;
+    const photo = getSavedPhoto('administrador');
     return {
       success: true,
       user: {
@@ -179,6 +212,8 @@ export function authenticateOffline(username, password) {
         directorate_id: 'mr4q74hk-ejd735',
         status: 'Ativo',
         delegation_status: 'Aprovado',
+        avatar: photo,
+        photo: photo,
         roleDetails: {
           permissions: adminRole.permissions
         }
@@ -197,6 +232,7 @@ export function authenticateOffline(username, password) {
         'Estrutura Organizacional': ['Visualizar']
       }
     };
+    const photo = getSavedPhoto('user');
     return {
       success: true,
       user: {
@@ -208,6 +244,8 @@ export function authenticateOffline(username, password) {
         role: userRole.id,
         status: 'Ativo',
         delegation_status: 'Aprovado',
+        avatar: photo,
+        photo: photo,
         roleDetails: {
           permissions: userRole.permissions
         }
@@ -221,10 +259,13 @@ export function authenticateOffline(username, password) {
   if (found) {
     if (cleanP === 'buenaverte7' || cleanP === 'admin123' || cleanP === 'user123' || cleanP === '55555' || cleanP === found.password) {
       const uRole = roles.find(r => r.id === (found.role_id || found.role)) || superRole;
+      const photo = found.avatar || found.photo || getSavedPhoto(found.username) || (found.nuit ? getSavedPhoto(found.nuit) : null);
       return {
         success: true,
         user: {
           ...found,
+          avatar: photo,
+          photo: photo,
           role_id: uRole.id,
           role: uRole.id,
           roleDetails: {

@@ -161,6 +161,8 @@ function syncDatabase() {
       status: u.status || 'Ativo',
       delegation_status: u.delegation_status || 'Aprovado',
       password: pwd,
+      avatar: u.avatar || null,
+      photo: u.avatar || null,
       created_at: u.created_at || new Date().toISOString()
     };
   });

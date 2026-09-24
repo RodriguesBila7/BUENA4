@@ -52,7 +52,7 @@ router.get('/users', (req, res) => {
   try {
     const db = getDb();
     const rows = db.prepare('SELECT id, name, username, nuit, email, contact, role_id as roleId, delegated_role_id as delegatedRoleId, delegation_start_date as delegationStartDate, delegation_end_date as delegationEndDate, delegation_status as delegationStatus, delegation_requested_by as delegationRequestedBy, delegation_approved_by as delegationApprovedBy, status, directorate_id as directorateId, department_id as departmentId, division_id as divisionId, section_id as sectionId, avatar, created_at as createdAt FROM users ORDER BY name').all();
-    res.json(rows);
+    res.json(rows.map(r => ({ ...r, photo: r.avatar || null })));
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -64,8 +64,9 @@ router.post('/users', (req, res) => {
     const dup = db.prepare('SELECT id FROM users WHERE username = ? OR (nuit IS NOT NULL AND nuit = ? AND nuit != \'\')').get(u.username, u.nuit || '');
     if (dup) return res.status(409).json({ error: 'duplicate_username' });
     const hashedPassword = bcrypt.hashSync(u.password, 10);
+    const photoVal = u.avatar !== undefined ? u.avatar : (u.photo !== undefined ? u.photo : null);
     db.prepare(`INSERT INTO users (id, name, username, nuit, email, contact, password, role_id, delegated_role_id, delegation_start_date, delegation_end_date, delegation_status, delegation_requested_by, delegation_approved_by, status, directorate_id, department_id, division_id, section_id, avatar)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(u.id, u.name, u.username, u.nuit||null, u.email||null, u.contact||null, hashedPassword, u.roleId||null, u.delegatedRoleId||null, u.delegationStartDate||null, u.delegationEndDate||null, u.delegationStatus||'Aprovado', u.delegationRequestedBy||null, u.delegationApprovedBy||null, u.status||'Ativo', u.directorateId||null, u.departmentId||null, u.divisionId||null, u.sectionId||null, u.avatar||null);
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(u.id, u.name, u.username, u.nuit||null, u.email||null, u.contact||null, hashedPassword, u.roleId||null, u.delegatedRoleId||null, u.delegationStartDate||null, u.delegationEndDate||null, u.delegationStatus||'Aprovado', u.delegationRequestedBy||null, u.delegationApprovedBy||null, u.status||'Ativo', u.directorateId||null, u.departmentId||null, u.divisionId||null, u.sectionId||null, photoVal);
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -94,7 +95,7 @@ router.put('/users/:id', (req, res) => {
     const departmentId = u.departmentId !== undefined ? u.departmentId : existing.department_id;
     const divisionId = u.divisionId !== undefined ? u.divisionId : existing.division_id;
     const sectionId = u.sectionId !== undefined ? u.sectionId : existing.section_id;
-    const avatar = u.avatar !== undefined ? u.avatar : existing.avatar;
+    const avatar = u.avatar !== undefined ? u.avatar : (u.photo !== undefined ? u.photo : existing.avatar);
 
     if (username && username !== existing.username) {
       const dup = db.prepare('SELECT id FROM users WHERE username = ? AND id != ?').get(username, req.params.id);
@@ -111,6 +112,17 @@ router.put('/users/:id', (req, res) => {
       db.prepare(`UPDATE users SET ${fields} WHERE id = ?`).run(...params, req.params.id);
     }
     res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// Endpoint dedicado para substituir a foto de perfil diretamente no banco de dados (economizando espaço com codificação)
+router.put('/users/:id/photo', (req, res) => {
+  const { photo } = req.body;
+  try {
+    const db = getDb();
+    // Substitui a fotografia existente pelo novo base64 codificado (ou null caso apagado), nunca duplicando
+    db.prepare(`UPDATE users SET avatar = ?, updated_at = datetime('now') WHERE id = ? OR username = ? OR (nuit IS NOT NULL AND nuit = ?)`).run(photo || null, req.params.id, req.params.id, req.params.id);
+    res.json({ success: true, photo: photo || null });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -209,6 +221,8 @@ router.post('/login', (req, res) => {
     safeUser.role = activeRoleId; 
     safeUser.roleName = activeRoleName;
     safeUser.isDelegated = isDelegated;
+    safeUser.photo = matchingUser.avatar || null;
+    safeUser.avatar = matchingUser.avatar || null;
     
     res.json({ success: true, user: { ...safeUser, permissions: activePermissions ? JSON.parse(activePermissions) : {} } });
   } catch (e) { res.status(500).json({ error: e.message }); }

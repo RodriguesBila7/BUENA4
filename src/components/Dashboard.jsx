@@ -23,6 +23,9 @@ import VacationManager from './vacations/VacationManager';
 import ErrorBoundary from './common/ErrorBoundary';
 import KeyboardShortcutsModal from './common/KeyboardShortcutsModal';
 import { isPrimaryCentralAdmin, isCentralUser, filterByProvincialScope } from '../utils/scopeUtils';
+import { compressImage } from '../utils/imageCompressor';
+import { updateFallbackUserPhoto } from '../services/storageFallback';
+import { useAuth } from '../contexts/AuthContext';
 
 const getDynamicGroupIcon = (groupName) => {
   switch(groupName) {
@@ -48,6 +51,8 @@ const getDynamicGroupIcon = (groupName) => {
 };
 
 export default function Dashboard({ user, settings, updateSettings, resetSettings, onLogout, t, language, setLanguage }) {
+  const authCtx = useAuth();
+  const updateUserSession = authCtx?.updateUserSession;
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('sernic_active_tab') || 'home';
   });
@@ -533,21 +538,94 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const profileMenuRef = React.useRef(null);
   const fileInputRef = React.useRef(null);
 
-  // Foto de perfil persistida no localStorage ou vinda do utilizador
+  // Foto de perfil persistida no banco / localStorage ou vinda do utilizador
   const [profilePhoto, setProfilePhoto] = useState(() => {
-    return localStorage.getItem('sernic_user_photo_' + (user?.username || 'admin')) || user?.photo || null;
+    return localStorage.getItem('sernic_user_photo_' + (user?.username || 'admin')) || user?.photo || user?.avatar || null;
   });
+  const [photoFeedback, setPhotoFeedback] = useState('');
 
-  const handlePhotoUpload = (e) => {
+  // Atualizar quando o user mudar
+  React.useEffect(() => {
+    const currentPhoto = localStorage.getItem('sernic_user_photo_' + (user?.username || 'admin')) || user?.photo || user?.avatar || null;
+    if (currentPhoto && currentPhoto !== profilePhoto) {
+      setProfilePhoto(currentPhoto);
+    }
+  }, [user?.username, user?.photo, user?.avatar]);
+
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result;
-      setProfilePhoto(base64);
-      localStorage.setItem('sernic_user_photo_' + (user?.username || 'admin'), base64);
-    };
-    reader.readAsDataURL(file);
+
+    try {
+      setPhotoFeedback('A codificar e comprimir...');
+      
+      // Comprime e codifica a imagem para Base64 ultraleve (~15KB a 25KB), economizando até 99% de espaço
+      const compressedBase64 = await compressImage(file, {
+        maxWidth: 320,
+        maxHeight: 320,
+        quality: 0.75,
+        mimeType: 'image/jpeg'
+      });
+
+      // 1. Substituir foto imediatamente na interface (sem duplicar)
+      setProfilePhoto(compressedBase64);
+
+      // 2. Substituir no localStorage local para carregamento instantâneo
+      const photoKey = 'sernic_user_photo_' + (user?.username || 'admin');
+      localStorage.setItem(photoKey, compressedBase64);
+
+      // 3. Substituir na sessão ativa do utilizador
+      if (updateUserSession) {
+        updateUserSession({ photo: compressedBase64, avatar: compressedBase64 });
+      }
+
+      // 4. Salvar e Substituir diretamente no Banco de Dados SQLite (Servidor)
+      const targetId = user?.id || user?.username || 'admin';
+      try {
+        await fetch(`/api/auth/users/${encodeURIComponent(targetId)}/photo`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photo: compressedBase64 })
+        });
+      } catch (apiErr) {
+        console.warn('API SQLite offline, mantendo foto no banco fallback local:', apiErr);
+      }
+
+      // 5. Substituir no Banco Fallback local (Vercel e offline)
+      updateFallbackUserPhoto(targetId, compressedBase64);
+
+      setPhotoFeedback('Foto salva no banco de dados!');
+      setTimeout(() => setPhotoFeedback(''), 3000);
+    } catch (err) {
+      console.error('Erro ao processar foto:', err);
+      setPhotoFeedback('Erro ao processar imagem');
+      setTimeout(() => setPhotoFeedback(''), 3000);
+    } finally {
+      if (e.target) e.target.value = '';
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setProfilePhoto(null);
+    const photoKey = 'sernic_user_photo_' + (user?.username || 'admin');
+    localStorage.removeItem(photoKey);
+
+    if (updateUserSession) {
+      updateUserSession({ photo: null, avatar: null });
+    }
+
+    const targetId = user?.id || user?.username || 'admin';
+    try {
+      await fetch(`/api/auth/users/${encodeURIComponent(targetId)}/photo`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ photo: null })
+      });
+    } catch (e) {}
+
+    updateFallbackUserPhoto(targetId, null);
+    setPhotoFeedback('Foto removida');
+    setTimeout(() => setPhotoFeedback(''), 3000);
   };
 
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', action: null, isDestructive: false });
@@ -1706,6 +1784,64 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                         {userDirectorateDisplay}
                       </span>
                     </div>
+                  </div>
+
+                  {photoFeedback && (
+                    <div style={{
+                      fontSize: '11px',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: photoFeedback.includes('Erro') ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                      color: photoFeedback.includes('Erro') ? '#dc2626' : '#059669',
+                      marginBottom: '8px',
+                      textAlign: 'center',
+                      fontWeight: '600'
+                    }}>
+                      {photoFeedback}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        flex: 1,
+                        fontSize: '11.5px',
+                        fontWeight: '600',
+                        padding: '5px 8px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--color-border)',
+                        backgroundColor: 'var(--color-bg-base)',
+                        color: 'var(--color-text-base)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      📷 {profilePhoto ? 'Substituir Foto' : 'Adicionar Foto'}
+                    </button>
+                    {profilePhoto && (
+                      <button
+                        type="button"
+                        onClick={handleRemovePhoto}
+                        style={{
+                          fontSize: '11.5px',
+                          fontWeight: '600',
+                          padding: '5px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid rgba(239, 68, 68, 0.2)',
+                          backgroundColor: 'rgba(239, 68, 68, 0.06)',
+                          color: '#dc2626',
+                          cursor: 'pointer'
+                        }}
+                        title="Remover fotografia do perfil"
+                      >
+                        Remover
+                      </button>
+                    )}
                   </div>
 
                   {/* Input invisível para carregar foto */}

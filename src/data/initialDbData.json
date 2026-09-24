@@ -17163,6 +17163,8 @@
       "status": "Ativo",
       "delegation_status": "Aprovado",
       "password": "admin123",
+      "avatar": null,
+      "photo": null,
       "created_at": "2026-07-15 20:46:06"
     },
     {
@@ -17176,6 +17178,8 @@
       "status": "Ativo",
       "delegation_status": "Aprovado",
       "password": "55555",
+      "avatar": null,
+      "photo": null,
       "created_at": "2026-08-12 17:11:40"
     },
     {
@@ -17189,6 +17193,8 @@
       "status": "Ativo",
       "delegation_status": "Aprovado",
       "password": "buenaverte7",
+      "avatar": null,
+      "photo": null,
       "created_at": "2026-09-08 10:27:26"
     },
     {
@@ -17202,6 +17208,8 @@
       "status": "Ativo",
       "delegation_status": "Aprovado",
       "password": "buenaverte7",
+      "avatar": null,
+      "photo": null,
       "created_at": "2026-09-24 21:17:28"
     }
   ],

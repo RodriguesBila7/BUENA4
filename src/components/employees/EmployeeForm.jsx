@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DisciplinarySubForm from '../disciplinary/DisciplinarySubForm';
 import useDisciplinaryData from '../../hooks/useDisciplinaryData';
 import { sanitizeNuit, validateNuit, formatMozPhone, validateMozPhone } from '../../utils/formatters';
+import { compressImage } from '../../utils/imageCompressor';
 
 export default function EmployeeForm({ employees, orgData, editingEmpId, onSave, onCancel, onSaved }) {
   const { data } = orgData;
@@ -87,19 +88,28 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
     });
   };
 
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 50 * 1024 * 1024) {
-        setErrorMsg('A foto deve ter no máximo 50MB.');
-        return;
+      try {
+        setErrorMsg('');
+        // Comprime e codifica a imagem para Base64 ultraleve (~20KB), substituindo a foto existente
+        const compressed = await compressImage(file, {
+          maxWidth: 360,
+          maxHeight: 360,
+          quality: 0.75,
+          mimeType: 'image/jpeg'
+        });
+        setFormData(prev => ({ ...prev, photo: compressed }));
+      } catch (err) {
+        console.error('Erro ao comprimir foto de funcionário:', err);
+        setErrorMsg('Erro ao processar e comprimir imagem.');
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, photo: reader.result }));
-      };
-      reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData(prev => ({ ...prev, photo: '' }));
   };
 
   const addAcademicHistory = () => {
@@ -301,11 +311,29 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
           )}
         </div>
         <div>
-          <label style={{...styles.btnSecondary, display: 'inline-block', padding: '8px 16px', fontSize: '13px'}}>
-            Carregar Foto
-            <input type="file" accept="image/png, image/jpeg" onChange={handlePhotoUpload} style={{ display: 'none' }} />
-          </label>
-          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: '8px 0 0 0' }}>Formatos: JPG, PNG. Max 50MB.</p>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <label style={{...styles.btnSecondary, display: 'inline-block', padding: '8px 16px', fontSize: '13px', cursor: 'pointer'}}>
+              {formData.photo ? 'Substituir Foto' : 'Carregar Foto'}
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+            </label>
+            {formData.photo && (
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                style={{
+                  ...styles.btnSecondary,
+                  padding: '8px 14px',
+                  fontSize: '13px',
+                  color: '#dc2626',
+                  borderColor: 'rgba(220, 38, 38, 0.3)',
+                  cursor: 'pointer'
+                }}
+              >
+                Remover
+              </button>
+            )}
+          </div>
+          <p style={{ fontSize: '12px', color: 'var(--color-text-muted)', margin: '8px 0 0 0' }}>Fotos são comprimidas e codificadas automaticamente para economizar espaço.</p>
         </div>
       </div>
 

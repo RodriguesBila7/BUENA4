@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { isCentralUser, formatProvincialRoleName } from '../../utils/scopeUtils';
 import { sanitizeNuit, validateNuit, formatMozPhone, validateMozPhone } from '../../utils/formatters';
 import ConfirmModal from '../ConfirmModal';
+import { compressImage } from '../../utils/imageCompressor';
 
 const styles = {
   container: { padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)' },
@@ -45,7 +46,14 @@ export default function UserForm({ initialData, onSave, onCancel }) {
 
   useEffect(() => {
     if (initialData) {
-      setFormData({ ...formData, ...initialData, confirmPassword: initialData.password || '' });
+      const existingPhoto = initialData.photo || initialData.avatar || '';
+      setFormData({ 
+        ...formData, 
+        ...initialData, 
+        photo: existingPhoto, 
+        avatar: existingPhoto, 
+        confirmPassword: initialData.password || '' 
+      });
       if (initialData.username && initialData.nuit && initialData.username !== initialData.nuit) {
         setLoginType('custom');
       } else {
@@ -188,13 +196,26 @@ export default function UserForm({ initialData, onSave, onCancel }) {
     });
   };
 
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setFormData(prev => ({ ...prev, photo: reader.result }));
-      reader.readAsDataURL(file);
+      try {
+        // Redimensiona e comprime em Base64 ultraleve (~15KB), substituindo a foto existente sem inchar o banco
+        const compressed = await compressImage(file, {
+          maxWidth: 320,
+          maxHeight: 320,
+          quality: 0.75,
+          mimeType: 'image/jpeg'
+        });
+        setFormData(prev => ({ ...prev, photo: compressed, avatar: compressed }));
+      } catch (err) {
+        console.error('Erro ao processar e comprimir foto de utilizador:', err);
+      }
     }
+  };
+
+  const handleRemovePhoto = () => {
+    setFormData(prev => ({ ...prev, photo: '', avatar: '' }));
   };
 
   const handleSubmit = (e) => {
@@ -258,6 +279,8 @@ export default function UserForm({ initialData, onSave, onCancel }) {
     // Assegurar que se for Administrador, não leva qualquer delegação
     const saveData = { ...formData };
     delete saveData.confirmPassword;
+    saveData.avatar = formData.photo || formData.avatar || null;
+    saveData.photo = formData.photo || formData.avatar || null;
 
     if (isPrimaryRoleAdmin) {
       saveData.delegatedRoleId = null;
@@ -421,10 +444,48 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         <h4 style={styles.sectionTitle}>Identificação por NUIT</h4>
         
         <div style={{...styles.formGroup, gridRow: 'span 2'}}>
-          <label style={styles.label}>Fotografia</label>
+          <label style={styles.label}>Fotografia do Perfil (Comprimida & Codificada)</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-            {formData.photo ? <img src={formData.photo} alt="Preview" style={styles.photoPreview} /> : <div style={{...styles.photoPreview, backgroundColor: '#eee'}}></div>}
-            <input type="file" accept="image/*" onChange={handlePhotoUpload} />
+            {formData.photo ? (
+              <div style={{ position: 'relative' }}>
+                <img src={formData.photo} alt="Preview" style={styles.photoPreview} />
+                <button
+                  type="button"
+                  onClick={handleRemovePhoto}
+                  style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    right: '-4px',
+                    background: '#ef4444',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '22px',
+                    height: '22px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                  }}
+                  title="Remover fotografia existente"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div style={{...styles.photoPreview, backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px'}}>
+                👤
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <input type="file" accept="image/*" onChange={handlePhotoUpload} />
+              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                {formData.photo ? 'Selecionar novo ficheiro substitui a foto atual.' : 'Fotos são comprimidas para economizar espaço no banco.'}
+              </span>
+            </div>
           </div>
         </div>
 

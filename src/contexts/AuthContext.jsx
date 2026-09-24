@@ -74,8 +74,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUserSession = (partialData) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...partialData };
+      localStorage.setItem('sernic_logged_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateSessionActivity }}>
+    <AuthContext.Provider value={{ user, login, logout, updateSessionActivity, updateUserSession }}>
       {children}
     </AuthContext.Provider>
   );
