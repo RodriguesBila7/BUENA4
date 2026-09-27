@@ -12,6 +12,7 @@ import {
   saveFallbackRoles,
   authenticateOffline
 } from '../services/storageFallback';
+import { getCloudPhotos } from '../services/cloudSyncService';
 
 // Cache em memoria
 let _usersCache = null;
@@ -47,18 +48,36 @@ async function api(method, path, body) {
 }
 
 async function fetchData() {
+  let u = [];
+  let r = [];
   try {
-    const [u, r] = await Promise.all([
+    [u, r] = await Promise.all([
       api('GET', '/users'),
       api('GET', '/roles')
     ]);
-    notifyAll(u, r);
   } catch (e) {
     console.warn('[useAuthData] API indisponível, a utilizar dados locais de fallback...');
-    const u = getFallbackUsers();
-    const r = getFallbackRoles();
-    notifyAll(u, r);
+    u = getFallbackUsers();
+    r = getFallbackRoles();
   }
+
+  // Sincronizar e mesclar fotografias da nuvem (garante que utilizadores criados no PC apareçam com foto no telemóvel e vice-versa)
+  try {
+    const cloudPhotos = await getCloudPhotos();
+    if (cloudPhotos && typeof cloudPhotos === 'object') {
+      u = (u || []).map(user => {
+        const key = (user.username || user.nuit || user.id || '').toLowerCase();
+        const photo = cloudPhotos[key] || cloudPhotos[(user.nuit || '').toLowerCase()] || cloudPhotos[(user.username || '').toLowerCase()] || user.photo || user.avatar;
+        return {
+          ...user,
+          photo: photo || null,
+          avatar: photo || null
+        };
+      });
+    }
+  } catch (err) {}
+
+  notifyAll(u, r);
 }
 
 export default function useAuthData() {

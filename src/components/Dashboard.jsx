@@ -25,6 +25,7 @@ import KeyboardShortcutsModal from './common/KeyboardShortcutsModal';
 import { isPrimaryCentralAdmin, isCentralUser, filterByProvincialScope } from '../utils/scopeUtils';
 import { compressImage } from '../utils/imageCompressor';
 import { updateFallbackUserPhoto } from '../services/storageFallback';
+import { getCloudPhotos, saveCloudPhoto, removeCloudPhoto } from '../services/cloudSyncService';
 import { useAuth } from '../contexts/AuthContext';
 
 const getDynamicGroupIcon = (groupName) => {
@@ -544,12 +545,27 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   });
   const [photoFeedback, setPhotoFeedback] = useState('');
 
-  // Atualizar quando o user mudar
+  // Atualizar quando o user mudar ou quando chegar foto da nuvem (sincronização PC e Telemóvel)
   React.useEffect(() => {
     const currentPhoto = localStorage.getItem('sernic_user_photo_' + (user?.username || 'admin')) || user?.photo || user?.avatar || null;
     if (currentPhoto && currentPhoto !== profilePhoto) {
       setProfilePhoto(currentPhoto);
     }
+
+    // Sincronização em nuvem ativa para computadores e telemóveis
+    const userKey = (user?.username || user?.nuit || 'admin').toLowerCase();
+    getCloudPhotos().then(photos => {
+      if (photos) {
+        const cloudPhoto = photos[userKey] || photos[(user?.nuit || '').toLowerCase()] || photos[(user?.username || '').toLowerCase()];
+        if (cloudPhoto && cloudPhoto !== profilePhoto) {
+          setProfilePhoto(cloudPhoto);
+          localStorage.setItem('sernic_user_photo_' + (user?.username || 'admin'), cloudPhoto);
+          if (updateUserSession) {
+            updateUserSession({ photo: cloudPhoto, avatar: cloudPhoto });
+          }
+        }
+      }
+    }).catch(() => {});
   }, [user?.username, user?.photo, user?.avatar]);
 
   const handlePhotoUpload = async (e) => {
@@ -557,7 +573,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     if (!file) return;
 
     try {
-      setPhotoFeedback('A codificar e comprimir...');
+      setPhotoFeedback('A codificar e sincronizar...');
       
       // Comprime e codifica a imagem para Base64 ultraleve (~15KB a 25KB), economizando até 99% de espaço
       const compressedBase64 = await compressImage(file, {
@@ -579,7 +595,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         updateUserSession({ photo: compressedBase64, avatar: compressedBase64 });
       }
 
-      // 4. Salvar e Substituir diretamente no Banco de Dados SQLite (Servidor)
+      // 4. Salvar e Substituir diretamente no Banco de Dados SQLite (Servidor Local se ativo)
       const targetId = user?.id || user?.username || 'admin';
       try {
         await fetch(`/api/auth/users/${encodeURIComponent(targetId)}/photo`, {
@@ -587,14 +603,21 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ photo: compressedBase64 })
         });
-      } catch (apiErr) {
-        console.warn('API SQLite offline, mantendo foto no banco fallback local:', apiErr);
-      }
+      } catch (apiErr) {}
 
       // 5. Substituir no Banco Fallback local (Vercel e offline)
       updateFallbackUserPhoto(targetId, compressedBase64);
 
-      setPhotoFeedback('Foto salva no banco de dados!');
+      // 6. Sincronizar na Nuvem Global (garante que no telemóvel e noutros PCs a foto apareça instantaneamente)
+      await saveCloudPhoto(targetId, compressedBase64);
+      if (user?.username && user.username !== targetId) {
+        saveCloudPhoto(user.username, compressedBase64);
+      }
+      if (user?.nuit && user.nuit !== targetId) {
+        saveCloudPhoto(user.nuit, compressedBase64);
+      }
+
+      setPhotoFeedback('Foto sincronizada no banco de dados!');
       setTimeout(() => setPhotoFeedback(''), 3000);
     } catch (err) {
       console.error('Erro ao processar foto:', err);
@@ -624,6 +647,10 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     } catch (e) {}
 
     updateFallbackUserPhoto(targetId, null);
+    await removeCloudPhoto(targetId);
+    if (user?.username) removeCloudPhoto(user.username);
+    if (user?.nuit) removeCloudPhoto(user.nuit);
+
     setPhotoFeedback('Foto removida');
     setTimeout(() => setPhotoFeedback(''), 3000);
   };

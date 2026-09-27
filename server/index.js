@@ -49,6 +49,10 @@ app.use('/api/effectiveness', createGenericRouter('effectiveness'));
 app.use('/api/settings',      settingsRouter);
 app.use('/api/security',      securityRouter);
 
+// Sincronização em nuvem de fotos de perfil (disponível tanto no Vercel como no servidor local)
+import syncPhotoHandler from '../api/sync-photo.js';
+app.all('/api/sync-photo', (req, res) => syncPhotoHandler(req, res));
+
 // ─── Healthcheck ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 

@@ -8,6 +8,7 @@ import { isCentralUser, formatProvincialRoleName } from '../../utils/scopeUtils'
 import { sanitizeNuit, validateNuit, formatMozPhone, validateMozPhone } from '../../utils/formatters';
 import ConfirmModal from '../ConfirmModal';
 import { compressImage } from '../../utils/imageCompressor';
+import { saveCloudPhoto, removeCloudPhoto } from '../../services/cloudSyncService';
 
 const styles = {
   container: { padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)' },
@@ -297,6 +298,17 @@ export default function UserForm({ initialData, onSave, onCancel }) {
       }
     } else {
       saveData.delegationStatus = 'Aprovado';
+    }
+
+    // Sincronizar foto do utilizador com a nuvem (disponível no PC e Telemóvel)
+    if (saveData.photo) {
+      if (saveData.username) saveCloudPhoto(saveData.username, saveData.photo);
+      if (saveData.nuit) saveCloudPhoto(saveData.nuit, saveData.photo);
+      if (saveData.id) saveCloudPhoto(saveData.id, saveData.photo);
+    } else {
+      if (saveData.username) removeCloudPhoto(saveData.username);
+      if (saveData.nuit) removeCloudPhoto(saveData.nuit);
+      if (saveData.id) removeCloudPhoto(saveData.id);
     }
 
     onSave(saveData);
