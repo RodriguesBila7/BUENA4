@@ -5,6 +5,12 @@
  */
 
 import initialData from '../data/initialDbData.json';
+import { saveCloudCollection, getCloudFullData } from './cloudSyncService';
+
+// Inicializar sincronização com a nuvem em segundo plano
+if (typeof window !== 'undefined') {
+  setTimeout(() => getCloudFullData().catch(() => {}), 100);
+}
 
 const STORAGE_KEYS = {
   EMPLOYEES: 'sernic_db_employees',
@@ -50,6 +56,7 @@ export function getFallbackEmployees() {
 
 export function saveFallbackEmployees(employees) {
   setStored(STORAGE_KEYS.EMPLOYEES, employees);
+  saveCloudCollection('employees', employees);
 }
 
 // ─── ORG STRUCTURE ──────────────────────────────────────────────────────
@@ -71,6 +78,7 @@ export function getFallbackOrg() {
 
 export function saveFallbackOrg(org) {
   setStored(STORAGE_KEYS.ORG, org);
+  saveCloudCollection('org', org);
 }
 
 // ─── USERS & ROLES ──────────────────────────────────────────────────────
@@ -97,6 +105,7 @@ export function getFallbackUsers() {
 
 export function saveFallbackUsers(users) {
   setStored(STORAGE_KEYS.USERS, users);
+  saveCloudCollection('users', users);
 }
 
 /**
@@ -133,6 +142,7 @@ export function getFallbackRoles() {
 
 export function saveFallbackRoles(roles) {
   setStored(STORAGE_KEYS.ROLES, roles);
+  saveCloudCollection('roles', roles);
 }
 
 // ─── AUTENTICAÇÃO OFFLINE ───────────────────────────────────────────────
@@ -322,6 +332,7 @@ export function getFallbackActTypes() {
 
 export function saveFallbackActTypes(types) {
   setStored(STORAGE_KEYS.ACT_TYPES, types);
+  saveCloudCollection('actTypes', types);
 }
 
 // ─── ADMIN ACTS ─────────────────────────────────────────────────────────
@@ -335,6 +346,7 @@ export function getFallbackAdminActs() {
 
 export function saveFallbackAdminActs(acts) {
   setStored(STORAGE_KEYS.ADMIN_ACTS, acts);
+  saveCloudCollection('adminActs', acts);
 }
 
 // ─── EVALUATIONS ────────────────────────────────────────────────────────
@@ -348,6 +360,7 @@ export function getFallbackEvaluations() {
 
 export function saveFallbackEvaluations(evals) {
   setStored(STORAGE_KEYS.EVALUATIONS, evals);
+  saveCloudCollection('evaluations', evals);
 }
 
 // ─── DISCIPLINARY ───────────────────────────────────────────────────────
@@ -361,6 +374,7 @@ export function getFallbackDisciplinary() {
 
 export function saveFallbackDisciplinary(list) {
   setStored(STORAGE_KEYS.DISCIPLINARY, list);
+  saveCloudCollection('disciplinary', list);
 }
 
 // ─── TRANSFERS ──────────────────────────────────────────────────────────
@@ -374,6 +388,7 @@ export function getFallbackTransfers() {
 
 export function saveFallbackTransfers(list) {
   setStored(STORAGE_KEYS.TRANSFERS, list);
+  saveCloudCollection('transfers', list);
 }
 
 // ─── EFFECTIVENESS ──────────────────────────────────────────────────────
@@ -387,6 +402,7 @@ export function getFallbackEffectiveness() {
 
 export function saveFallbackEffectiveness(list) {
   setStored(STORAGE_KEYS.EFFECTIVENESS, list);
+  saveCloudCollection('effectiveness', list);
 }
 
 // ─── SECURITY SETTINGS ──────────────────────────────────────────────────
@@ -412,6 +428,7 @@ export function getFallbackSecurity() {
 
 export function saveFallbackSecurity(settings) {
   setStored(STORAGE_KEYS.SECURITY, settings);
+  saveCloudCollection('security', settings);
 }
 
 // ─── AUDIT LOGS ─────────────────────────────────────────────────────────
@@ -494,4 +511,5 @@ export function saveFallbackAudit(logs) {
   if (!Array.isArray(logs)) return;
   const sanitized = logs.map((l, i) => sanitizeAuditItem(l, i)).filter(Boolean);
   setStored(STORAGE_KEYS.AUDIT, sanitized);
+  saveCloudCollection('audit', sanitized);
 }

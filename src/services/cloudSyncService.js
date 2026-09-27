@@ -1,50 +1,62 @@
 /**
  * src/services/cloudSyncService.js
- * Serviço de sincronização em nuvem para fotos de perfil e dados de utilizador.
- * Permite que fotos alteradas num computador apareçam instantaneamente no telemóvel
- * e vice-versa, sem necessidade de servidores pagos ou configurações adicionais.
+ * Serviço de sincronização total em nuvem para todo o sistema SERNIC DRH
+ * (Perfis, Utilizadores, Colaboradores, Atos, Transferências, Disciplinar, Avaliações, Fotos, etc.)
+ * Permite que todas as operações efetuadas num computador fiquem disponíveis em tempo real
+ * no telemóvel e vice-versa.
  */
 
 const GIST_ID = 'dd985f35807d842a90cc097c26c07e47';
 const GIST_FILENAME = 'sernic_sync.json';
 
-// Cache em memória
-let _cloudPhotosCache = null;
+// Chaves locais mapeadas para coleções na nuvem
+export const COLLECTION_MAP = {
+  users: 'sernic_db_users',
+  roles: 'sernic_db_roles',
+  employees: 'sernic_db_employees',
+  org: 'sernic_db_org',
+  adminActs: 'sernic_db_admin_acts',
+  disciplinary: 'sernic_db_disciplinary',
+  evaluations: 'sernic_db_evaluations',
+  transfers: 'sernic_db_transfers',
+  effectiveness: 'sernic_db_effectiveness',
+  actTypes: 'sernic_db_act_types',
+  security: 'sernic_db_security',
+  audit: 'sernic_db_audit'
+};
+
+let _cloudCache = null;
 let _lastFetchTime = 0;
-const CACHE_TTL_MS = 10000; // 10 segundos
+const CACHE_TTL_MS = 6000; // 6 segundos
 
 /**
- * Obtém todas as fotos sincronizadas na nuvem
- * @param {boolean} forceRefresh - Forçar busca na rede sem usar cache em memória
- * @returns {Promise<Object>} Mapa de fotografias: { [username]: base64 }
+ * Obtém todo o estado da base de dados sincronizada na nuvem
+ * e atualiza o localStorage deste dispositivo
  */
-export async function getCloudPhotos(forceRefresh = false) {
+export async function getCloudFullData(forceRefresh = false) {
   const now = Date.now();
-  if (!forceRefresh && _cloudPhotosCache && (now - _lastFetchTime < CACHE_TTL_MS)) {
-    return _cloudPhotosCache;
+  if (!forceRefresh && _cloudCache && (now - _lastFetchTime < CACHE_TTL_MS)) {
+    return _cloudCache;
   }
 
-  // 1. Tentar primeiro o endpoint Serverless da Vercel (/api/sync-photo)
+  // 1. Tentar endpoint da Vercel /api/sync
   try {
-    const res = await fetch(`/api/sync-photo?t=${now}`, {
+    const res = await fetch(`/api/sync?t=${now}`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' }
     });
-
     if (res.ok) {
-      const data = await res.json();
-      if (data && data.photos) {
-        _cloudPhotosCache = data.photos;
+      const json = await res.json();
+      if (json && json.data) {
+        _cloudCache = json.data;
         _lastFetchTime = now;
-        syncPhotosToLocalStorage(data.photos);
-        return data.photos;
+        applyCloudDataToLocal(json.data);
+        return json.data;
       }
     }
-  } catch (err) {
-    // Falha silenciosa, tenta o fallback direto via Gist
-  }
+  } catch (err) {}
 
-  // 2. Fallback direto para o GitHub Gist público (funciona em qualquer navegador, computador ou telemóvel)
+  // 2. Fallback direto ao GitHub Gist público
   try {
     const res = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${now}`, {
       headers: {
@@ -57,31 +69,53 @@ export async function getCloudPhotos(forceRefresh = false) {
       const gistData = await res.json();
       const content = gistData.files && gistData.files[GIST_FILENAME] ? gistData.files[GIST_FILENAME].content : '{}';
       const parsed = JSON.parse(content || '{}');
-      const photos = parsed.photos || {};
 
-      _cloudPhotosCache = photos;
+      _cloudCache = parsed;
       _lastFetchTime = now;
-      syncPhotosToLocalStorage(photos);
-      return photos;
+      applyCloudDataToLocal(parsed);
+      return parsed;
     }
   } catch (err) {
-    console.warn('[cloudSyncService] Não foi possível conectar à nuvem:', err.message);
+    console.warn('[cloudSyncService] Aviso: Modo offline ativo.');
   }
 
-  // 3. Fallback: carregar do localStorage
-  return loadPhotosFromLocalStorage();
+  return _cloudCache || {};
 }
 
 /**
- * Atualiza e substitui a foto de um utilizador na nuvem (sincronização entre computador e telemóvel)
- * @param {string} username - Nome de utilizador ou NUIT
- * @param {string|null} photoBase64 - Foto codificada e comprimida em Base64 (ou null para remover)
+ * Salva uma coleção inteira na nuvem (ex: 'users', 'employees', 'roles', etc.)
+ */
+export async function saveCloudCollection(collection, data) {
+  if (!collection || data === undefined) return false;
+
+  try {
+    const res = await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ collection, data })
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn(`[cloudSyncService] Erro ao sincronizar coleção ${collection}:`, err.message);
+    return false;
+  }
+}
+
+/**
+ * Obtém todas as fotos da nuvem
+ */
+export async function getCloudPhotos(forceRefresh = false) {
+  const full = await getCloudFullData(forceRefresh);
+  return full.photos || {};
+}
+
+/**
+ * Salva e substitui uma foto de perfil na nuvem
  */
 export async function saveCloudPhoto(username, photoBase64) {
   if (!username) return false;
   const key = String(username).trim().toLowerCase();
 
-  // 1. Atualizar imediatamente no localStorage local
   const photoKey = 'sernic_user_photo_' + key;
   if (photoBase64) {
     localStorage.setItem(photoKey, photoBase64);
@@ -89,29 +123,21 @@ export async function saveCloudPhoto(username, photoBase64) {
     localStorage.removeItem(photoKey);
   }
 
-  if (_cloudPhotosCache) {
-    if (photoBase64) {
-      _cloudPhotosCache[key] = photoBase64;
-    } else {
-      delete _cloudPhotosCache[key];
-    }
+  if (_cloudCache && _cloudCache.photos) {
+    if (photoBase64) _cloudCache.photos[key] = photoBase64;
+    else delete _cloudCache.photos[key];
   }
 
-  // 2. Sincronizar via endpoint seguro (/api/sync-photo)
   try {
-    const res = await fetch('/api/sync-photo', {
+    const res = await fetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: key, photo: photoBase64 })
     });
-    if (res.ok) {
-      return true;
-    }
+    return res.ok;
   } catch (err) {
-    console.warn('[cloudSyncService] Erro ao sincronizar foto com o servidor:', err.message);
+    return false;
   }
-
-  return false;
 }
 
 /**
@@ -122,32 +148,43 @@ export async function removeCloudPhoto(username) {
 }
 
 /**
- * Sincroniza o mapa de fotos recebido da nuvem para o localStorage deste dispositivo
+ * Aplica os dados da nuvem no localStorage deste dispositivo
  */
-function syncPhotosToLocalStorage(photos) {
-  if (!photos || typeof photos !== 'object') return;
+function applyCloudDataToLocal(cloudData) {
+  if (!cloudData || typeof cloudData !== 'object') return;
+
   try {
-    Object.entries(photos).forEach(([userKey, base64]) => {
-      if (base64) {
-        localStorage.setItem('sernic_user_photo_' + userKey.toLowerCase(), base64);
+    let hasChanges = false;
+
+    // Aplicar cada coleção se presente na nuvem
+    Object.entries(COLLECTION_MAP).forEach(([colKey, storageKey]) => {
+      if (cloudData[colKey] !== undefined && cloudData[colKey] !== null) {
+        const cloudStr = JSON.stringify(cloudData[colKey]);
+        const currentStr = localStorage.getItem(storageKey);
+        if (cloudStr !== currentStr) {
+          localStorage.setItem(storageKey, cloudStr);
+          hasChanges = true;
+        }
       }
     });
-  } catch (e) {}
-}
 
-/**
- * Lê fotos já armazenadas no localStorage deste dispositivo
- */
-function loadPhotosFromLocalStorage() {
-  const result = {};
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('sernic_user_photo_')) {
-        const username = key.replace('sernic_user_photo_', '');
-        result[username] = localStorage.getItem(key);
-      }
+    // Aplicar fotografias
+    if (cloudData.photos && typeof cloudData.photos === 'object') {
+      Object.entries(cloudData.photos).forEach(([userKey, base64]) => {
+        if (base64) {
+          const photoKey = 'sernic_user_photo_' + userKey.toLowerCase();
+          if (localStorage.getItem(photoKey) !== base64) {
+            localStorage.setItem(photoKey, base64);
+            hasChanges = true;
+          }
+        }
+      });
     }
-  } catch (e) {}
-  return result;
+
+    if (hasChanges && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('sernic_cloud_sync_updated', { detail: cloudData }));
+    }
+  } catch (e) {
+    console.warn('[cloudSyncService] Erro ao aplicar dados locais:', e);
+  }
 }
