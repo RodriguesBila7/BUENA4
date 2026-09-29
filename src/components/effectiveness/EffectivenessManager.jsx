@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import EffectivenessForm from './EffectivenessForm';
 import EffectivenessQuery from './EffectivenessQuery';
+import EffectivenessApprovals from './EffectivenessApprovals';
 import EffectivenessReports from './EffectivenessReports';
 import EffectivenessStats from './EffectivenessStats';
 import useEffectivenessData from '../../hooks/useEffectivenessData';
@@ -43,6 +44,7 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
 
   const tabs = [
     { id: 'query', label: '📋 Funcionários Faltosos' },
+    { id: 'approvals', label: '⚖️ Aprovação de Justificações' },
     { id: 'register', label: '✍️ Registar Faltas' },
     { id: 'reports', label: '🖨️ Relatórios & Impressão por Província' },
     { id: 'stats', label: '📊 Estatísticas de Faltas' }
@@ -89,6 +91,13 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
             onGoToRegister={() => setActiveTab('register')} 
           />
         )}
+        {activeTab === 'approvals' && (
+          <EffectivenessApprovals 
+            user={user}
+            orgData={orgData}
+            employeesData={employeesData}
+          />
+        )}
         {activeTab === 'register' && (
           <EffectivenessForm 
             user={user}
@@ -112,6 +121,7 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
           />
         )}
       </div>
+
 
       <ConfirmModal
         isOpen={confirmModal.isOpen}

@@ -3,12 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo-sernic-transparente.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>SERNIC DRH - Gestão de Recursos Humanos</title>
     <meta name="description" content="Portal de Gestão de Recursos Humanos e Identidade Visual Institucional do Serviço Nacional de Investigação Criminal (SERNIC) de Moçambique." />
+    
+    <!-- PWA e Suporte Móvel (Android & Apple iOS) -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1B365D" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SERNIC DRH" />
+    <link rel="apple-touch-icon" href="/logo-sernic-transparente.png" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>
+

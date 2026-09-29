@@ -27,6 +27,8 @@ import { compressImage } from '../utils/imageCompressor';
 import { updateFallbackUserPhoto } from '../services/storageFallback';
 import { getCloudPhotos, saveCloudPhoto, removeCloudPhoto } from '../services/cloudSyncService';
 import { useAuth } from '../contexts/AuthContext';
+import EmployeePortal from './portal/EmployeePortal';
+import PwaInstallBanner from './common/PwaInstallBanner';
 
 const getDynamicGroupIcon = (groupName) => {
   switch(groupName) {
@@ -977,6 +979,24 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             {t('menu_home')}
           </button>
           
+          {/* Menu Portal do Funcionário (Autoatendimento) */}
+          <button 
+            onClick={() => handleTabChange('portal')}
+            style={{
+              ...getNavItemStyle(activeTab === 'portal'),
+              borderLeft: activeTab === 'portal' ? '3px solid #059669' : 'none',
+              backgroundColor: activeTab === 'portal' ? 'rgba(5, 150, 105, 0.08)' : 'transparent',
+              color: activeTab === 'portal' ? '#059669' : 'var(--color-text-base)'
+            }}
+          >
+            <svg style={{ ...styles.navIcon, color: activeTab === 'portal' ? '#059669' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span style={{ fontWeight: '700' }}>Portal do Funcionário</span>
+            <span style={{ marginLeft: 'auto', fontSize: '10px', backgroundColor: '#ecfdf5', color: '#059669', padding: '2px 6px', borderRadius: '10px', fontWeight: 'bold' }}>Novo</span>
+          </button>
+
           <button 
             onClick={() => handleTabChange('reports')}
             style={getNavItemStyle(activeTab === 'reports')}
@@ -1522,6 +1542,28 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           </div>
 
           <div style={styles.headerActions}>
+            {/* Botão de Acesso Rápido ao Portal do Funcionário */}
+            <button
+              onClick={() => handleTabChange(activeTab === 'portal' ? 'home' : 'portal')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                border: activeTab === 'portal' ? '1px solid #059669' : '1px solid var(--color-border)',
+                backgroundColor: activeTab === 'portal' ? '#ecfdf5' : 'var(--color-bg-base)',
+                color: activeTab === 'portal' ? '#059669' : 'var(--color-text-base)',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              title="Alternar entre Painel Geral e Portal do Agente"
+            >
+              <span>{activeTab === 'portal' ? '⬅️ Modo Geral' : '🛡️ Meu Portal'}</span>
+            </button>
+
             {/* Seletor de Idioma no Header */}
             <div style={{ position: 'relative' }} ref={langMenuRef}>
               <button
@@ -2002,6 +2044,16 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           )}
 
 
+
+          {/* TAB PORTAL DO FUNCIONÁRIO (AUTOATENDIMENTO) */}
+          {activeTab === 'portal' && (
+            <div className="animate-fade-in" style={{ ...styles.tabContainer, padding: 0 }}>
+              <EmployeePortal 
+                user={user} 
+                onBackToAdmin={() => handleTabChange('home')} 
+              />
+            </div>
+          )}
 
           {/* TAB EFETIVIDADE */}
           {activeTab === 'effectiveness' && (
@@ -4118,6 +4170,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}
       />
+
+      {/* Banner de Instalação Mobile PWA */}
+      <PwaInstallBanner />
     </div>
   );
 }
