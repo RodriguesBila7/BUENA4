@@ -343,9 +343,6 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
             style={styles.sernicLogo} 
           />
           <div style={styles.instText}>
-            <div style={styles.instRepub}>
-              REPÚBLICA DE MOÇAMBIQUE • MINISTÉRIO DO INTERIOR
-            </div>
             <h1 style={styles.instTitle}>
               SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL
             </h1>
