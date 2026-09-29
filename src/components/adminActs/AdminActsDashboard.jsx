@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import useAdminActsData from '../../hooks/useAdminActsData';
 
-const COLORS = ['#1B365D', '#3182CE', '#E53E3E', '#D69E2E', '#38A169', '#805AD5', '#DD6B20', '#319795'];
+const COLORS = ['#B71C1C', '#3182CE', '#E53E3E', '#D69E2E', '#38A169', '#805AD5', '#DD6B20', '#319795'];
 
 export default function AdminActsDashboard() {
   const { stats } = useAdminActsData();
@@ -140,7 +140,7 @@ export default function AdminActsDashboard() {
                 <YAxis />
                 <RechartsTooltip />
                 <Legend />
-                <Line type="monotone" dataKey="Atos" stroke="#1B365D" strokeWidth={3} activeDot={{ r: 8 }} />
+                <Line type="monotone" dataKey="Atos" stroke="#B71C1C" strokeWidth={3} activeDot={{ r: 8 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>

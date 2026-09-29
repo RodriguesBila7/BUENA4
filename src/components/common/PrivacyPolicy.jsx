@@ -3,7 +3,7 @@ import React from 'react';
 export default function PrivacyPolicy() {
   return (
     <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-      <h2 style={{ color: '#1B365D', borderBottom: '2px solid #1B365D', paddingBottom: '10px' }}>
+      <h2 style={{ color: '#B71C1C', borderBottom: '2px solid #B71C1C', paddingBottom: '10px' }}>
         Política de Privacidade e Proteção de Dados
       </h2>
       

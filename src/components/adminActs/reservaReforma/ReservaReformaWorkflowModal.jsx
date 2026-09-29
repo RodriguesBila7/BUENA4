@@ -40,7 +40,7 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
         if (isReactivating) {
           return (
             <div style={styles.stepContainer}>
-              <h3 style={{ color: 'var(--color-primary, #1B365D)', marginBottom: '16px' }}>Trazer para a Ativa (Reativar)</h3>
+              <h3 style={{ color: 'var(--color-primary, #B71C1C)', marginBottom: '16px' }}>Trazer para a Ativa (Reativar)</h3>
               <p style={{ fontSize: '13px', color: 'var(--color-text-muted, #64748B)', marginBottom: '16px' }}>
                 Para trazer {employee.name} de volta à atividade, insira o número do Despacho e o código de Super Administrador.
               </p>
@@ -227,14 +227,14 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
           {/* Stepper */}
           <div style={styles.stepper}>
             <div style={{ ...styles.stepItem, opacity: workflow.step >= 1 ? 1 : 0.5 }}>
-              <div style={{ ...styles.stepCircle, backgroundColor: workflow.step > 1 ? '#10B981' : workflow.step === 1 ? '#1B365D' : '#CBD5E1' }}>
+              <div style={{ ...styles.stepCircle, backgroundColor: workflow.step > 1 ? '#10B981' : workflow.step === 1 ? '#B71C1C' : '#CBD5E1' }}>
                 {workflow.step > 1 ? '✓' : '1'}
               </div>
               <span style={styles.stepLabel}>1. Fixação Provisória</span>
             </div>
             <div style={styles.stepLine} />
             <div style={{ ...styles.stepItem, opacity: workflow.step >= 2 ? 1 : 0.5 }}>
-              <div style={{ ...styles.stepCircle, backgroundColor: workflow.isCompleted ? '#10B981' : workflow.step === 2 ? '#1B365D' : '#CBD5E1' }}>
+              <div style={{ ...styles.stepCircle, backgroundColor: workflow.isCompleted ? '#10B981' : workflow.step === 2 ? '#B71C1C' : '#CBD5E1' }}>
                 {workflow.isCompleted ? '✓' : '2'}
               </div>
               <span style={styles.stepLabel}>2. Visto do T.A.</span>
@@ -401,7 +401,7 @@ const styles = {
   },
   btnPrimary: {
     padding: '10px 18px',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: 'var(--color-primary, #B71C1C)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -420,7 +420,7 @@ const styles = {
   },
   btnAction: {
     padding: '10px 18px',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: 'var(--color-primary, #B71C1C)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',

@@ -375,7 +375,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
 
                       {/* Cargo / Detalhes */}
                       <td style={styles.td}>
-                        <span style={{ fontWeight: '600', color: '#1B365D', display: 'block', fontSize: '12px' }}>
+                        <span style={{ fontWeight: '600', color: '#B71C1C', display: 'block', fontSize: '12px' }}>
                           {act.details?.newRole || act.details?.newCargo || act.details?.previousRole || '-'}
                         </span>
                         {act.details?.brNumber && (

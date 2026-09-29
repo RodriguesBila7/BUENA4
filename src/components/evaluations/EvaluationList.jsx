@@ -304,10 +304,10 @@ export default function EvaluationList({ user }) {
               text-align: center;
               margin-bottom: 25px;
             }
-            .header h2 { margin: 0; font-size: 15px; text-transform: uppercase; font-weight: 800; color: #1B365D; }
-            .header h3 { margin: 3px 0; font-size: 13px; text-transform: uppercase; color: #1B365D; }
-            .header h4 { margin: 3px 0; font-size: 12px; text-transform: uppercase; color: #1B365D; }
-            .header .dir { font-weight: bold; font-size: 12px; color: #1B365D; text-transform: uppercase; margin-top: 4px; }
+            .header h2 { margin: 0; font-size: 15px; text-transform: uppercase; font-weight: 800; color: #B71C1C; }
+            .header h3 { margin: 3px 0; font-size: 13px; text-transform: uppercase; color: #B71C1C; }
+            .header h4 { margin: 3px 0; font-size: 12px; text-transform: uppercase; color: #B71C1C; }
+            .header .dir { font-weight: bold; font-size: 12px; color: #B71C1C; text-transform: uppercase; margin-top: 4px; }
             .header .title {
               margin-top: 15px;
               padding: 8px;
@@ -316,7 +316,7 @@ export default function EvaluationList({ user }) {
               font-size: 14px;
               font-weight: 800;
               text-transform: uppercase;
-              color: #1B365D;
+              color: #B71C1C;
             }
             .section {
               margin-bottom: 20px;
@@ -325,7 +325,7 @@ export default function EvaluationList({ user }) {
               overflow: hidden;
             }
             .section-title {
-              background-color: #1B365D;
+              background-color: #B71C1C;
               color: #fff;
               padding: 6px 12px;
               font-weight: bold;
@@ -359,7 +359,7 @@ export default function EvaluationList({ user }) {
             .score-val {
               font-size: 28px;
               font-weight: 900;
-              color: #1B365D;
+              color: #B71C1C;
             }
             .score-class {
               font-size: 16px;

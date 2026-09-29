@@ -203,10 +203,10 @@ export default function VacationAlerts({ onGoToSettings }) {
           <div style={styles.kpiSub}>Convocatória de apresentação</div>
         </div>
 
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #1b365d' }}>
+        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #B71C1C' }}>
           <div style={styles.kpiTop}>
             <span style={styles.kpiIcon}>📲</span>
-            <span style={{ ...styles.kpiBadge, backgroundColor: '#eff6ff', color: '#1b365d' }}>Total</span>
+            <span style={{ ...styles.kpiBadge, backgroundColor: '#eff6ff', color: '#B71C1C' }}>Total</span>
           </div>
           <div style={styles.kpiValue}>{counts.total}</div>
           <div style={styles.kpiLabel}>Processos a Notificar</div>
@@ -725,7 +725,7 @@ const styles = {
   },
   btnSms: {
     padding: '8px 14px',
-    backgroundColor: '#1b365d',
+    backgroundColor: '#B71C1C',
     color: '#fff',
     borderRadius: '6px',
     fontWeight: '600',

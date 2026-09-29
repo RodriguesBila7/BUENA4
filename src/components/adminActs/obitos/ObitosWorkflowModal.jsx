@@ -395,7 +395,7 @@ const styles = {
   },
   btnPrimary: {
     padding: '10px 16px',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: 'var(--color-primary, #B71C1C)',
     color: 'white',
     border: 'none',
     borderRadius: '8px',

@@ -105,9 +105,9 @@ export default function EmployeeSearchModal({ isOpen, onClose, employees = [], o
               onClick={() => { setSearchTerm(''); setShowAll(!showAll); }} 
               style={{
                 ...styles.btnShowAll,
-                backgroundColor: showAll ? 'var(--color-primary, #1B365D)' : 'var(--color-bg-base, #f8fafc)',
+                backgroundColor: showAll ? 'var(--color-primary, #B71C1C)' : 'var(--color-bg-base, #f8fafc)',
                 color: showAll ? '#fff' : 'var(--color-text-base, #1e293b)',
-                borderColor: showAll ? 'var(--color-primary, #1B365D)' : 'var(--color-border, #cbd5e1)'
+                borderColor: showAll ? 'var(--color-primary, #B71C1C)' : 'var(--color-border, #cbd5e1)'
               }}
             >
               👥 {showAll ? 'Ocultar' : 'Visualizar Todos'}
@@ -241,7 +241,7 @@ const styles = {
   },
   empName: { fontSize: '14px', fontWeight: '600', color: 'var(--color-text-base, #0f172a)', marginBottom: '2px' },
   empNip: { fontSize: '12px', color: 'var(--color-text-muted, #64748b)' },
-  selectArrow: { fontSize: '14px', color: 'var(--color-primary, #1B365D)', fontWeight: 'bold' },
+  selectArrow: { fontSize: '14px', color: 'var(--color-primary, #B71C1C)', fontWeight: 'bold' },
   empty: { padding: '30px 20px', textAlign: 'center', color: 'var(--color-text-muted, #64748b)', fontSize: '13px' },
   resizeHandle: {
     position: 'absolute',

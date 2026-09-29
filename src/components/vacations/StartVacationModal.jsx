@@ -419,7 +419,7 @@ const styles = {
   },
   fileName: {
     fontSize: '12px',
-    color: 'var(--color-primary, #1B365D)',
+    color: 'var(--color-primary, #B71C1C)',
     fontWeight: '500'
   },
   input: {
@@ -453,7 +453,7 @@ const styles = {
     padding: '8px 18px',
     borderRadius: '6px',
     border: 'none',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: 'var(--color-primary, #B71C1C)',
     color: '#fff',
     fontWeight: '600',
     cursor: 'pointer',

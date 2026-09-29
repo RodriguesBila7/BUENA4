@@ -213,10 +213,10 @@ export default function EffectivenessApprovals({ user, orgData: passedOrgData, e
           <div style={styles.kpiSub}>Sujeitas a desconto e sanção legal</div>
         </div>
 
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #1b365d' }}>
+        <div style={{ ...styles.kpiCard, borderLeft: '4px solid #B71C1C' }}>
           <div style={styles.kpiTop}>
             <span style={styles.kpiIcon}>📋</span>
-            <span style={{ ...styles.kpiBadge, backgroundColor: '#eff6ff', color: '#1b365d' }}>Total</span>
+            <span style={{ ...styles.kpiBadge, backgroundColor: '#eff6ff', color: '#B71C1C' }}>Total</span>
           </div>
           <div style={styles.kpiValue}>{stats.total}</div>
           <div style={styles.kpiLabel}>Total de Registos</div>

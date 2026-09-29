@@ -12,7 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { isCentralUser, filterByProvincialScope, formatProvincialRoleName } from '../utils/scopeUtils';
 import { getKPIs, getChartData, getHierarchyTree, getAuditIssues } from '../services/orgAnalyticsService';
 
-const COLORS = ['#1B365D', '#4A5568', '#718096', '#A0AEC0', '#E2E8F0'];
+const COLORS = ['#B71C1C', '#4A5568', '#718096', '#A0AEC0', '#E2E8F0'];
 
 const KPICard = ({ title, data, t }) => (
   <div style={styles.kpiCard}>

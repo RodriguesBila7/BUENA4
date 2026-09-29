@@ -380,14 +380,14 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
           <style>
             @page { size: A4 landscape; margin: 15mm; }
             body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; margin: 0; padding: 20px; font-size: 11px; }
-            .header { text-align: center; border-bottom: 2.5px solid #1B365D; padding-bottom: 12px; margin-bottom: 16px; }
-            .header h2 { margin: 0 0 4px 0; font-size: 14px; text-transform: uppercase; color: #1B365D; }
+            .header { text-align: center; border-bottom: 2.5px solid #B71C1C; padding-bottom: 12px; margin-bottom: 16px; }
+            .header h2 { margin: 0 0 4px 0; font-size: 14px; text-transform: uppercase; color: #B71C1C; }
             .header h3 { margin: 0 0 4px 0; font-size: 12px; font-weight: 600; }
-            .header h4 { margin: 0 0 6px 0; font-size: 13px; color: #1B365D; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+            .header h4 { margin: 0 0 6px 0; font-size: 13px; color: #B71C1C; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
             .meta-box { display: flex; justify-content: space-between; background-color: #f8fafc; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 14px; }
             .meta-box div { font-size: 11px; line-height: 1.5; }
             table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-            th { background-color: #1B365D; color: #ffffff; padding: 6px 8px; border: 1px solid #0f2442; text-align: left; font-weight: 700; }
+            th { background-color: #B71C1C; color: #ffffff; padding: 6px 8px; border: 1px solid #0f2442; text-align: left; font-weight: 700; }
             td { padding: 5px 8px; border: 1px solid #cbd5e1; text-align: left; }
             tr:nth-child(even) { background-color: #f8fafc; }
             .footer-totals { margin-top: 14px; padding: 10px 14px; background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; display: flex; justify-content: space-around; font-weight: bold; font-size: 11px; }
@@ -400,9 +400,9 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
             <h2>REPÚBLICA DE MOÇAMBIQUE</h2>
             <h3>MINISTÉRIO DO INTERIOR</h3>
             <h4>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)</h4>
-            <div style="font-weight: 800; font-size: 11.5px; color: #1B365D; text-transform: uppercase;">DIRECÇÃO GERAL</div>
-            <div style="font-weight: 700; font-size: 11px; color: #1B365D; text-transform: uppercase;">DIRECÇÃO DE RECURSOS HUMANOS</div>
-            <div style="margin-top: 6px; font-size: 12.5px; font-weight: 800; text-transform: uppercase; color: #1B365D;">
+            <div style="font-weight: 800; font-size: 11.5px; color: #B71C1C; text-transform: uppercase;">DIRECÇÃO GERAL</div>
+            <div style="font-weight: 700; font-size: 11px; color: #B71C1C; text-transform: uppercase;">DIRECÇÃO DE RECURSOS HUMANOS</div>
+            <div style="margin-top: 6px; font-size: 12.5px; font-weight: 800; text-transform: uppercase; color: #B71C1C;">
               MAPA OFICIAL DE EFETIVIDADE E ASSIDUIDADE DE PESSOAL
             </div>
           </div>
@@ -701,7 +701,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
           padding: '14px 18px',
           backgroundColor: 'rgba(27, 54, 93, 0.05)',
           borderRadius: '10px',
-          border: '1.5px solid var(--color-primary, #1B365D)',
+          border: '1.5px solid var(--color-primary, #B71C1C)',
           marginBottom: '16px',
           flexWrap: 'wrap',
           boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
@@ -709,7 +709,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '20px' }}>🏛️</span>
             <div>
-              <div style={{ fontSize: '13.5px', fontWeight: 'bold', color: 'var(--color-primary, #1B365D)' }}>
+              <div style={{ fontSize: '13.5px', fontWeight: 'bold', color: 'var(--color-primary, #B71C1C)' }}>
                 Direcção Provincial de RH:
               </div>
             </div>
@@ -748,7 +748,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
               onClick={handlePrintProvincialMap}
               style={{
                 padding: '8px 16px',
-                backgroundColor: 'var(--color-primary, #1B365D)',
+                backgroundColor: 'var(--color-primary, #B71C1C)',
                 color: 'var(--color-accent, #EAAA00)',
                 border: 'none',
                 borderRadius: '6px',
@@ -794,7 +794,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
           backgroundColor: 'rgba(27, 54, 93, 0.06)',
           borderRadius: '8px',
           border: '1px solid rgba(27, 54, 93, 0.15)',
-          color: 'var(--color-primary, #1B365D)',
+          color: 'var(--color-primary, #B71C1C)',
           fontSize: '13px',
           fontWeight: '600',
           display: 'flex',
@@ -814,7 +814,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
             onClick={handlePrintProvincialMap}
             style={{
               padding: '6px 12px',
-              backgroundColor: 'var(--color-primary, #1B365D)',
+              backgroundColor: 'var(--color-primary, #B71C1C)',
               color: 'var(--color-accent, #EAAA00)',
               border: 'none',
               borderRadius: '6px',
@@ -1079,7 +1079,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                     🏛️ Imprimir Todas as Faltas (Todas as Direcções)
                   </button>
                 )}
-                <button onClick={handlePrintProvincialMap} style={{...styles.btnGoToRegister, backgroundColor: 'var(--color-primary, #1B365D)'}}>
+                <button onClick={handlePrintProvincialMap} style={{...styles.btnGoToRegister, backgroundColor: 'var(--color-primary, #B71C1C)'}}>
                   🖨️ Imprimir Mapa
                 </button>
                 <button onClick={exportToExcel} style={{...styles.btnGoToRegister, backgroundColor: '#107c41'}}>
@@ -1225,7 +1225,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                     style={{
                       flex: 1,
                       padding: '7px 10px',
-                      backgroundColor: 'var(--color-primary, #1B365D)',
+                      backgroundColor: 'var(--color-primary, #B71C1C)',
                       color: 'var(--color-accent, #EAAA00)',
                       border: 'none',
                       borderRadius: '5px',

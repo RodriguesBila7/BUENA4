@@ -199,7 +199,7 @@ const styles = {
     margin: 0,
     fontSize: '16px',
     fontWeight: '700',
-    color: 'var(--color-primary, #1B365D)',
+    color: 'var(--color-primary, #B71C1C)',
   },
   subtitle: {
     margin: '2px 0 0',

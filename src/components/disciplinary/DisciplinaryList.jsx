@@ -489,7 +489,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
           backgroundColor: 'rgba(27, 54, 93, 0.06)',
           borderRadius: '8px',
           border: '1px solid rgba(27, 54, 93, 0.15)',
-          color: 'var(--color-primary, #1B365D)',
+          color: 'var(--color-primary, #B71C1C)',
           fontSize: '13px',
           fontWeight: '600',
           display: 'flex',
@@ -1222,7 +1222,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                 onClick={() => handleExecuteSanctionAct(true)}
                 style={{
                   padding: '14px 18px',
-                  backgroundColor: 'var(--color-primary, #1B365D)',
+                  backgroundColor: 'var(--color-primary, #B71C1C)',
                   color: 'var(--color-accent, #EAAA00)',
                   border: 'none',
                   borderRadius: '8px',

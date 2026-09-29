@@ -211,7 +211,7 @@ function PortalAgentSearchModal({ isOpen, onClose, employees = [], orgData, curr
                     }}
                     style={{
                       ...modalStyles.resultCard,
-                      borderColor: isSelected ? 'var(--color-primary, #1B365D)' : 'var(--color-border)',
+                      borderColor: isSelected ? 'var(--color-primary, #B71C1C)' : 'var(--color-border)',
                       backgroundColor: isSelected ? 'rgba(27, 54, 93, 0.08)' : 'var(--color-bg-card, #ffffff)'
                     }}
                   >
@@ -671,7 +671,7 @@ function PortalActivationCodesTab({ employees = [], orgData, onUpdateEmployee })
       <div style={{ overflowX: 'auto', backgroundColor: 'var(--color-bg-subtle)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
         <table className="premium-table" style={{ width: '100%', fontSize: '13px' }}>
           <thead>
-            <tr style={{ backgroundColor: 'var(--color-primary, #1B365D)', color: '#fff' }}>
+            <tr style={{ backgroundColor: 'var(--color-primary, #B71C1C)', color: '#fff' }}>
               <th style={styles.th}>Agente / Investigador</th>
               <th style={styles.th}>NUIT / NIP</th>
               <th style={styles.th}>Contactos (SMS / Email)</th>
@@ -1502,7 +1502,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
                         outerRadius={58}
                         paddingAngle={3}
                       >
-                        <Cell fill="var(--color-primary, #1B365D)" />
+                        <Cell fill="var(--color-primary, #B71C1C)" />
                         <Cell fill="#059669" />
                       </Pie>
                       <RechartsTooltip />
@@ -1837,7 +1837,7 @@ const styles = {
   instTitle: {
     fontSize: '19px',
     fontWeight: '800',
-    color: 'var(--color-primary, #1B365D)',
+    color: 'var(--color-primary, #B71C1C)',
     margin: '0 0 2px 0',
     letterSpacing: '0.4px'
   },
@@ -1986,7 +1986,7 @@ const styles = {
     flexDirection: 'column',
     justifyContent: 'space-between'
   },
-  chartTitle: { fontSize: '13px', fontWeight: '700', color: 'var(--color-primary, #1B365D)', margin: '0 0 8px 0' },
+  chartTitle: { fontSize: '13px', fontWeight: '700', color: 'var(--color-primary, #B71C1C)', margin: '0 0 8px 0' },
   chartLegendRow: { display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '6px' },
   chartLegendItem: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)' },
   legendDot: { width: '8px', height: '8px', borderRadius: '50%' },
@@ -2292,7 +2292,7 @@ const modalStyles = {
   btnResetFilters: {
     background: 'none',
     border: 'none',
-    color: 'var(--color-primary, #1B365D)',
+    color: 'var(--color-primary, #B71C1C)',
     fontSize: '11px',
     fontWeight: '700',
     cursor: 'pointer'
@@ -2331,7 +2331,7 @@ const modalStyles = {
   avatarFallback: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: 'var(--color-primary, #B71C1C)',
     color: '#ffffff',
     display: 'flex',
     alignItems: 'center',
@@ -2353,7 +2353,7 @@ const modalStyles = {
     padding: '2px 6px',
     borderRadius: '4px',
     backgroundColor: 'rgba(27, 54, 93, 0.08)',
-    color: 'var(--color-primary, #1B365D)',
+    color: 'var(--color-primary, #B71C1C)',
     whiteSpace: 'nowrap'
   },
   empSub: {

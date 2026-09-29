@@ -62,8 +62,9 @@ export default function App() {
     const activeColor = settings.cor_principal || '#B71C1C';
     // Injeção de variáveis CSS customizadas
     if (settings.modo_tema === 'dark') {
-      const isDefaultDarkNavy = !settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D';
-      const primaryColor = isDefaultDarkNavy ? '#4F8DF7' : settings.cor_principal;
+      const primaryColor = (settings.cor_principal && settings.cor_principal.toUpperCase() !== '#1B365D')
+        ? settings.cor_principal
+        : '#EF4444';
       document.documentElement.style.setProperty('--color-primary', primaryColor);
       document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria || '#3A4A66');
       document.documentElement.style.setProperty('--color-accent', settings.cor_destaque || '#FFFFFF');

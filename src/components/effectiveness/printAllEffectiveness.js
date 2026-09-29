@@ -118,7 +118,7 @@ export function printAllAbsencesNationalMap({ records = [], employees = [], orgD
           }
           .header {
             text-align: center;
-            border-bottom: 2.5px solid #1B365D;
+            border-bottom: 2.5px solid #B71C1C;
             padding-bottom: 8px;
             margin-bottom: 12px;
           }
@@ -126,7 +126,7 @@ export function printAllAbsencesNationalMap({ records = [], employees = [], orgD
             margin: 0 0 2px 0;
             font-size: 13.5px;
             text-transform: uppercase;
-            color: #1B365D;
+            color: #B71C1C;
             letter-spacing: 0.5px;
           }
           .header h3 {
@@ -146,21 +146,21 @@ export function printAllAbsencesNationalMap({ records = [], employees = [], orgD
           .dg-sub {
             font-weight: 800;
             font-size: 11px;
-            color: #1B365D;
+            color: #B71C1C;
             text-transform: uppercase;
             margin-bottom: 2px;
           }
           .drh-sub {
             font-weight: 700;
             font-size: 11px;
-            color: #1B365D;
+            color: #B71C1C;
             text-transform: uppercase;
           }
           .doc-badge {
             display: inline-block;
             margin-top: 5px;
             padding: 4px 14px;
-            background-color: #1B365D;
+            background-color: #B71C1C;
             color: #FFFFFF;
             font-size: 11px;
             font-weight: 800;
@@ -175,7 +175,7 @@ export function printAllAbsencesNationalMap({ records = [], employees = [], orgD
             background-color: #F8FAFC;
             padding: 10px 14px;
             border: 1px solid #E2E8F0;
-            border-left: 4px solid #1B365D;
+            border-left: 4px solid #B71C1C;
             border-radius: 6px;
             margin-bottom: 14px;
           }

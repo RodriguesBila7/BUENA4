@@ -8,7 +8,7 @@ import AgentActivationWizard from './auth/AgentActivationWizard';
 
 /* ── Temas pré-definidos ── */
 const TEMAS = [
-  { nome: 'Azul Institucional', cor: '#1B365D' },
+  { nome: 'Azul Institucional', cor: '#B71C1C' },
   { nome: 'Azul Escuro',        cor: '#0D1B4B' },
   { nome: 'Azul Real',          cor: '#1565C0' },
   { nome: 'Azul Aço',          cor: '#0277BD' },
@@ -87,8 +87,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     // handled by useAuthData defaults
   }, []);
 
-  // Ignorar o logotipo em cache temporariamente para forçar o transparente
-  const logoSrc = SERNIC_LOGO_B64;
+  // Logótipo em alta resolução com nitidez aprimorada para mobile
+  const logoSrc = settings.logotipo || '/logo-sernic-transparente.png';
 
   const isDark = bwMode === 'noite' || settings.modo_tema === 'dark';
 
@@ -305,7 +305,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             style={{
               ...s.langBtn,
               backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.18)',
-              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+              color: bwMode === 'claro' ? '#B71C1C' : '#FFFFFF',
               border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
               display: 'flex',
               alignItems: 'center',
@@ -335,7 +335,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                   style={{
                     ...s.langBtn,
                     backgroundColor: 'transparent',
-                    color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+                    color: bwMode === 'claro' ? '#B71C1C' : '#FFFFFF',
                     opacity: 0.95,
                     width: '100%',
                     textAlign: 'left',
@@ -364,7 +364,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               bwMode === 'claro' ? 'rgba(0,0,0,0.08)' :
               'rgba(255,255,255,0.2)',
             color:
-              bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+              bwMode === 'claro' ? '#B71C1C' : '#FFFFFF',
             border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
           }}
         >
@@ -403,7 +403,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             style={{
               ...s.iconBtn,
               backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.2)',
-              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+              color: bwMode === 'claro' ? '#B71C1C' : '#FFFFFF',
               border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
             }}
           >
@@ -832,7 +832,9 @@ const s = {
     width: '215px',
     height: '215px',
     objectFit: 'contain',
-    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.25))',
+    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.25)) contrast(1.05)',
+    imageRendering: '-webkit-optimize-contrast',
+    imageRendering: 'crisp-edges',
     transition: 'transform 0.2s ease',
   },
   instNome: {

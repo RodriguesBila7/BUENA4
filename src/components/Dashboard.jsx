@@ -959,9 +959,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       >
         <div style={styles.sidebarHeader}>
           {settings.logotipo ? (
-            <img src={settings.logotipo} alt="Logo SERNIC" style={styles.sidebarLogo} />
+            <img src={settings.logotipo} alt="Logo SERNIC" style={{ ...styles.sidebarLogo, imageRendering: '-webkit-optimize-contrast' }} />
           ) : (
-            <img src={SERNIC_LOGO_B64} alt="Logo SERNIC Padrão" style={{ ...styles.sidebarLogo, width: '42px', height: '42px' }} />
+            <img src="/logo-sernic-transparente.png" alt="Logo SERNIC Padrão" style={{ ...styles.sidebarLogo, width: '42px', height: '42px', imageRendering: '-webkit-optimize-contrast' }} />
           )}
           <div style={styles.sidebarHeaderText}>
             <span style={styles.sidebarSigla}>{settings.sigla}</span>
@@ -974,7 +974,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             onClick={() => handleTabChange('home')}
             style={getNavItemStyle(activeTab === 'home')}
           >
-            <svg style={{ ...styles.navIcon, color: activeTab === 'home' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <svg style={{ ...styles.navIcon, color: activeTab === 'home' ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             {t('menu_home')}
           </button>
           
@@ -1000,7 +1000,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             onClick={() => handleTabChange('reports')}
             style={getNavItemStyle(activeTab === 'reports')}
           >
-            <svg style={{ ...styles.navIcon, color: activeTab === 'reports' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <svg style={{ ...styles.navIcon, color: activeTab === 'reports' ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             {t('menu_reports')}
           </button>
 
@@ -1009,7 +1009,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             onClick={() => handleTabChange('disciplinary')}
             style={getNavItemStyle(activeTab === 'disciplinary')}
           >
-            <svg style={{ ...styles.navIcon, color: activeTab === 'disciplinary' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <svg style={{ ...styles.navIcon, color: activeTab === 'disciplinary' ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             Contencioso Laboral
           </button>
 
@@ -1018,7 +1018,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             onClick={() => handleTabChange('effectiveness')}
             style={getNavItemStyle(activeTab === 'effectiveness')}
           >
-            <svg style={{ ...styles.navIcon, color: activeTab === 'effectiveness' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg style={{ ...styles.navIcon, color: activeTab === 'effectiveness' ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -1032,7 +1032,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             onClick={() => handleTabChange('evaluations')}
             style={getNavItemStyle(activeTab === 'evaluations')}
           >
-            <svg style={{ ...styles.navIcon, color: activeTab === 'evaluations' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6M6 20V10M18 20V4" /><circle cx="12" cy="10" r="2" /><circle cx="6" cy="6" r="2" /><circle cx="18" cy="16" r="2" /></svg>
+            <svg style={{ ...styles.navIcon, color: activeTab === 'evaluations' ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6M6 20V10M18 20V4" /><circle cx="12" cy="10" r="2" /><circle cx="6" cy="6" r="2" /><circle cx="18" cy="16" r="2" /></svg>
             Gestão de Desempenho Individual
           </button>
 
@@ -1101,7 +1101,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                    >
                      <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)' }}></div>
                      <span style={{ fontWeight: activeTab === item.id ? '700' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                       <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                          {item.icon}
                        </svg>
                        {item.label}
@@ -1152,7 +1152,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                    >
                      <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)' }}></div>
                      <span style={{ fontWeight: activeTab === item.id ? '700' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                       <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                          {item.icon}
                        </svg>
                        {item.label}
@@ -1293,7 +1293,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                          >
                            <div style={{ position: 'absolute', left: '46px', top: '50%', width: '6px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
                            <span style={{ fontWeight: activeTab === item.id ? '700' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                             <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle></svg>
+                             <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle></svg>
                              {t(`menu_${item.id}`) || item.label}
                            </span>
                          </button>
@@ -1312,7 +1312,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   >
                     <div style={{ position: 'absolute', left: '26px', top: '50%', width: '6px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_languages' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_languages' ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                       <span style={{ fontWeight: activeTab === 'settings_languages' ? '700' : '400' }}>{t('menu_settings_languages') || 'Idiomas e Região'}</span>
                     </div>
                   </button>
@@ -1328,7 +1328,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   >
                     <div style={{ position: 'absolute', left: '26px', top: '50%', width: '6px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_system' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_system' ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
                       <span style={{ fontWeight: activeTab === 'settings_system' ? '700' : '400' }}>{t('menu_settings_system') || 'Sistema'}</span>
                     </div>
                   </button>
@@ -1344,7 +1344,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   >
                     <div style={{ position: 'absolute', left: '26px', top: '50%', width: '6px', height: '1px', backgroundColor: 'var(--color-border)', zIndex: 1 }}></div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_backup' ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                      <svg style={{ width: '15px', height: '15px', color: activeTab === 'settings_backup' ? 'var(--color-primary, #B71C1C)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                       <span style={{ fontWeight: activeTab === 'settings_backup' ? '700' : '400' }}>Central de Backup</span>
                     </div>
                   </button>
@@ -1463,9 +1463,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={styles.headerTitle}>
               {settings.logotipo ? (
-                <img src={settings.logotipo} alt="Logo" style={{ ...styles.headerLogo, width: '42px', height: '42px' }} />
+                <img src={settings.logotipo} alt="Logo" style={{ ...styles.headerLogo, width: '42px', height: '42px', imageRendering: '-webkit-optimize-contrast' }} />
               ) : (
-                <img src={SERNIC_LOGO_B64} alt="Logo Padrão" style={{ ...styles.headerLogo, width: '42px', height: '42px' }} />
+                <img src="/logo-sernic-transparente.png" alt="Logo Padrão" style={{ ...styles.headerLogo, width: '42px', height: '42px', imageRendering: '-webkit-optimize-contrast' }} />
               )}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <h2 style={{ ...styles.institutionTitle, margin: 0, fontSize: '13px', color: 'var(--color-text-muted, #64748b)', fontWeight: '600', lineHeight: '1.2' }}>
@@ -1475,7 +1475,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   <span style={{ 
                     fontSize: '20px', 
                     fontWeight: '800', 
-                    color: 'var(--color-primary, #1B365D)', 
+                    color: 'var(--color-primary, #B71C1C)', 
                     textTransform: 'uppercase',
                     letterSpacing: '0.6px',
                     marginTop: '2px',
@@ -1644,7 +1644,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   padding: '3px 12px 3px 4px',
                   borderRadius: '9999px',
                   border: showProfileMenu 
-                    ? '1px solid var(--color-primary, #1B365D)' 
+                    ? '1px solid var(--color-primary, #B71C1C)' 
                     : '1px solid var(--color-border)',
                   boxShadow: showProfileMenu 
                     ? '0 0 0 3px rgba(27, 54, 93, 0.1), 0 2px 8px rgba(0,0,0,0.04)' 
@@ -1654,7 +1654,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   outline: 'none',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--color-primary, #1B365D)';
+                  e.currentTarget.style.borderColor = 'var(--color-primary, #B71C1C)';
                   e.currentTarget.style.boxShadow = '0 3px 10px rgba(0,0,0,0.06)';
                 }}
                 onMouseLeave={(e) => {
@@ -1686,7 +1686,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       height: '34px',
                       borderRadius: '50%',
                       background: isSuperAdmin 
-                        ? 'linear-gradient(135deg, #1B365D 0%, #2563eb 100%)' 
+                        ? 'linear-gradient(135deg, #B71C1C 0%, #DC2626 100%)' 
                         : 'linear-gradient(135deg, #475569 0%, #64748b 100%)',
                       color: '#ffffff',
                       display: 'flex',
@@ -1695,7 +1695,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       fontWeight: '700',
                       fontSize: '13.5px',
                       letterSpacing: '0.3px',
-                      boxShadow: '0 1px 3px rgba(27, 54, 93, 0.2)'
+                      boxShadow: '0 1px 3px rgba(183, 28, 28, 0.25)'
                     }}>
                       {userDisplayName.charAt(0).toUpperCase()}
                     </div>
@@ -1791,7 +1791,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           width: '48px',
                           height: '48px',
                           borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #1B365D 0%, #2563eb 100%)',
+                          background: 'linear-gradient(135deg, #B71C1C 0%, #DC2626 100%)',
                           color: '#ffffff',
                           display: 'flex',
                           alignItems: 'center',
@@ -1814,7 +1814,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           width: '20px',
                           height: '20px',
                           borderRadius: '50%',
-                          backgroundColor: 'var(--color-primary, #1B365D)',
+                          backgroundColor: 'var(--color-primary, #B71C1C)',
                           color: '#ffffff',
                           border: '2px solid var(--color-bg-card)',
                           display: 'flex',
@@ -1839,7 +1839,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                         <span style={{ 
                           fontSize: '10px', 
                           fontWeight: '700', 
-                          color: isSuperAdmin ? '#059669' : 'var(--color-primary, #1B365D)',
+                          color: isSuperAdmin ? '#059669' : 'var(--color-primary, #B71C1C)',
                           backgroundColor: isSuperAdmin ? 'rgba(16, 185, 129, 0.08)' : 'rgba(27, 54, 93, 0.06)',
                           padding: '1px 6px',
                           borderRadius: '4px',
@@ -2153,7 +2153,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                         {tempLogo ? (
                           <img src={tempLogo} alt="Preview Logo" style={styles.logoPreviewImg} />
                         ) : (
-                          <img src={SERNIC_LOGO_B64} alt="Preview Padrão" style={{ ...styles.logoPreviewImg, width: '64px', height: '64px' }} />
+                          <img src="/logo-sernic-transparente.png" style={{ ...styles.sidebarLogo, width: "42px", height: "42px", imageRendering: "-webkit-optimize-contrast" }} alt="Preview Padrão" style={{ ...styles.logoPreviewImg, width: '64px', height: '64px' }} />
                         )}
                       </div>
                       <div style={styles.logoUploadControls}>
@@ -2439,7 +2439,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     {settings.logotipo ? (
                       <img src={settings.logotipo} alt="Logo" style={styles.reportHeaderLogo} className="print-logo" />
                     ) : (
-                      <img src={SERNIC_LOGO_B64} alt="Logo Padrão" style={{ ...styles.reportHeaderLogo, width: '70px', height: '70px' }} className="print-logo" />
+                      <img src="/logo-sernic-transparente.png" style={{ ...styles.sidebarLogo, width: "42px", height: "42px", imageRendering: "-webkit-optimize-contrast" }} alt="Logo Padrão" style={{ ...styles.reportHeaderLogo, width: '70px', height: '70px' }} className="print-logo" />
                     )}
                   </div>
                   <div style={styles.reportHeaderRight}>
@@ -2467,7 +2467,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   {/* RESUMO GERAL E GÉNERO SIMPLIFICADOS */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px', marginTop: '16px' }}>
                     <div style={{ border: '1px solid var(--color-border)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--color-bg-base)', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary, #1B365D)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary, #B71C1C)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         📊 Resumo Geral
                       </h4>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -2482,13 +2482,13 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     </div>
 
                     <div style={{ border: '1px solid var(--color-border)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--color-bg-base)', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary, #1B365D)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary, #B71C1C)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         👥 Distribuição por Género
                       </h4>
                       <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '42px' }}>
                         <div style={{ textAlign: 'center' }}>
                           <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Homens: </span>
-                          <strong style={{ fontSize: '16px', color: 'var(--color-primary, #1B365D)' }}>{reportStats.men}</strong>
+                          <strong style={{ fontSize: '16px', color: 'var(--color-primary, #B71C1C)' }}>{reportStats.men}</strong>
                         </div>
                         <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)' }}></div>
                         <div style={{ textAlign: 'center' }}>
@@ -2506,7 +2506,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       backgroundColor: 'rgba(27, 54, 93, 0.06)',
                       borderRadius: '8px',
                       border: '1px solid rgba(27, 54, 93, 0.15)',
-                      color: 'var(--color-primary, #1B365D)',
+                      color: 'var(--color-primary, #B71C1C)',
                       fontSize: '13px',
                       fontWeight: '600',
                       display: 'flex',
@@ -2687,7 +2687,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               </select>
                             </div>
                           ) : (
-                            <div style={{ padding: '4px 10px', backgroundColor: 'rgba(27, 54, 93, 0.08)', borderRadius: '6px', fontSize: '12px', fontWeight: '700', color: 'var(--color-primary, #1B365D)' }}>
+                            <div style={{ padding: '4px 10px', backgroundColor: 'rgba(183, 28, 28, 0.08)', borderRadius: '6px', fontSize: '12px', fontWeight: '700', color: 'var(--color-primary, #B71C1C)' }}>
                               📍 {reportStats.userDirectorateName}
                             </div>
                           )}
@@ -4225,7 +4225,7 @@ const styles = {
   },
   sidebarDRH: {
     fontSize: '10.5px',
-    color: 'var(--color-primary, #1B365D)',
+    color: 'var(--color-primary, #B71C1C)',
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: '0.5px',

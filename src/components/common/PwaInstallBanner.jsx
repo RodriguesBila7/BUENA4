@@ -87,7 +87,7 @@ export default function PwaInstallBanner() {
         <div style={styles.overlay} onClick={() => setShowGuide(false)}>
           <div style={styles.modal} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ margin: 0, color: 'var(--color-primary, #1B365D)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ margin: 0, color: 'var(--color-primary, #B71C1C)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 📱 Como Instalar a Aplicação
               </h3>
               <button onClick={() => setShowGuide(false)} style={styles.btnGuideClose}>✕</button>
@@ -113,7 +113,7 @@ export default function PwaInstallBanner() {
               </div>
             )}
 
-            <div style={{ backgroundColor: 'rgba(27, 54, 93, 0.06)', padding: '10px 14px', borderRadius: '8px', fontSize: '12px', color: 'var(--color-primary, #1B365D)', marginBottom: '14px' }}>
+            <div style={{ backgroundColor: 'rgba(183, 28, 28, 0.08)', padding: '10px 14px', borderRadius: '8px', fontSize: '12px', color: 'var(--color-primary, #B71C1C)', marginBottom: '14px' }}>
               💡 O ícone oficial do SERNIC ficará disponível junto das suas outras aplicações no telemóvel.
             </div>
 
@@ -133,7 +133,7 @@ const styles = {
     bottom: '16px',
     left: '50%',
     transform: 'translateX(-50%)',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: 'var(--color-primary, #B71C1C)',
     color: '#fff',
     padding: '10px 18px',
     borderRadius: '30px',
@@ -166,7 +166,7 @@ const styles = {
   btnInstall: {
     padding: '7px 16px',
     backgroundColor: '#fff',
-    color: 'var(--color-primary, #1B365D)',
+    color: 'var(--color-primary, #B71C1C)',
     border: 'none',
     borderRadius: '20px',
     fontSize: '12px',
@@ -231,7 +231,7 @@ const styles = {
   btnModalClose: {
     width: '100%',
     padding: '11px',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: 'var(--color-primary, #B71C1C)',
     color: '#fff',
     border: 'none',
     borderRadius: '8px',
