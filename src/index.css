@@ -1016,6 +1016,16 @@ button.evaluation-tab.active:focus,
     min-height: 100% !important;
     min-height: 100dvh !important;
     background-color: var(--color-bg-base, #ffffff) !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  #root,
+  .app-container,
+  .app-main-content {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
   #root {
@@ -1034,7 +1044,8 @@ button.evaluation-tab.active:focus,
     padding-bottom: 76px !important;
   }
 
-  .charts-row-responsive {
+  .charts-row-responsive,
+  .bottom-row-responsive {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
   }

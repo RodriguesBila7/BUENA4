@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import useOrgData from '../hooks/useOrgData';
 import useEmployeeData from '../hooks/useEmployeeData';
@@ -72,6 +72,13 @@ export default function HomeDashboard({ t, onTabChange }) {
   const { workflows } = useObitosData();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Escopo de estrutura organizacional para utilizadores provinciais
   const scopedData = useMemo(() => {
@@ -250,7 +257,14 @@ export default function HomeDashboard({ t, onTabChange }) {
   );
 
   return (
-    <div style={styles.container}>
+    <div style={{
+      ...styles.container,
+      padding: isMobile ? '0' : '28px',
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box',
+      overflowX: 'hidden'
+    }}>
       <div style={styles.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
@@ -442,134 +456,224 @@ export default function HomeDashboard({ t, onTabChange }) {
         </div>
       )}
 
-      {/* ── BARRA DE GESTÃO RÁPIDA & AÇÕES CRUD ── */}
-      <div className="quick-crud-bar" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-        gap: '12px',
-        marginBottom: '20px'
+      {/* ── PAINEL DE OPERAÇÕES RÁPIDAS (CRUD EXECUTIVO) ── */}
+      <div style={{
+        backgroundColor: 'var(--color-bg-card)',
+        borderRadius: '16px',
+        padding: isMobile ? '12px' : '16px 20px',
+        border: '1px solid var(--color-border)',
+        marginBottom: '20px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
       }}>
-        <button 
-          type="button"
-          onClick={() => onTabChange && onTabChange('emp_form')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '12px 16px',
-            backgroundColor: 'var(--color-primary, #B71C1C)',
-            color: '#FFFFFF',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '10px'
+        }}>
+          <span style={{
+            fontSize: isMobile ? '11px' : '12px',
             fontWeight: '700',
-            fontSize: '13px',
-            boxShadow: '0 3px 12px rgba(183, 28, 28, 0.25)',
-          }}
-          className="crud-quick-btn"
-          title="Cadastrar novo funcionário no sistema"
-        >
-          <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          </div>
-          <span>+ Novo Funcionário</span>
-        </button>
+            textTransform: 'uppercase',
+            letterSpacing: '0.6px',
+            color: 'var(--color-text-muted)'
+          }}>
+            ⚡ Gestão Rápida (CRUD)
+          </span>
+          <span style={{
+            fontSize: '11px',
+            color: 'var(--color-primary, #B71C1C)',
+            fontWeight: '700'
+          }}>
+            SERNIC DRH
+          </span>
+        </div>
 
-        <button 
-          type="button"
-          onClick={() => onTabChange && onTabChange('emp_list')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '12px 16px',
-            backgroundColor: 'var(--color-bg-card)',
-            color: 'var(--color-text-base)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontWeight: '600',
-            fontSize: '13px',
-          }}
-          className="crud-quick-btn"
-          title="Ver e gerir todos os funcionários"
-        >
-          <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          </div>
-          <span>Gerir Efetivos ({sysStats.employees.total})</span>
-        </button>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
+          gap: isMobile ? '8px' : '12px'
+        }}>
+          <button 
+            type="button"
+            onClick={() => onTabChange && onTabChange('emp_form')}
+            className="crud-quick-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: isMobile ? '10px' : '12px 16px',
+              backgroundColor: 'var(--color-primary, #B71C1C)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: '700',
+              fontSize: isMobile ? '12px' : '13px',
+              boxShadow: '0 3px 10px rgba(183, 28, 28, 0.22)',
+              textAlign: 'left'
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </div>
+            <div style={{ lineHeight: 1.2 }}>
+              <div>+ Novo</div>
+              <div style={{ fontSize: '10px', opacity: 0.9, fontWeight: 500 }}>Funcionário</div>
+            </div>
+          </button>
 
-        <button 
-          type="button"
-          onClick={() => onTabChange && onTabChange('admin_acts_dynamic_Provimento_e_Posse')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '12px 16px',
-            backgroundColor: 'var(--color-bg-card)',
-            color: 'var(--color-text-base)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontWeight: '600',
-            fontSize: '13px',
-          }}
-          className="crud-quick-btn"
-          title="Registar provimento, posse ou outro ato"
-        >
-          <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: 'rgba(168, 85, 247, 0.1)', color: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-          </div>
-          <span>Registar Acto</span>
-        </button>
+          <button 
+            type="button"
+            onClick={() => onTabChange && onTabChange('emp_list')}
+            className="crud-quick-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: isMobile ? '10px' : '12px 16px',
+              backgroundColor: 'var(--color-bg-base)',
+              color: 'var(--color-text-base)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: isMobile ? '12px' : '13px',
+              textAlign: 'left'
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              color: '#2563EB',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </div>
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontWeight: '700' }}>Efetivos</div>
+              <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>{sysStats.employees.total} Registados</div>
+            </div>
+          </button>
 
-        <button 
-          type="button"
-          onClick={() => onTabChange && onTabChange('vacations')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            padding: '12px 16px',
-            backgroundColor: 'var(--color-bg-card)',
-            color: 'var(--color-text-base)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontWeight: '600',
-            fontSize: '13px',
-          }}
-          className="crud-quick-btn"
-          title="Agendar férias e licenças"
-        >
-          <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          </div>
-          <span>Marcar Férias</span>
-        </button>
+          <button 
+            type="button"
+            onClick={() => onTabChange && onTabChange('admin_acts_dynamic_Provimento_e_Posse')}
+            className="crud-quick-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: isMobile ? '10px' : '12px 16px',
+              backgroundColor: 'var(--color-bg-base)',
+              color: 'var(--color-text-base)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: isMobile ? '12px' : '13px',
+              textAlign: 'left'
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(168, 85, 247, 0.1)',
+              color: '#9333EA',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+            </div>
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontWeight: '700' }}>Actos Admin.</div>
+              <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>Registar Acto</div>
+            </div>
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => onTabChange && onTabChange('vacations')}
+            className="crud-quick-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: isMobile ? '10px' : '12px 16px',
+              backgroundColor: 'var(--color-bg-base)',
+              color: 'var(--color-text-base)',
+              border: '1px solid var(--color-border)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontSize: isMobile ? '12px' : '13px',
+              textAlign: 'left'
+            }}
+          >
+            <div style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              color: '#059669',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontWeight: '700' }}>Férias</div>
+              <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>Agendar Período</div>
+            </div>
+          </button>
+        </div>
       </div>
 
-      {/* Grade de Indicadores dos Módulos (Interativos) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+      {/* ── GRADE DE INDICADORES (KPIs) EM 2 COLUNAS NO SMARTPHONE ── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: isMobile ? '10px' : '16px',
+        marginBottom: '24px'
+      }}>
         
         {/* KPI 1: Funcionários (CRUD) */}
         <div 
           className="kpi-card-interactive" 
-          style={styles.kpiCard}
+          style={{ ...styles.kpiCard, padding: isMobile ? '12px 14px' : '18px 20px' }}
           onClick={() => onTabChange && onTabChange('emp_list')}
           title="Toque para ver a lista e gerir funcionários"
         >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Funcionários</span>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-primary, #B71C1C)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <span style={{ ...styles.kpiTitle, fontSize: isMobile ? '10px' : '11.5px' }}>Funcionários</span>
+            <span style={{ fontSize: isMobile ? '10px' : '11px', fontWeight: '700', color: 'var(--color-primary, #B71C1C)' }}>
               Gerir →
             </span>
           </div>
-          <div style={styles.kpiTotal}>{sysStats.employees.total}</div>
+          <div style={{ ...styles.kpiTotal, fontSize: isMobile ? '22px' : '28px', marginBottom: isMobile ? '6px' : '10px' }}>
+            {sysStats.employees.total}
+          </div>
           <div style={styles.kpiDetails}>
-            <span style={styles.kpiBadgeActive}>
+            <span style={{ ...styles.kpiBadgeActive, fontSize: isMobile ? '10.5px' : '11.5px', padding: isMobile ? '2px 7px' : '3px 9px' }}>
               <span style={styles.kpiDotActive}></span>
               {sysStats.employees.active} Ativos
             </span>
@@ -579,21 +683,23 @@ export default function HomeDashboard({ t, onTabChange }) {
         {/* KPI 2: Actos Administrativos */}
         <div 
           className="kpi-card-interactive" 
-          style={styles.kpiCard}
+          style={{ ...styles.kpiCard, padding: isMobile ? '12px 14px' : '18px 20px' }}
           onClick={() => onTabChange && onTabChange('admin_acts_dynamic_Provimento_e_Posse')}
           title="Toque para ver os atos administrativos"
         >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Actos Administrativos</span>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#2563EB', display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <span style={{ ...styles.kpiTitle, fontSize: isMobile ? '10px' : '11.5px' }}>Actos Admin.</span>
+            <span style={{ fontSize: isMobile ? '10px' : '11px', fontWeight: '700', color: '#2563EB' }}>
               Aceder →
             </span>
           </div>
-          <div style={styles.kpiTotal}>{sysStats.acts.total}</div>
+          <div style={{ ...styles.kpiTotal, fontSize: isMobile ? '22px' : '28px', marginBottom: isMobile ? '6px' : '10px' }}>
+            {sysStats.acts.total}
+          </div>
           <div style={styles.kpiDetails}>
-            <span style={{ ...styles.kpiBadgeActive, backgroundColor: 'rgba(59, 130, 246, 0.08)', color: '#2563EB' }}>
+            <span style={{ ...styles.kpiBadgeActive, backgroundColor: 'rgba(59, 130, 246, 0.08)', color: '#2563EB', fontSize: isMobile ? '10.5px' : '11.5px', padding: isMobile ? '2px 7px' : '3px 9px' }}>
               <span style={{ ...styles.kpiDotActive, backgroundColor: '#3B82F6' }}></span>
-              {sysStats.acts.recent} nos últimos 30d
+              {sysStats.acts.recent} nos 30d
             </span>
           </div>
         </div>
@@ -601,19 +707,21 @@ export default function HomeDashboard({ t, onTabChange }) {
         {/* KPI 3: Colocações / Transferências */}
         <div 
           className="kpi-card-interactive" 
-          style={styles.kpiCard}
+          style={{ ...styles.kpiCard, padding: isMobile ? '12px 14px' : '18px 20px' }}
           onClick={() => onTabChange && onTabChange('transfers')}
           title="Toque para gerir colocações e transferências"
         >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Colocações / Transf.</span>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <span style={{ ...styles.kpiTitle, fontSize: isMobile ? '10px' : '11.5px' }}>Colocações</span>
+            <span style={{ fontSize: isMobile ? '10px' : '11px', fontWeight: '700', color: 'var(--color-text-muted)' }}>
               Aceder →
             </span>
           </div>
-          <div style={styles.kpiTotal}>{sysStats.transfers.total}</div>
+          <div style={{ ...styles.kpiTotal, fontSize: isMobile ? '22px' : '28px', marginBottom: isMobile ? '6px' : '10px' }}>
+            {sysStats.transfers.total}
+          </div>
           <div style={styles.kpiDetails}>
-            <span style={styles.kpiBadgeInactive}>
+            <span style={{ ...styles.kpiBadgeInactive, fontSize: isMobile ? '10.5px' : '11.5px', padding: isMobile ? '2px 7px' : '3px 9px' }}>
               <span style={styles.kpiDotInactive}></span>
               {sysStats.transfers.pending} Pendentes
             </span>
@@ -623,19 +731,21 @@ export default function HomeDashboard({ t, onTabChange }) {
         {/* KPI 4: Desempenho Individual */}
         <div 
           className="kpi-card-interactive" 
-          style={styles.kpiCard}
+          style={{ ...styles.kpiCard, padding: isMobile ? '12px 14px' : '18px 20px' }}
           onClick={() => onTabChange && onTabChange('evaluations')}
           title="Toque para ver avaliações de desempenho"
         >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Desempenho Individual</span>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#059669', display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <span style={{ ...styles.kpiTitle, fontSize: isMobile ? '10px' : '11.5px' }}>Desempenho</span>
+            <span style={{ fontSize: isMobile ? '10px' : '11px', fontWeight: '700', color: '#059669' }}>
               Aceder →
             </span>
           </div>
-          <div style={styles.kpiTotal}>{sysStats.evaluations.total}</div>
+          <div style={{ ...styles.kpiTotal, fontSize: isMobile ? '22px' : '28px', marginBottom: isMobile ? '6px' : '10px' }}>
+            {sysStats.evaluations.total}
+          </div>
           <div style={styles.kpiDetails}>
-            <span style={styles.kpiBadgeActive}>
+            <span style={{ ...styles.kpiBadgeActive, fontSize: isMobile ? '10.5px' : '11.5px', padding: isMobile ? '2px 7px' : '3px 9px' }}>
               <span style={styles.kpiDotActive}></span>
               Média: {sysStats.evaluations.avg}
             </span>
@@ -645,19 +755,21 @@ export default function HomeDashboard({ t, onTabChange }) {
         {/* KPI 5: Contencioso Laboral */}
         <div 
           className="kpi-card-interactive" 
-          style={styles.kpiCard}
+          style={{ ...styles.kpiCard, padding: isMobile ? '12px 14px' : '18px 20px' }}
           onClick={() => onTabChange && onTabChange('disciplinary')}
           title="Toque para ver processos disciplinares"
         >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Contencioso Laboral</span>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#D97706', display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <span style={{ ...styles.kpiTitle, fontSize: isMobile ? '10px' : '11.5px' }}>Contencioso</span>
+            <span style={{ fontSize: isMobile ? '10px' : '11px', fontWeight: '700', color: '#D97706' }}>
               Aceder →
             </span>
           </div>
-          <div style={styles.kpiTotal}>{sysStats.disciplinary.total}</div>
+          <div style={{ ...styles.kpiTotal, fontSize: isMobile ? '22px' : '28px', marginBottom: isMobile ? '6px' : '10px' }}>
+            {sysStats.disciplinary.total}
+          </div>
           <div style={styles.kpiDetails}>
-            <span style={styles.kpiBadgeInactive}>
+            <span style={{ ...styles.kpiBadgeInactive, fontSize: isMobile ? '10.5px' : '11.5px', padding: isMobile ? '2px 7px' : '3px 9px' }}>
               <span style={styles.kpiDotInactive}></span>
               {sysStats.disciplinary.active} Em Curso
             </span>
@@ -667,21 +779,23 @@ export default function HomeDashboard({ t, onTabChange }) {
         {/* KPI 6: Efectividade (Faltas) */}
         <div 
           className="kpi-card-interactive" 
-          style={styles.kpiCard}
+          style={{ ...styles.kpiCard, padding: isMobile ? '12px 14px' : '18px 20px' }}
           onClick={() => onTabChange && onTabChange('effectiveness')}
           title="Toque para ver mapa de faltas e efectividade"
         >
           <div style={styles.kpiHeader}>
-            <span style={styles.kpiTitle}>Efectividade (Faltas)</span>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#DC2626', display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <span style={{ ...styles.kpiTitle, fontSize: isMobile ? '10px' : '11.5px' }}>Efectividade</span>
+            <span style={{ fontSize: isMobile ? '10px' : '11px', fontWeight: '700', color: '#DC2626' }}>
               Aceder →
             </span>
           </div>
-          <div style={styles.kpiTotal}>{sysStats.effectiveness.total}</div>
+          <div style={{ ...styles.kpiTotal, fontSize: isMobile ? '22px' : '28px', marginBottom: isMobile ? '6px' : '10px' }}>
+            {sysStats.effectiveness.total}
+          </div>
           <div style={styles.kpiDetails}>
-            <span style={{ ...styles.kpiBadgeActive, backgroundColor: 'rgba(239, 68, 68, 0.08)', color: '#DC2626' }}>
+            <span style={{ ...styles.kpiBadgeActive, backgroundColor: 'rgba(239, 68, 68, 0.08)', color: '#DC2626', fontSize: isMobile ? '10.5px' : '11.5px', padding: isMobile ? '2px 7px' : '3px 9px' }}>
               <span style={{ ...styles.kpiDotActive, backgroundColor: '#EF4444' }}></span>
-              {sysStats.effectiveness.unjustified} Injustificadas
+              {sysStats.effectiveness.unjustified} Injustif.
             </span>
           </div>
         </div>
@@ -689,8 +803,16 @@ export default function HomeDashboard({ t, onTabChange }) {
       </div>
 
       {/* Charts Row */}
-      <div className="charts-row-responsive" style={styles.chartsRow}>
-        <div style={styles.chartCard}>
+      <div 
+        className="charts-row-responsive" 
+        style={{
+          ...styles.chartsRow,
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: isMobile ? '14px' : '24px',
+          marginBottom: isMobile ? '16px' : '24px'
+        }}
+      >
+        <div style={{ ...styles.chartCard, padding: isMobile ? '16px 14px' : '24px' }}>
           <h3 style={styles.cardTitle}>Volume Estrutural</h3>
           <div style={styles.chartWrapper}>
             <ResponsiveContainer width="100%" height="100%">
@@ -704,7 +826,7 @@ export default function HomeDashboard({ t, onTabChange }) {
           </div>
         </div>
 
-        <div style={styles.chartCard}>
+        <div style={{ ...styles.chartCard, padding: isMobile ? '16px 14px' : '24px' }}>
           <h3 style={styles.cardTitle}>Distribuição por Unidade</h3>
           <div style={styles.chartWrapper}>
             {charts.depsPerDir.length > 0 ? (
@@ -734,15 +856,22 @@ export default function HomeDashboard({ t, onTabChange }) {
       </div>
 
       {/* Bottom Row: Tree & Audit */}
-      <div style={styles.bottomRow}>
-        <div style={styles.treeCard}>
+      <div 
+        className="bottom-row-responsive" 
+        style={{
+          ...styles.bottomRow,
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 350px',
+          gap: isMobile ? '14px' : '24px'
+        }}
+      >
+        <div style={{ ...styles.treeCard, padding: isMobile ? '16px 14px' : '24px', height: isMobile ? '380px' : '480px' }}>
           <div style={styles.cardHeaderWithSearch}>
             <h3 style={{...styles.cardTitle, margin: 0}}>{t('dash_tree') || 'Hierarquia Local da Direcção'}</h3>
-            <div style={styles.searchContainerCompact}>
+            <div style={{ ...styles.searchContainerCompact, width: isMobile ? '140px' : '180px' }}>
               <svg style={styles.searchIconCompact} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               <input 
                 type="text" 
-                placeholder="Pesquisar unidade..." 
+                placeholder="Pesquisar..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={styles.searchInputCompact}
@@ -761,7 +890,7 @@ export default function HomeDashboard({ t, onTabChange }) {
           </div>
         </div>
 
-        <div style={styles.auditCard}>
+        <div style={{ ...styles.auditCard, padding: isMobile ? '16px 14px' : '24px', height: isMobile ? '380px' : '480px' }}>
           <div style={styles.cardHeaderWithBadge}>
             <h3 style={{...styles.cardTitle, margin: 0}}>{t('dash_audit') || 'Auditoria Estrutural'}</h3>
             {issues.length > 0 && (

@@ -553,6 +553,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const [profilePhoto, setProfilePhoto] = useState(() => {
     return localStorage.getItem('sernic_user_photo_' + (user?.username || 'admin')) || user?.photo || user?.avatar || null;
   });
+  const [photoError, setPhotoError] = useState(false);
   const [photoFeedback, setPhotoFeedback] = useState('');
 
   // Atualizar quando o user mudar ou quando chegar foto da nuvem (sincronização PC e Telemóvel)
@@ -1710,7 +1711,19 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
               <button
                 type="button"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                style={{
+                style={isMobile ? {
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '2px',
+                  borderRadius: '50%',
+                  border: '1.5px solid rgba(255, 255, 255, 0.4)',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                  width: '36px',
+                  height: '36px',
+                  flexShrink: 0
+                } : {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '9px',
@@ -1728,11 +1741,13 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   outline: 'none',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--color-primary, #B71C1C)';
-                  e.currentTarget.style.boxShadow = '0 3px 10px rgba(0,0,0,0.06)';
+                  if (!isMobile) {
+                    e.currentTarget.style.borderColor = 'var(--color-primary, #B71C1C)';
+                    e.currentTarget.style.boxShadow = '0 3px 10px rgba(0,0,0,0.06)';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  if (!showProfileMenu) {
+                  if (!isMobile && !showProfileMenu) {
                     e.currentTarget.style.borderColor = 'var(--color-border)';
                     e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)';
                   }
@@ -1740,14 +1755,15 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                 title="Perfil do Utilizador"
               >
                 {/* Avatar com Indicador Discreto */}
-                <div style={{ position: 'relative', width: '34px', height: '34px', flexShrink: 0 }}>
-                  {profilePhoto ? (
+                <div style={{ position: 'relative', width: '32px', height: '32px', flexShrink: 0 }}>
+                  {profilePhoto && !photoError ? (
                     <img 
                       src={profilePhoto} 
-                      alt="Foto de Perfil" 
+                      onError={() => setPhotoError(true)}
+                      alt="" 
                       style={{
-                        width: '34px',
-                        height: '34px',
+                        width: '32px',
+                        height: '32px',
                         borderRadius: '50%',
                         objectFit: 'cover',
                         border: '1.5px solid var(--color-border)',
@@ -1756,8 +1772,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     />
                   ) : (
                     <div style={{
-                      width: '34px',
-                      height: '34px',
+                      width: '32px',
+                      height: '32px',
                       borderRadius: '50%',
                       background: isSuperAdmin 
                         ? 'linear-gradient(135deg, #B71C1C 0%, #DC2626 100%)' 
@@ -1767,7 +1783,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontWeight: '700',
-                      fontSize: '13.5px',
+                      fontSize: '13px',
                       letterSpacing: '0.3px',
                       boxShadow: '0 1px 3px rgba(183, 28, 28, 0.25)'
                     }}>
@@ -1780,60 +1796,64 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     position: 'absolute',
                     bottom: '0px',
                     right: '0px',
-                    width: '8px',
-                    height: '8px',
+                    width: '7px',
+                    height: '7px',
                     borderRadius: '50%',
                     backgroundColor: '#10B981',
                     border: '1.5px solid var(--color-bg-base, #ffffff)'
                   }}></span>
                 </div>
 
-                {/* Nome e Cargo / Nível Conciso e Elegante (Sem poluição redundante) */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: '1.25' }}>
-                  <span style={{ 
-                    fontSize: '13px', 
-                    fontWeight: '600', 
-                    color: 'var(--color-text-base)', 
-                    maxWidth: '150px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {userDisplayName}
-                  </span>
-                  <span style={{
-                    color: 'var(--color-text-muted)',
-                    fontSize: '11px',
-                    fontWeight: '500',
-                    maxWidth: '150px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {isSuperAdmin ? 'Super Administrador' : (user?.roleName || user?.role || 'Utilizador')}
-                  </span>
-                </div>
+                {/* Nome e Cargo / Nível (Apenas Desktop) */}
+                {!isMobile && (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: '1.25' }}>
+                    <span style={{ 
+                      fontSize: '13px', 
+                      fontWeight: '600', 
+                      color: 'var(--color-text-base)', 
+                      maxWidth: '150px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {userDisplayName}
+                    </span>
+                    <span style={{
+                      color: 'var(--color-text-muted)',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      maxWidth: '150px',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {isSuperAdmin ? 'Super Administrador' : (user?.roleName || user?.role || 'Utilizador')}
+                    </span>
+                  </div>
+                )}
 
-                {/* Seta / Chevron Minimalista */}
-                <svg 
-                  width="12" 
-                  height="12" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2.2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  style={{
-                    color: 'var(--color-text-muted)',
-                    transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transform: showProfileMenu ? 'rotate(180deg)' : 'rotate(0deg)',
-                    marginLeft: '2px',
-                    opacity: 0.7
-                  }}
-                >
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
+                {/* Seta / Chevron Minimalista (Apenas Desktop) */}
+                {!isMobile && (
+                  <svg 
+                    width="12" 
+                    height="12" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2.2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                    style={{
+                      color: 'var(--color-text-muted)',
+                      transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transform: showProfileMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+                      marginLeft: '2px',
+                      opacity: 0.7
+                    }}
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                )}
               </button>
 
               {/* Menu Dropdown Sofisticado e Limpo */}
@@ -2062,7 +2082,14 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         </header>
 
         {/* ÁREA DE CONTEÚDO DINÂMICO */}
-        <div style={styles.contentArea}>
+        <div style={{
+          ...styles.contentArea,
+          padding: isMobile ? '12px 10px' : '24px 28px',
+          width: '100%',
+          maxWidth: '100vw',
+          boxSizing: 'border-box',
+          overflowX: 'hidden'
+        }}>
           <ErrorBoundary key={activeTab}>
           
           {/* TAB 1: INÍCIO (DASHBOARD) */}
