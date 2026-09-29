@@ -571,7 +571,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <div style={s.sysTitleBold}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
-        <div style={{ marginTop: isMobile ? '8px' : '14px', marginBottom: isMobile ? '8px' : '10px' }}>
+        <div style={{ marginTop: isMobile ? '12px' : '22px', marginBottom: isMobile ? '8px' : '12px' }}>
           <p style={s.sysTitleSub}>
             SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
           </p>
@@ -822,7 +822,7 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '14px',
+    marginBottom: '2px',
   },
   logo: {
     width: '215px',
