@@ -106,10 +106,10 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   React.useEffect(() => {
     document.documentElement.style.backgroundColor = bgColor;
     document.body.style.backgroundColor = bgColor;
-    let metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', bgColor);
-    }
+    const metaTags = document.querySelectorAll('meta[name="theme-color"]');
+    metaTags.forEach(tag => tag.setAttribute('content', bgColor));
+    const navBtnColor = document.querySelector('meta[name="msapplication-navbutton-color"]');
+    if (navBtnColor) navBtnColor.setAttribute('content', bgColor);
     return () => {
       document.documentElement.style.backgroundColor = '';
       document.body.style.backgroundColor = '';

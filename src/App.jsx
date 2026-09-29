@@ -74,14 +74,11 @@ export default function App() {
     // Injeção do modo de tema no html/root
     document.documentElement.setAttribute('data-theme', settings.modo_tema);
 
-    // Sincronizar a meta tag theme-color para navegadores móveis (Safari, Chrome barra de navegação/status)
-    let metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (!metaTheme) {
-      metaTheme = document.createElement('meta');
-      metaTheme.name = 'theme-color';
-      document.head.appendChild(metaTheme);
-    }
-    metaTheme.setAttribute('content', activeColor);
+    // Sincronizar todas as meta tags theme-color para navegadores móveis (Safari, Chrome barra de navegação/status)
+    const metaTags = document.querySelectorAll('meta[name="theme-color"]');
+    metaTags.forEach(tag => tag.setAttribute('content', activeColor));
+    const navBtnColor = document.querySelector('meta[name="msapplication-navbutton-color"]');
+    if (navBtnColor) navBtnColor.setAttribute('content', activeColor);
   }, [settings]);
 
   // Função para actualizar e salvar configurações (simulação de UPDATE SQL)
