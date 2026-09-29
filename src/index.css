@@ -991,8 +991,8 @@ button.evaluation-tab.active:focus,
     border-radius: 16px !important;
   }
   .login-page-root img[alt="Logótipo SERNIC"] {
-    width: 135px !important;
-    height: 135px !important;
+    width: 155px !important;
+    height: 155px !important;
   }
 
   /* DASHBOARD — sidebar como overlay */
