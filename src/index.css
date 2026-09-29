@@ -978,9 +978,10 @@ button.evaluation-tab.active:focus,
   .login-page-root {
     overflow-y: auto !important;
     height: auto !important;
-    min-height: 100dvh;
-    padding: 16px 12px 36px !important;
+    min-height: calc(100dvh / 0.85) !important;
+    padding: 20px 12px 28px !important;
     align-items: center !important;
+    justify-content: space-between !important;
   }
   .login-card {
     width: 100% !important;

@@ -555,9 +555,10 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         </div>
       </div>
 
-      {/* ══════════════ CABEÇALHO INSTITUCIONAL ELEGANTE E MINIMALISTA ══════════════ */}
-      {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
-      <div style={s.header}>
+      {/* ══════════════ CONTEÚDO CENTRALIZADO (MAIS AO CENTRO) ══════════════ */}
+      <div style={s.centerContentWrap}>
+        {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
+        <div style={s.header}>
         <div style={s.logoContainer}>
           <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
         </div>
@@ -770,6 +771,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             }}
           />
         )}
+        </div>
       </div>
 
       {/* ══════════════ RODAPÉ ══════════════ */}
@@ -789,12 +791,22 @@ const s = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    padding: '36px 16px 36px',
+    justifyContent: 'space-between',
+    padding: '28px 16px 24px',
     transition: 'background-color 0.35s ease',
     fontFamily: "'Inter', system-ui, sans-serif",
     boxSizing: 'border-box',
     flex: 1,
+  },
+
+  centerContentWrap: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    flex: '1 0 auto',
+    margin: 'auto 0',
   },
 
   /* ── Cabeçalho ── */
