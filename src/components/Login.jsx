@@ -102,6 +102,16 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     bwMode === 'claro' ? '#F8FAFC' :
     (settings.cor_principal && settings.cor_principal !== '#1B365D' ? settings.cor_principal : '#B71C1C');
 
+  // Assegurar que o fundo do documento (html e body) cobre 100% da tela até o fundo com a cor do tema
+  React.useEffect(() => {
+    document.documentElement.style.backgroundColor = bgColor;
+    document.body.style.backgroundColor = bgColor;
+    return () => {
+      document.documentElement.style.backgroundColor = '';
+      document.body.style.backgroundColor = '';
+    };
+  }, [bgColor]);
+
   /* ciclo: theme → noite → claro → theme */
   const toggleBwMode = () => {
     const nextMode =
@@ -763,7 +773,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       </div>
 
       {/* ══════════════ RODAPÉ ══════════════ */}
-      <footer style={{...s.footer, color: bwMode === 'claro' ? '#64748B' : 'rgba(255,255,255,0.85)', fontSize: '11.5px', marginTop: '26px'}}>
+      <footer style={{...s.footer, color: bwMode === 'claro' ? '#64748B' : 'rgba(255,255,255,0.85)', fontSize: '11.5px', marginTop: 'auto', paddingTop: '26px', paddingBottom: '28px'}}>
         <p>Copyright © 2026 – Serviço Nacional de Investigação Criminal (SERNIC). Todos os direitos reservados. | Versão: 05.01.00</p>
       </footer>
     </div>
@@ -773,14 +783,18 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
 /* ════════════════ ESTILOS ════════════════ */
 const s = {
   page: {
-    minHeight: '100vh',
+    minHeight: '100dvh',
+    minHeight: 'calc(100vh / 0.85)',
+    width: '100%',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    padding: '36px 16px 20px',
+    padding: '36px 16px 36px',
     transition: 'background-color 0.35s ease',
     fontFamily: "'Inter', system-ui, sans-serif",
+    boxSizing: 'border-box',
+    flex: 1,
   },
 
   /* ── Cabeçalho ── */

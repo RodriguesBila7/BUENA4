@@ -41,6 +41,35 @@
   --radius-lg: 16px;
 }
 
+/* Escala e Zoom padrão oficial a 85% com cobertura total da tela e fundo do tema */
+html {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  min-height: 100dvh;
+  background-color: var(--color-bg-base, #1B365D);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  min-height: 100dvh;
+  zoom: 0.85;
+  -moz-transform: scale(0.85);
+  -moz-transform-origin: top center;
+  background-color: var(--color-bg-base, #1B365D);
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100%;
+  min-height: calc(100dvh / 0.85);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 /* Modo Escuro - Reestruturado: Mais Claro, Nobre, Suave e Visualmente Agradável */
 [data-theme="dark"] {
   /* Fundo e Superfícies Elevadas (Tons Grafite Suaves - Muito mais claros que o preto antigo) */
