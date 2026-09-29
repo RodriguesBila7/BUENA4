@@ -442,11 +442,131 @@ export default function HomeDashboard({ t, onTabChange }) {
         </div>
       )}
 
-      {/* Grade de Indicadores dos Módulos */}
+      {/* ── BARRA DE GESTÃO RÁPIDA & AÇÕES CRUD ── */}
+      <div className="quick-crud-bar" style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: '12px',
+        marginBottom: '20px'
+      }}>
+        <button 
+          type="button"
+          onClick={() => onTabChange && onTabChange('emp_form')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            backgroundColor: 'var(--color-primary, #B71C1C)',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontWeight: '700',
+            fontSize: '13px',
+            boxShadow: '0 3px 12px rgba(183, 28, 28, 0.25)',
+          }}
+          className="crud-quick-btn"
+          title="Cadastrar novo funcionário no sistema"
+        >
+          <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </div>
+          <span>+ Novo Funcionário</span>
+        </button>
+
+        <button 
+          type="button"
+          onClick={() => onTabChange && onTabChange('emp_list')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            backgroundColor: 'var(--color-bg-card)',
+            color: 'var(--color-text-base)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '13px',
+          }}
+          className="crud-quick-btn"
+          title="Ver e gerir todos os funcionários"
+        >
+          <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <span>Gerir Efetivos ({sysStats.employees.total})</span>
+        </button>
+
+        <button 
+          type="button"
+          onClick={() => onTabChange && onTabChange('admin_acts_dynamic_Provimento_e_Posse')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            backgroundColor: 'var(--color-bg-card)',
+            color: 'var(--color-text-base)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '13px',
+          }}
+          className="crud-quick-btn"
+          title="Registar provimento, posse ou outro ato"
+        >
+          <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: 'rgba(168, 85, 247, 0.1)', color: '#9333EA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+          </div>
+          <span>Registar Acto</span>
+        </button>
+
+        <button 
+          type="button"
+          onClick={() => onTabChange && onTabChange('vacations')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            backgroundColor: 'var(--color-bg-card)',
+            color: 'var(--color-text-base)',
+            border: '1px solid var(--color-border)',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '13px',
+          }}
+          className="crud-quick-btn"
+          title="Agendar férias e licenças"
+        >
+          <div style={{ width: '28px', height: '28px', borderRadius: '8px', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+          <span>Marcar Férias</span>
+        </button>
+      </div>
+
+      {/* Grade de Indicadores dos Módulos (Interativos) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '16px', marginBottom: '24px' }}>
         
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Funcionários</span></div>
+        {/* KPI 1: Funcionários (CRUD) */}
+        <div 
+          className="kpi-card-interactive" 
+          style={styles.kpiCard}
+          onClick={() => onTabChange && onTabChange('emp_list')}
+          title="Toque para ver a lista e gerir funcionários"
+        >
+          <div style={styles.kpiHeader}>
+            <span style={styles.kpiTitle}>Funcionários</span>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-primary, #B71C1C)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              Gerir →
+            </span>
+          </div>
           <div style={styles.kpiTotal}>{sysStats.employees.total}</div>
           <div style={styles.kpiDetails}>
             <span style={styles.kpiBadgeActive}>
@@ -456,8 +576,19 @@ export default function HomeDashboard({ t, onTabChange }) {
           </div>
         </div>
 
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Actos Administrativos</span></div>
+        {/* KPI 2: Actos Administrativos */}
+        <div 
+          className="kpi-card-interactive" 
+          style={styles.kpiCard}
+          onClick={() => onTabChange && onTabChange('admin_acts_dynamic_Provimento_e_Posse')}
+          title="Toque para ver os atos administrativos"
+        >
+          <div style={styles.kpiHeader}>
+            <span style={styles.kpiTitle}>Actos Administrativos</span>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: '#2563EB', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              Aceder →
+            </span>
+          </div>
           <div style={styles.kpiTotal}>{sysStats.acts.total}</div>
           <div style={styles.kpiDetails}>
             <span style={{ ...styles.kpiBadgeActive, backgroundColor: 'rgba(59, 130, 246, 0.08)', color: '#2563EB' }}>
@@ -467,8 +598,19 @@ export default function HomeDashboard({ t, onTabChange }) {
           </div>
         </div>
 
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Colocações / Transf.</span></div>
+        {/* KPI 3: Colocações / Transferências */}
+        <div 
+          className="kpi-card-interactive" 
+          style={styles.kpiCard}
+          onClick={() => onTabChange && onTabChange('transfers')}
+          title="Toque para gerir colocações e transferências"
+        >
+          <div style={styles.kpiHeader}>
+            <span style={styles.kpiTitle}>Colocações / Transf.</span>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              Aceder →
+            </span>
+          </div>
           <div style={styles.kpiTotal}>{sysStats.transfers.total}</div>
           <div style={styles.kpiDetails}>
             <span style={styles.kpiBadgeInactive}>
@@ -478,8 +620,19 @@ export default function HomeDashboard({ t, onTabChange }) {
           </div>
         </div>
 
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Desempenho Individual</span></div>
+        {/* KPI 4: Desempenho Individual */}
+        <div 
+          className="kpi-card-interactive" 
+          style={styles.kpiCard}
+          onClick={() => onTabChange && onTabChange('evaluations')}
+          title="Toque para ver avaliações de desempenho"
+        >
+          <div style={styles.kpiHeader}>
+            <span style={styles.kpiTitle}>Desempenho Individual</span>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: '#059669', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              Aceder →
+            </span>
+          </div>
           <div style={styles.kpiTotal}>{sysStats.evaluations.total}</div>
           <div style={styles.kpiDetails}>
             <span style={styles.kpiBadgeActive}>
@@ -489,8 +642,19 @@ export default function HomeDashboard({ t, onTabChange }) {
           </div>
         </div>
 
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Contencioso Laboral</span></div>
+        {/* KPI 5: Contencioso Laboral */}
+        <div 
+          className="kpi-card-interactive" 
+          style={styles.kpiCard}
+          onClick={() => onTabChange && onTabChange('disciplinary')}
+          title="Toque para ver processos disciplinares"
+        >
+          <div style={styles.kpiHeader}>
+            <span style={styles.kpiTitle}>Contencioso Laboral</span>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: '#D97706', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              Aceder →
+            </span>
+          </div>
           <div style={styles.kpiTotal}>{sysStats.disciplinary.total}</div>
           <div style={styles.kpiDetails}>
             <span style={styles.kpiBadgeInactive}>
@@ -500,8 +664,19 @@ export default function HomeDashboard({ t, onTabChange }) {
           </div>
         </div>
 
-        <div style={styles.kpiCard}>
-          <div style={styles.kpiHeader}><span style={styles.kpiTitle}>Efectividade (Faltas)</span></div>
+        {/* KPI 6: Efectividade (Faltas) */}
+        <div 
+          className="kpi-card-interactive" 
+          style={styles.kpiCard}
+          onClick={() => onTabChange && onTabChange('effectiveness')}
+          title="Toque para ver mapa de faltas e efectividade"
+        >
+          <div style={styles.kpiHeader}>
+            <span style={styles.kpiTitle}>Efectividade (Faltas)</span>
+            <span style={{ fontSize: '11px', fontWeight: '700', color: '#DC2626', display: 'flex', alignItems: 'center', gap: '2px' }}>
+              Aceder →
+            </span>
+          </div>
           <div style={styles.kpiTotal}>{sysStats.effectiveness.total}</div>
           <div style={styles.kpiDetails}>
             <span style={{ ...styles.kpiBadgeActive, backgroundColor: 'rgba(239, 68, 68, 0.08)', color: '#DC2626' }}>
@@ -514,7 +689,7 @@ export default function HomeDashboard({ t, onTabChange }) {
       </div>
 
       {/* Charts Row */}
-      <div style={styles.chartsRow}>
+      <div className="charts-row-responsive" style={styles.chartsRow}>
         <div style={styles.chartCard}>
           <h3 style={styles.cardTitle}>Volume Estrutural</h3>
           <div style={styles.chartWrapper}>
