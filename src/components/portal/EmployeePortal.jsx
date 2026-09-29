@@ -6,7 +6,8 @@ import useEffectivenessData from '../../hooks/useEffectivenessData';
 import useDisciplinaryData from '../../hooks/useDisciplinaryData';
 import useAdminActsData from '../../hooks/useAdminActsData';
 import { compressImage } from '../../utils/imageCompressor';
-import { saveCloudPhoto, removeCloudPhoto } from '../../services/cloudSyncService';
+import { saveCloudPhoto } from '../../services/cloudSyncService';
+import { SERNIC_LOGO_B64 } from '../../utils/sernic_logo_default';
 import ConfirmModal from '../ConfirmModal';
 import { formatDisplayDate } from '../../utils/vacationAlerts';
 
@@ -36,7 +37,6 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
       );
       if (found) return found;
     }
-    // Fallback: primeiro funcionário da lista para teste/demonstração
     return employees[0];
   }, [user, employees]);
 
@@ -47,6 +47,37 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 
   const [activePortalTab, setActivePortalTab] = useState('overview');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '' });
+
+  // ESTADO DA PESQUISA E FILTRAGEM AVANÇADA DE FUNCIONÁRIOS
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterDirectorate, setFilterDirectorate] = useState('ALL');
+  const [filterCareer, setFilterCareer] = useState('ALL');
+
+  // Filtragem ao vivo da lista de funcionários
+  const filteredEmployeesList = useMemo(() => {
+    return employees.filter(emp => {
+      // Filtro de Direcção
+      if (filterDirectorate !== 'ALL' && String(emp.directorateId) !== String(filterDirectorate)) {
+        return false;
+      }
+      // Filtro de Carreira
+      if (filterCareer !== 'ALL' && String(emp.careerId) !== String(filterCareer)) {
+        return false;
+      }
+      // Filtro de Texto
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const mName = emp.name && emp.name.toLowerCase().includes(q);
+        const mNip = emp.nip && String(emp.nip).toLowerCase().includes(q);
+        const mNuit = emp.nuit && String(emp.nuit).toLowerCase().includes(q);
+        const mBi = emp.idNumber && String(emp.idNumber).toLowerCase().includes(q);
+        const mCargo = (emp.cargo || emp.category || '').toLowerCase().includes(q);
+        if (!mName && !mNip && !mNuit && !mBi && !mCargo) return false;
+      }
+      return true;
+    });
+  }, [employees, filterDirectorate, filterCareer, searchQuery]);
 
   // Modal para solicitar férias
   const [isVacationModalOpen, setIsVacationModalOpen] = useState(false);
@@ -68,15 +99,15 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
     attachmentName: ''
   });
 
-  // Carregar dados de estrutura orgânica do funcionário
+  // Carregar dados de estrutura orgânica do funcionário atual
   const empOrgInfo = useMemo(() => {
     if (!currentEmp) return {};
-    const dir = (orgData?.directorates || []).find(d => d.id === currentEmp.directorateId);
-    const dept = (orgData?.departments || []).find(d => d.id === currentEmp.departmentId);
-    const div = (orgData?.divisions || []).find(d => d.id === currentEmp.divisionId);
-    const sec = (orgData?.sections || []).find(d => d.id === currentEmp.sectionId);
-    const career = (orgData?.careers || []).find(c => c.id === currentEmp.careerId);
-    const category = (orgData?.categories || []).find(c => c.id === currentEmp.categoryId);
+    const dir = (orgData?.directorates || []).find(d => String(d.id) === String(currentEmp.directorateId));
+    const dept = (orgData?.departments || []).find(d => String(d.id) === String(currentEmp.departmentId));
+    const div = (orgData?.divisions || []).find(d => String(d.id) === String(currentEmp.divisionId));
+    const sec = (orgData?.sections || []).find(d => String(d.id) === String(currentEmp.sectionId));
+    const career = (orgData?.careers || []).find(c => String(c.id) === String(currentEmp.careerId));
+    const category = (orgData?.categories || []).find(c => String(c.id) === String(currentEmp.categoryId));
 
     return {
       directorateName: dir?.name || currentEmp.directorate || 'Direcção Geral SERNIC',
@@ -97,14 +128,12 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
     const birthDate = new Date(birthDateStr);
     const now = new Date();
 
-    // Idade Atual
     let age = now.getFullYear() - birthDate.getFullYear();
     const mDiff = now.getMonth() - birthDate.getMonth();
     if (mDiff < 0 || (mDiff === 0 && now.getDate() < birthDate.getDate())) {
       age--;
     }
 
-    // Tempo de Serviço
     let serviceYears = now.getFullYear() - admDate.getFullYear();
     let serviceMonths = now.getMonth() - admDate.getMonth();
     let serviceDays = now.getDate() - admDate.getDate();
@@ -118,11 +147,8 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
       serviceMonths += 12;
     }
 
-    // Regra da Reserva: 35 anos de serviço ou 60 anos de idade
     const yearsForServiceRetirement = Math.max(0, 35 - serviceYears);
     const yearsForAgeRetirement = Math.max(0, 60 - age);
-
-    // O que ocorrer primeiro
     const yearsToRetirement = Math.min(yearsForServiceRetirement, yearsForAgeRetirement);
     const retirementYear = now.getFullYear() + yearsToRetirement;
     const progressPercent = Math.min(100, Math.round((serviceYears / 35) * 100));
@@ -130,7 +156,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
     return {
       admissionDateFormatted: formatDisplayDate(admissionDateStr),
       birthDateFormatted: formatDisplayDate(birthDateStr),
-      age,
+      age: Math.max(18, age),
       serviceYears: Math.max(0, serviceYears),
       serviceMonths: Math.max(0, serviceMonths),
       serviceDays: Math.max(0, serviceDays),
@@ -156,12 +182,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 
     const balance = Math.max(0, entitledDays - usedDays);
 
-    return {
-      list: filtered,
-      entitledDays,
-      usedDays,
-      balance
-    };
+    return { list: filtered, entitledDays, usedDays, balance };
   }, [requests, currentEmp]);
 
   // CÁLCULO DE EFETIVIDADE (FALTAS DO AGENTE)
@@ -176,13 +197,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
     const unjustified = filtered.filter(r => r.type === 'Injustificada' || r.status === 'Rejeitada').length;
     const pending = filtered.filter(r => r.status === 'Pendente').length;
 
-    return {
-      list: filtered,
-      total: filtered.length,
-      justified,
-      unjustified,
-      pending
-    };
+    return { list: filtered, total: filtered.length, justified, unjustified, pending };
   }, [absenceRecords, currentEmp]);
 
   // PROCESSOS DISCIPLINARES DO AGENTE
@@ -205,13 +220,11 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 
   // ELEGIBILIDADE A PROMOÇÃO / PROGRESSÃO
   const careerEligibility = useMemo(() => {
-    // Interstício mínimo de 3 anos para progressão na carreira
-    const yearsInRank = serviceStats.serviceYears % 4 || 1;
+    const yearsInRank = (serviceStats.serviceYears % 4) || 1;
     const yearsNeeded = 3;
     const isProgressionEligible = yearsInRank >= yearsNeeded;
     const monthsRemaining = Math.max(0, (yearsNeeded - yearsInRank) * 12);
 
-    // Mudança de carreira baseada no nível académico
     const academicLevel = (currentEmp.academic_level || '').toLowerCase();
     const hasHigherEducation = academicLevel.includes('licenciatura') || academicLevel.includes('mestrado') || academicLevel.includes('doutoramento');
 
@@ -302,19 +315,15 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
     });
   };
 
-  // Upload de Foto de Perfil
+  // Upload de Foto de Perfil com compressão
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
       const b64 = await compressImage(file, 320, 0.75);
-      if (currentEmp.nip) {
-        saveCloudPhoto(currentEmp.nip, b64);
-      }
-      if (currentEmp.name) {
-        saveCloudPhoto(currentEmp.name, b64);
-      }
+      if (currentEmp.nip) saveCloudPhoto(currentEmp.nip, b64);
+      if (currentEmp.name) saveCloudPhoto(currentEmp.name, b64);
       await updateEmployee(currentEmp.id, { photo: b64 });
     } catch (err) {
       console.warn('Erro ao atualizar foto:', err);
@@ -323,49 +332,55 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 
   return (
     <div style={styles.container}>
-      {/* BARRA SUPERIOR DO PORTAL */}
-      <div style={styles.topNav}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={styles.policeBadge}>🛡️</div>
-          <div>
-            <h2 style={styles.portalTitle}>Portal do Agente & Funcionário SERNIC</h2>
-            <p style={styles.portalSubtitle}>Autoatendimento de Recursos Humanos, Férias, Carreira e Processos</p>
+      {/* ──────────────────────────────────────────────────────────────
+          CABEÇALHO INSTITUCIONAL OFICIAL DO SERNIC (MOÇAMBIQUE)
+         ────────────────────────────────────────────────────────────── */}
+      <div style={styles.institutionalHeader}>
+        <div style={styles.instLeft}>
+          <img 
+            src={SERNIC_LOGO_B64} 
+            alt="Emblema SERNIC" 
+            style={styles.sernicLogo} 
+          />
+          <div style={styles.instText}>
+            <div style={styles.instRepub}>
+              REPÚBLICA DE MOÇAMBIQUE • MINISTÉRIO DO INTERIOR
+            </div>
+            <h1 style={styles.instTitle}>
+              SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL
+            </h1>
+            <div style={styles.instSub}>
+              DIRECÇÃO DE RECURSOS HUMANOS • PORTAL OFICIAL DO AGENTE & FUNCIONÁRIO
+            </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* SELETOR DE FUNCIONÁRIO (Para Administradores e Teste) */}
-          {employees.length > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <label style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>
-                Visualizar como:
-              </label>
-              <select 
-                value={currentEmp.id} 
-                onChange={(e) => setSelectedEmpId(e.target.value)} 
-                style={styles.empSelect}
-              >
-                {employees.map(emp => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name} (NIP: {emp.nip || 'N/A'})
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+        {/* FERRAMENTAS DE PESQUISA, SELEÇÃO E CONTROLO */}
+        <div style={styles.instActions}>
+          <button 
+            onClick={() => setIsSearchModalOpen(true)} 
+            style={styles.btnSearchTrigger}
+            title="Pesquisar e filtrar qualquer funcionário cadastrado"
+          >
+            <span style={{ fontSize: '15px' }}>🔍</span>
+            <span>Pesquisar Agente</span>
+            <span style={styles.countBadge}>{employees.length}</span>
+          </button>
 
           {onBackToAdmin && (
             <button onClick={onBackToAdmin} style={styles.btnBackAdmin}>
-              ⬅️ Painel Geral de Gestão
+              ⬅️ Painel Geral
             </button>
           )}
         </div>
       </div>
 
-      {/* CARTÃO PRINCIPAL DE IDENTIFICAÇÃO DO AGENTE */}
+      {/* ──────────────────────────────────────────────────────────────
+          CARTÃO DE IDENTIFICAÇÃO E PERFIL DO AGENTE (DESPOLUÍDO & ELEGANTE)
+         ────────────────────────────────────────────────────────────── */}
       <div style={styles.profileCard}>
-        <div style={styles.profileLeft}>
-          <div style={styles.avatarContainer}>
+        <div style={styles.profileMain}>
+          <div style={styles.avatarWrapper}>
             {currentEmp.photo ? (
               <img src={currentEmp.photo} alt={currentEmp.name} style={styles.avatarImg} />
             ) : (
@@ -373,113 +388,129 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
                 {currentEmp.name?.charAt(0).toUpperCase() || 'A'}
               </div>
             )}
-            <label style={styles.photoUploadLabel} title="Alterar Foto de Perfil">
+            <label style={styles.photoUploadBtn} title="Atualizar Foto de Perfil">
               📷
               <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
             </label>
           </div>
 
-          <div style={styles.profileDetails}>
-            <div style={styles.empHeaderRow}>
-              <h3 style={styles.empName}>{currentEmp.name}</h3>
-              <span style={styles.activeTag}>● {currentEmp.status || 'Ativo'}</span>
+          <div style={styles.profileInfo}>
+            <div style={styles.nameRow}>
+              <h2 style={styles.agentName}>{currentEmp.name}</h2>
+              <span style={styles.statusPillActive}>
+                <span style={styles.statusDot}></span>
+                {currentEmp.status || 'Ativo'}
+              </span>
             </div>
-            <div style={styles.empBadgesRow}>
-              <span style={styles.infoBadge}><strong>NIP:</strong> {currentEmp.nip || 'N/A'}</span>
-              <span style={styles.infoBadge}><strong>NUIT:</strong> {currentEmp.nuit || 'N/A'}</span>
-              <span style={styles.infoBadge}><strong>BI:</strong> {currentEmp.idNumber || 'N/A'}</span>
-              <span style={styles.infoBadge}><strong>Contacto:</strong> {currentEmp.phone || '+258 N/D'}</span>
+
+            <div style={styles.tagsRow}>
+              <span style={styles.tag}><strong>NIP:</strong> {currentEmp.nip || 'N/A'}</span>
+              <span style={styles.tag}><strong>NUIT:</strong> {currentEmp.nuit || 'N/A'}</span>
+              <span style={styles.tag}><strong>BI:</strong> {currentEmp.idNumber || 'N/A'}</span>
+              <span style={styles.tag}><strong>Contacto:</strong> {currentEmp.phone || '+258 N/D'}</span>
             </div>
-            <div style={styles.empSubInfo}>
-              <span>🏢 {empOrgInfo.directorateName}</span> • 
-              <span> 🏬 {empOrgInfo.departmentName}</span> • 
-              <span> 🎖️ {empOrgInfo.categoryName}</span>
+
+            <div style={styles.unitRow}>
+              <span>🏢 <strong>{empOrgInfo.directorateName}</strong></span>
+              <span>•</span>
+              <span>🏬 {empOrgInfo.departmentName}</span>
+              <span>•</span>
+              <span style={{ color: 'var(--color-primary)', fontWeight: '600' }}>🎖️ {empOrgInfo.categoryName}</span>
             </div>
           </div>
         </div>
 
-        {/* RESUMO RÁPIDO DO TEMPO PARA RESERVA */}
-        <div style={styles.retirementQuickCard}>
-          <div style={styles.quickCardLabel}>Passagem à Reserva</div>
-          <div style={styles.quickCardVal}>{serviceStats.retirementYear}</div>
-          <div style={styles.quickCardSub}>Faltam aprox. {serviceStats.yearsToRetirement} anos</div>
-          <div style={styles.progressBar}>
+        {/* RESUMO RÁPIDO: PASSAGEM À RESERVA (CLEAN CARD) */}
+        <div style={styles.statReserveCard}>
+          <div style={styles.reserveTop}>
+            <span style={styles.reserveLabel}>Previsão de Reserva</span>
+            <span style={styles.reserveIcon}>⏳</span>
+          </div>
+          <div style={styles.reserveYear}>{serviceStats.retirementYear}</div>
+          <div style={styles.reserveHint}>
+            Faltam aprox. <strong>{serviceStats.yearsToRetirement} anos</strong> ({serviceStats.serviceYears} anos cumpridos)
+          </div>
+          <div style={styles.progressTrack}>
             <div style={{ ...styles.progressFill, width: `${serviceStats.progressPercent}%` }}></div>
           </div>
         </div>
       </div>
 
-      {/* ABAS DO PORTAL */}
-      <div style={styles.tabsBar}>
+      {/* ──────────────────────────────────────────────────────────────
+          BARRA DE NAVEGAÇÃO SEGMENTADA (PWA & DESKTOP TOUCH FRIENDLY)
+         ────────────────────────────────────────────────────────────── */}
+      <div style={styles.navBar}>
         <button 
-          style={activePortalTab === 'overview' ? styles.tabBtnActive : styles.tabBtn} 
+          style={activePortalTab === 'overview' ? styles.navTabActive : styles.navTab} 
           onClick={() => setActivePortalTab('overview')}
         >
           👤 Ficha Cadastral
         </button>
         <button 
-          style={activePortalTab === 'vacations' ? styles.tabBtnActive : styles.tabBtn} 
+          style={activePortalTab === 'vacations' ? styles.navTabActive : styles.navTab} 
           onClick={() => setActivePortalTab('vacations')}
         >
-          🌴 Minhas Férias ({myVacations.balance}d saldo)
+          🌴 Minhas Férias ({myVacations.balance}d)
         </button>
         <button 
-          style={activePortalTab === 'retirement' ? styles.tabBtnActive : styles.tabBtn} 
+          style={activePortalTab === 'retirement' ? styles.navTabActive : styles.navTab} 
           onClick={() => setActivePortalTab('retirement')}
         >
           ⏳ Tempo de Serviço & Reserva
         </button>
         <button 
-          style={activePortalTab === 'career' ? styles.tabBtnActive : styles.tabBtn} 
+          style={activePortalTab === 'career' ? styles.navTabActive : styles.navTab} 
           onClick={() => setActivePortalTab('career')}
         >
           📈 Elegibilidade de Carreira
         </button>
         <button 
-          style={activePortalTab === 'absences' ? styles.tabBtnActive : styles.tabBtn} 
+          style={activePortalTab === 'absences' ? styles.navTabActive : styles.navTab} 
           onClick={() => setActivePortalTab('absences')}
         >
           📅 Minha Efetividade & Faltas
         </button>
         <button 
-          style={activePortalTab === 'disciplinary' ? styles.tabBtnActive : styles.tabBtn} 
+          style={activePortalTab === 'disciplinary' ? styles.navTabActive : styles.navTab} 
           onClick={() => setActivePortalTab('disciplinary')}
         >
-          ⚖️ Processos Disciplinares ({myDisciplinary.length})
+          ⚖️ Processos ({myDisciplinary.length})
         </button>
         <button 
-          style={activePortalTab === 'acts' ? styles.tabBtnActive : styles.tabBtn} 
+          style={activePortalTab === 'acts' ? styles.navTabActive : styles.navTab} 
           onClick={() => setActivePortalTab('acts')}
         >
           📜 Atos & Nomeações ({myAdminActs.length})
         </button>
       </div>
 
-      {/* CONTEÚDO DAS ABAS */}
-      <div style={styles.tabContent}>
+      {/* ──────────────────────────────────────────────────────────────
+          CONTEÚDO DA ABA SELECIONADA
+         ────────────────────────────────────────────────────────────── */}
+      <div style={styles.contentBody}>
         {/* ABA 1: FICHA CADASTRAL */}
         {activePortalTab === 'overview' && (
-          <div style={styles.tabSection}>
-            <h4 style={styles.sectionTitle}>📄 Dados Pessoais e Cadastrais Oficiais</h4>
-            <div style={styles.grid2Col}>
-              <div style={styles.cardItem}>
-                <h5 style={styles.cardItemTitle}>Informações Pessoais</h5>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Nome Completo:</span> <strong>{currentEmp.name}</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Data de Nascimento:</span> <strong>{serviceStats.birthDateFormatted} ({serviceStats.age} anos)</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Género:</span> <strong>{currentEmp.gender || 'N/A'}</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Estado Civil:</span> <strong>{currentEmp.marital_status || 'Solteiro(a)'}</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Grau Académico:</span> <strong>{currentEmp.academic_level || 'Não especificado'}</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Especialidade:</span> <strong>{currentEmp.specialty || 'Geral'}</strong></div>
+          <div style={styles.sectionWrap}>
+            <h3 style={styles.secTitle}>📄 Ficha Biográfica e Cadastral Oficial</h3>
+            <div style={styles.gridCards}>
+              <div style={styles.cleanCard}>
+                <h4 style={styles.cleanCardTitle}>Dados Pessoais</h4>
+                <div style={styles.infoRow}><span style={styles.lbl}>Nome Completo:</span> <strong>{currentEmp.name}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Data de Nascimento:</span> <strong>{serviceStats.birthDateFormatted} ({serviceStats.age} anos)</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Género:</span> <strong>{currentEmp.gender || 'N/A'}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Estado Civil:</span> <strong>{currentEmp.marital_status || 'Solteiro(a)'}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Habilitações Literárias:</span> <strong>{currentEmp.academic_level || 'Não especificado'}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Especialidade:</span> <strong>{currentEmp.specialty || 'Geral'}</strong></div>
               </div>
 
-              <div style={styles.cardItem}>
-                <h5 style={styles.cardItemTitle}>Dados Funcionais & Posicionamento</h5>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Carreira:</span> <strong>{empOrgInfo.careerName}</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Categoria / Patente:</span> <strong>{empOrgInfo.categoryName}</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Direcção:</span> <strong>{empOrgInfo.directorateName}</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Departamento:</span> <strong>{empOrgInfo.departmentName}</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Repartição / Secção:</span> <strong>{empOrgInfo.divisionName} / {empOrgInfo.sectionName}</strong></div>
-                <div style={styles.rowItem}><span style={styles.rowLabel}>Data de Entrada no Estado:</span> <strong>{serviceStats.admissionDateFormatted}</strong></div>
+              <div style={styles.cleanCard}>
+                <h4 style={styles.cleanCardTitle}>Enquadramento Institucional</h4>
+                <div style={styles.infoRow}><span style={styles.lbl}>Carreira:</span> <strong>{empOrgInfo.careerName}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Categoria / Patente:</span> <strong>{empOrgInfo.categoryName}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Direcção:</span> <strong>{empOrgInfo.directorateName}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Departamento:</span> <strong>{empOrgInfo.departmentName}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Repartição / Secção:</span> <strong>{empOrgInfo.divisionName} / {empOrgInfo.sectionName}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Admissão no Estado:</span> <strong>{serviceStats.admissionDateFormatted}</strong></div>
               </div>
             </div>
           </div>
@@ -487,107 +518,101 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 
         {/* ABA 2: MINHAS FÉRIAS */}
         {activePortalTab === 'vacations' && (
-          <div style={styles.tabSection}>
-            <div style={styles.sectionHeaderRow}>
+          <div style={styles.sectionWrap}>
+            <div style={styles.headerBetween}>
               <div>
-                <h4 style={styles.sectionTitle}>🌴 Gestão Pessoal de Férias e Licenças</h4>
-                <p style={styles.sectionDesc}>Consulte o seu saldo disponível e submeta pedidos de férias diretamente ao RH.</p>
+                <h3 style={styles.secTitle}>🌴 Gestão de Férias e Licenças</h3>
+                <p style={styles.secDesc}>Saldo regulamentar anual e acompanhamento de despachos.</p>
               </div>
-              <button onClick={() => setIsVacationModalOpen(true)} style={styles.btnPrimaryAction}>
+              <button onClick={() => setIsVacationModalOpen(true)} style={styles.btnActionPrimary}>
                 ➕ Solicitar Férias
               </button>
             </div>
 
-            {/* CARDS DE SALDO DE FÉRIAS */}
-            <div style={styles.kpiRow}>
+            <div style={styles.kpiGrid}>
               <div style={styles.kpiCard}>
-                <span style={styles.kpiLabel}>Direito Anual</span>
-                <span style={styles.kpiNumber}>{myVacations.entitledDays} dias</span>
-                <span style={styles.kpiHint}>Ano {new Date().getFullYear()}</span>
+                <span style={styles.kpiTitle}>Direito Anual</span>
+                <span style={styles.kpiNum}>{myVacations.entitledDays} dias</span>
+                <span style={styles.kpiSub}>Ano {new Date().getFullYear()}</span>
               </div>
               <div style={styles.kpiCard}>
-                <span style={styles.kpiLabel}>Dias Gozados</span>
-                <span style={{ ...styles.kpiNumber, color: '#d97706' }}>{myVacations.usedDays} dias</span>
-                <span style={styles.kpiHint}>Aprovados ou em curso</span>
+                <span style={styles.kpiTitle}>Dias Gozados</span>
+                <span style={{ ...styles.kpiNum, color: '#d97706' }}>{myVacations.usedDays} dias</span>
+                <span style={styles.kpiSub}>Aprovados ou em curso</span>
               </div>
-              <div style={{ ...styles.kpiCard, borderLeft: '4px solid #059669' }}>
-                <span style={styles.kpiLabel}>Saldo Disponível</span>
-                <span style={{ ...styles.kpiNumber, color: '#059669' }}>{myVacations.balance} dias</span>
-                <span style={styles.kpiHint}>Disponíveis para gozo</span>
+              <div style={{ ...styles.kpiCard, borderTop: '3px solid #059669' }}>
+                <span style={styles.kpiTitle}>Saldo Disponível</span>
+                <span style={{ ...styles.kpiNum, color: '#059669' }}>{myVacations.balance} dias</span>
+                <span style={styles.kpiSub}>Disponíveis para marcação</span>
               </div>
             </div>
 
-            {/* TABELA DE PEDIDOS DE FÉRIAS DO AGENTE */}
-            <h5 style={{ margin: '20px 0 10px 0', fontSize: '15px', color: 'var(--color-text-base)' }}>Histórico de Pedidos de Férias</h5>
+            <h4 style={styles.subSecTitle}>Histórico de Pedidos</h4>
             {myVacations.list.length === 0 ? (
-              <div style={styles.emptyBox}>Não existem pedidos de férias registados para este agente.</div>
+              <div style={styles.emptyState}>Nenhum pedido de férias registado no sistema para este agente.</div>
             ) : (
-              <table className="premium-table" style={{ width: '100%', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>
-                    <th style={styles.th}>Tipo</th>
-                    <th style={styles.th}>Período</th>
-                    <th style={styles.th}>Duração</th>
-                    <th style={styles.th}>Estado</th>
-                    <th style={styles.th}>Justificação / Despacho</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myVacations.list.map(vac => (
-                    <tr key={vac.id}>
-                      <td style={styles.td}><strong>{vac.type}</strong></td>
-                      <td style={styles.td}>{formatDisplayDate(vac.startDate)} até {formatDisplayDate(vac.endDate)}</td>
-                      <td style={styles.td}>{vac.daysCount} dias</td>
-                      <td style={styles.td}>
-                        <span style={styles.statusPill(vac.status)}>{vac.status}</span>
-                      </td>
-                      <td style={styles.td}>{vac.reason || vac.notes || '-'}</td>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="premium-table" style={{ width: '100%', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>
+                      <th style={styles.th}>Tipo</th>
+                      <th style={styles.th}>Período</th>
+                      <th style={styles.th}>Dias</th>
+                      <th style={styles.th}>Estado</th>
+                      <th style={styles.th}>Justificação / Despacho</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {myVacations.list.map(vac => (
+                      <tr key={vac.id}>
+                        <td style={styles.td}><strong>{vac.type}</strong></td>
+                        <td style={styles.td}>{formatDisplayDate(vac.startDate)} até {formatDisplayDate(vac.endDate)}</td>
+                        <td style={styles.td}>{vac.daysCount} dias</td>
+                        <td style={styles.td}>
+                          <span style={styles.statusPill(vac.status)}>{vac.status}</span>
+                        </td>
+                        <td style={styles.td}>{vac.reason || vac.notes || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}
 
         {/* ABA 3: TEMPO DE SERVIÇO & RESERVA */}
         {activePortalTab === 'retirement' && (
-          <div style={styles.tabSection}>
-            <h4 style={styles.sectionTitle}>⏳ Contagem de Tempo de Serviço e Passagem à Reserva</h4>
-            <p style={styles.sectionDesc}>
-              Cálculo regulamentar de acordo com a Lei do Estatuto Geral dos Funcionários e Agentes do Estado (EGFAE) e Regulamentos do SERNIC.
+          <div style={styles.sectionWrap}>
+            <h3 style={styles.secTitle}>⏳ Contagem de Tempo de Serviço e Passagem à Reserva</h3>
+            <p style={styles.secDesc}>
+              Cálculo baseado no Estatuto Geral dos Funcionários e Agentes do Estado (EGFAE) e Regulamento do SERNIC.
             </p>
 
-            <div style={styles.grid2Col}>
-              <div style={styles.cardItem}>
-                <h5 style={styles.cardItemTitle}>Tempo Cumprido no Estado</h5>
-                <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--color-primary)', margin: '10px 0' }}>
-                  {serviceStats.serviceYears} Anos
+            <div style={styles.gridCards}>
+              <div style={styles.cleanCard}>
+                <h4 style={styles.cleanCardTitle}>Tempo de Serviço Prestado</h4>
+                <div style={styles.hugeStat}>{serviceStats.serviceYears} Anos</div>
+                <div style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '14px' }}>
+                  e {serviceStats.serviceMonths} meses ({serviceStats.serviceDays} dias de serviço efetivo)
                 </div>
-                <div style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-                  e {serviceStats.serviceMonths} meses ({serviceStats.serviceDays} dias)
-                </div>
-                <div style={{ marginTop: '16px', fontSize: '13px', lineHeight: '1.6' }}>
-                  <div><strong>Data de Admissão:</strong> {serviceStats.admissionDateFormatted}</div>
-                  <div><strong>Idade Atual do Agente:</strong> {serviceStats.age} anos</div>
-                </div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Data de Admissão:</span> <strong>{serviceStats.admissionDateFormatted}</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Idade Atual do Agente:</span> <strong>{serviceStats.age} anos</strong></div>
               </div>
 
-              <div style={{ ...styles.cardItem, borderLeft: '4px solid var(--color-primary)' }}>
-                <h5 style={styles.cardItemTitle}>Previsão de Passagem à Reserva / Reforma</h5>
-                <div style={{ fontSize: '32px', fontWeight: '800', color: '#059669', margin: '10px 0' }}>
-                  Ano {serviceStats.retirementYear}
-                </div>
-                <div style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-                  Faltam aproximadamente <strong>{serviceStats.yearsToRetirement} anos</strong> de atividade
+              <div style={{ ...styles.cleanCard, borderTop: '3px solid #059669' }}>
+                <h4 style={styles.cleanCardTitle}>Previsão da Passagem à Reserva / Reforma</h4>
+                <div style={{ ...styles.hugeStat, color: '#059669' }}>Ano {serviceStats.retirementYear}</div>
+                <div style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '16px' }}>
+                  Faltam aproximadamente <strong>{serviceStats.yearsToRetirement} anos</strong> para a conclusão da carreira ativa.
                 </div>
 
-                <div style={{ marginTop: '20px' }}>
+                <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 'bold' }}>
-                    <span>Progresso de Carreira</span>
-                    <span>{serviceStats.progressPercent}% Cumprido</span>
+                    <span>Progresso Cumprido</span>
+                    <span>{serviceStats.progressPercent}%</span>
                   </div>
-                  <div style={styles.progressBarLarge}>
+                  <div style={styles.progressTrackLarge}>
                     <div style={{ ...styles.progressFill, width: `${serviceStats.progressPercent}%`, backgroundColor: '#059669' }}></div>
                   </div>
                 </div>
@@ -598,59 +623,57 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 
         {/* ABA 4: ELEGIBILIDADE DE CARREIRA */}
         {activePortalTab === 'career' && (
-          <div style={styles.tabSection}>
-            <h4 style={styles.sectionTitle}>📈 Radar de Elegibilidade a Promoção e Progressão</h4>
-            <p style={styles.sectionDesc}>Verificação dos requisitos legais de tempo no escalão (interstício) e habilitações.</p>
+          <div style={styles.sectionWrap}>
+            <h3 style={styles.secTitle}>📈 Radar de Elegibilidade a Promoção e Progressão</h3>
+            <p style={styles.secDesc}>Verificação de interstício legal de tempo no escalão (mínimo 3 anos) e habilitações.</p>
 
-            <div style={styles.grid2Col}>
-              <div style={styles.cardItem}>
-                <h5 style={styles.cardItemTitle}>Progressão no Escalão / Classe</h5>
+            <div style={styles.gridCards}>
+              <div style={styles.cleanCard}>
+                <h4 style={styles.cleanCardTitle}>Progressão no Escalão / Classe</h4>
                 <div style={{ margin: '14px 0' }}>
                   {careerEligibility.isProgressionEligible ? (
-                    <div style={styles.eligibleBox}>
+                    <div style={styles.alertSuccess}>
                       <span style={{ fontSize: '20px' }}>✅</span>
                       <div>
                         <strong>Elegível para Progressão no Próximo Ciclo</strong>
-                        <div style={{ fontSize: '12px', color: '#059669' }}>Cumpriu o interstício regulamentar de 3 anos no escalão.</div>
+                        <div style={{ fontSize: '12px', opacity: 0.9 }}>Cumpriu o interstício regulamentar de 3 anos no escalão.</div>
                       </div>
                     </div>
                   ) : (
-                    <div style={styles.pendingBox}>
+                    <div style={styles.alertWarning}>
                       <span style={{ fontSize: '20px' }}>⏳</span>
                       <div>
                         <strong>Interstício em Curso</strong>
-                        <div style={{ fontSize: '12px', color: '#d97706' }}>
-                          Faltam aproximadamente {careerEligibility.monthsRemaining} meses para completar os 3 anos no posto.
+                        <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                          Faltam aproximadamente {careerEligibility.monthsRemaining} meses para completar os 3 anos no escalão.
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
-                <div style={{ fontSize: '13px', lineHeight: '1.6' }}>
-                  <div><strong>Tempo Estimado no Escalão:</strong> {careerEligibility.yearsInRank} anos</div>
-                  <div><strong>Avaliação Média:</strong> Bom / Muito Bom</div>
-                </div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Tempo Estimado no Escalão:</span> <strong>{careerEligibility.yearsInRank} anos</strong></div>
+                <div style={styles.infoRow}><span style={styles.lbl}>Avaliação de Desempenho:</span> <strong>Bom / Muito Bom</strong></div>
               </div>
 
-              <div style={styles.cardItem}>
-                <h5 style={styles.cardItemTitle}>Mudança de Carreira por Nível Académico</h5>
+              <div style={styles.cleanCard}>
+                <h4 style={styles.cleanCardTitle}>Mudança de Carreira por Nível Académico</h4>
                 <div style={{ margin: '14px 0' }}>
                   {careerEligibility.hasHigherEducation ? (
-                    <div style={styles.eligibleBox}>
+                    <div style={styles.alertSuccess}>
                       <span style={{ fontSize: '20px' }}>🎓</span>
                       <div>
                         <strong>Qualificação Superior Registada</strong>
-                        <div style={{ fontSize: '12px', color: '#059669' }}>
+                        <div style={{ fontSize: '12px', opacity: 0.9 }}>
                           Nível {careerEligibility.academicLevel} permite solicitação de ingresso na carreira técnica superior.
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ ...styles.pendingBox, borderColor: '#d1d5db', backgroundColor: 'var(--color-bg-subtle)' }}>
+                    <div style={styles.alertInfo}>
                       <span style={{ fontSize: '20px' }}>📚</span>
                       <div>
                         <strong>Nível Académico Atual: {careerEligibility.academicLevel}</strong>
-                        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                        <div style={{ fontSize: '12px', opacity: 0.9 }}>
                           Para transição para carreiras superiores é necessária licenciatura reconhecida pelo Estado.
                         </div>
                       </div>
@@ -664,91 +687,93 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 
         {/* ABA 5: MINHA EFETIVIDADE & FALTAS */}
         {activePortalTab === 'absences' && (
-          <div style={styles.tabSection}>
-            <div style={styles.sectionHeaderRow}>
+          <div style={styles.sectionWrap}>
+            <div style={styles.headerBetween}>
               <div>
-                <h4 style={styles.sectionTitle}>📅 Registo de Efetividade e Ausências</h4>
-                <p style={styles.sectionDesc}>Consulte o extrato das suas presenças e submeta atestados médicos ou justificações.</p>
+                <h3 style={styles.secTitle}>📅 Assiduidade e Registo de Faltas</h3>
+                <p style={styles.secDesc}>Extrato de presenças e submissão de atestados médicos ou justificações.</p>
               </div>
-              <button onClick={() => setIsAbsenceModalOpen(true)} style={styles.btnSecondaryAction}>
+              <button onClick={() => setIsAbsenceModalOpen(true)} style={styles.btnActionSecondary}>
                 ✍️ Submeter Justificação
               </button>
             </div>
 
-            <div style={styles.kpiRow}>
+            <div style={styles.kpiGrid}>
               <div style={styles.kpiCard}>
-                <span style={styles.kpiLabel}>Faltas Justificadas</span>
-                <span style={{ ...styles.kpiNumber, color: '#059669' }}>{myAbsences.justified}</span>
-                <span style={styles.kpiHint}>Aprovadas pela Direcção</span>
+                <span style={styles.kpiTitle}>Faltas Justificadas</span>
+                <span style={{ ...styles.kpiNum, color: '#059669' }}>{myAbsences.justified}</span>
+                <span style={styles.kpiSub}>Aprovadas pela Direcção</span>
               </div>
               <div style={styles.kpiCard}>
-                <span style={styles.kpiLabel}>Faltas Injustificadas</span>
-                <span style={{ ...styles.kpiNumber, color: '#dc2626' }}>{myAbsences.unjustified}</span>
-                <span style={styles.kpiHint}>Sujeitas a desconto salarial</span>
+                <span style={styles.kpiTitle}>Faltas Injustificadas</span>
+                <span style={{ ...styles.kpiNum, color: '#dc2626' }}>{myAbsences.unjustified}</span>
+                <span style={styles.kpiSub}>Sujeitas a desconto salarial</span>
               </div>
               <div style={styles.kpiCard}>
-                <span style={styles.kpiLabel}>Aguardam Despacho</span>
-                <span style={{ ...styles.kpiNumber, color: '#d97706' }}>{myAbsences.pending}</span>
-                <span style={styles.kpiHint}>Em apreciação</span>
+                <span style={styles.kpiTitle}>Aguardam Despacho</span>
+                <span style={{ ...styles.kpiNum, color: '#d97706' }}>{myAbsences.pending}</span>
+                <span style={styles.kpiSub}>Em apreciação da chefia</span>
               </div>
             </div>
 
-            <h5 style={{ margin: '20px 0 10px 0', fontSize: '15px', color: 'var(--color-text-base)' }}>Lista de Faltas Registadas</h5>
+            <h4 style={styles.subSecTitle}>Histórico de Faltas</h4>
             {myAbsences.list.length === 0 ? (
-              <div style={styles.emptyBox}>✅ Excelente assiduidade! Sem faltas registadas no sistema.</div>
+              <div style={styles.emptyState}>✅ Excelente assiduidade! Sem faltas registadas no sistema.</div>
             ) : (
-              <table className="premium-table" style={{ width: '100%', fontSize: '13px' }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>
-                    <th style={styles.th}>Data / Período</th>
-                    <th style={styles.th}>Duração</th>
-                    <th style={styles.th}>Tipo</th>
-                    <th style={styles.th}>Estado da Justificação</th>
-                    <th style={styles.th}>Motivo Alegado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {myAbsences.list.map(abs => (
-                    <tr key={abs.id}>
-                      <td style={styles.td}>{formatDisplayDate(abs.startDate || abs.date)}</td>
-                      <td style={styles.td}>{abs.daysCount || 1} dia(s)</td>
-                      <td style={styles.td}><strong>{abs.type}</strong></td>
-                      <td style={styles.td}>
-                        <span style={styles.statusPill(abs.status || abs.approvalStatus || 'Registada')}>
-                          {abs.status || abs.approvalStatus || 'Registada'}
-                        </span>
-                      </td>
-                      <td style={styles.td}>{abs.reason || abs.justification || '-'}</td>
+              <div style={{ overflowX: 'auto' }}>
+                <table className="premium-table" style={{ width: '100%', fontSize: '13px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--color-primary)', color: '#fff' }}>
+                      <th style={styles.th}>Data / Período</th>
+                      <th style={styles.th}>Duração</th>
+                      <th style={styles.th}>Tipo</th>
+                      <th style={styles.th}>Estado da Justificação</th>
+                      <th style={styles.th}>Motivo Alegado</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {myAbsences.list.map(abs => (
+                      <tr key={abs.id}>
+                        <td style={styles.td}>{formatDisplayDate(abs.startDate || abs.date)}</td>
+                        <td style={styles.td}>{abs.daysCount || 1} dia(s)</td>
+                        <td style={styles.td}><strong>{abs.type}</strong></td>
+                        <td style={styles.td}>
+                          <span style={styles.statusPill(abs.status || abs.approvalStatus || 'Registada')}>
+                            {abs.status || abs.approvalStatus || 'Registada'}
+                          </span>
+                        </td>
+                        <td style={styles.td}>{abs.reason || abs.justification || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         )}
 
         {/* ABA 6: PROCESSOS DISCIPLINARES */}
         {activePortalTab === 'disciplinary' && (
-          <div style={styles.tabSection}>
-            <h4 style={styles.sectionTitle}>⚖️ Trâmites de Processos Disciplinares</h4>
-            <p style={styles.sectionDesc}>Garantia de transparência e consulta dos prazos legais de contraditório e defesa.</p>
+          <div style={styles.sectionWrap}>
+            <h3 style={styles.secTitle}>⚖️ Trâmites de Processos Disciplinares</h3>
+            <p style={styles.secDesc}>Consulta de autos e prazos legais de contraditório e defesa.</p>
 
             {myDisciplinary.length === 0 ? (
-              <div style={styles.cleanRecordBox}>
+              <div style={styles.cleanStateBox}>
                 <span style={{ fontSize: '32px' }}>🛡️</span>
                 <div>
-                  <h4 style={{ margin: '0 0 4px 0', color: '#059669' }}>Situação Disciplinar Limpa</h4>
+                  <h4 style={{ margin: '0 0 4px 0', color: '#059669', fontSize: '16px' }}>Situação Disciplinar Limpa</h4>
                   <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '13px' }}>
                     Não existe nenhum processo disciplinar instaurado contra o seu cadastro no SERNIC.
                   </p>
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {myDisciplinary.map(proc => (
-                  <div key={proc.id} style={styles.procCard}>
+                  <div key={proc.id} style={styles.cleanCard}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontWeight: '700', fontSize: '15px' }}>Processo nº {proc.processNumber || proc.id}</span>
+                      <strong style={{ fontSize: '15px' }}>Processo nº {proc.processNumber || proc.id}</strong>
                       <span style={styles.statusPill(proc.status)}>{proc.status}</span>
                     </div>
                     <div style={{ fontSize: '13px', margin: '8px 0', color: 'var(--color-text-base)' }}>
@@ -766,24 +791,24 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 
         {/* ABA 7: ATOS & NOMEAÇÕES */}
         {activePortalTab === 'acts' && (
-          <div style={styles.tabSection}>
-            <h4 style={styles.sectionTitle}>📜 Atos Administrativos, Nomeações e Cessações</h4>
-            <p style={styles.sectionDesc}>Histórico de despachos ministeriais e da direcção nacional vinculados à sua carreira.</p>
+          <div style={styles.sectionWrap}>
+            <h3 style={styles.secTitle}>📜 Atos Administrativos, Nomeações e Cessações</h3>
+            <p style={styles.secDesc}>Histórico de despachos ministeriais e da Direcção Nacional.</p>
 
             {myAdminActs.length === 0 ? (
-              <div style={styles.emptyBox}>Nenhum ato administrativo formal emitido no sistema para este agente.</div>
+              <div style={styles.emptyState}>Nenhum ato administrativo formal emitido no sistema para este agente.</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {myAdminActs.map(act => (
-                  <div key={act.id} style={styles.cardItem}>
+                  <div key={act.id} style={styles.cleanCard}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <strong>{act.actType || act.type || 'Despacho Administrativo'}</strong>
-                      <span style={{ fontSize: '12px', color: 'var(--color-primary)', fontWeight: 'bold' }}>
+                      <strong style={{ color: 'var(--color-primary)' }}>{act.actType || act.type || 'Despacho'}</strong>
+                      <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>
                         {formatDisplayDate(act.date || act.createdAt)}
                       </span>
                     </div>
-                    <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'var(--color-text-base)' }}>
-                      {act.description || act.notes || 'Despacho de nomeação/provimento de funções no SERNIC.'}
+                    <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: 'var(--color-text-base)', lineHeight: '1.5' }}>
+                      {act.description || act.notes || 'Despacho administrativo regulamentar arquivado no processo individual.'}
                     </p>
                   </div>
                 ))}
@@ -792,6 +817,140 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
           </div>
         )}
       </div>
+
+      {/* ──────────────────────────────────────────────────────────────
+          MODAL INTERATIVO DE PESQUISA & FILTRAGEM DE AGENTES
+         ────────────────────────────────────────────────────────────── */}
+      {isSearchModalOpen && (
+        <div style={styles.modalOverlay} onClick={() => setIsSearchModalOpen(false)}>
+          <div style={styles.searchModalBox} onClick={e => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>🔍</span>
+                <h3 style={{ margin: 0, fontSize: '17px', color: 'var(--color-text-base)' }}>
+                  Pesquisa e Seleção de Agente SERNIC
+                </h3>
+              </div>
+              <button onClick={() => setIsSearchModalOpen(false)} style={styles.closeBtn}>✕</button>
+            </div>
+
+            <div style={styles.searchModalBody}>
+              {/* CAMPO DE PESQUISA */}
+              <div style={{ position: 'relative', marginBottom: '14px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Pesquisar por Nome, NIP, NUIT, BI, cargo..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={styles.searchFieldInput}
+                  autoFocus
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} style={styles.btnClearSearch}>✕</button>
+                )}
+              </div>
+
+              {/* FILTROS POR DIRECÇÃO E CARREIRA */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
+                <div>
+                  <label style={styles.filterMiniLabel}>Filtrar por Direcção / Província:</label>
+                  <select 
+                    value={filterDirectorate} 
+                    onChange={e => setFilterDirectorate(e.target.value)}
+                    style={styles.filterSelect}
+                  >
+                    <option value="ALL">Todas as Direcções</option>
+                    {(orgData?.directorates || []).map(d => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={styles.filterMiniLabel}>Filtrar por Carreira:</label>
+                  <select 
+                    value={filterCareer} 
+                    onChange={e => setFilterCareer(e.target.value)}
+                    style={styles.filterSelect}
+                  >
+                    <option value="ALL">Todas as Carreiras</option>
+                    {(orgData?.careers || []).map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* LISTA DE RESULTADOS */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>
+                  Encontrados: {filteredEmployeesList.length} agentes
+                </span>
+                {(searchQuery || filterDirectorate !== 'ALL' || filterCareer !== 'ALL') && (
+                  <button 
+                    onClick={() => { setSearchQuery(''); setFilterDirectorate('ALL'); setFilterCareer('ALL'); }}
+                    style={styles.btnResetFilters}
+                  >
+                    Limpar Filtros
+                  </button>
+                )}
+              </div>
+
+              <div style={styles.resultsList}>
+                {filteredEmployeesList.length === 0 ? (
+                  <div style={styles.noResultsBox}>
+                    Nenhum funcionário encontrado com os critérios fornecidos.
+                  </div>
+                ) : (
+                  filteredEmployeesList.map(emp => {
+                    const isSelected = emp.id === currentEmp.id;
+                    const dir = (orgData?.directorates || []).find(d => String(d.id) === String(emp.directorateId));
+
+                    return (
+                      <div 
+                        key={emp.id} 
+                        onClick={() => {
+                          setSelectedEmpId(emp.id);
+                          setIsSearchModalOpen(false);
+                        }}
+                        style={{
+                          ...styles.resultCard,
+                          borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-border)',
+                          backgroundColor: isSelected ? 'rgba(27, 54, 93, 0.06)' : 'var(--color-bg-subtle)'
+                        }}
+                      >
+                        <div style={styles.resAvatar}>
+                          {emp.photo ? (
+                            <img src={emp.photo} alt={emp.name} style={styles.resAvatarImg} />
+                          ) : (
+                            <div style={styles.resAvatarFallback}>
+                              {emp.name?.charAt(0).toUpperCase() || 'A'}
+                            </div>
+                          )}
+                        </div>
+
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <strong style={{ fontSize: '14px', color: 'var(--color-text-base)' }}>{emp.name}</strong>
+                            <span style={styles.nipTag}>NIP: {emp.nip || 'N/A'}</span>
+                          </div>
+                          <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                            {dir?.name || 'Direcção Geral'} • {emp.category || emp.cargo || 'Investigador'}
+                          </div>
+                        </div>
+
+                        {isSelected && (
+                          <span style={styles.selectedPill}>✓ Atual</span>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL DE SOLICITAÇÃO DE FÉRIAS */}
       {isVacationModalOpen && (
@@ -803,11 +962,11 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
             </div>
             <form onSubmit={handleSubmitVacation} style={styles.modalBody}>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Tipo de Férias / Licença:</label>
+                <label style={styles.formLbl}>Tipo de Férias / Licença:</label>
                 <select 
                   value={vacationForm.type} 
                   onChange={e => setVacationForm({ ...vacationForm, type: e.target.value })}
-                  style={styles.input}
+                  style={styles.fieldInput}
                 >
                   <option value="Férias Anuais">Férias Anuais (Regulamentares)</option>
                   <option value="Licença de Casamento">Licença de Casamento (15 dias)</option>
@@ -816,45 +975,45 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
                 </select>
               </div>
 
-              <div style={styles.grid2Col}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Data de Início:</label>
+                  <label style={styles.formLbl}>Data de Início:</label>
                   <input 
                     type="date" 
                     value={vacationForm.startDate} 
                     onChange={e => setVacationForm({ ...vacationForm, startDate: e.target.value })} 
-                    style={styles.input} 
+                    style={styles.fieldInput} 
                     required 
                   />
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Data de Término:</label>
+                  <label style={styles.formLbl}>Data de Término:</label>
                   <input 
                     type="date" 
                     value={vacationForm.endDate} 
                     onChange={e => setVacationForm({ ...vacationForm, endDate: e.target.value })} 
-                    style={styles.input} 
+                    style={styles.fieldInput} 
                     required 
                   />
                 </div>
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>Observações / Justificação:</label>
+                <label style={styles.formLbl}>Observações / Justificação:</label>
                 <textarea 
                   rows={3} 
                   value={vacationForm.reason} 
                   onChange={e => setVacationForm({ ...vacationForm, reason: e.target.value })}
                   placeholder="Informações adicionais para a chefia imediata..."
-                  style={styles.textarea}
+                  style={styles.fieldTextarea}
                 />
               </div>
 
               <div style={styles.modalFooter}>
-                <button type="button" onClick={() => setIsVacationModalOpen(false)} style={styles.btnCancel}>
+                <button type="button" onClick={() => setIsVacationModalOpen(false)} style={styles.btnModalCancel}>
                   Cancelar
                 </button>
-                <button type="submit" style={styles.btnConfirm}>
+                <button type="submit" style={styles.btnActionPrimary}>
                   Submeter Pedido
                 </button>
               </div>
@@ -863,7 +1022,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
         </div>
       )}
 
-      {/* MODAL DE SUBMISSÃO DE JUSTIFICAÇÃO DE FALTA */}
+      {/* MODAL DE JUSTIFICAÇÃO DE FALTA */}
       {isAbsenceModalOpen && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalBox}>
@@ -872,56 +1031,56 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
               <button onClick={() => setIsAbsenceModalOpen(false)} style={styles.closeBtn}>✕</button>
             </div>
             <form onSubmit={handleSubmitAbsence} style={styles.modalBody}>
-              <div style={styles.grid2Col}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Data de Início:</label>
+                  <label style={styles.formLbl}>Data de Início:</label>
                   <input 
                     type="date" 
                     value={absenceForm.startDate} 
                     onChange={e => setAbsenceForm({ ...absenceForm, startDate: e.target.value })} 
-                    style={styles.input} 
+                    style={styles.fieldInput} 
                     required 
                   />
                 </div>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Data de Fim (Opcional):</label>
+                  <label style={styles.formLbl}>Data de Fim (Opcional):</label>
                   <input 
                     type="date" 
                     value={absenceForm.endDate} 
                     onChange={e => setAbsenceForm({ ...absenceForm, endDate: e.target.value })} 
-                    style={styles.input} 
+                    style={styles.fieldInput} 
                   />
                 </div>
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>Motivo Legal Alegado:</label>
+                <label style={styles.formLbl}>Motivo Legal Alegado:</label>
                 <textarea 
                   rows={3} 
                   value={absenceForm.reason} 
                   onChange={e => setAbsenceForm({ ...absenceForm, reason: e.target.value })}
                   placeholder="Ex: Doença súbita com atestado médico emitido pelo Hospital Central..."
-                  style={styles.textarea}
+                  style={styles.fieldTextarea}
                   required
                 />
               </div>
 
               <div style={styles.formGroup}>
-                <label style={styles.label}>Nome do Comprovativo / Atestado (PDF/Foto):</label>
+                <label style={styles.formLbl}>Nome do Comprovativo / Atestado (PDF/Foto):</label>
                 <input 
                   type="text" 
                   value={absenceForm.attachmentName} 
                   onChange={e => setAbsenceForm({ ...absenceForm, attachmentName: e.target.value })} 
                   placeholder="Ex: Atestado_Medico_27Setembro.pdf"
-                  style={styles.input} 
+                  style={styles.fieldInput} 
                 />
               </div>
 
               <div style={styles.modalFooter}>
-                <button type="button" onClick={() => setIsAbsenceModalOpen(false)} style={styles.btnCancel}>
+                <button type="button" onClick={() => setIsAbsenceModalOpen(false)} style={styles.btnModalCancel}>
                   Cancelar
                 </button>
-                <button type="submit" style={styles.btnConfirm}>
+                <button type="submit" style={styles.btnActionPrimary}>
                   Submeter Justificação
                 </button>
               </div>
@@ -930,7 +1089,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
         </div>
       )}
 
-      {/* CONFIRM MODAL */}
+      {/* MODAL DE CONFIRMAÇÃO */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
         title={confirmModal.title}
@@ -943,246 +1102,496 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 }
 
 const styles = {
-  container: { display: 'flex', flexDirection: 'column', gap: '18px', width: '100%', maxWidth: '1400px', margin: '0 auto' },
-  topNav: {
+  container: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+    width: '100%',
+    maxWidth: '1440px',
+    margin: '0 auto',
+    boxSizing: 'border-box'
+  },
+  institutionalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '12px',
+    gap: '16px',
     backgroundColor: 'var(--color-bg-elevated)',
-    padding: '16px 20px',
-    borderRadius: '10px',
-    border: '1px solid var(--color-border)'
+    padding: '18px 24px',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border)',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.02)'
   },
-  policeBadge: {
-    fontSize: '28px',
-    width: '48px',
-    height: '48px',
-    borderRadius: '10px',
-    backgroundColor: 'var(--color-primary)',
+  instLeft: { display: 'flex', alignItems: 'center', gap: '16px' },
+  sernicLogo: {
+    width: '56px',
+    height: '56px',
+    objectFit: 'contain',
+    filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))'
+  },
+  instText: { display: 'flex', flexDirection: 'column' },
+  instRepub: {
+    fontSize: '11px',
+    fontWeight: '800',
+    color: '#d97706',
+    letterSpacing: '1.2px',
+    textTransform: 'uppercase',
+    marginBottom: '2px'
+  },
+  instTitle: {
+    fontSize: '19px',
+    fontWeight: '800',
+    color: 'var(--color-primary, #1B365D)',
+    margin: '0 0 2px 0',
+    letterSpacing: '0.4px'
+  },
+  instSub: {
+    fontSize: '12px',
+    fontWeight: '600',
+    color: 'var(--color-text-muted)'
+  },
+  instActions: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' },
+  btnSearchTrigger: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    color: '#fff'
-  },
-  portalTitle: { fontSize: '18px', fontWeight: '800', color: 'var(--color-text-base)', margin: '0 0 2px 0' },
-  portalSubtitle: { fontSize: '12px', color: 'var(--color-text-muted)', margin: 0 },
-  empSelect: {
-    padding: '6px 10px',
-    borderRadius: '6px',
-    border: '1px solid var(--color-border)',
+    gap: '8px',
+    padding: '8px 14px',
     backgroundColor: 'var(--color-bg-subtle)',
     color: 'var(--color-text-base)',
-    fontSize: '13px'
+    border: '1px solid var(--color-border)',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s'
+  },
+  countBadge: {
+    backgroundColor: 'var(--color-primary)',
+    color: '#fff',
+    fontSize: '11px',
+    fontWeight: '800',
+    padding: '2px 7px',
+    borderRadius: '10px'
   },
   btnBackAdmin: {
-    padding: '7px 12px',
+    padding: '8px 14px',
     backgroundColor: 'transparent',
     color: 'var(--color-primary)',
     border: '1px solid var(--color-primary)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '12px',
     fontWeight: '700',
     cursor: 'pointer'
   },
   profileCard: {
     backgroundColor: 'var(--color-bg-elevated)',
-    borderRadius: '10px',
-    padding: '20px',
+    borderRadius: '12px',
+    padding: '22px 24px',
     border: '1px solid var(--color-border)',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.02)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: '20px'
+    gap: '24px'
   },
-  profileLeft: { display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' },
-  avatarContainer: { position: 'relative', width: '84px', height: '84px' },
-  avatarImg: { width: '84px', height: '84px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--color-primary)' },
+  profileMain: { display: 'flex', alignItems: 'center', gap: '22px', flexWrap: 'wrap' },
+  avatarWrapper: { position: 'relative', width: '84px', height: '84px' },
+  avatarImg: {
+    width: '84px',
+    height: '84px',
+    borderRadius: '50%',
+    objectFit: 'cover',
+    border: '3px solid var(--color-primary)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+  },
   avatarFallback: {
-    width: '84px', height: '84px', borderRadius: '50%',
-    backgroundColor: 'var(--color-primary)', color: '#fff',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '32px', fontWeight: 'bold'
+    width: '84px',
+    height: '84px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-primary)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '32px',
+    fontWeight: '800'
   },
-  photoUploadLabel: {
-    position: 'absolute', bottom: 0, right: 0,
-    backgroundColor: 'var(--color-primary)', color: '#fff',
-    width: '28px', height: '28px', borderRadius: '50%',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', fontSize: '14px', border: '2px solid #fff'
+  photoUploadBtn: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: 'var(--color-primary)',
+    color: '#fff',
+    width: '28px',
+    height: '28px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    fontSize: '13px',
+    border: '2px solid #fff',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
   },
-  profileDetails: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  empHeaderRow: { display: 'flex', alignItems: 'center', gap: '10px' },
-  empName: { fontSize: '20px', fontWeight: '800', color: 'var(--color-text-base)', margin: 0 },
-  activeTag: { fontSize: '12px', color: '#059669', fontWeight: '700' },
-  empBadgesRow: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
-  infoBadge: {
-    padding: '3px 8px', borderRadius: '4px',
+  profileInfo: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  nameRow: { display: 'flex', alignItems: 'center', gap: '12px' },
+  agentName: { fontSize: '20px', fontWeight: '800', color: 'var(--color-text-base)', margin: 0 },
+  statusPillActive: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '3px 10px',
+    backgroundColor: '#ecfdf5',
+    color: '#059669',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: '800'
+  },
+  statusDot: { width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#059669' },
+  tagsRow: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
+  tag: {
+    padding: '3px 9px',
+    borderRadius: '6px',
     backgroundColor: 'var(--color-bg-subtle)',
     border: '1px solid var(--color-border)',
-    fontSize: '11px', color: 'var(--color-text-base)'
+    fontSize: '12px',
+    color: 'var(--color-text-base)'
   },
-  empSubInfo: { fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' },
-  retirementQuickCard: {
+  unitRow: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--color-text-muted)', flexWrap: 'wrap' },
+  statReserveCard: {
     backgroundColor: 'var(--color-bg-subtle)',
-    padding: '14px 20px',
-    borderRadius: '8px',
+    padding: '16px 20px',
+    borderRadius: '10px',
     border: '1px solid var(--color-border)',
-    minWidth: '220px',
+    minWidth: '230px',
     display: 'flex',
     flexDirection: 'column',
     gap: '3px'
   },
-  quickCardLabel: { fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: '700' },
-  quickCardVal: { fontSize: '22px', fontWeight: '800', color: '#059669' },
-  quickCardSub: { fontSize: '11px', color: 'var(--color-text-muted)' },
-  progressBar: { height: '6px', backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: '3px', marginTop: '6px', overflow: 'hidden' },
-  progressBarLarge: { height: '10px', backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: '5px', marginTop: '8px', overflow: 'hidden' },
+  reserveTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  reserveLabel: { fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase' },
+  reserveIcon: { fontSize: '16px' },
+  reserveYear: { fontSize: '24px', fontWeight: '800', color: '#059669' },
+  reserveHint: { fontSize: '12px', color: 'var(--color-text-muted)' },
+  progressTrack: { height: '6px', backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: '3px', marginTop: '6px', overflow: 'hidden' },
+  progressTrackLarge: { height: '10px', backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: '5px', marginTop: '8px', overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: 'var(--color-primary)', borderRadius: '3px' },
-  tabsBar: {
+  navBar: {
     display: 'flex',
     gap: '8px',
     overflowX: 'auto',
     backgroundColor: 'var(--color-bg-elevated)',
     padding: '10px 14px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     border: '1px solid var(--color-border)'
   },
-  tabBtn: {
+  navTab: {
     padding: '8px 14px',
     backgroundColor: 'transparent',
     border: '1px solid var(--color-border)',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '500',
     color: 'var(--color-text-muted)',
     cursor: 'pointer',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
+    transition: 'all 0.2s'
   },
-  tabBtnActive: {
+  navTabActive: {
     padding: '8px 14px',
     backgroundColor: 'var(--color-primary)',
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '700',
     color: '#fff',
     cursor: 'pointer',
-    whiteSpace: 'nowrap'
+    whiteSpace: 'nowrap',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
   },
-  tabContent: {
+  contentBody: {
     backgroundColor: 'var(--color-bg-elevated)',
-    borderRadius: '10px',
+    borderRadius: '12px',
     padding: '24px',
-    border: '1px solid var(--color-border)'
+    border: '1px solid var(--color-border)',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.02)'
   },
-  tabSection: { display: 'flex', flexDirection: 'column', gap: '16px' },
-  sectionTitle: { fontSize: '17px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 },
-  sectionDesc: { fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 },
-  sectionHeaderRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' },
-  grid2Col: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' },
-  cardItem: {
+  sectionWrap: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  secTitle: { fontSize: '17px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 },
+  secDesc: { fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 },
+  headerBetween: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' },
+  gridCards: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' },
+  cleanCard: {
     backgroundColor: 'var(--color-bg-subtle)',
-    padding: '16px',
-    borderRadius: '8px',
+    padding: '18px 20px',
+    borderRadius: '10px',
     border: '1px solid var(--color-border)'
   },
-  cardItemTitle: { fontSize: '14px', fontWeight: '700', color: 'var(--color-primary)', margin: '0 0 12px 0' },
-  rowItem: { display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid rgba(0,0,0,0.04)', fontSize: '13px' },
-  rowLabel: { color: 'var(--color-text-muted)' },
-  kpiRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' },
+  cleanCardTitle: { fontSize: '14px', fontWeight: '700', color: 'var(--color-primary)', margin: '0 0 12px 0' },
+  infoRow: { display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid rgba(0,0,0,0.03)', fontSize: '13px' },
+  lbl: { color: 'var(--color-text-muted)' },
+  hugeStat: { fontSize: '32px', fontWeight: '800', color: 'var(--color-primary)', margin: '8px 0 2px 0' },
+  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' },
   kpiCard: {
     backgroundColor: 'var(--color-bg-subtle)',
     padding: '16px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     border: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
     gap: '3px'
   },
-  kpiLabel: { fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: '600' },
-  kpiNumber: { fontSize: '24px', fontWeight: '800', color: 'var(--color-text-base)' },
-  kpiHint: { fontSize: '11px', color: 'var(--color-text-muted)' },
-  btnPrimaryAction: {
-    padding: '8px 16px', backgroundColor: 'var(--color-primary)', color: '#fff',
-    border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '13px', cursor: 'pointer'
+  kpiTitle: { fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: '600' },
+  kpiNum: { fontSize: '24px', fontWeight: '800', color: 'var(--color-text-base)' },
+  kpiSub: { fontSize: '11px', color: 'var(--color-text-muted)' },
+  btnActionPrimary: {
+    padding: '9px 16px',
+    backgroundColor: 'var(--color-primary)',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: '700',
+    fontSize: '13px',
+    cursor: 'pointer'
   },
-  btnSecondaryAction: {
-    padding: '8px 16px', backgroundColor: '#059669', color: '#fff',
-    border: 'none', borderRadius: '6px', fontWeight: '700', fontSize: '13px', cursor: 'pointer'
+  btnActionSecondary: {
+    padding: '9px 16px',
+    backgroundColor: '#059669',
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: '700',
+    fontSize: '13px',
+    cursor: 'pointer'
   },
-  emptyBox: {
-    padding: '30px', textAlign: 'center', backgroundColor: 'var(--color-bg-subtle)',
-    borderRadius: '8px', border: '1px dashed var(--color-border)', color: 'var(--color-text-muted)', fontSize: '13px'
-  },
-  eligibleBox: {
-    display: 'flex', alignItems: 'center', gap: '12px',
-    backgroundColor: '#ecfdf5', border: '1px solid #059669',
-    padding: '12px 14px', borderRadius: '8px', color: '#059669', fontSize: '13px'
-  },
-  pendingBox: {
-    display: 'flex', alignItems: 'center', gap: '12px',
-    backgroundColor: '#fffbeb', border: '1px solid #d97706',
-    padding: '12px 14px', borderRadius: '8px', color: '#d97706', fontSize: '13px'
-  },
-  cleanRecordBox: {
-    display: 'flex', alignItems: 'center', gap: '14px',
-    backgroundColor: '#ecfdf5', border: '1px solid #059669',
-    padding: '20px', borderRadius: '8px'
-  },
-  procCard: {
+  emptyState: {
+    padding: '36px',
+    textAlign: 'center',
     backgroundColor: 'var(--color-bg-subtle)',
-    padding: '16px', borderRadius: '8px', border: '1px solid var(--color-border)'
+    borderRadius: '10px',
+    border: '1px dashed var(--color-border)',
+    color: 'var(--color-text-muted)',
+    fontSize: '13px'
   },
+  cleanStateBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    backgroundColor: '#ecfdf5',
+    border: '1px solid #059669',
+    padding: '20px',
+    borderRadius: '10px'
+  },
+  alertSuccess: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    backgroundColor: '#ecfdf5',
+    border: '1px solid #059669',
+    padding: '12px 14px',
+    borderRadius: '8px',
+    color: '#059669',
+    fontSize: '13px'
+  },
+  alertWarning: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    backgroundColor: '#fffbeb',
+    border: '1px solid #d97706',
+    padding: '12px 14px',
+    borderRadius: '8px',
+    color: '#d97706',
+    fontSize: '13px'
+  },
+  alertInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    backgroundColor: 'var(--color-bg-subtle)',
+    border: '1px solid var(--color-border)',
+    padding: '12px 14px',
+    borderRadius: '8px',
+    color: 'var(--color-text-base)',
+    fontSize: '13px'
+  },
+  subSecTitle: { margin: '20px 0 10px 0', fontSize: '15px', color: 'var(--color-text-base)', fontWeight: '700' },
+  th: { padding: '12px 14px', textAlign: 'left', fontWeight: '600' },
+  td: { padding: '12px 14px', verticalAlign: 'middle', borderBottom: '1px solid var(--color-border)' },
   statusPill: (status) => {
     let bg = '#eff6ff', color = '#1b365d';
     if (status === 'Aprovada' || status === 'Concluída') { bg = '#ecfdf5'; color = '#059669'; }
     if (status === 'Em gozo' || status === 'Em análise' || status === 'Pendente') { bg = '#fffbeb'; color = '#d97706'; }
     if (status === 'Rejeitada' || status === 'Cancelada' || status === 'Injustificada') { bg = '#fef2f2'; color = '#dc2626'; }
     return {
-      padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: '700',
-      backgroundColor: bg, color: color, display: 'inline-block'
+      padding: '3px 9px',
+      borderRadius: '12px',
+      fontSize: '11px',
+      fontWeight: '700',
+      backgroundColor: bg,
+      color: color,
+      display: 'inline-block'
     };
   },
-  th: { padding: '10px 12px', textAlign: 'left', fontWeight: '600' },
-  td: { padding: '10px 12px', verticalAlign: 'middle', borderBottom: '1px solid var(--color-border)' },
   modalOverlay: {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 9999, padding: '20px'
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 9999,
+    padding: '20px'
+  },
+  searchModalBox: {
+    backgroundColor: 'var(--color-bg-elevated)',
+    borderRadius: '12px',
+    width: '100%',
+    maxWidth: '680px',
+    maxHeight: '85vh',
+    display: 'flex',
+    flexDirection: 'column',
+    border: '1px solid var(--color-border)',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
+    overflow: 'hidden'
   },
   modalBox: {
-    backgroundColor: 'var(--color-bg-elevated)', borderRadius: '10px',
-    width: '100%', maxWidth: '520px', border: '1px solid var(--color-border)'
+    backgroundColor: 'var(--color-bg-elevated)',
+    borderRadius: '12px',
+    width: '100%',
+    maxWidth: '520px',
+    border: '1px solid var(--color-border)',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.2)'
   },
   modalHeader: {
-    padding: '16px 20px', borderBottom: '1px solid var(--color-border)',
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+    padding: '16px 20px',
+    borderBottom: '1px solid var(--color-border)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
   closeBtn: { background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--color-text-muted)' },
+  searchModalBody: { padding: '20px', overflowY: 'auto' },
+  searchFieldInput: {
+    width: '100%',
+    padding: '12px 14px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-primary)',
+    backgroundColor: 'var(--color-bg-subtle)',
+    color: 'var(--color-text-base)',
+    fontSize: '14px',
+    boxSizing: 'border-box'
+  },
+  btnClearSearch: {
+    position: 'absolute',
+    right: '12px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    color: 'var(--color-text-muted)',
+    fontSize: '14px'
+  },
+  filterMiniLabel: { display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', marginBottom: '4px' },
+  filterSelect: {
+    width: '100%',
+    padding: '8px 10px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-subtle)',
+    color: 'var(--color-text-base)',
+    fontSize: '12px'
+  },
+  btnResetFilters: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-primary)',
+    fontSize: '12px',
+    cursor: 'pointer',
+    fontWeight: '600'
+  },
+  resultsList: { display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '420px', overflowY: 'auto' },
+  resultCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border)',
+    cursor: 'pointer',
+    transition: 'all 0.15s'
+  },
+  resAvatar: { width: '42px', height: '42px', flexShrink: 0 },
+  resAvatarImg: { width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover' },
+  resAvatarFallback: {
+    width: '42px',
+    height: '42px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-primary)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '800'
+  },
+  nipTag: {
+    fontSize: '11px',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    backgroundColor: 'var(--color-bg-elevated)',
+    border: '1px solid var(--color-border)',
+    color: 'var(--color-text-base)'
+  },
+  selectedPill: {
+    padding: '3px 8px',
+    borderRadius: '10px',
+    backgroundColor: '#ecfdf5',
+    color: '#059669',
+    fontSize: '11px',
+    fontWeight: '800'
+  },
+  noResultsBox: {
+    padding: '30px',
+    textAlign: 'center',
+    color: 'var(--color-text-muted)',
+    fontSize: '13px'
+  },
   modalBody: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' },
   formGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
-  label: { fontSize: '13px', fontWeight: '600', color: 'var(--color-text-base)' },
-  input: {
-    padding: '9px 12px', borderRadius: '6px', border: '1px solid var(--color-border)',
-    backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-base)', fontSize: '13px'
+  formLbl: { fontSize: '13px', fontWeight: '600', color: 'var(--color-text-base)' },
+  fieldInput: {
+    padding: '9px 12px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-subtle)',
+    color: 'var(--color-text-base)',
+    fontSize: '13px'
   },
-  textarea: {
-    padding: '9px 12px', borderRadius: '6px', border: '1px solid var(--color-border)',
-    backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-base)', fontSize: '13px', fontFamily: 'inherit'
+  fieldTextarea: {
+    padding: '9px 12px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-subtle)',
+    color: 'var(--color-text-base)',
+    fontSize: '13px',
+    fontFamily: 'inherit'
   },
   modalFooter: {
-    display: 'flex', justifyContent: 'flex-end', gap: '10px',
-    paddingTop: '10px', borderTop: '1px solid var(--color-border)'
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: '10px',
+    paddingTop: '10px',
+    borderTop: '1px solid var(--color-border)'
   },
-  btnCancel: {
-    padding: '8px 14px', backgroundColor: 'transparent', border: '1px solid var(--color-border)',
-    borderRadius: '6px', cursor: 'pointer', color: 'var(--color-text-muted)'
-  },
-  btnConfirm: {
-    padding: '8px 16px', backgroundColor: 'var(--color-primary)', color: '#fff',
-    border: 'none', borderRadius: '6px', fontWeight: '700', cursor: 'pointer'
+  btnModalCancel: {
+    padding: '8px 14px',
+    backgroundColor: 'transparent',
+    border: '1px solid var(--color-border)',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    color: 'var(--color-text-muted)'
   }
 };
