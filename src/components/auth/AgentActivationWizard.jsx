@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   validateNuitAndCode,
   verifyEmployeePhone,
@@ -20,9 +20,89 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
   const [loading, setLoading] = useState(false);
   const [simulatedSmsAlert, setSimulatedSmsAlert] = useState(null);
 
+  // ─── GESTÃO DO CRONÓMETRO DE 15 MINUTOS (COMEÇA AO ACEDER AO APLICATIVO) ──────
+  const [countdownExpiresAt, setCountdownExpiresAt] = useState(() => {
+    // Ao aceder ao assistente, inicializa o teto máximo de 15 minutos
+    return new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  });
+  const [remainingSeconds, setRemainingSeconds] = useState(15 * 60);
+
+  useEffect(() => {
+    if (!countdownExpiresAt) return;
+
+    const tick = () => {
+      const diff = Math.max(0, Math.floor((new Date(countdownExpiresAt).getTime() - Date.now()) / 1000));
+      setRemainingSeconds(diff);
+      if (diff <= 0) {
+        setError('O tempo limite de 15 minutos deste código expirou. Por motivos de segurança, solicite um novo código junto da DRH.');
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [countdownExpiresAt]);
+
+  const isExpired = remainingSeconds !== null && remainingSeconds <= 0;
+
+  const formattedCountdown = () => {
+    if (remainingSeconds === null) return '15:00';
+    const m = Math.floor(remainingSeconds / 60);
+    const s = remainingSeconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  // ─── INTEGRAÇÃO COM OS BOTÕES NATIVOS DE VOLTAR E SEGUIR DO TELEMÓVEL ──────
+  const goToStep = (nextStep, pushHistory = true) => {
+    setStep(nextStep);
+    setError('');
+    if (pushHistory && typeof window !== 'undefined') {
+      window.history.pushState({ view: 'agent_code', step: nextStep }, '');
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Assegurar que o histórico tem o passo 1 registrado
+    if (!window.history.state || window.history.state.view !== 'agent_code') {
+      window.history.pushState({ view: 'agent_code', step: 1 }, '');
+    }
+
+    const handlePopState = (event) => {
+      const state = event.state;
+      if (!state || state.view !== 'agent_code') {
+        // O utilizador usou o botão nativo "Voltar" do telemóvel para sair do assistente
+        if (onCancel) onCancel();
+        return;
+      }
+
+      const targetStep = state.step || 1;
+      setStep(targetStep);
+      setError('');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [onCancel]);
+
+  const handleNativeBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      window.history.back();
+    } else if (step > 1) {
+      goToStep(step - 1, false);
+    } else if (onCancel) {
+      onCancel();
+    }
+  };
+
   // ─── PASSO 1: Validar NUIT + Código Inicial ────────────────────────────────
   const handleStep1Submit = (e) => {
     e.preventDefault();
+    if (isExpired) {
+      setError('O tempo limite de 15 minutos expirou. Solicite um novo código à DRH.');
+      return;
+    }
     setError('');
     const res = validateNuitAndCode(nuit, accessCode, employees);
     if (!res.success) {
@@ -30,24 +110,35 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
       return;
     }
     setIdentifiedEmp(res.employee);
-    setStep(2);
+    if (res.expiresAt) {
+      setCountdownExpiresAt(res.expiresAt);
+    }
+    goToStep(2);
   };
 
   // ─── PASSO 2: Validar Número de Telefone Principal ─────────────────────────
   const handleStep2Submit = (e) => {
     e.preventDefault();
+    if (isExpired) {
+      setError('O tempo limite de 15 minutos expirou. Solicite um novo código à DRH.');
+      return;
+    }
     setError('');
     const res = verifyEmployeePhone(identifiedEmp, phone);
     if (!res.success) {
       setError(res.error);
       return;
     }
-    setStep(3);
+    goToStep(3);
   };
 
   // ─── PASSO 3: Submeter Nova Senha e Gerar Código SMS ───────────────────────
   const handleStep3Submit = (e) => {
     e.preventDefault();
+    if (isExpired) {
+      setError('O tempo limite de 15 minutos expirou. Solicite um novo código à DRH.');
+      return;
+    }
     setError('');
 
     if (newPassword.length < 5) {
@@ -65,19 +156,23 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
       // Gerar e "enviar" o novo código SMS
       const generatedSms = generateFinalSmsConfirmationCode(identifiedEmp.id, phone);
       
-      // Simulação visual de recebimento do SMS no dispositivo
+      // Simulação visual de recebimento do SMS no telemóvel
       setSimulatedSmsAlert({
         phone: phone || identifiedEmp.phone,
         code: generatedSms
       });
 
-      setStep(4);
+      goToStep(4);
     }, 600);
   };
 
   // ─── PASSO 4: Validar Código SMS Final e Entrar ────────────────────────────
   const handleStep4Submit = async (e) => {
     e.preventDefault();
+    if (isExpired) {
+      setError('O tempo limite de 15 minutos expirou. Solicite um novo código à DRH.');
+      return;
+    }
     setError('');
     setLoading(true);
 
@@ -102,9 +197,29 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
 
   return (
     <div style={styles.wizardCard}>
-      {/* CABEÇALHO DO WIZARD */}
+      {/* CABEÇALHO DO WIZARD COM BARRAS E CRONÓMETRO */}
       <div style={styles.wizardHeader}>
-        <div style={styles.badgeStep}>Passo {step} de 4</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <div style={styles.badgeStep}>Passo {step} de 4</div>
+          
+          {/* CRONÓMETRO DE 15 MINUTOS */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '3px 10px',
+            borderRadius: '16px',
+            fontSize: '11px',
+            fontWeight: '800',
+            backgroundColor: isExpired ? '#fef2f2' : remainingSeconds < 180 ? '#fffbeb' : '#ecfdf5',
+            color: isExpired ? '#dc2626' : remainingSeconds < 180 ? '#d97706' : '#059669',
+            border: isExpired ? '1px solid #fecaca' : remainingSeconds < 180 ? '1px solid #fde68a' : '1px solid #a7f3d0'
+          }}>
+            <span>⏱️</span>
+            <span>{isExpired ? 'Expirado' : `Válido por ${formattedCountdown()}`}</span>
+          </div>
+        </div>
+
         <h3 style={styles.wizardTitle}>
           {step === 1 && '🔑 Ativação por Código de Acesso'}
           {step === 2 && '📱 Confirmação de Identidade por Telefone'}
@@ -112,7 +227,7 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
           {step === 4 && '✉️ Confirmação Final de Segurança (SMS)'}
         </h3>
         <p style={styles.wizardSub}>
-          {step === 1 && 'Insira o seu NUIT e o código temporário recebido por SMS, WhatsApp ou Email da DRH.'}
+          {step === 1 && 'Insira o seu NUIT e o código temporário recebido por SMS, WhatsApp ou Email da DRH (validade de 15 minutos).'}
           {step === 2 && 'Confirme o número de telefone principal registado no seu cadastro oficial do SERNIC.'}
           {step === 3 && 'Crie a sua palavra-passe definitiva para aceder ao sistema.'}
           {step === 4 && 'Introduza o código de confirmação final que acabámos de enviar por SMS.'}
@@ -141,7 +256,7 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
           </div>
           <div style={{ fontSize: '13px', margin: '4px 0', color: '#111' }}>
             SERNIC: O seu código de confirmação final para ativação de senha é: 
-            <strong style={{ fontSize: '15px', color: 'var(--color-primary, #1B365D)', letterSpacing: '2px', marginLeft: '6px' }}>
+            <strong style={{ fontSize: '15px', color: '#BA1B1D', letterSpacing: '2px', marginLeft: '6px' }}>
               {simulatedSmsAlert.code}
             </strong>
           </div>
@@ -178,15 +293,15 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
               required
             />
             <span style={styles.hint}>
-              Dica: O código foi emitido e enviado pela Direcção de Recursos Humanos.
+              ⏱️ A validade de 15 minutos é acionada assim que entra no aplicativo.
             </span>
           </div>
 
           <div style={styles.btnRow}>
-            <button type="button" onClick={onCancel} style={styles.btnSecondary}>
+            <button type="button" onClick={handleNativeBack} style={styles.btnSecondary}>
               Voltar ao Login
             </button>
-            <button type="submit" style={styles.btnPrimary}>
+            <button type="submit" disabled={isExpired} style={{ ...styles.btnPrimary, opacity: isExpired ? 0.6 : 1 }}>
               Validar Código ➔
             </button>
           </div>
@@ -233,10 +348,10 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
           </div>
 
           <div style={styles.btnRow}>
-            <button type="button" onClick={() => setStep(1)} style={styles.btnSecondary}>
+            <button type="button" onClick={handleNativeBack} style={styles.btnSecondary}>
               ⬅ Voltar
             </button>
-            <button type="submit" style={styles.btnPrimary}>
+            <button type="submit" disabled={isExpired} style={{ ...styles.btnPrimary, opacity: isExpired ? 0.6 : 1 }}>
               Confirmar Telefone ➔
             </button>
           </div>
@@ -279,10 +394,10 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
           </div>
 
           <div style={styles.btnRow}>
-            <button type="button" onClick={() => setStep(2)} style={styles.btnSecondary}>
+            <button type="button" onClick={handleNativeBack} style={styles.btnSecondary}>
               ⬅ Voltar
             </button>
-            <button type="submit" disabled={loading} style={styles.btnPrimary}>
+            <button type="submit" disabled={loading || isExpired} style={{ ...styles.btnPrimary, opacity: isExpired ? 0.6 : 1 }}>
               {loading ? 'A Enviar SMS...' : 'Submeter e Gerar Código SMS ➔'}
             </button>
           </div>
@@ -312,10 +427,10 @@ export default function AgentActivationWizard({ employees = [], updateEmployee, 
           </div>
 
           <div style={styles.btnRow}>
-            <button type="button" onClick={() => setStep(3)} style={styles.btnSecondary}>
+            <button type="button" onClick={handleNativeBack} style={styles.btnSecondary}>
               ⬅ Alterar Senha
             </button>
-            <button type="submit" disabled={loading} style={styles.btnPrimaryGreen}>
+            <button type="submit" disabled={loading || isExpired} style={{ ...styles.btnPrimary, opacity: isExpired ? 0.6 : 1 }}>
               {loading ? 'A Ativar Conta...' : '✓ Confirmar e Entrar no Portal'}
             </button>
           </div>
@@ -342,41 +457,52 @@ const styles = {
     display: 'inline-block',
     padding: '4px 10px',
     borderRadius: '12px',
-    backgroundColor: 'rgba(27, 54, 93, 0.1)',
-    color: 'var(--color-primary, #1B365D)',
+    backgroundColor: 'rgba(186, 27, 29, 0.1)',
+    color: '#BA1B1D',
     fontSize: '11px',
-    fontWeight: '800',
-    marginBottom: '8px'
+    fontWeight: '800'
   },
   wizardTitle: {
-    margin: '0 0 6px 0',
+    margin: '6px 0 4px 0',
     fontSize: '17px',
     fontWeight: '800',
     color: 'var(--color-text-base, #0f172a)'
   },
   wizardSub: {
-    margin: 0,
-    fontSize: '13px',
+    margin: '0 0 14px 0',
+    fontSize: '12.5px',
     color: 'var(--color-text-muted, #64748b)',
     lineHeight: '1.4'
   },
   progressBarBg: {
     width: '100%',
-    height: '5px',
+    height: '6px',
     backgroundColor: 'var(--color-border, #e2e8f0)',
     borderRadius: '3px',
-    marginTop: '12px',
     overflow: 'hidden'
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: '#BA1B1D',
     transition: 'width 0.3s ease'
   },
-  form: { display: 'flex', flexDirection: 'column', gap: '16px' },
-  formGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '13px', fontWeight: '700', color: 'var(--color-text-base, #0f172a)' },
+  form: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '14px'
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px'
+  },
+  label: {
+    fontSize: '12px',
+    fontWeight: '700',
+    color: 'var(--color-text-base, #334155)'
+  },
   input: {
+    width: '100%',
     padding: '11px 14px',
     borderRadius: '8px',
     border: '1px solid var(--color-border, #cbd5e1)',
@@ -396,25 +522,16 @@ const styles = {
   },
   btnPrimary: {
     padding: '11px 18px',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: '#BA1B1D',
     color: '#ffffff',
     border: 'none',
     borderRadius: '8px',
     fontSize: '13px',
     fontWeight: '800',
     cursor: 'pointer',
-    flex: 1
-  },
-  btnPrimaryGreen: {
-    padding: '11px 18px',
-    backgroundColor: '#059669',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '800',
-    cursor: 'pointer',
-    flex: 1
+    flex: 1,
+    boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)',
+    transition: 'all 0.2s ease'
   },
   btnSecondary: {
     padding: '11px 16px',
@@ -451,15 +568,15 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     padding: '12px 14px',
-    backgroundColor: 'rgba(27, 54, 93, 0.06)',
+    backgroundColor: 'rgba(186, 27, 29, 0.05)',
     borderRadius: '8px',
-    border: '1px solid rgba(27, 54, 93, 0.15)'
+    border: '1px solid rgba(186, 27, 29, 0.15)'
   },
   avatarMini: {
     width: '38px',
     height: '38px',
     borderRadius: '50%',
-    backgroundColor: 'var(--color-primary, #1B365D)',
+    backgroundColor: '#BA1B1D',
     color: '#fff',
     display: 'flex',
     alignItems: 'center',

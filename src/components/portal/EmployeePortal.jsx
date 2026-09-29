@@ -689,7 +689,7 @@ function PortalActivationCodesTab({ employees = [], orgData, onUpdateEmployee })
             ) : (
               filteredList.map(emp => {
                 const codeEntry = activeCodes[emp.id];
-                const hasCode = codeEntry && !codeEntry.isUsed && new Date(codeEntry.expiresAt) > new Date();
+                const hasCode = codeEntry && !codeEntry.isUsed && (!codeEntry.expiresAt || new Date(codeEntry.expiresAt) > new Date());
                 const dir = (orgData?.directorates || []).find(d => String(d.id) === String(emp.directorateId));
 
                 return (
@@ -730,8 +730,10 @@ function PortalActivationCodesTab({ employees = [], orgData, onUpdateEmployee })
                           <span style={{ padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(2, 132, 199, 0.1)', color: '#0284c7', fontWeight: '800', letterSpacing: '2px', fontSize: '13px', display: 'inline-block', width: 'fit-content' }}>
                             {codeEntry.code}
                           </span>
-                          <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>
-                            Válido até: {new Date(codeEntry.expiresAt).toLocaleDateString()}
+                          <span style={{ fontSize: '10px', color: codeEntry.accessStartedAt ? '#059669' : 'var(--color-text-muted)', fontWeight: codeEntry.accessStartedAt ? '700' : 'normal' }}>
+                            {codeEntry.accessStartedAt
+                              ? `⏱️ Em uso (expira: ${new Date(codeEntry.expiresAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})`
+                              : '⏱️ 15 min ao aceder'}
                           </span>
                         </div>
                       ) : (

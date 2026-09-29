@@ -123,6 +123,35 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     setError('');
   };
 
+  // Navegação de vistas com histórico do navegador/telemóvel (suporte para botão Voltar e Seguir nativo)
+  const navigateToView = (newView, pushHistory = true) => {
+    clearCredentials();
+    setView(newView);
+    if (pushHistory && typeof window !== 'undefined') {
+      window.history.pushState({ view: newView, step: 1 }, '');
+    }
+  };
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (!window.history.state || !window.history.state.view) {
+      window.history.replaceState({ view: 'login' }, '');
+    }
+
+    const handlePopState = (event) => {
+      const state = event.state;
+      if (state && state.view) {
+        setView(state.view);
+      } else {
+        setView('login');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   // Limpa campos apenas quando o utilizador alterna intencionalmente de vista (Login <-> Pedir Acesso <-> Recuperar)
   const prevViewRef = React.useRef(view);
   React.useEffect(() => {
@@ -549,7 +578,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               </button>
               <button
                 type="button"
-                onClick={() => { clearCredentials(); setView('recover'); }}
+                onClick={() => navigateToView('recover')}
                 style={{ 
                   ...s.btnPrimary, 
                   backgroundColor: '#BA1B1D', 
@@ -562,7 +591,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               </button>
               <button
                 type="button"
-                onClick={() => { clearCredentials(); setView('register'); }}
+                onClick={() => navigateToView('register')}
                 style={{ 
                   ...s.btnPrimary, 
                   backgroundColor: '#BA1B1D', 
@@ -575,13 +604,13 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               </button>
               <button
                 type="button"
-                onClick={() => { clearCredentials(); setView('agent_code'); }}
+                onClick={() => navigateToView('agent_code')}
                 style={{ 
                   ...s.btnPrimary, 
-                  backgroundColor: '#1B365D', 
+                  backgroundColor: '#BA1B1D', 
                   marginTop: '12px', 
                   textTransform: 'uppercase',
-                  boxShadow: '0 4px 14px rgba(27, 54, 93, 0.35)',
+                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -621,7 +650,19 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <button type="submit" style={{...s.btnPrimary, opacity: isLoading ? 0.7 : 1}} disabled={isLoading}>
                 {isLoading ? t('register_submit_loading') : t('register_submit')}
               </button>
-              <button type="button" onClick={() => { clearCredentials(); setView('login'); }} style={s.btnSecondary}>{t('register_back')}</button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.history.length > 1) {
+                    window.history.back();
+                  } else {
+                    navigateToView('login', false);
+                  }
+                }} 
+                style={s.btnSecondary}
+              >
+                {t('register_back')}
+              </button>
             </form>
           </>
         )}
@@ -637,7 +678,19 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <button type="submit" style={{...s.btnPrimary, opacity: isLoading ? 0.7 : 1}} disabled={isLoading}>
                 {isLoading ? t('recover_submit_loading') : t('recover_submit')}
               </button>
-              <button type="button" onClick={() => { clearCredentials(); setView('login'); }} style={s.btnSecondary}>{t('recover_back')}</button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.history.length > 1) {
+                    window.history.back();
+                  } else {
+                    navigateToView('login', false);
+                  }
+                }} 
+                style={s.btnSecondary}
+              >
+                {t('recover_back')}
+              </button>
             </form>
           </>
         )}
@@ -652,7 +705,11 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             }}
             onCancel={() => {
               clearCredentials();
-              setView('login');
+              if (typeof window !== 'undefined' && window.history.state?.view === 'agent_code') {
+                window.history.back();
+              } else {
+                setView('login');
+              }
             }}
           />
         )}

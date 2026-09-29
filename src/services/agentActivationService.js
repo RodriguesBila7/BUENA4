@@ -32,50 +32,82 @@ export function saveStoredCodes(codes) {
 
 /**
  * Gerar código aleatório de 6 dígitos para o funcionário
+ * A validade é de 15 minutos, começando a contar no momento em que o funcionário acede ao aplicativo.
  */
 export function generateAgentAccessCode(employeeId, channel = 'SMS') {
   const code = String(Math.floor(100000 + Math.random() * 900000));
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000); // Válido por 48 horas
 
   const codes = getStoredCodes();
   codes[employeeId] = {
     code,
     channel,
     createdAt: now.toISOString(),
-    expiresAt: expiresAt.toISOString(),
+    // A validade estrita de 15 minutos começa a contar assim que aceder ao aplicativo
+    durationMinutes: 15,
+    accessStartedAt: null,
+    expiresAt: null,
     isUsed: false
   };
 
   saveStoredCodes(codes);
-  return { code, expiresAt };
+  return { code, durationMinutes: 15 };
 }
 
 /**
- * Obter código ativo de um funcionário
+ * Obter código ativo de um funcionário com contagem regressiva
  */
 export function getActiveCodeForEmployee(employeeId) {
   const codes = getStoredCodes();
   const entry = codes[employeeId];
   if (!entry) return null;
 
-  const now = new Date();
-  const exp = new Date(entry.expiresAt);
-  if (exp < now || entry.isUsed) {
+  if (entry.isUsed) {
     return { ...entry, isExpired: true };
   }
-  return { ...entry, isExpired: false };
+
+  // Se o agente já acedeu ao aplicativo, a contagem de 15 minutos já está a decorrer
+  if (entry.accessStartedAt && entry.expiresAt) {
+    const now = Date.now();
+    const exp = new Date(entry.expiresAt).getTime();
+    if (now > exp) {
+      return { ...entry, isExpired: true, remainingSeconds: 0 };
+    }
+    const remainingSeconds = Math.max(0, Math.floor((exp - now) / 1000));
+    return { ...entry, isExpired: false, remainingSeconds };
+  }
+
+  // Aguarda primeiro acesso do funcionário
+  return { ...entry, isExpired: false, notStarted: true, durationMinutes: 15 };
+}
+
+/**
+ * Iniciar contagem regressiva de 15 minutos ao aceder ao aplicativo
+ */
+export function startCodeAccessCountdown(employeeId) {
+  const codes = getStoredCodes();
+  const entry = codes[employeeId];
+  if (!entry) return null;
+
+  const now = new Date();
+  if (!entry.accessStartedAt) {
+    entry.accessStartedAt = now.toISOString();
+    entry.expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+    codes[employeeId] = entry;
+    saveStoredCodes(codes);
+  }
+  return entry;
 }
 
 /**
  * Formatar mensagens oficiais para SMS, WhatsApp e Email
  */
 export function buildActivationMessage(emp, code) {
-  return `SERNIC DRH: Caro(a) Investigador(a)/Agente ${emp.name}, o seu código de acesso ao Portal do Agente é ${code}. Aceda com o seu NUIT ${emp.nuit || emp.nip || ''} e ative a sua conta nas próximas 48 horas.`;
+  return `SERNIC DRH: Caro(a) Investigador(a)/Agente ${emp.name}, o seu código de acesso ao Portal do Agente é ${code}. A validade deste código é de 15 minutos, começando a contar assim que entrar no aplicativo com o seu NUIT ${emp.nuit || emp.nip || ''}.`;
 }
 
 /**
- * Validação do Passo 1: NUIT + Código Inicial
+ * Validação do Passo 1: NUIT + Código Inicial (com disparo do cronómetro de 15 min)
  */
 export function validateNuitAndCode(nuit, codeInput, employees = []) {
   if (!nuit || !codeInput) {
@@ -102,6 +134,8 @@ export function validateNuitAndCode(nuit, codeInput, employees = []) {
   // Código mestre de demonstração/contingência: 123456 ou 000000
   const isMasterCode = cleanCode === '123456' || cleanCode === '000000';
 
+  let finalExpiresAt = null;
+
   if (!isMasterCode) {
     if (!entry) {
       return { success: false, error: 'Nenhum código de acesso ativo foi emitido para este funcionário. Contacte a DRH.' };
@@ -109,15 +143,37 @@ export function validateNuitAndCode(nuit, codeInput, employees = []) {
     if (entry.isUsed) {
       return { success: false, error: 'Este código já foi utilizado. Solicite um novo código à DRH.' };
     }
-    if (new Date(entry.expiresAt) < new Date()) {
-      return { success: false, error: 'Este código expirou. Solicite a emissão de um novo código à DRH.' };
+
+    // Se já tinha iniciado a contagem e ultrapassou os 15 minutos:
+    if (entry.accessStartedAt && entry.expiresAt) {
+      if (new Date(entry.expiresAt).getTime() < Date.now()) {
+        return { 
+          success: false, 
+          error: 'O código de acesso expirou. O tempo limite de 15 minutos foi excedido. Solicite um novo código à DRH.' 
+        };
+      }
+      finalExpiresAt = entry.expiresAt;
     }
+
     if (entry.code !== cleanCode) {
       return { success: false, error: 'Código de acesso incorreto. Verifique o SMS, WhatsApp ou Email recebido.' };
     }
+
+    // Código correto: inicia a contagem de 15 minutos a contar deste momento de acesso
+    if (!entry.accessStartedAt) {
+      const now = new Date();
+      entry.accessStartedAt = now.toISOString();
+      entry.expiresAt = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+      codes[emp.id] = entry;
+      saveStoredCodes(codes);
+      finalExpiresAt = entry.expiresAt;
+    }
+  } else {
+    // Código mestre também recebe validade de 15 minutos de sessão
+    finalExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
   }
 
-  return { success: true, employee: emp };
+  return { success: true, employee: emp, expiresAt: finalExpiresAt };
 }
 
 /**
