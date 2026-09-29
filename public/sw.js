@@ -1,5 +1,5 @@
 // Service Worker para SERNIC DRH PWA
-const CACHE_NAME = 'sernic-drh-pwa-v1';
+const CACHE_NAME = 'sernic-drh-pwa-v2';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

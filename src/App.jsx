@@ -30,32 +30,29 @@ import useSecuritySettings from './hooks/useSecuritySettings';
 export default function App() {
   const { user, login, logout, updateSessionActivity } = useAuth();
   const { policies } = useSecuritySettings();
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const { t, language, setLanguage } = useTranslation();
-
-  // Carregar configurações do localStorage ao iniciar (simulação de carregamento do DB)
-  useEffect(() => {
-    const saved = localStorage.getItem('sernic_identity_settings');
-    if (saved) {
-      try {
+  const [settings, setSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sernic_identity_settings');
+      if (saved) {
         const parsed = JSON.parse(saved);
-        // Migrar padrão anterior caso ainda seja o azul antigo #1B365D
-        if (parsed.cor_principal === '#1B365D') {
+        // Migrar imediatamente qualquer cor azul antiga (#1B365D / #0D1B4B) para o vermelho oficial
+        if (!parsed.cor_principal || parsed.cor_principal.toUpperCase() === '#1B365D' || parsed.cor_principal.toUpperCase() === '#0D1B4B') {
           parsed.cor_principal = '#B71C1C';
+          localStorage.setItem('sernic_identity_settings', JSON.stringify(parsed));
         }
-        // Se a opção de cores aleatórias estiver ativa, sorteia uma cor ao iniciar/recarregar a página
         if (parsed.cores_aleatorias) {
           const randomCor = CORES_PALETA[Math.floor(Math.random() * CORES_PALETA.length)];
           parsed.cor_principal = randomCor;
           localStorage.setItem('sernic_identity_settings', JSON.stringify(parsed));
         }
-        setSettings(parsed);
-      } catch (e) {
-        console.error("Erro ao carregar configurações salvas, usando padrão.", e);
-        setSettings(DEFAULT_SETTINGS);
+        return { ...DEFAULT_SETTINGS, ...parsed, cor_principal: parsed.cor_principal || '#B71C1C' };
       }
+    } catch (e) {
+      console.error("Erro ao carregar configurações salvas, usando padrão.", e);
     }
-  }, []);
+    return DEFAULT_SETTINGS;
+  });
+  const { t, language, setLanguage } = useTranslation();
 
   // Aplicar cores e tema globalmente sempre que houver alteração
   useEffect(() => {

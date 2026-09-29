@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt">
+<html lang="pt" style="background-color: #B71C1C;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/icon-192.png" />
@@ -15,9 +15,69 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="SERNIC DRH" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #B71C1C;
+        overflow-x: hidden;
+      }
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #B71C1C;
+        z-index: 99999;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #ffffff;
+      }
+      .loader-logo {
+        width: 130px;
+        height: 130px;
+        object-fit: contain;
+        filter: drop-shadow(0 6px 16px rgba(0,0,0,0.3));
+        animation: loaderPulse 1.8s infinite ease-in-out;
+      }
+      .loader-spinner {
+        width: 28px;
+        height: 28px;
+        margin-top: 24px;
+        border: 3px solid rgba(255,255,255,0.3);
+        border-top-color: #ffffff;
+        border-radius: 50%;
+        animation: loaderSpin 0.8s linear infinite;
+      }
+      .loader-text {
+        margin-top: 14px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        color: rgba(255,255,255,0.95);
+        text-transform: uppercase;
+      }
+      @keyframes loaderPulse {
+        0%, 100% { transform: scale(1); opacity: 0.95; }
+        50% { transform: scale(1.05); opacity: 1; }
+      }
+      @keyframes loaderSpin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="margin: 0; padding: 0; background-color: #B71C1C;">
+    <div id="root">
+      <div id="initial-loader">
+        <img src="/logo-sernic-transparente.png" alt="SERNIC DRH" class="loader-logo" />
+        <div class="loader-spinner"></div>
+        <div class="loader-text">A Carregar Sistema...</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
@@ -28,4 +88,3 @@
     </script>
   </body>
 </html>
-
