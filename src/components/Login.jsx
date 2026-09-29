@@ -50,8 +50,15 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const [bwMode, setBwMode] = useState(() => {
     return settings.modo_tema === 'dark' ? 'noite' : 'theme';
   });
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
   const themeMenuRef = React.useRef(null);
   const langMenuRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   React.useEffect(() => {
     if (settings.modo_tema === 'dark' && bwMode !== 'noite') {
@@ -414,11 +421,26 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                       style={{
                         ...s.temaSwatch,
                         backgroundColor: tema.cor,
-                        transform: isActive || isHover ? 'scale(1.3)' : 'scale(1)',
-                        outline: isActive ? '2px solid #333' : isHover ? '2px solid rgba(0,0,0,0.4)' : 'none',
-                        outlineOffset: '2px',
+                        transform: isActive || isHover ? 'scale(1.18)' : 'scale(1)',
+                        boxShadow: isActive 
+                          ? `0 0 0 2px #FFFFFF, 0 0 0 4px ${tema.cor}, 0 4px 10px rgba(0,0,0,0.35)`
+                          : isHover
+                            ? `0 0 0 2px #FFFFFF, 0 3px 8px rgba(0,0,0,0.25)`
+                            : '0 2px 6px rgba(0,0,0,0.18)',
                       }}
-                    />
+                    >
+                      {isActive && (
+                        <span style={{ 
+                          color: '#FFFFFF', 
+                          fontSize: '11px', 
+                          fontWeight: '900', 
+                          textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                          lineHeight: 1
+                        }}>
+                          ✓
+                        </span>
+                      )}
+                    </button>
                   );
                 })}
               </div>
@@ -431,14 +453,39 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <div style={s.dropdownDivider} />
               <p style={s.dropdownTitle}>{t('themes_custom')}</p>
               <div style={s.colorPickerRow}>
-                <input
-                  type="color"
-                  id="custom-color-picker"
-                  defaultValue={settings.cor_principal}
-                  onChange={(e) => aplicarTema(e.target.value)}
-                  style={s.colorPicker}
-                  title={t('themes_pick')}
-                />
+                <div style={{
+                  width: '30px',
+                  height: '30px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+                  border: '2px solid rgba(255,255,255,0.95)',
+                  backgroundColor: settings.cor_principal,
+                  flexShrink: 0
+                }}>
+                  <input
+                    type="color"
+                    id="custom-color-picker"
+                    defaultValue={settings.cor_principal}
+                    onChange={(e) => aplicarTema(e.target.value)}
+                    style={{
+                      position: 'absolute',
+                      top: '-10px',
+                      left: '-10px',
+                      width: '54px',
+                      height: '54px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      opacity: 0
+                    }}
+                    title={t('themes_pick')}
+                  />
+                  <span style={{ fontSize: '13px', pointerEvents: 'none' }}>🎨</span>
+                </div>
                 <label htmlFor="custom-color-picker" style={s.colorPickerLabel}>
                   {t('themes_pick')}
                 </label>
@@ -513,7 +560,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <div style={s.sysTitleBold}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
-        <div style={{ marginTop: 'calc(18px + 1.0cm)', marginBottom: '10px' }}>
+        <div style={{ marginTop: isMobile ? '8px' : 'calc(18px + 1.0cm)', marginBottom: isMobile ? '8px' : '10px' }}>
           <p style={s.sysTitleSub}>
             SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
           </p>
@@ -927,12 +974,13 @@ const s = {
     right: '0',
     backgroundColor: 'var(--color-bg-card, #243044)',
     border: '1px solid var(--color-border, #3A4A66)',
-    borderRadius: '12px',
+    borderRadius: '16px',
     padding: '18px 16px 14px',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
-    width: '252px',
-    zIndex: 10,
-    color: 'var(--color-text-base, #F8FAFC)'
+    boxShadow: '0 16px 44px rgba(0,0,0,0.45)',
+    width: '260px',
+    zIndex: 100,
+    color: 'var(--color-text-base, #F8FAFC)',
+    backdropFilter: 'blur(12px)',
   },
   dropdownTitle: {
     fontSize: '10px',
@@ -948,49 +996,59 @@ const s = {
     margin: '12px 0',
   },
   temaSwatches: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(6, 1fr)',
+    gap: '10px 8px',
+    alignItems: 'center',
+    justifyItems: 'center',
+    padding: '6px 2px',
   },
   temaSwatch: {
-    width: '22px',
-    height: '22px',
+    width: '28px',
+    height: '28px',
+    minWidth: '28px',
+    minHeight: '28px',
+    maxWidth: '28px',
+    maxHeight: '28px',
     borderRadius: '50%',
-    border: '1px solid rgba(0,0,0,0.12)',
+    aspectRatio: '1 / 1',
+    border: '2px solid rgba(255, 255, 255, 0.95)',
     cursor: 'pointer',
-    transition: 'transform 0.15s ease, outline 0.15s ease',
+    transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
     padding: 0,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+    margin: 0,
+    outline: 'none',
+    flexShrink: 0,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxSizing: 'border-box',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.22), inset 0 1px 2px rgba(255,255,255,0.3)',
+    appearance: 'none',
+    WebkitAppearance: 'none',
   },
   temaTooltip: {
     fontSize: '11px',
-    fontWeight: '600',
-    color: '#555',
+    fontWeight: '700',
+    color: 'var(--color-text-muted, #A8B7CD)',
     margin: '8px 0 0',
     textAlign: 'center',
     minHeight: '16px',
+    letterSpacing: '0.3px',
   },
   colorPickerRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    marginTop: '2px',
-  },
-  colorPicker: {
-    width: '38px',
-    height: '38px',
-    border: '1px solid #E0E0E0',
-    borderRadius: '8px',
-    padding: '2px',
-    cursor: 'pointer',
-    background: 'none',
-    flexShrink: 0,
+    gap: '12px',
+    marginTop: '4px',
+    padding: '4px 2px',
   },
   colorPickerLabel: {
-    fontSize: '13px',
-    color: '#555',
+    fontSize: '12px',
+    color: 'var(--color-text-base, #F8FAFC)',
     cursor: 'pointer',
-    fontWeight: '500',
+    fontWeight: '600',
+    userSelect: 'none',
   },
 
   /* ── Seletor de Idioma ── */
