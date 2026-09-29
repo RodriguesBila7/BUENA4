@@ -5,6 +5,7 @@ import VacationRequests from './VacationRequests';
 import VacationManagement from './VacationManagement';
 import VacationHistory from './VacationHistory';
 import VacationSettings from './VacationSettings';
+import VacationAlerts from './VacationAlerts';
 import DraggableTabs from '../common/DraggableTabs';
 
 export default function VacationManager() {
@@ -12,9 +13,10 @@ export default function VacationManager() {
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard Geral' },
-    { id: 'plan', label: 'Plano Anual' },
-    { id: 'requests', label: 'Solicitações / Aprovações' },
     { id: 'management', label: 'Gestão de Férias' },
+    { id: 'alerts', label: '📢 Alertas & Mensagens' },
+    { id: 'requests', label: 'Solicitações / Aprovações' },
+    { id: 'plan', label: 'Plano Anual' },
     { id: 'history', label: 'Histórico de Férias e Licenças' },
     { id: 'settings', label: 'Configurações' }
   ];
@@ -25,9 +27,10 @@ export default function VacationManager() {
 
       <div style={styles.contentArea}>
         {activeTab === 'dashboard' && <VacationDashboard />}
-        {activeTab === 'plan' && <VacationPlan />}
-        {activeTab === 'requests' && <VacationRequests />}
         {activeTab === 'management' && <VacationManagement />}
+        {activeTab === 'alerts' && <VacationAlerts onGoToSettings={() => setActiveTab('settings')} />}
+        {activeTab === 'requests' && <VacationRequests />}
+        {activeTab === 'plan' && <VacationPlan />}
         {activeTab === 'history' && <VacationHistory />}
         {activeTab === 'settings' && <VacationSettings />}
       </div>
