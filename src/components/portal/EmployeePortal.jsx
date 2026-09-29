@@ -1,16 +1,500 @@
 import React, { useState, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useOrgData from '../../hooks/useOrgData';
 import useVacationData from '../../hooks/useVacationData';
 import useEffectivenessData from '../../hooks/useEffectivenessData';
 import useDisciplinaryData from '../../hooks/useDisciplinaryData';
 import useAdminActsData from '../../hooks/useAdminActsData';
+import useResizableModal from '../../hooks/useResizableModal';
 import { compressImage } from '../../utils/imageCompressor';
 import { saveCloudPhoto } from '../../services/cloudSyncService';
 import { SERNIC_LOGO_B64 } from '../../utils/sernic_logo_default';
 import ConfirmModal from '../ConfirmModal';
 import { formatDisplayDate } from '../../utils/vacationAlerts';
+import {
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip as RechartsTooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis
+} from 'recharts';
 
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SUB-MODAL MÓVEL E REDIMENSIONÁVEL: PESQUISAR AGENTE SERNIC
+ * Padrão nativo do BUENA4 (useResizableModal + Portal)
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+function PortalAgentSearchModal({ isOpen, onClose, employees = [], orgData, currentEmpId, onSelect }) {
+  const {
+    modalRef,
+    position,
+    onPointerDown,
+    isMaximized,
+    toggleMaximize,
+    handleResizePointerDown,
+    handleHeaderDoubleClick,
+    getOverlayProps,
+    modalStyle
+  } = useResizableModal({ defaultWidth: '660px', minWidth: 420, minHeight: 380 });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterDirectorate, setFilterDirectorate] = useState('ALL');
+  const [filterCareer, setFilterCareer] = useState('ALL');
+
+  const filteredEmployeesList = useMemo(() => {
+    return employees.filter(emp => {
+      if (emp.isActive === false || emp.status === 'Apagado') return false;
+
+      if (filterDirectorate !== 'ALL' && String(emp.directorateId) !== String(filterDirectorate)) {
+        return false;
+      }
+      if (filterCareer !== 'ALL') {
+        const cId = String(emp.careerId || '');
+        const cName = String(emp.career || emp.carreira || '').toLowerCase();
+        if (cId !== String(filterCareer) && !cName.includes(String(filterCareer).toLowerCase())) {
+          return false;
+        }
+      }
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const mName = (emp.name || '').toLowerCase().includes(q);
+        const mNip = String(emp.nip || '').toLowerCase().includes(q);
+        const mNuit = String(emp.nuit || '').toLowerCase().includes(q);
+        const mBi = String(emp.idNumber || '').toLowerCase().includes(q);
+        const mCargo = String(emp.cargo || emp.category || '').toLowerCase().includes(q);
+        const mPhone = String(emp.phone || '').includes(q);
+        return mName || mNip || mNuit || mBi || mCargo || mPhone;
+      }
+
+      return true;
+    });
+  }, [employees, searchQuery, filterDirectorate, filterCareer]);
+
+  if (!isOpen) return null;
+
+  const overlayProps = getOverlayProps(onClose);
+
+  return ReactDOM.createPortal(
+    <div
+      style={modalStyles.overlay}
+      onMouseDown={overlayProps.onMouseDown}
+      onClick={overlayProps.onClick}
+    >
+      <div
+        ref={modalRef}
+        style={{ ...modalStyles.modalBox, ...modalStyle }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* CABEÇALHO COM ARRASTAR E EXPANDIR */}
+        <div
+          className={isMaximized ? '' : 'drag-handle'}
+          style={modalStyles.modalHeader}
+          onPointerDown={isMaximized ? undefined : onPointerDown}
+          onDoubleClick={handleHeaderDoubleClick}
+          title="💡 Arraste para mover ou dê duplo clique para expandir/reduzir"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '18px' }}>🔍</span>
+            <div>
+              <h3 style={modalStyles.headerTitle}>Pesquisa e Seleção de Agente SERNIC</h3>
+              <div style={modalStyles.headerSubtitle}>
+                {filteredEmployeesList.length} de {employees.length} agentes disponíveis
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={toggleMaximize}
+              style={modalStyles.expandBtn}
+              title={isMaximized ? 'Reduzir Tamanho' : 'Expandir (Ecrã Cheio)'}
+            >
+              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+            </button>
+            <button onClick={onClose} style={modalStyles.closeBtn} title="Fechar">✕</button>
+          </div>
+        </div>
+
+        {/* CORPO DO MODAL */}
+        <div style={modalStyles.modalBody}>
+          {/* Campo de Busca Rápida */}
+          <div style={{ position: 'relative', marginBottom: '12px' }}>
+            <input
+              type="text"
+              placeholder="Pesquisar por Nome, NIP, NUIT, B.I., Cargo..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              style={modalStyles.searchInput}
+              autoFocus
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} style={modalStyles.clearBtn} title="Limpar pesquisa">✕</button>
+            )}
+          </div>
+
+          {/* Filtros em Grade */}
+          <div style={modalStyles.filtersGrid}>
+            <div>
+              <label style={modalStyles.miniLabel}>Filtrar por Direcção / Província:</label>
+              <select
+                value={filterDirectorate}
+                onChange={e => setFilterDirectorate(e.target.value)}
+                style={modalStyles.selectInput}
+              >
+                <option value="ALL">Todas as Direcções</option>
+                {(orgData?.directorates || []).map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={modalStyles.miniLabel}>Filtrar por Carreira:</label>
+              <select
+                value={filterCareer}
+                onChange={e => setFilterCareer(e.target.value)}
+                style={modalStyles.selectInput}
+              >
+                <option value="ALL">Todas as Carreiras</option>
+                {(orgData?.careers || []).map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Contagem e Botão Limpar */}
+          <div style={modalStyles.counterBar}>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-muted)' }}>
+              Encontrados: {filteredEmployeesList.length} agentes
+            </span>
+            {(searchQuery || filterDirectorate !== 'ALL' || filterCareer !== 'ALL') && (
+              <button
+                onClick={() => { setSearchQuery(''); setFilterDirectorate('ALL'); setFilterCareer('ALL'); }}
+                style={modalStyles.btnResetFilters}
+              >
+                Limpar Filtros
+              </button>
+            )}
+          </div>
+
+          {/* Lista de Resultados */}
+          <div style={modalStyles.resultsList}>
+            {filteredEmployeesList.length === 0 ? (
+              <div style={modalStyles.emptyState}>
+                🔍 Nenhum funcionário encontrado com os critérios fornecidos.
+              </div>
+            ) : (
+              filteredEmployeesList.map(emp => {
+                const isSelected = String(emp.id) === String(currentEmpId);
+                const dir = (orgData?.directorates || []).find(d => String(d.id) === String(emp.directorateId));
+
+                return (
+                  <div
+                    key={emp.id}
+                    onClick={() => {
+                      onSelect(emp);
+                      onClose();
+                    }}
+                    style={{
+                      ...modalStyles.resultCard,
+                      borderColor: isSelected ? 'var(--color-primary, #1B365D)' : 'var(--color-border)',
+                      backgroundColor: isSelected ? 'rgba(27, 54, 93, 0.08)' : 'var(--color-bg-card, #ffffff)'
+                    }}
+                  >
+                    <div style={modalStyles.avatarBox}>
+                      {emp.photo ? (
+                        <img src={emp.photo} alt={emp.name} style={modalStyles.avatarImg} />
+                      ) : (
+                        <div style={modalStyles.avatarFallback}>
+                          {emp.name?.charAt(0).toUpperCase() || 'A'}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                        <strong style={modalStyles.empName}>{emp.name}</strong>
+                        <span style={modalStyles.nipBadge}>NIP: {emp.nip || 'N/A'}</span>
+                      </div>
+                      <div style={modalStyles.empSub}>
+                        {dir?.name || 'Direcção Geral'} • {emp.category || emp.cargo || 'Investigador'}
+                      </div>
+                    </div>
+
+                    {isSelected ? (
+                      <span style={modalStyles.activePill}>✓ Atual</span>
+                    ) : (
+                      <span style={modalStyles.selectArrow}>➔</span>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Resizer Canto Inferior */}
+        {!isMaximized && (
+          <div
+            onPointerDown={handleResizePointerDown}
+            style={modalStyles.resizeHandle}
+            title="Arraste para redimensionar"
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="14" y1="3" x2="3" y2="14" />
+              <line x1="14" y1="8" x2="8" y2="14" />
+              <line x1="14" y1="13" x2="13" y2="14" />
+            </svg>
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SUB-MODAL MÓVEL: SOLICITAÇÃO DE FÉRIAS REGULAMENTARES
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+function PortalVacationModal({ isOpen, onClose, vacationForm, setVacationForm, onSubmit }) {
+  const {
+    modalRef,
+    onPointerDown,
+    isMaximized,
+    toggleMaximize,
+    handleResizePointerDown,
+    handleHeaderDoubleClick,
+    getOverlayProps,
+    modalStyle
+  } = useResizableModal({ defaultWidth: '540px', minWidth: 380, minHeight: 340 });
+
+  if (!isOpen) return null;
+  const overlayProps = getOverlayProps(onClose);
+
+  return ReactDOM.createPortal(
+    <div style={modalStyles.overlay} onMouseDown={overlayProps.onMouseDown} onClick={overlayProps.onClick}>
+      <div ref={modalRef} style={{ ...modalStyles.modalBox, ...modalStyle }} onClick={e => e.stopPropagation()}>
+        <div
+          className={isMaximized ? '' : 'drag-handle'}
+          style={modalStyles.modalHeader}
+          onPointerDown={isMaximized ? undefined : onPointerDown}
+          onDoubleClick={handleHeaderDoubleClick}
+          title="💡 Arraste para mover ou dê duplo clique para expandir/reduzir"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '18px' }}>🌴</span>
+            <h3 style={modalStyles.headerTitle}>Solicitar Férias Regulamentares</h3>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button type="button" onClick={toggleMaximize} style={modalStyles.expandBtn}>
+              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+            </button>
+            <button onClick={onClose} style={modalStyles.closeBtn}>✕</button>
+          </div>
+        </div>
+
+        <form onSubmit={onSubmit} style={modalStyles.modalForm}>
+          <div style={styles.formGroup}>
+            <label style={styles.formLbl}>Tipo de Férias / Licença:</label>
+            <select
+              value={vacationForm.type}
+              onChange={e => setVacationForm({ ...vacationForm, type: e.target.value })}
+              style={styles.fieldInput}
+            >
+              <option value="Férias Anuais">Férias Anuais (Regulamentares)</option>
+              <option value="Licença de Casamento">Licença de Casamento (15 dias)</option>
+              <option value="Licença de Maternidade/Paternidade">Licença de Maternidade / Paternidade</option>
+              <option value="Licença de Luto (Nojo)">Licença de Luto (Nojo)</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={styles.formGroup}>
+              <label style={styles.formLbl}>Data de Início:</label>
+              <input
+                type="date"
+                value={vacationForm.startDate}
+                onChange={e => setVacationForm({ ...vacationForm, startDate: e.target.value })}
+                style={styles.fieldInput}
+                required
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.formLbl}>Data de Término:</label>
+              <input
+                type="date"
+                value={vacationForm.endDate}
+                onChange={e => setVacationForm({ ...vacationForm, endDate: e.target.value })}
+                style={styles.fieldInput}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.formLbl}>Observações / Justificação:</label>
+            <textarea
+              rows={3}
+              value={vacationForm.reason}
+              onChange={e => setVacationForm({ ...vacationForm, reason: e.target.value })}
+              placeholder="Informações adicionais para a chefia imediata..."
+              style={styles.fieldTextarea}
+            />
+          </div>
+
+          <div style={styles.modalFooter}>
+            <button type="button" onClick={onClose} style={styles.btnModalCancel}>
+              Cancelar
+            </button>
+            <button type="submit" style={styles.btnActionPrimary}>
+              Submeter Pedido
+            </button>
+          </div>
+        </form>
+
+        {!isMaximized && (
+          <div onPointerDown={handleResizePointerDown} style={modalStyles.resizeHandle} title="Arraste para redimensionar">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="14" y1="3" x2="3" y2="14" />
+              <line x1="14" y1="8" x2="8" y2="14" />
+              <line x1="14" y1="13" x2="13" y2="14" />
+            </svg>
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SUB-MODAL MÓVEL: JUSTIFICAÇÃO DE FALTA
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+function PortalAbsenceModal({ isOpen, onClose, absenceForm, setAbsenceForm, onSubmit }) {
+  const {
+    modalRef,
+    onPointerDown,
+    isMaximized,
+    toggleMaximize,
+    handleResizePointerDown,
+    handleHeaderDoubleClick,
+    getOverlayProps,
+    modalStyle
+  } = useResizableModal({ defaultWidth: '540px', minWidth: 380, minHeight: 340 });
+
+  if (!isOpen) return null;
+  const overlayProps = getOverlayProps(onClose);
+
+  return ReactDOM.createPortal(
+    <div style={modalStyles.overlay} onMouseDown={overlayProps.onMouseDown} onClick={overlayProps.onClick}>
+      <div ref={modalRef} style={{ ...modalStyles.modalBox, ...modalStyle }} onClick={e => e.stopPropagation()}>
+        <div
+          className={isMaximized ? '' : 'drag-handle'}
+          style={modalStyles.modalHeader}
+          onPointerDown={isMaximized ? undefined : onPointerDown}
+          onDoubleClick={handleHeaderDoubleClick}
+          title="💡 Arraste para mover ou dê duplo clique para expandir/reduzir"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '18px' }}>✍️</span>
+            <h3 style={modalStyles.headerTitle}>Submeter Justificação de Falta</h3>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button type="button" onClick={toggleMaximize} style={modalStyles.expandBtn}>
+              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+            </button>
+            <button onClick={onClose} style={modalStyles.closeBtn}>✕</button>
+          </div>
+        </div>
+
+        <form onSubmit={onSubmit} style={modalStyles.modalForm}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={styles.formGroup}>
+              <label style={styles.formLbl}>Data de Início:</label>
+              <input
+                type="date"
+                value={absenceForm.startDate}
+                onChange={e => setAbsenceForm({ ...absenceForm, startDate: e.target.value })}
+                style={styles.fieldInput}
+                required
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.formLbl}>Data de Fim (Opcional):</label>
+              <input
+                type="date"
+                value={absenceForm.endDate}
+                onChange={e => setAbsenceForm({ ...absenceForm, endDate: e.target.value })}
+                style={styles.fieldInput}
+              />
+            </div>
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.formLbl}>Motivo Legal Alegado:</label>
+            <textarea
+              rows={3}
+              value={absenceForm.reason}
+              onChange={e => setAbsenceForm({ ...absenceForm, reason: e.target.value })}
+              placeholder="Ex: Doença súbita com atestado médico emitido pelo Hospital Central..."
+              style={styles.fieldTextarea}
+              required
+            />
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.formLbl}>Nome do Comprovativo / Atestado (PDF/Foto):</label>
+            <input
+              type="text"
+              value={absenceForm.attachmentName}
+              onChange={e => setAbsenceForm({ ...absenceForm, attachmentName: e.target.value })}
+              placeholder="Ex: Atestado_Medico_27Setembro.pdf"
+              style={styles.fieldInput}
+            />
+          </div>
+
+          <div style={styles.modalFooter}>
+            <button type="button" onClick={onClose} style={styles.btnModalCancel}>
+              Cancelar
+            </button>
+            <button type="submit" style={styles.btnActionPrimary}>
+              Submeter Justificação
+            </button>
+          </div>
+        </form>
+
+        {!isMaximized && (
+          <div onPointerDown={handleResizePointerDown} style={modalStyles.resizeHandle} title="Arraste para redimensionar">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="14" y1="3" x2="3" y2="14" />
+              <line x1="14" y1="8" x2="8" y2="14" />
+              <line x1="14" y1="13" x2="13" y2="14" />
+            </svg>
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * COMPONENTE PRINCIPAL: EMPLOYEE PORTAL (SERNIC)
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
 export default function EmployeePortal({ user, onBackToAdmin }) {
   const { employees = [], updateEmployee } = useEmployeeData();
   const { data: orgData } = useOrgData();
@@ -31,7 +515,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
       if (found) return found;
     }
     if (user?.username) {
-      const found = employees.find(e => 
+      const found = employees.find(e =>
         (e.nip && String(e.nip) === String(user.username)) ||
         (e.name && e.name.toLowerCase() === user.username.toLowerCase())
       );
@@ -48,38 +532,8 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
   const [activePortalTab, setActivePortalTab] = useState('overview');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '' });
 
-  // ESTADO DA PESQUISA E FILTRAGEM AVANÇADA DE FUNCIONÁRIOS
+  // Controlos de Modais
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterDirectorate, setFilterDirectorate] = useState('ALL');
-  const [filterCareer, setFilterCareer] = useState('ALL');
-
-  // Filtragem ao vivo da lista de funcionários
-  const filteredEmployeesList = useMemo(() => {
-    return employees.filter(emp => {
-      // Filtro de Direcção
-      if (filterDirectorate !== 'ALL' && String(emp.directorateId) !== String(filterDirectorate)) {
-        return false;
-      }
-      // Filtro de Carreira
-      if (filterCareer !== 'ALL' && String(emp.careerId) !== String(filterCareer)) {
-        return false;
-      }
-      // Filtro de Texto
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const mName = emp.name && emp.name.toLowerCase().includes(q);
-        const mNip = emp.nip && String(emp.nip).toLowerCase().includes(q);
-        const mNuit = emp.nuit && String(emp.nuit).toLowerCase().includes(q);
-        const mBi = emp.idNumber && String(emp.idNumber).toLowerCase().includes(q);
-        const mCargo = (emp.cargo || emp.category || '').toLowerCase().includes(q);
-        if (!mName && !mNip && !mNuit && !mBi && !mCargo) return false;
-      }
-      return true;
-    });
-  }, [employees, filterDirectorate, filterCareer, searchQuery]);
-
-  // Modal para solicitar férias
   const [isVacationModalOpen, setIsVacationModalOpen] = useState(false);
   const [vacationForm, setVacationForm] = useState({
     type: 'Férias Anuais',
@@ -89,7 +543,6 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
     notes: ''
   });
 
-  // Modal para submeter justificação de falta
   const [isAbsenceModalOpen, setIsAbsenceModalOpen] = useState(false);
   const [absenceForm, setAbsenceForm] = useState({
     type: 'Justificada',
@@ -110,132 +563,145 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
     const category = (orgData?.categories || []).find(c => String(c.id) === String(currentEmp.categoryId));
 
     return {
-      directorateName: dir?.name || currentEmp.directorate || 'Direcção Geral SERNIC',
+      directorateName: dir?.name || 'Direcção Geral',
       departmentName: dept?.name || 'Departamento Geral',
       divisionName: div?.name || '-',
       sectionName: sec?.name || '-',
-      careerName: career?.name || currentEmp.career || 'Carreira Policial de Investigação Criminal',
-      categoryName: category?.name || currentEmp.category || currentEmp.cargo || 'Investigador de 2ª'
+      careerName: career?.name || currentEmp.career || 'Investigação Criminal',
+      categoryName: category?.name || currentEmp.category || currentEmp.cargo || 'Agente'
     };
   }, [currentEmp, orgData]);
 
-  // CÁLCULO DE TEMPO DE SERVIÇO & RESERVA (REFORMA)
+  // Tempo de serviço, idade e previsão de passagem à reserva
   const serviceStats = useMemo(() => {
-    const admissionDateStr = currentEmp.admissionDate || currentEmp.createdAt || '2012-05-10';
-    const birthDateStr = currentEmp.birthDate || '1984-06-15';
+    if (!currentEmp) return {};
 
-    const admDate = new Date(admissionDateStr);
-    const birthDate = new Date(birthDateStr);
     const now = new Date();
+    const admissionDate = currentEmp.admissionDate ? new Date(currentEmp.admissionDate) : new Date(now.getFullYear() - 8, 0, 1);
+    const birthDate = currentEmp.birthDate ? new Date(currentEmp.birthDate) : new Date(now.getFullYear() - 36, 0, 1);
 
-    let age = now.getFullYear() - birthDate.getFullYear();
-    const mDiff = now.getMonth() - birthDate.getMonth();
-    if (mDiff < 0 || (mDiff === 0 && now.getDate() < birthDate.getDate())) {
-      age--;
-    }
+    const diffServiceMs = Math.max(0, now - admissionDate);
+    const serviceYears = Math.floor(diffServiceMs / (1000 * 60 * 60 * 24 * 365.25));
+    const serviceMonths = Math.floor((diffServiceMs % (1000 * 60 * 60 * 24 * 365.25)) / (1000 * 60 * 60 * 24 * 30.4));
+    const serviceDays = Math.floor(diffServiceMs / (1000 * 60 * 60 * 24));
 
-    let serviceYears = now.getFullYear() - admDate.getFullYear();
-    let serviceMonths = now.getMonth() - admDate.getMonth();
-    let serviceDays = now.getDate() - admDate.getDate();
+    const diffAgeMs = Math.max(0, now - birthDate);
+    const age = Math.floor(diffAgeMs / (1000 * 60 * 60 * 24 * 365.25));
 
-    if (serviceDays < 0) {
-      serviceMonths--;
-      serviceDays += 30;
-    }
-    if (serviceMonths < 0) {
-      serviceYears--;
-      serviceMonths += 12;
-    }
-
-    const yearsForServiceRetirement = Math.max(0, 35 - serviceYears);
-    const yearsForAgeRetirement = Math.max(0, 60 - age);
-    const yearsToRetirement = Math.min(yearsForServiceRetirement, yearsForAgeRetirement);
-    const retirementYear = now.getFullYear() + yearsToRetirement;
-    const progressPercent = Math.min(100, Math.round((serviceYears / 35) * 100));
+    // No SERNIC/EGFAE Moçambique: Reserva compulsória aos 60 anos de idade ou 35 anos de serviço
+    const retirementByAgeYear = birthDate.getFullYear() + 60;
+    const retirementByServiceYear = admissionDate.getFullYear() + 35;
+    const retirementYear = Math.min(retirementByAgeYear, retirementByServiceYear);
+    const yearsToRetirement = Math.max(0, retirementYear - now.getFullYear());
+    const totalServiceTarget = 35;
+    const progressPercent = Math.min(100, Math.round((serviceYears / totalServiceTarget) * 100));
 
     return {
-      admissionDateFormatted: formatDisplayDate(admissionDateStr),
-      birthDateFormatted: formatDisplayDate(birthDateStr),
-      age: Math.max(18, age),
-      serviceYears: Math.max(0, serviceYears),
-      serviceMonths: Math.max(0, serviceMonths),
-      serviceDays: Math.max(0, serviceDays),
-      yearsToRetirement: Math.max(0, yearsToRetirement),
+      serviceYears,
+      serviceMonths,
+      serviceDays,
+      age,
       retirementYear,
-      progressPercent
+      yearsToRetirement,
+      progressPercent,
+      admissionDateFormatted: formatDisplayDate(currentEmp.admissionDate || admissionDate.toISOString().split('T')[0]),
+      birthDateFormatted: formatDisplayDate(currentEmp.birthDate || birthDate.toISOString().split('T')[0])
     };
   }, [currentEmp]);
 
-  // CÁLCULO DE FÉRIAS DO AGENTE
+  // Férias do funcionário
   const myVacations = useMemo(() => {
-    const filtered = requests.filter(r => 
-      (currentEmp.id && r.employeeId === currentEmp.id) ||
-      (currentEmp.nip && String(r.employeeNip) === String(currentEmp.nip)) ||
-      (currentEmp.name && r.employeeName && r.employeeName.toLowerCase() === currentEmp.name.toLowerCase())
-    );
-
-    const entitledDays = 30;
-    const currentYear = String(new Date().getFullYear());
-    const usedDays = filtered
-      .filter(r => (r.year === currentYear || !r.year) && ['Aprovada', 'Em gozo', 'Concluída'].includes(r.status))
+    if (!currentEmp?.id) return { list: [], usedDays: 0, balance: 30, entitledDays: 30 };
+    const empRequests = requests.filter(r => String(r.employeeId) === String(currentEmp.id));
+    const usedDays = empRequests
+      .filter(r => r.status === 'Aprovada' || r.status === 'Em Gozo' || r.status === 'Gozada')
       .reduce((sum, r) => sum + (Number(r.daysCount) || 0), 0);
-
+    const entitledDays = 30;
     const balance = Math.max(0, entitledDays - usedDays);
 
-    return { list: filtered, entitledDays, usedDays, balance };
+    return {
+      list: empRequests,
+      usedDays,
+      balance,
+      entitledDays
+    };
   }, [requests, currentEmp]);
 
-  // CÁLCULO DE EFETIVIDADE (FALTAS DO AGENTE)
+  // Faltas do funcionário
   const myAbsences = useMemo(() => {
-    const filtered = absenceRecords.filter(r => 
-      (currentEmp.id && String(r.employeeId) === String(currentEmp.id)) ||
-      (currentEmp.nip && String(r.employeeNip || r.nip) === String(currentEmp.nip)) ||
-      (currentEmp.name && r.employeeName && r.employeeName.toLowerCase() === currentEmp.name.toLowerCase())
-    );
+    if (!currentEmp?.id) return { list: [], justified: 0, unjustified: 0, pending: 0 };
+    const list = absenceRecords.filter(r => String(r.employeeId) === String(currentEmp.id));
 
-    const justified = filtered.filter(r => r.type === 'Justificada' || r.status === 'Aprovada').length;
-    const unjustified = filtered.filter(r => r.type === 'Injustificada' || r.status === 'Rejeitada').length;
-    const pending = filtered.filter(r => r.status === 'Pendente').length;
+    let justified = 0;
+    let unjustified = 0;
+    let pending = 0;
 
-    return { list: filtered, total: filtered.length, justified, unjustified, pending };
+    list.forEach(r => {
+      const days = Number(r.daysCount || r.days || 1);
+      const st = (r.status || r.approvalStatus || r.type || '').toLowerCase();
+      if (st.includes('justificada') || st.includes('aprovad')) {
+        justified += days;
+      } else if (st.includes('injustificada') || st.includes('rejeitad')) {
+        unjustified += days;
+      } else {
+        pending += days;
+      }
+    });
+
+    return { list, justified, unjustified, pending };
   }, [absenceRecords, currentEmp]);
 
-  // PROCESSOS DISCIPLINARES DO AGENTE
+  // Processos disciplinares do funcionário
   const myDisciplinary = useMemo(() => {
-    return disciplinaryProcesses.filter(p => 
-      (currentEmp.id && p.employeeId === currentEmp.id) ||
-      (currentEmp.nip && String(p.nip) === String(currentEmp.nip)) ||
-      (currentEmp.name && p.employeeName && p.employeeName.toLowerCase() === currentEmp.name.toLowerCase())
-    );
+    if (!currentEmp?.id) return [];
+    return disciplinaryProcesses.filter(p => String(p.employeeId) === String(currentEmp.id));
   }, [disciplinaryProcesses, currentEmp]);
 
-  // ATOS E NOMEAÇÕES DO AGENTE
+  // Atos administrativos e nomeações
   const myAdminActs = useMemo(() => {
-    return adminActs.filter(a => 
-      (currentEmp.id && a.employeeId === currentEmp.id) ||
-      (currentEmp.nip && String(a.nip) === String(currentEmp.nip)) ||
-      (currentEmp.name && a.employeeName && a.employeeName.toLowerCase() === currentEmp.name.toLowerCase())
-    );
+    if (!currentEmp?.id) return [];
+    return adminActs.filter(a => String(a.employeeId) === String(currentEmp.id));
   }, [adminActs, currentEmp]);
 
-  // ELEGIBILIDADE A PROMOÇÃO / PROGRESSÃO
+  // Elegibilidade de carreira
   const careerEligibility = useMemo(() => {
-    const yearsInRank = (serviceStats.serviceYears % 4) || 1;
-    const yearsNeeded = 3;
-    const isProgressionEligible = yearsInRank >= yearsNeeded;
-    const monthsRemaining = Math.max(0, (yearsNeeded - yearsInRank) * 12);
-
-    const academicLevel = (currentEmp.academic_level || '').toLowerCase();
-    const hasHigherEducation = academicLevel.includes('licenciatura') || academicLevel.includes('mestrado') || academicLevel.includes('doutoramento');
+    const yearsInRank = Math.max(1, Math.min(serviceStats.serviceYears || 3, 6));
+    const isProgressionEligible = yearsInRank >= 3;
+    const monthsRemaining = isProgressionEligible ? 0 : Math.max(0, (3 - yearsInRank) * 12);
+    const academicLevel = currentEmp.academic_level || currentEmp.academicLevel || 'Médio';
+    const hasHigherEducation = ['Licenciatura', 'Mestrado', 'Doutoramento', 'Superior'].some(l =>
+      academicLevel.toLowerCase().includes(l.toLowerCase())
+    );
 
     return {
       yearsInRank,
       isProgressionEligible,
       monthsRemaining,
-      hasHigherEducation,
-      academicLevel: currentEmp.academic_level || 'Médio Técnico'
+      academicLevel,
+      hasHigherEducation
     };
   }, [serviceStats, currentEmp]);
+
+  // Atualização da foto de perfil
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentEmp?.id) return;
+
+    try {
+      const compressed = await compressImage(file, { maxWidth: 300, maxHeight: 300, quality: 0.8 });
+      await updateEmployee(currentEmp.id, { photo: compressed });
+      saveCloudPhoto(currentEmp.id, compressed);
+
+      setConfirmModal({
+        isOpen: true,
+        title: 'Foto Atualizada',
+        message: 'A sua foto de perfil oficial foi atualizada e sincronizada com sucesso!',
+        hideCancel: true
+      });
+    } catch {
+      alert('Erro ao processar imagem.');
+    }
+  };
 
   // Submeter pedido de férias
   const handleSubmitVacation = async (e) => {
@@ -298,10 +764,11 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
       startDate: absenceForm.startDate,
       endDate: absenceForm.endDate || absenceForm.startDate,
       daysCount: diffDays,
-      reason: absenceForm.reason || 'Justificação apresentada pelo agente',
-      justification: absenceForm.reason || '',
-      attachmentName: absenceForm.attachmentName || 'Comprovativo_Submetido.pdf',
-      submittedBy: currentEmp.name
+      reason: absenceForm.reason,
+      attachmentName: absenceForm.attachmentName,
+      submittedBy: currentEmp.name,
+      directorateId: currentEmp.directorateId,
+      departmentId: currentEmp.departmentId
     });
 
     setIsAbsenceModalOpen(false);
@@ -310,30 +777,15 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
     setConfirmModal({
       isOpen: true,
       title: 'Justificação Submetida',
-      message: 'A sua justificação de ausência foi submetida com sucesso e aguarda despacho da Direcção.',
+      message: 'A justificação de ausência foi registada e encaminhada para validação da Direcção.',
       hideCancel: true
     });
-  };
-
-  // Upload de Foto de Perfil com compressão
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const b64 = await compressImage(file, 320, 0.75);
-      if (currentEmp.nip) saveCloudPhoto(currentEmp.nip, b64);
-      if (currentEmp.name) saveCloudPhoto(currentEmp.name, b64);
-      await updateEmployee(currentEmp.id, { photo: b64 });
-    } catch (err) {
-      console.warn('Erro ao atualizar foto:', err);
-    }
   };
 
   return (
     <div style={styles.container}>
       {/* ──────────────────────────────────────────────────────────────
-          CABEÇALHO INSTITUCIONAL OFICIAL DO SERNIC (MOÇAMBIQUE)
+          CABEÇALHO INSTITUCIONAL OFICIAL DO SERNIC (LIMPO E OFICIAL)
          ────────────────────────────────────────────────────────────── */}
       <div style={styles.institutionalHeader}>
         <div style={styles.instLeft}>
@@ -366,14 +818,14 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
 
           {onBackToAdmin && (
             <button onClick={onBackToAdmin} style={styles.btnBackAdmin}>
-              ⬅️ Painel Geral
+              ⬅ Painel Geral
             </button>
           )}
         </div>
       </div>
 
       {/* ──────────────────────────────────────────────────────────────
-          CARTÃO DE IDENTIFICAÇÃO E PERFIL DO AGENTE (DESPOLUÍDO & ELEGANTE)
+          CARTÃO DE IDENTIFICAÇÃO DO AGENTE (CLEAN DESIGN)
          ────────────────────────────────────────────────────────────── */}
       <div style={styles.profileCard}>
         <div style={styles.profileMain}>
@@ -417,7 +869,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
           </div>
         </div>
 
-        {/* RESUMO RÁPIDO: PASSAGEM À RESERVA (CLEAN CARD) */}
+        {/* RESUMO RÁPIDO: PASSAGEM À RESERVA */}
         <div style={styles.statReserveCard}>
           <div style={styles.reserveTop}>
             <span style={styles.reserveLabel}>Previsão de Reserva</span>
@@ -434,47 +886,47 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
       </div>
 
       {/* ──────────────────────────────────────────────────────────────
-          BARRA DE NAVEGAÇÃO SEGMENTADA (PWA & DESKTOP TOUCH FRIENDLY)
+          SUB-ABAS DE NAVEGAÇÃO PADRONIZADAS (BUENA4 STANDARD)
          ────────────────────────────────────────────────────────────── */}
-      <div style={styles.navBar}>
+      <div className="tabs-container-standard" style={{ marginTop: '4px', marginBottom: '18px' }}>
         <button 
-          style={activePortalTab === 'overview' ? styles.navTabActive : styles.navTab} 
+          className={`module-tab ${activePortalTab === 'overview' ? 'active' : ''}`}
           onClick={() => setActivePortalTab('overview')}
         >
           👤 Ficha Cadastral
         </button>
         <button 
-          style={activePortalTab === 'vacations' ? styles.navTabActive : styles.navTab} 
+          className={`module-tab ${activePortalTab === 'vacations' ? 'active' : ''}`}
           onClick={() => setActivePortalTab('vacations')}
         >
           🌴 Minhas Férias ({myVacations.balance}d)
         </button>
         <button 
-          style={activePortalTab === 'retirement' ? styles.navTabActive : styles.navTab} 
+          className={`module-tab ${activePortalTab === 'retirement' ? 'active' : ''}`}
           onClick={() => setActivePortalTab('retirement')}
         >
           ⏳ Tempo de Serviço & Reserva
         </button>
         <button 
-          style={activePortalTab === 'career' ? styles.navTabActive : styles.navTab} 
+          className={`module-tab ${activePortalTab === 'career' ? 'active' : ''}`}
           onClick={() => setActivePortalTab('career')}
         >
           📈 Elegibilidade de Carreira
         </button>
         <button 
-          style={activePortalTab === 'absences' ? styles.navTabActive : styles.navTab} 
+          className={`module-tab ${activePortalTab === 'absences' ? 'active' : ''}`}
           onClick={() => setActivePortalTab('absences')}
         >
           📅 Minha Efetividade & Faltas
         </button>
         <button 
-          style={activePortalTab === 'disciplinary' ? styles.navTabActive : styles.navTab} 
+          className={`module-tab ${activePortalTab === 'disciplinary' ? 'active' : ''}`}
           onClick={() => setActivePortalTab('disciplinary')}
         >
           ⚖️ Processos ({myDisciplinary.length})
         </button>
         <button 
-          style={activePortalTab === 'acts' ? styles.navTabActive : styles.navTab} 
+          className={`module-tab ${activePortalTab === 'acts' ? 'active' : ''}`}
           onClick={() => setActivePortalTab('acts')}
         >
           📜 Atos & Nomeações ({myAdminActs.length})
@@ -513,7 +965,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
           </div>
         )}
 
-        {/* ABA 2: MINHAS FÉRIAS */}
+        {/* ABA 2: MINHAS FÉRIAS (COM GRÁFICO VISUAL) */}
         {activePortalTab === 'vacations' && (
           <div style={styles.sectionWrap}>
             <div style={styles.headerBetween}>
@@ -526,21 +978,56 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
               </button>
             </div>
 
-            <div style={styles.kpiGrid}>
-              <div style={styles.kpiCard}>
-                <span style={styles.kpiTitle}>Direito Anual</span>
-                <span style={styles.kpiNum}>{myVacations.entitledDays} dias</span>
-                <span style={styles.kpiSub}>Ano {new Date().getFullYear()}</span>
+            {/* GRÁFICO E BALANÇO VISUAL */}
+            <div style={styles.chartsGridTwoCol}>
+              <div style={styles.kpiGrid}>
+                <div style={styles.kpiCard}>
+                  <span style={styles.kpiTitle}>Direito Anual</span>
+                  <span style={styles.kpiNum}>{myVacations.entitledDays} dias</span>
+                  <span style={styles.kpiSub}>Ano {new Date().getFullYear()}</span>
+                </div>
+                <div style={styles.kpiCard}>
+                  <span style={styles.kpiTitle}>Dias Gozados</span>
+                  <span style={{ ...styles.kpiNum, color: '#d97706' }}>{myVacations.usedDays} dias</span>
+                  <span style={styles.kpiSub}>Aprovados ou em curso</span>
+                </div>
+                <div style={{ ...styles.kpiCard, borderTop: '3px solid #059669' }}>
+                  <span style={styles.kpiTitle}>Saldo Disponível</span>
+                  <span style={{ ...styles.kpiNum, color: '#059669' }}>{myVacations.balance} dias</span>
+                  <span style={styles.kpiSub}>Disponíveis para marcação</span>
+                </div>
               </div>
-              <div style={styles.kpiCard}>
-                <span style={styles.kpiTitle}>Dias Gozados</span>
-                <span style={{ ...styles.kpiNum, color: '#d97706' }}>{myVacations.usedDays} dias</span>
-                <span style={styles.kpiSub}>Aprovados ou em curso</span>
-              </div>
-              <div style={{ ...styles.kpiCard, borderTop: '3px solid #059669' }}>
-                <span style={styles.kpiTitle}>Saldo Disponível</span>
-                <span style={{ ...styles.kpiNum, color: '#059669' }}>{myVacations.balance} dias</span>
-                <span style={styles.kpiSub}>Disponíveis para marcação</span>
+
+              {/* Card com Gráfico Donut de Férias */}
+              <div style={styles.chartMiniCard}>
+                <h4 style={styles.chartTitle}>Distribuição da Quota de Férias</h4>
+                <div style={{ width: '100%', height: '140px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Dias Gozados', value: Math.max(0, myVacations.usedDays) },
+                          { name: 'Saldo Disponível', value: Math.max(0, myVacations.balance) }
+                        ]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={42}
+                        outerRadius={62}
+                        paddingAngle={3}
+                      >
+                        <Cell fill="#d97706" />
+                        <Cell fill="#059669" />
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div style={styles.chartLegendRow}>
+                  <span style={styles.chartLegendItem}><span style={{ ...styles.legendDot, backgroundColor: '#d97706' }} /> Gozados ({myVacations.usedDays}d)</span>
+                  <span style={styles.chartLegendItem}><span style={{ ...styles.legendDot, backgroundColor: '#059669' }} /> Disponível ({myVacations.balance}d)</span>
+                </div>
               </div>
             </div>
 
@@ -578,7 +1065,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
           </div>
         )}
 
-        {/* ABA 3: TEMPO DE SERVIÇO & RESERVA */}
+        {/* ABA 3: TEMPO DE SERVIÇO & RESERVA (COM GRÁFICO VISUAL) */}
         {activePortalTab === 'retirement' && (
           <div style={styles.sectionWrap}>
             <h3 style={styles.secTitle}>⏳ Contagem de Tempo de Serviço e Passagem à Reserva</h3>
@@ -600,11 +1087,36 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
               <div style={{ ...styles.cleanCard, borderTop: '3px solid #059669' }}>
                 <h4 style={styles.cleanCardTitle}>Previsão da Passagem à Reserva / Reforma</h4>
                 <div style={{ ...styles.hugeStat, color: '#059669' }}>Ano {serviceStats.retirementYear}</div>
-                <div style={{ color: 'var(--color-text-muted)', fontSize: '14px', marginBottom: '16px' }}>
+                <div style={{ color: 'var(--color-text-muted)', fontSize: '13px', marginBottom: '10px' }}>
                   Faltam aproximadamente <strong>{serviceStats.yearsToRetirement} anos</strong> para a conclusão da carreira ativa.
                 </div>
 
-                <div>
+                {/* Donut Chart de Reserva */}
+                <div style={{ width: '100%', height: '130px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Anos Cumpridos', value: Math.max(0, serviceStats.serviceYears) },
+                          { name: 'Anos Restantes', value: Math.max(0, serviceStats.yearsToRetirement) }
+                        ]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={58}
+                        paddingAngle={3}
+                      >
+                        <Cell fill="var(--color-primary, #1B365D)" />
+                        <Cell fill="#059669" />
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div style={{ marginTop: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 'bold' }}>
                     <span>Progresso Cumprido</span>
                     <span>{serviceStats.progressPercent}%</span>
@@ -682,7 +1194,7 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
           </div>
         )}
 
-        {/* ABA 5: MINHA EFETIVIDADE & FALTAS */}
+        {/* ABA 5: MINHA EFETIVIDADE & FALTAS (COM GRÁFICO VISUAL) */}
         {activePortalTab === 'absences' && (
           <div style={styles.sectionWrap}>
             <div style={styles.headerBetween}>
@@ -695,21 +1207,50 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
               </button>
             </div>
 
-            <div style={styles.kpiGrid}>
-              <div style={styles.kpiCard}>
-                <span style={styles.kpiTitle}>Faltas Justificadas</span>
-                <span style={{ ...styles.kpiNum, color: '#059669' }}>{myAbsences.justified}</span>
-                <span style={styles.kpiSub}>Aprovadas pela Direcção</span>
+            {/* GRÁFICO E BALANÇO VISUAL */}
+            <div style={styles.chartsGridTwoCol}>
+              <div style={styles.kpiGrid}>
+                <div style={styles.kpiCard}>
+                  <span style={styles.kpiTitle}>Faltas Justificadas</span>
+                  <span style={{ ...styles.kpiNum, color: '#059669' }}>{myAbsences.justified}</span>
+                  <span style={styles.kpiSub}>Aprovadas pela Direcção</span>
+                </div>
+                <div style={styles.kpiCard}>
+                  <span style={styles.kpiTitle}>Faltas Injustificadas</span>
+                  <span style={{ ...styles.kpiNum, color: '#dc2626' }}>{myAbsences.unjustified}</span>
+                  <span style={styles.kpiSub}>Sujeitas a desconto salarial</span>
+                </div>
+                <div style={styles.kpiCard}>
+                  <span style={styles.kpiTitle}>Aguardam Despacho</span>
+                  <span style={{ ...styles.kpiNum, color: '#d97706' }}>{myAbsences.pending}</span>
+                  <span style={styles.kpiSub}>Em apreciação da chefia</span>
+                </div>
               </div>
-              <div style={styles.kpiCard}>
-                <span style={styles.kpiTitle}>Faltas Injustificadas</span>
-                <span style={{ ...styles.kpiNum, color: '#dc2626' }}>{myAbsences.unjustified}</span>
-                <span style={styles.kpiSub}>Sujeitas a desconto salarial</span>
-              </div>
-              <div style={styles.kpiCard}>
-                <span style={styles.kpiTitle}>Aguardam Despacho</span>
-                <span style={{ ...styles.kpiNum, color: '#d97706' }}>{myAbsences.pending}</span>
-                <span style={styles.kpiSub}>Em apreciação da chefia</span>
+
+              {/* BarChart de Assiduidade */}
+              <div style={styles.chartMiniCard}>
+                <h4 style={styles.chartTitle}>Extrato Comparativo de Ausências</h4>
+                <div style={{ width: '100%', height: '140px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={[
+                        { name: 'Justificadas', total: myAbsences.justified, fill: '#059669' },
+                        { name: 'Injustificadas', total: myAbsences.unjustified, fill: '#dc2626' },
+                        { name: 'Em Análise', total: myAbsences.pending, fill: '#d97706' }
+                      ]}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    >
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                      <RechartsTooltip />
+                      <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+                        <Cell fill="#059669" />
+                        <Cell fill="#dc2626" />
+                        <Cell fill="#d97706" />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
 
@@ -816,275 +1357,32 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
       </div>
 
       {/* ──────────────────────────────────────────────────────────────
-          MODAL INTERATIVO DE PESQUISA & FILTRAGEM DE AGENTES
+          MODAIS MÓVEIS (PORTAIS ROBUSTOS E PADRONIZADOS)
          ────────────────────────────────────────────────────────────── */}
-      {isSearchModalOpen && (
-        <div style={styles.modalOverlay} onClick={() => setIsSearchModalOpen(false)}>
-          <div style={styles.searchModalBox} onClick={e => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '18px' }}>🔍</span>
-                <h3 style={{ margin: 0, fontSize: '17px', color: 'var(--color-text-base)' }}>
-                  Pesquisa e Seleção de Agente SERNIC
-                </h3>
-              </div>
-              <button onClick={() => setIsSearchModalOpen(false)} style={styles.closeBtn}>✕</button>
-            </div>
+      <PortalAgentSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        employees={employees}
+        orgData={orgData}
+        currentEmpId={currentEmp.id}
+        onSelect={(emp) => setSelectedEmpId(emp.id)}
+      />
 
-            <div style={styles.searchModalBody}>
-              {/* CAMPO DE PESQUISA */}
-              <div style={{ position: 'relative', marginBottom: '14px' }}>
-                <input 
-                  type="text" 
-                  placeholder="Pesquisar por Nome, NIP, NUIT, BI, cargo..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  style={styles.searchFieldInput}
-                  autoFocus
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} style={styles.btnClearSearch}>✕</button>
-                )}
-              </div>
+      <PortalVacationModal
+        isOpen={isVacationModalOpen}
+        onClose={() => setIsVacationModalOpen(false)}
+        vacationForm={vacationForm}
+        setVacationForm={setVacationForm}
+        onSubmit={handleSubmitVacation}
+      />
 
-              {/* FILTROS POR DIRECÇÃO E CARREIRA */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '16px' }}>
-                <div>
-                  <label style={styles.filterMiniLabel}>Filtrar por Direcção / Província:</label>
-                  <select 
-                    value={filterDirectorate} 
-                    onChange={e => setFilterDirectorate(e.target.value)}
-                    style={styles.filterSelect}
-                  >
-                    <option value="ALL">Todas as Direcções</option>
-                    {(orgData?.directorates || []).map(d => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={styles.filterMiniLabel}>Filtrar por Carreira:</label>
-                  <select 
-                    value={filterCareer} 
-                    onChange={e => setFilterCareer(e.target.value)}
-                    style={styles.filterSelect}
-                  >
-                    <option value="ALL">Todas as Carreiras</option>
-                    {(orgData?.careers || []).map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* LISTA DE RESULTADOS */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-text-muted)' }}>
-                  Encontrados: {filteredEmployeesList.length} agentes
-                </span>
-                {(searchQuery || filterDirectorate !== 'ALL' || filterCareer !== 'ALL') && (
-                  <button 
-                    onClick={() => { setSearchQuery(''); setFilterDirectorate('ALL'); setFilterCareer('ALL'); }}
-                    style={styles.btnResetFilters}
-                  >
-                    Limpar Filtros
-                  </button>
-                )}
-              </div>
-
-              <div style={styles.resultsList}>
-                {filteredEmployeesList.length === 0 ? (
-                  <div style={styles.noResultsBox}>
-                    Nenhum funcionário encontrado com os critérios fornecidos.
-                  </div>
-                ) : (
-                  filteredEmployeesList.map(emp => {
-                    const isSelected = emp.id === currentEmp.id;
-                    const dir = (orgData?.directorates || []).find(d => String(d.id) === String(emp.directorateId));
-
-                    return (
-                      <div 
-                        key={emp.id} 
-                        onClick={() => {
-                          setSelectedEmpId(emp.id);
-                          setIsSearchModalOpen(false);
-                        }}
-                        style={{
-                          ...styles.resultCard,
-                          borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-border)',
-                          backgroundColor: isSelected ? 'rgba(27, 54, 93, 0.06)' : 'var(--color-bg-subtle)'
-                        }}
-                      >
-                        <div style={styles.resAvatar}>
-                          {emp.photo ? (
-                            <img src={emp.photo} alt={emp.name} style={styles.resAvatarImg} />
-                          ) : (
-                            <div style={styles.resAvatarFallback}>
-                              {emp.name?.charAt(0).toUpperCase() || 'A'}
-                            </div>
-                          )}
-                        </div>
-
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <strong style={{ fontSize: '14px', color: 'var(--color-text-base)' }}>{emp.name}</strong>
-                            <span style={styles.nipTag}>NIP: {emp.nip || 'N/A'}</span>
-                          </div>
-                          <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-                            {dir?.name || 'Direcção Geral'} • {emp.category || emp.cargo || 'Investigador'}
-                          </div>
-                        </div>
-
-                        {isSelected && (
-                          <span style={styles.selectedPill}>✓ Atual</span>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE SOLICITAÇÃO DE FÉRIAS */}
-      {isVacationModalOpen && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalBox}>
-            <div style={styles.modalHeader}>
-              <h3 style={{ margin: 0, fontSize: '17px' }}>🌴 Solicitar Férias Regulamentares</h3>
-              <button onClick={() => setIsVacationModalOpen(false)} style={styles.closeBtn}>✕</button>
-            </div>
-            <form onSubmit={handleSubmitVacation} style={styles.modalBody}>
-              <div style={styles.formGroup}>
-                <label style={styles.formLbl}>Tipo de Férias / Licença:</label>
-                <select 
-                  value={vacationForm.type} 
-                  onChange={e => setVacationForm({ ...vacationForm, type: e.target.value })}
-                  style={styles.fieldInput}
-                >
-                  <option value="Férias Anuais">Férias Anuais (Regulamentares)</option>
-                  <option value="Licença de Casamento">Licença de Casamento (15 dias)</option>
-                  <option value="Licença de Maternidade/Paternidade">Licença de Maternidade / Paternidade</option>
-                  <option value="Licença de Luto (Nojo)">Licença de Luto (Nojo)</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div style={styles.formGroup}>
-                  <label style={styles.formLbl}>Data de Início:</label>
-                  <input 
-                    type="date" 
-                    value={vacationForm.startDate} 
-                    onChange={e => setVacationForm({ ...vacationForm, startDate: e.target.value })} 
-                    style={styles.fieldInput} 
-                    required 
-                  />
-                </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.formLbl}>Data de Término:</label>
-                  <input 
-                    type="date" 
-                    value={vacationForm.endDate} 
-                    onChange={e => setVacationForm({ ...vacationForm, endDate: e.target.value })} 
-                    style={styles.fieldInput} 
-                    required 
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.formLbl}>Observações / Justificação:</label>
-                <textarea 
-                  rows={3} 
-                  value={vacationForm.reason} 
-                  onChange={e => setVacationForm({ ...vacationForm, reason: e.target.value })}
-                  placeholder="Informações adicionais para a chefia imediata..."
-                  style={styles.fieldTextarea}
-                />
-              </div>
-
-              <div style={styles.modalFooter}>
-                <button type="button" onClick={() => setIsVacationModalOpen(false)} style={styles.btnModalCancel}>
-                  Cancelar
-                </button>
-                <button type="submit" style={styles.btnActionPrimary}>
-                  Submeter Pedido
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE JUSTIFICAÇÃO DE FALTA */}
-      {isAbsenceModalOpen && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalBox}>
-            <div style={styles.modalHeader}>
-              <h3 style={{ margin: 0, fontSize: '17px' }}>✍️ Submeter Justificação de Falta</h3>
-              <button onClick={() => setIsAbsenceModalOpen(false)} style={styles.closeBtn}>✕</button>
-            </div>
-            <form onSubmit={handleSubmitAbsence} style={styles.modalBody}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div style={styles.formGroup}>
-                  <label style={styles.formLbl}>Data de Início:</label>
-                  <input 
-                    type="date" 
-                    value={absenceForm.startDate} 
-                    onChange={e => setAbsenceForm({ ...absenceForm, startDate: e.target.value })} 
-                    style={styles.fieldInput} 
-                    required 
-                  />
-                </div>
-                <div style={styles.formGroup}>
-                  <label style={styles.formLbl}>Data de Fim (Opcional):</label>
-                  <input 
-                    type="date" 
-                    value={absenceForm.endDate} 
-                    onChange={e => setAbsenceForm({ ...absenceForm, endDate: e.target.value })} 
-                    style={styles.fieldInput} 
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.formLbl}>Motivo Legal Alegado:</label>
-                <textarea 
-                  rows={3} 
-                  value={absenceForm.reason} 
-                  onChange={e => setAbsenceForm({ ...absenceForm, reason: e.target.value })}
-                  placeholder="Ex: Doença súbita com atestado médico emitido pelo Hospital Central..."
-                  style={styles.fieldTextarea}
-                  required
-                />
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.formLbl}>Nome do Comprovativo / Atestado (PDF/Foto):</label>
-                <input 
-                  type="text" 
-                  value={absenceForm.attachmentName} 
-                  onChange={e => setAbsenceForm({ ...absenceForm, attachmentName: e.target.value })} 
-                  placeholder="Ex: Atestado_Medico_27Setembro.pdf"
-                  style={styles.fieldInput} 
-                />
-              </div>
-
-              <div style={styles.modalFooter}>
-                <button type="button" onClick={() => setIsAbsenceModalOpen(false)} style={styles.btnModalCancel}>
-                  Cancelar
-                </button>
-                <button type="submit" style={styles.btnActionPrimary}>
-                  Submeter Justificação
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <PortalAbsenceModal
+        isOpen={isAbsenceModalOpen}
+        onClose={() => setIsAbsenceModalOpen(false)}
+        absenceForm={absenceForm}
+        setAbsenceForm={setAbsenceForm}
+        onSubmit={handleSubmitAbsence}
+      />
 
       {/* MODAL DE CONFIRMAÇÃO */}
       <ConfirmModal
@@ -1098,6 +1396,11 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
   );
 }
 
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ESTILOS VISUAIS DO PORTAL E MODAIS MÓVEIS
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
 const styles = {
   container: {
     display: 'flex',
@@ -1114,7 +1417,7 @@ const styles = {
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: '16px',
-    backgroundColor: 'var(--color-bg-elevated)',
+    backgroundColor: 'var(--color-bg-card, #ffffff)',
     padding: '18px 24px',
     borderRadius: '12px',
     border: '1px solid var(--color-border)',
@@ -1128,14 +1431,6 @@ const styles = {
     filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.12))'
   },
   instText: { display: 'flex', flexDirection: 'column' },
-  instRepub: {
-    fontSize: '11px',
-    fontWeight: '800',
-    color: '#d97706',
-    letterSpacing: '1.2px',
-    textTransform: 'uppercase',
-    marginBottom: '2px'
-  },
   instTitle: {
     fontSize: '19px',
     fontWeight: '800',
@@ -1182,7 +1477,7 @@ const styles = {
     cursor: 'pointer'
   },
   profileCard: {
-    backgroundColor: 'var(--color-bg-elevated)',
+    backgroundColor: 'var(--color-bg-card, #ffffff)',
     borderRadius: '12px',
     padding: '22px 24px',
     border: '1px solid var(--color-border)',
@@ -1247,69 +1542,26 @@ const styles = {
     fontWeight: '800'
   },
   statusDot: { width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#059669' },
-  tagsRow: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
-  tag: {
-    padding: '3px 9px',
-    borderRadius: '6px',
-    backgroundColor: 'var(--color-bg-subtle)',
-    border: '1px solid var(--color-border)',
-    fontSize: '12px',
-    color: 'var(--color-text-base)'
-  },
+  tagsRow: { display: 'flex', gap: '10px', flexWrap: 'wrap', fontSize: '13px', color: 'var(--color-text-muted)' },
+  tag: { backgroundColor: 'var(--color-bg-subtle)', padding: '3px 8px', borderRadius: '6px' },
   unitRow: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--color-text-muted)', flexWrap: 'wrap' },
   statReserveCard: {
     backgroundColor: 'var(--color-bg-subtle)',
     padding: '16px 20px',
     borderRadius: '10px',
-    border: '1px solid var(--color-border)',
-    minWidth: '230px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '3px'
-  },
-  reserveTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  reserveLabel: { fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', textTransform: 'uppercase' },
-  reserveIcon: { fontSize: '16px' },
-  reserveYear: { fontSize: '24px', fontWeight: '800', color: '#059669' },
-  reserveHint: { fontSize: '12px', color: 'var(--color-text-muted)' },
-  progressTrack: { height: '6px', backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: '3px', marginTop: '6px', overflow: 'hidden' },
-  progressTrackLarge: { height: '10px', backgroundColor: 'rgba(0,0,0,0.08)', borderRadius: '5px', marginTop: '8px', overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: 'var(--color-primary)', borderRadius: '3px' },
-  navBar: {
-    display: 'flex',
-    gap: '8px',
-    overflowX: 'auto',
-    backgroundColor: 'var(--color-bg-elevated)',
-    padding: '10px 14px',
-    borderRadius: '10px',
+    minWidth: '220px',
     border: '1px solid var(--color-border)'
   },
-  navTab: {
-    padding: '8px 14px',
-    backgroundColor: 'transparent',
-    border: '1px solid var(--color-border)',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '500',
-    color: 'var(--color-text-muted)',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    transition: 'all 0.2s'
-  },
-  navTabActive: {
-    padding: '8px 14px',
-    backgroundColor: 'var(--color-primary)',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '13px',
-    fontWeight: '700',
-    color: '#fff',
-    cursor: 'pointer',
-    whiteSpace: 'nowrap',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-  },
+  reserveTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' },
+  reserveLabel: { fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--color-text-muted)' },
+  reserveIcon: { fontSize: '14px' },
+  reserveYear: { fontSize: '26px', fontWeight: '800', color: '#059669' },
+  reserveHint: { fontSize: '11px', color: 'var(--color-text-muted)', margin: '4px 0 8px 0' },
+  progressTrack: { width: '100%', height: '6px', backgroundColor: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' },
+  progressTrackLarge: { width: '100%', height: '8px', backgroundColor: 'var(--color-border)', borderRadius: '4px', overflow: 'hidden', marginTop: '4px' },
+  progressFill: { height: '100%', backgroundColor: 'var(--color-primary)', transition: 'width 0.3s ease' },
   contentBody: {
-    backgroundColor: 'var(--color-bg-elevated)',
+    backgroundColor: 'var(--color-bg-card, #ffffff)',
     borderRadius: '12px',
     padding: '24px',
     border: '1px solid var(--color-border)',
@@ -1318,8 +1570,23 @@ const styles = {
   sectionWrap: { display: 'flex', flexDirection: 'column', gap: '16px' },
   secTitle: { fontSize: '17px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 },
   secDesc: { fontSize: '13px', color: 'var(--color-text-muted)', margin: 0 },
+  subSecTitle: { fontSize: '15px', fontWeight: '700', color: 'var(--color-text-base)', margin: '14px 0 6px 0' },
   headerBetween: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' },
   gridCards: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' },
+  chartsGridTwoCol: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '8px' },
+  chartMiniCard: {
+    backgroundColor: 'var(--color-bg-subtle)',
+    padding: '16px 18px',
+    borderRadius: '10px',
+    border: '1px solid var(--color-border)',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between'
+  },
+  chartTitle: { fontSize: '13px', fontWeight: '700', color: 'var(--color-primary, #1B365D)', margin: '0 0 8px 0' },
+  chartLegendRow: { display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '6px' },
+  chartLegendItem: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)' },
+  legendDot: { width: '8px', height: '8px', borderRadius: '50%' },
   cleanCard: {
     backgroundColor: 'var(--color-bg-subtle)',
     padding: '18px 20px',
@@ -1329,241 +1596,133 @@ const styles = {
   cleanCardTitle: { fontSize: '14px', fontWeight: '700', color: 'var(--color-primary)', margin: '0 0 12px 0' },
   infoRow: { display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderBottom: '1px solid rgba(0,0,0,0.03)', fontSize: '13px' },
   lbl: { color: 'var(--color-text-muted)' },
-  hugeStat: { fontSize: '32px', fontWeight: '800', color: 'var(--color-primary)', margin: '8px 0 2px 0' },
-  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' },
+  hugeStat: { fontSize: '30px', fontWeight: '800', color: 'var(--color-primary)', margin: '6px 0 2px 0' },
+  kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' },
   kpiCard: {
     backgroundColor: 'var(--color-bg-subtle)',
-    padding: '16px',
+    padding: '14px 16px',
     borderRadius: '10px',
     border: '1px solid var(--color-border)',
     display: 'flex',
     flexDirection: 'column',
     gap: '3px'
   },
-  kpiTitle: { fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: '600' },
-  kpiNum: { fontSize: '24px', fontWeight: '800', color: 'var(--color-text-base)' },
+  kpiTitle: { fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--color-text-muted)' },
+  kpiNum: { fontSize: '20px', fontWeight: '800', color: 'var(--color-text-base)' },
   kpiSub: { fontSize: '11px', color: 'var(--color-text-muted)' },
-  btnActionPrimary: {
-    padding: '9px 16px',
-    backgroundColor: 'var(--color-primary)',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    fontWeight: '700',
-    fontSize: '13px',
-    cursor: 'pointer'
-  },
-  btnActionSecondary: {
-    padding: '9px 16px',
-    backgroundColor: '#059669',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '8px',
-    fontWeight: '700',
-    fontSize: '13px',
-    cursor: 'pointer'
-  },
   emptyState: {
-    padding: '36px',
+    padding: '28px 16px',
     textAlign: 'center',
-    backgroundColor: 'var(--color-bg-subtle)',
-    borderRadius: '10px',
-    border: '1px dashed var(--color-border)',
     color: 'var(--color-text-muted)',
+    backgroundColor: 'var(--color-bg-subtle)',
+    borderRadius: '8px',
     fontSize: '13px'
   },
   cleanStateBox: {
     display: 'flex',
     alignItems: 'center',
-    gap: '14px',
-    backgroundColor: '#ecfdf5',
-    border: '1px solid #059669',
+    gap: '16px',
     padding: '20px',
-    borderRadius: '10px'
+    backgroundColor: '#ecfdf5',
+    borderRadius: '10px',
+    border: '1px solid #a7f3d0'
   },
   alertSuccess: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    backgroundColor: '#ecfdf5',
-    border: '1px solid #059669',
     padding: '12px 14px',
+    backgroundColor: '#ecfdf5',
+    color: '#065f46',
     borderRadius: '8px',
-    color: '#059669',
+    border: '1px solid #a7f3d0',
     fontSize: '13px'
   },
   alertWarning: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    backgroundColor: '#fffbeb',
-    border: '1px solid #d97706',
     padding: '12px 14px',
+    backgroundColor: '#fffbeb',
+    color: '#92400e',
     borderRadius: '8px',
-    color: '#d97706',
+    border: '1px solid #fde68a',
     fontSize: '13px'
   },
   alertInfo: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    backgroundColor: 'var(--color-bg-subtle)',
-    border: '1px solid var(--color-border)',
     padding: '12px 14px',
+    backgroundColor: '#eff6ff',
+    color: '#1e40af',
     borderRadius: '8px',
-    color: 'var(--color-text-base)',
+    border: '1px solid #bfdbfe',
     fontSize: '13px'
   },
-  subSecTitle: { margin: '20px 0 10px 0', fontSize: '15px', color: 'var(--color-text-base)', fontWeight: '700' },
-  th: { padding: '12px 14px', textAlign: 'left', fontWeight: '600' },
-  td: { padding: '12px 14px', verticalAlign: 'middle', borderBottom: '1px solid var(--color-border)' },
+  th: { padding: '10px 14px', textAlign: 'left', fontWeight: '700', fontSize: '12px' },
+  td: { padding: '10px 14px', borderBottom: '1px solid var(--color-border)' },
   statusPill: (status) => {
-    let bg = '#eff6ff', color = '#1b365d';
-    if (status === 'Aprovada' || status === 'Concluída') { bg = '#ecfdf5'; color = '#059669'; }
-    if (status === 'Em gozo' || status === 'Em análise' || status === 'Pendente') { bg = '#fffbeb'; color = '#d97706'; }
-    if (status === 'Rejeitada' || status === 'Cancelada' || status === 'Injustificada') { bg = '#fef2f2'; color = '#dc2626'; }
+    let bg = '#f1f5f9';
+    let col = '#475569';
+    const s = (status || '').toLowerCase();
+    if (s.includes('aprov') || s.includes('goz') || s.includes('concl')) {
+      bg = '#ecfdf5';
+      col = '#059669';
+    } else if (s.includes('pend') || s.includes('submet')) {
+      bg = '#fffbeb';
+      col = '#d97706';
+    } else if (s.includes('rejeit') || s.includes('injust')) {
+      bg = '#fef2f2';
+      col = '#dc2626';
+    }
     return {
-      padding: '3px 9px',
-      borderRadius: '12px',
+      padding: '3px 8px',
+      borderRadius: '10px',
       fontSize: '11px',
       fontWeight: '700',
       backgroundColor: bg,
-      color: color,
+      color: col,
       display: 'inline-block'
     };
   },
-  modalOverlay: {
-    position: 'fixed',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 9999,
-    padding: '20px'
-  },
-  searchModalBox: {
-    backgroundColor: 'var(--color-bg-elevated)',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '680px',
-    maxHeight: '85vh',
-    display: 'flex',
-    flexDirection: 'column',
-    border: '1px solid var(--color-border)',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
-    overflow: 'hidden'
-  },
-  modalBox: {
-    backgroundColor: 'var(--color-bg-elevated)',
-    borderRadius: '12px',
-    width: '100%',
-    maxWidth: '520px',
-    border: '1px solid var(--color-border)',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.2)'
-  },
-  modalHeader: {
-    padding: '16px 20px',
-    borderBottom: '1px solid var(--color-border)',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  closeBtn: { background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: 'var(--color-text-muted)' },
-  searchModalBody: { padding: '20px', overflowY: 'auto' },
-  searchFieldInput: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: '8px',
-    border: '1px solid var(--color-primary)',
-    backgroundColor: 'var(--color-bg-subtle)',
-    color: 'var(--color-text-base)',
-    fontSize: '14px',
-    boxSizing: 'border-box'
-  },
-  btnClearSearch: {
-    position: 'absolute',
-    right: '12px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    color: 'var(--color-text-muted)',
-    fontSize: '14px'
-  },
-  filterMiniLabel: { display: 'block', fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', marginBottom: '4px' },
-  filterSelect: {
-    width: '100%',
-    padding: '8px 10px',
-    borderRadius: '6px',
-    border: '1px solid var(--color-border)',
-    backgroundColor: 'var(--color-bg-subtle)',
-    color: 'var(--color-text-base)',
-    fontSize: '12px'
-  },
-  btnResetFilters: {
-    background: 'none',
-    border: 'none',
-    color: 'var(--color-primary)',
-    fontSize: '12px',
-    cursor: 'pointer',
-    fontWeight: '600'
-  },
-  resultsList: { display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '420px', overflowY: 'auto' },
-  resultCard: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '10px 14px',
-    borderRadius: '8px',
-    border: '1px solid var(--color-border)',
-    cursor: 'pointer',
-    transition: 'all 0.15s'
-  },
-  resAvatar: { width: '42px', height: '42px', flexShrink: 0 },
-  resAvatarImg: { width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover' },
-  resAvatarFallback: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '50%',
+  btnActionPrimary: {
+    padding: '9px 16px',
     backgroundColor: 'var(--color-primary)',
     color: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: '800'
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '700',
+    cursor: 'pointer'
   },
-  nipTag: {
-    fontSize: '11px',
-    padding: '2px 6px',
-    borderRadius: '4px',
-    backgroundColor: 'var(--color-bg-elevated)',
+  btnActionSecondary: {
+    padding: '9px 16px',
+    backgroundColor: 'transparent',
+    color: 'var(--color-primary)',
+    border: '1px solid var(--color-primary)',
+    borderRadius: '8px',
+    fontSize: '13px',
+    fontWeight: '700',
+    cursor: 'pointer'
+  },
+  modalFooter: { display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '14px' },
+  btnModalCancel: {
+    padding: '9px 16px',
+    backgroundColor: 'transparent',
     border: '1px solid var(--color-border)',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '13px',
     color: 'var(--color-text-base)'
   },
-  selectedPill: {
-    padding: '3px 8px',
-    borderRadius: '10px',
-    backgroundColor: '#ecfdf5',
-    color: '#059669',
-    fontSize: '11px',
-    fontWeight: '800'
-  },
-  noResultsBox: {
-    padding: '30px',
-    textAlign: 'center',
-    color: 'var(--color-text-muted)',
-    fontSize: '13px'
-  },
-  modalBody: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' },
   formGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
   formLbl: { fontSize: '13px', fontWeight: '600', color: 'var(--color-text-base)' },
   fieldInput: {
     padding: '9px 12px',
     borderRadius: '6px',
     border: '1px solid var(--color-border)',
-    backgroundColor: 'var(--color-bg-subtle)',
+    backgroundColor: 'var(--color-bg-card, #ffffff)',
     color: 'var(--color-text-base)',
     fontSize: '13px'
   },
@@ -1571,24 +1730,269 @@ const styles = {
     padding: '9px 12px',
     borderRadius: '6px',
     border: '1px solid var(--color-border)',
-    backgroundColor: 'var(--color-bg-subtle)',
+    backgroundColor: 'var(--color-bg-card, #ffffff)',
     color: 'var(--color-text-base)',
     fontSize: '13px',
-    fontFamily: 'inherit'
-  },
-  modalFooter: {
+    resize: 'vertical'
+  }
+};
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ESTILOS DOS MODAIS MÓVEIS E RESIZABLE (SOLID SURFACES)
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+const modalStyles = {
+  overlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    backdropFilter: 'blur(4px)',
     display: 'flex',
-    justifyContent: 'flex-end',
-    gap: '10px',
-    paddingTop: '10px',
-    borderTop: '1px solid var(--color-border)'
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 999999,
+    animation: 'fadeIn 0.2s ease-out'
   },
-  btnModalCancel: {
-    padding: '8px 14px',
-    backgroundColor: 'transparent',
-    border: '1px solid var(--color-border)',
+  modalBox: {
+    backgroundColor: 'var(--color-bg-base, #ffffff)',
+    borderRadius: '16px',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
+    border: '1px solid var(--color-border, #cbd5e1)',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+    boxSizing: 'border-box'
+  },
+  modalHeader: {
+    padding: '16px 20px',
+    borderBottom: '1px solid var(--color-border, #e2e8f0)',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'var(--color-bg-card, #f8fafc)',
+    cursor: 'move',
+    userSelect: 'none',
+    flexShrink: 0
+  },
+  headerTitle: {
+    margin: 0,
+    fontSize: '16px',
+    fontWeight: '700',
+    color: 'var(--color-text-base, #0f172a)'
+  },
+  headerSubtitle: {
+    fontSize: '11px',
+    fontWeight: '600',
+    color: 'var(--color-text-muted, #64748b)',
+    marginTop: '2px'
+  },
+  expandBtn: {
+    background: 'rgba(37, 99, 235, 0.08)',
+    border: '1px solid rgba(37, 99, 235, 0.25)',
+    color: '#2563eb',
     borderRadius: '6px',
+    padding: '4px 8px',
+    fontSize: '11px',
+    fontWeight: '700',
     cursor: 'pointer',
-    color: 'var(--color-text-muted)'
+    display: 'flex',
+    alignItems: 'center',
+    gap: '3px'
+  },
+  closeBtn: {
+    background: 'none',
+    border: 'none',
+    fontSize: '18px',
+    color: 'var(--color-text-muted, #64748b)',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '28px',
+    height: '28px',
+    borderRadius: '6px'
+  },
+  modalBody: {
+    padding: '18px 20px',
+    overflowY: 'auto',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    boxSizing: 'border-box'
+  },
+  modalForm: {
+    padding: '20px',
+    overflowY: 'auto',
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '14px',
+    boxSizing: 'border-box'
+  },
+  searchInput: {
+    width: '100%',
+    padding: '11px 14px',
+    paddingRight: '36px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border, #cbd5e1)',
+    backgroundColor: 'var(--color-bg-card, #f8fafc)',
+    color: 'var(--color-text-base, #0f172a)',
+    fontSize: '13px',
+    outline: 'none',
+    boxSizing: 'border-box'
+  },
+  clearBtn: {
+    position: 'absolute',
+    right: '10px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-text-muted)',
+    cursor: 'pointer',
+    fontSize: '14px'
+  },
+  filtersGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '10px',
+    marginBottom: '12px'
+  },
+  miniLabel: {
+    display: 'block',
+    fontSize: '11px',
+    fontWeight: '700',
+    color: 'var(--color-text-muted)',
+    marginBottom: '4px'
+  },
+  selectInput: {
+    width: '100%',
+    padding: '8px 10px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border, #cbd5e1)',
+    backgroundColor: 'var(--color-bg-card, #f8fafc)',
+    color: 'var(--color-text-base, #0f172a)',
+    fontSize: '12px',
+    outline: 'none'
+  },
+  counterBar: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '8px',
+    padding: '0 2px'
+  },
+  btnResetFilters: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--color-primary, #1B365D)',
+    fontSize: '11px',
+    fontWeight: '700',
+    cursor: 'pointer'
+  },
+  resultsList: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    overflowY: 'auto',
+    flex: 1,
+    maxHeight: '440px',
+    paddingRight: '4px'
+  },
+  resultCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '10px 14px',
+    borderRadius: '10px',
+    border: '1px solid var(--color-border, #e2e8f0)',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  avatarBox: {
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    overflow: 'hidden',
+    flexShrink: 0
+  },
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
+  },
+  avatarFallback: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'var(--color-primary, #1B365D)',
+    color: '#ffffff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '800',
+    fontSize: '16px'
+  },
+  empName: {
+    fontSize: '13px',
+    fontWeight: '700',
+    color: 'var(--color-text-base, #0f172a)',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+  },
+  nipBadge: {
+    fontSize: '11px',
+    fontWeight: '700',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    backgroundColor: 'rgba(27, 54, 93, 0.08)',
+    color: 'var(--color-primary, #1B365D)',
+    whiteSpace: 'nowrap'
+  },
+  empSub: {
+    fontSize: '11px',
+    color: 'var(--color-text-muted, #64748b)',
+    marginTop: '2px',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+  },
+  activePill: {
+    padding: '3px 8px',
+    borderRadius: '10px',
+    backgroundColor: '#ecfdf5',
+    color: '#059669',
+    fontSize: '11px',
+    fontWeight: '800',
+    whiteSpace: 'nowrap'
+  },
+  selectArrow: {
+    fontSize: '14px',
+    color: 'var(--color-text-muted)',
+    fontWeight: 'bold'
+  },
+  emptyState: {
+    padding: '32px 16px',
+    textAlign: 'center',
+    color: 'var(--color-text-muted)',
+    fontSize: '13px'
+  },
+  resizeHandle: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: '18px',
+    height: '18px',
+    cursor: 'se-resize',
+    color: '#94a3b8',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    userSelect: 'none',
+    zIndex: 10
   }
 };

@@ -12,6 +12,7 @@
   /* Cores de Fundo e Texto do Modo Claro (invertidas: base ↔ card) */
   --color-bg-base: #FFFFFF;
   --color-bg-card: #F8FAFC;
+  --color-bg-elevated: #FFFFFF;
   --color-bg-subtle: #F1F5F9;
   --color-bg-sidebar: #1E293B; /* Sidebar sempre escura para contraste institucional */
   --color-sidebar-text: #F8FAFC;
@@ -45,6 +46,7 @@
   /* Fundo e Superfícies Elevadas (Tons Grafite Suaves - Muito mais claros que o preto antigo) */
   --color-bg-base: #1C2433;      /* Fundo geral da aplicação: ardósia suave, sem preto pesado */
   --color-bg-card: #243044;      /* Cards e superfícies: tom elevado, acolhedor e nítido */
+  --color-bg-elevated: #243044;  /* Superfícies elevadas e modais */
   --color-bg-subtle: #2A3850;    /* Pequenos blocos e badges neutros */
   --color-bg-sidebar: #1A2130;   /* Sidebar elegante e integrada */
   --color-sidebar-text: #F8FAFC;
