@@ -944,16 +944,6 @@ button.evaluation-tab.active:focus,
 
 /* ── MOBILE (≤ 768px) ── */
 @media (max-width: 768px) {
-  /* Escala proporcional e zoom de 80% solicitado para não ficar muito grande no telemóvel */
-  html {
-    font-size: 82% !important;
-  }
-
-  body {
-    zoom: 0.82;
-    -moz-transform: scale(0.82);
-    -moz-transform-origin: top center;
-  }
 
   /* LOGIN */
   .login-page-root {

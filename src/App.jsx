@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import useTranslation from './hooks/useTranslation';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
 import PwaInstallBanner from './components/common/PwaInstallBanner';
+import ZoomController from './components/common/ZoomController';
 
 const DEFAULT_SETTINGS = {
   nome_instituicao: 'Serviço Nacional de Investigação Criminal',
@@ -204,6 +205,7 @@ export default function App() {
         }}
       />
       <PwaInstallBanner />
+      <ZoomController />
     </>
   );
 }
