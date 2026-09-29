@@ -100,12 +100,16 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const bgColor =
     bwMode === 'noite' ? '#1C2433' :
     bwMode === 'claro' ? '#F8FAFC' :
-    (settings.cor_principal && settings.cor_principal !== '#1B365D' ? settings.cor_principal : '#B71C1C');
+    (settings.cor_principal || '#B71C1C');
 
-  // Assegurar que o fundo do documento (html e body) cobre 100% da tela até o fundo com a cor do tema
+  // Assegurar que o fundo do documento (html e body) e o meta theme-color cobrem 100% da tela até o topo e fundo com a cor do tema
   React.useEffect(() => {
     document.documentElement.style.backgroundColor = bgColor;
     document.body.style.backgroundColor = bgColor;
+    let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', bgColor);
+    }
     return () => {
       document.documentElement.style.backgroundColor = '';
       document.body.style.backgroundColor = '';
@@ -571,7 +575,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <div style={s.sysTitleBold}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
-        <div style={{ marginTop: isMobile ? '12px' : '22px', marginBottom: isMobile ? '8px' : '12px' }}>
+        <div style={{ marginTop: isMobile ? 'calc(12px + 0.7cm)' : 'calc(22px + 0.7cm)', marginBottom: isMobile ? '8px' : '12px' }}>
           <p style={s.sysTitleSub}>
             SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
           </p>

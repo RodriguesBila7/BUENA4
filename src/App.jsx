@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS = {
   nome_instituicao: 'Serviço Nacional de Investigação Criminal',
   sigla: 'SERNIC',
   logotipo: null, // Nulo por padrão. Será exibido o logotipo padrão do sistema
-  cor_principal: '#1B365D',
+  cor_principal: '#B71C1C',
   cor_secundaria: '#2D3748',
   cor_destaque: '#FFFFFF',
   modo_tema: 'light',
@@ -19,9 +19,9 @@ const DEFAULT_SETTINGS = {
 };
 
 const CORES_PALETA = [
+  '#B71C1C', '#C62828', '#880E4F', '#4A148C', '#6A1B9A',
   '#1B365D', '#0D1B4B', '#1565C0', '#0277BD', '#1B5E20', '#00695C',
-  '#33691E', '#B71C1C', '#C62828', '#880E4F', '#4A148C', '#6A1B9A',
-  '#212121', '#37474F', '#BF360C', '#F57F17', '#004D40', '#01579B'
+  '#33691E', '#212121', '#37474F', '#BF360C', '#F57F17', '#004D40', '#01579B'
 ];
 
 import { useAuth } from './contexts/AuthContext';
@@ -39,6 +39,10 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // Migrar padrão anterior caso ainda seja o azul antigo #1B365D
+        if (parsed.cor_principal === '#1B365D') {
+          parsed.cor_principal = '#B71C1C';
+        }
         // Se a opção de cores aleatórias estiver ativa, sorteia uma cor ao iniciar/recarregar a página
         if (parsed.cores_aleatorias) {
           const randomCor = CORES_PALETA[Math.floor(Math.random() * CORES_PALETA.length)];
@@ -55,6 +59,7 @@ export default function App() {
 
   // Aplicar cores e tema globalmente sempre que houver alteração
   useEffect(() => {
+    const activeColor = settings.cor_principal || '#B71C1C';
     // Injeção de variáveis CSS customizadas
     if (settings.modo_tema === 'dark') {
       const isDefaultDarkNavy = !settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D';
@@ -63,13 +68,22 @@ export default function App() {
       document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria || '#3A4A66');
       document.documentElement.style.setProperty('--color-accent', settings.cor_destaque || '#FFFFFF');
     } else {
-      document.documentElement.style.setProperty('--color-primary', settings.cor_principal);
+      document.documentElement.style.setProperty('--color-primary', activeColor);
       document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria);
       document.documentElement.style.setProperty('--color-accent', settings.cor_destaque);
     }
     
     // Injeção do modo de tema no html/root
     document.documentElement.setAttribute('data-theme', settings.modo_tema);
+
+    // Sincronizar a meta tag theme-color para navegadores móveis (Safari, Chrome barra de navegação/status)
+    let metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (!metaTheme) {
+      metaTheme = document.createElement('meta');
+      metaTheme.name = 'theme-color';
+      document.head.appendChild(metaTheme);
+    }
+    metaTheme.setAttribute('content', activeColor);
   }, [settings]);
 
   // Função para actualizar e salvar configurações (simulação de UPDATE SQL)

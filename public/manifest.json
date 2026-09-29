@@ -5,8 +5,8 @@
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0D1B4B",
-  "theme_color": "#1B365D",
+  "background_color": "#B71C1C",
+  "theme_color": "#B71C1C",
   "icons": [
     {
       "src": "/logo-sernic-transparente.png",
