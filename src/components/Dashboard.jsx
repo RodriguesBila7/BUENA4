@@ -28,7 +28,6 @@ import { updateFallbackUserPhoto } from '../services/storageFallback';
 import { getCloudPhotos, saveCloudPhoto, removeCloudPhoto } from '../services/cloudSyncService';
 import { useAuth } from '../contexts/AuthContext';
 import EmployeePortal from './portal/EmployeePortal';
-import PwaInstallBanner from './common/PwaInstallBanner';
 
 const getDynamicGroupIcon = (groupName) => {
   switch(groupName) {
@@ -4170,9 +4169,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}
       />
-
-      {/* Banner de Instalação Mobile PWA */}
-      <PwaInstallBanner />
     </div>
   );
 }

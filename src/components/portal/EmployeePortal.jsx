@@ -13,6 +13,12 @@ import { SERNIC_LOGO_B64 } from '../../utils/sernic_logo_default';
 import ConfirmModal from '../ConfirmModal';
 import { formatDisplayDate } from '../../utils/vacationAlerts';
 import {
+  generateAgentAccessCode,
+  getActiveCodeForEmployee,
+  buildActivationMessage,
+  getStoredCodes
+} from '../../services/agentActivationService';
+import {
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -492,6 +498,386 @@ function PortalAbsenceModal({ isOpen, onClose, absenceForm, setAbsenceForm, onSu
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
+ * SUB-ABA: CENTRAL DE EMISSÃO E ENVIO DE CÓDIGOS DE ACESSO (PRIMEIRO LOGIN)
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+function PortalActivationCodesTab({ employees = [], orgData, onUpdateEmployee }) {
+  const [search, setSearch] = useState('');
+  const [dirFilter, setDirFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [activeCodes, setActiveCodes] = useState(() => getStoredCodes());
+  const [activeModalMessage, setActiveModalMessage] = useState(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const refreshCodes = () => {
+    setActiveCodes(getStoredCodes());
+  };
+
+  const handleGenerate = (emp, channel = 'SMS') => {
+    const res = generateAgentAccessCode(emp.id, channel);
+    refreshCodes();
+    const message = buildActivationMessage(emp, res.code);
+    setActiveModalMessage({
+      emp,
+      code: res.code,
+      channel,
+      message,
+      expiresAt: res.expiresAt
+    });
+  };
+
+  const handleGenerateBatch = () => {
+    let count = 0;
+    employees.forEach(emp => {
+      const existing = getActiveCodeForEmployee(emp.id);
+      if (!existing || existing.isExpired) {
+        generateAgentAccessCode(emp.id, 'SMS');
+        count++;
+      }
+    });
+    refreshCodes();
+    alert(`Sucesso: Foram gerados ${count} novos códigos de acesso provisórios.`);
+  };
+
+  const handleOpenChannel = (emp, channel) => {
+    const existing = getActiveCodeForEmployee(emp.id);
+    let code = existing?.code;
+    let expiresAt = existing?.expiresAt;
+    if (!code || existing.isExpired) {
+      const res = generateAgentAccessCode(emp.id, channel);
+      code = res.code;
+      expiresAt = res.expiresAt;
+      refreshCodes();
+    }
+    const message = buildActivationMessage(emp, code);
+    setActiveModalMessage({
+      emp,
+      code,
+      channel,
+      message,
+      expiresAt
+    });
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2500);
+  };
+
+  const filteredList = useMemo(() => {
+    return employees.filter(emp => {
+      if (emp.isActive === false || emp.status === 'Apagado') return false;
+
+      if (dirFilter !== 'ALL' && String(emp.directorateId) !== String(dirFilter)) {
+        return false;
+      }
+
+      const codeEntry = activeCodes[emp.id];
+      const hasActiveCode = codeEntry && !codeEntry.isUsed && new Date(codeEntry.expiresAt) > new Date();
+
+      if (statusFilter === 'ACTIVE_CODE' && !hasActiveCode) return false;
+      if (statusFilter === 'NO_CODE' && hasActiveCode) return false;
+      if (statusFilter === 'ACTIVATED' && !emp.hasActivatedAccount) return false;
+
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const mName = (emp.name || '').toLowerCase().includes(q);
+        const mNip = String(emp.nip || '').includes(q);
+        const mNuit = String(emp.nuit || '').includes(q);
+        const mPhone = String(emp.phone || '').includes(q);
+        return mName || mNip || mNuit || mPhone;
+      }
+      return true;
+    });
+  }, [employees, dirFilter, statusFilter, search, activeCodes]);
+
+  const stats = useMemo(() => {
+    const total = employees.length;
+    let withCode = 0;
+    let activated = 0;
+    employees.forEach(e => {
+      if (e.hasActivatedAccount) activated++;
+      const c = activeCodes[e.id];
+      if (c && !c.isUsed && new Date(c.expiresAt) > new Date()) withCode++;
+    });
+    return { total, withCode, activated, pending: Math.max(0, total - withCode - activated) };
+  }, [employees, activeCodes]);
+
+  return (
+    <div style={styles.sectionWrap}>
+      <div style={styles.headerBetween}>
+        <div>
+          <h3 style={styles.secTitle}>🔐 Central de Códigos de Acesso & Primeiro Login</h3>
+          <p style={styles.secDesc}>
+            Gere e envie códigos aleatórios de 6 dígitos para os funcionários ativarem o Portal do Agente via SMS, WhatsApp ou Email.
+          </p>
+        </div>
+        <button onClick={handleGenerateBatch} style={styles.btnActionPrimary}>
+          ⚡ Gerar Códigos em Lote
+        </button>
+      </div>
+
+      {/* CARDS DE RESUMO */}
+      <div style={styles.kpiGrid}>
+        <div style={styles.kpiCard}>
+          <span style={styles.kpiTitle}>Total de Agentes</span>
+          <span style={styles.kpiNum}>{stats.total}</span>
+          <span style={styles.kpiSub}>Efetivo Registado</span>
+        </div>
+        <div style={{ ...styles.kpiCard, borderTop: '3px solid #0284c7' }}>
+          <span style={styles.kpiTitle}>Com Código Ativo</span>
+          <span style={{ ...styles.kpiNum, color: '#0284c7' }}>{stats.withCode}</span>
+          <span style={styles.kpiSub}>Prontos para ativação</span>
+        </div>
+        <div style={{ ...styles.kpiCard, borderTop: '3px solid #059669' }}>
+          <span style={styles.kpiTitle}>Contas Ativadas</span>
+          <span style={{ ...styles.kpiNum, color: '#059669' }}>{stats.activated}</span>
+          <span style={styles.kpiSub}>Acesso concluído</span>
+        </div>
+        <div style={{ ...styles.kpiCard, borderTop: '3px solid #d97706' }}>
+          <span style={styles.kpiTitle}>Sem Código Emitido</span>
+          <span style={{ ...styles.kpiNum, color: '#d97706' }}>{stats.pending}</span>
+          <span style={styles.kpiSub}>Aguardam envio</span>
+        </div>
+      </div>
+
+      {/* FILTROS E PESQUISA */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', alignItems: 'center' }}>
+        <input
+          type="text"
+          placeholder="Pesquisar por Nome, NIP, NUIT ou Telefone..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          style={styles.fieldInput}
+        />
+
+        <select value={dirFilter} onChange={e => setDirFilter(e.target.value)} style={styles.fieldInput}>
+          <option value="ALL">Todas as Direcções</option>
+          {(orgData?.directorates || []).map(d => (
+            <option key={d.id} value={d.id}>{d.name}</option>
+          ))}
+        </select>
+
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={styles.fieldInput}>
+          <option value="ALL">Todos os Estados</option>
+          <option value="ACTIVE_CODE">Com Código Ativo</option>
+          <option value="ACTIVATED">Conta Já Ativada</option>
+          <option value="NO_CODE">Sem Código Emitido</option>
+        </select>
+      </div>
+
+      {/* TABELA DE AGENTES */}
+      <div style={{ overflowX: 'auto', backgroundColor: 'var(--color-bg-subtle)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+        <table className="premium-table" style={{ width: '100%', fontSize: '13px' }}>
+          <thead>
+            <tr style={{ backgroundColor: 'var(--color-primary, #1B365D)', color: '#fff' }}>
+              <th style={styles.th}>Agente / Investigador</th>
+              <th style={styles.th}>NUIT / NIP</th>
+              <th style={styles.th}>Contactos (SMS / Email)</th>
+              <th style={styles.th}>Estado do Código</th>
+              <th style={{ ...styles.th, textAlign: 'center' }}>Canais de Envio Oficial</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredList.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ padding: '30px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                  Nenhum funcionário encontrado com os filtros selecionados.
+                </td>
+              </tr>
+            ) : (
+              filteredList.map(emp => {
+                const codeEntry = activeCodes[emp.id];
+                const hasCode = codeEntry && !codeEntry.isUsed && new Date(codeEntry.expiresAt) > new Date();
+                const dir = (orgData?.directorates || []).find(d => String(d.id) === String(emp.directorateId));
+
+                return (
+                  <tr key={emp.id}>
+                    <td style={styles.td}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '13px', overflow: 'hidden' }}>
+                          {emp.photo ? (
+                            <img src={emp.photo} alt={emp.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            emp.name?.charAt(0).toUpperCase() || 'A'
+                          )}
+                        </div>
+                        <div>
+                          <strong>{emp.name}</strong>
+                          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                            {dir?.name || 'Direcção Geral'} • {emp.category || emp.cargo || 'Agente'}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td style={styles.td}>
+                      <div><strong>NUIT:</strong> {emp.nuit || '-'}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>NIP: {emp.nip || '-'}</div>
+                    </td>
+
+                    <td style={styles.td}>
+                      <div>📱 {emp.phone || '+258 N/D'}</div>
+                      <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>✉️ {emp.email || 'Sem email'}</div>
+                    </td>
+
+                    <td style={styles.td}>
+                      {emp.hasActivatedAccount ? (
+                        <span style={styles.statusPill('Concluído')}>✓ Conta Ativada</span>
+                      ) : hasCode ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ padding: '3px 8px', borderRadius: '6px', backgroundColor: 'rgba(2, 132, 199, 0.1)', color: '#0284c7', fontWeight: '800', letterSpacing: '2px', fontSize: '13px', display: 'inline-block', width: 'fit-content' }}>
+                            {codeEntry.code}
+                          </span>
+                          <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>
+                            Válido até: {new Date(codeEntry.expiresAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ padding: '3px 8px', borderRadius: '10px', backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '11px', fontWeight: '600' }}>
+                          Pendente de Emissão
+                        </span>
+                      )}
+                    </td>
+
+                    <td style={{ ...styles.td, textAlign: 'center' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={() => handleOpenChannel(emp, 'SMS')}
+                          style={{ padding: '5px 9px', borderRadius: '6px', border: '1px solid #cbd5e1', backgroundColor: '#fff', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}
+                          title="Enviar por SMS"
+                        >
+                          📱 SMS
+                        </button>
+                        <button
+                          onClick={() => handleOpenChannel(emp, 'WhatsApp')}
+                          style={{ padding: '5px 9px', borderRadius: '6px', border: '1px solid #86efac', backgroundColor: '#ecfdf5', color: '#047857', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}
+                          title="Enviar por WhatsApp"
+                        >
+                          💬 WhatsApp
+                        </button>
+                        <button
+                          onClick={() => handleOpenChannel(emp, 'Email')}
+                          style={{ padding: '5px 9px', borderRadius: '6px', border: '1px solid #bfdbfe', backgroundColor: '#eff6ff', color: '#1d4ed8', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}
+                          title="Enviar por Email"
+                        >
+                          ✉️ Email
+                        </button>
+                        <button
+                          onClick={() => handleGenerate(emp, 'Novo Código')}
+                          style={{ padding: '5px 9px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', cursor: 'pointer', fontSize: '11px', fontWeight: '700' }}
+                          title="Gerar Novo Código Aleatório"
+                        >
+                          🔄 Novo
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* MODAL DE PRÉ-VISUALIZAÇÃO E DISPARO DE MENSAGEM */}
+      {activeModalMessage && (
+        <div style={modalStyles.overlay} onClick={() => setActiveModalMessage(null)}>
+          <div style={{ ...modalStyles.modalBox, maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
+            <div style={modalStyles.modalHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>📡</span>
+                <h3 style={modalStyles.headerTitle}>Disparo de Código de Acesso</h3>
+              </div>
+              <button onClick={() => setActiveModalMessage(null)} style={modalStyles.closeBtn}>✕</button>
+            </div>
+
+            <div style={modalStyles.modalBody}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <strong>Destinatário:</strong> {activeModalMessage.emp.name} (NUIT: {activeModalMessage.emp.nuit})
+              </div>
+
+              <div style={{ padding: '14px', backgroundColor: 'rgba(27, 54, 93, 0.05)', borderRadius: '10px', border: '1px solid rgba(27, 54, 93, 0.15)', marginBottom: '14px' }}>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-primary)', marginBottom: '4px' }}>
+                  CÓDIGO GERADO:
+                </div>
+                <div style={{ fontSize: '26px', fontWeight: '900', letterSpacing: '4px', color: 'var(--color-primary)' }}>
+                  {activeModalMessage.code}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={modalStyles.miniLabel}>Mensagem Formatada Oficial SERNIC:</label>
+                <textarea
+                  readOnly
+                  rows={4}
+                  value={activeModalMessage.message}
+                  style={{ ...styles.fieldTextarea, width: '100%', fontSize: '13px', lineHeight: '1.4' }}
+                />
+              </div>
+
+              {copySuccess && (
+                <div style={{ padding: '8px 12px', backgroundColor: '#ecfdf5', color: '#059669', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', marginBottom: '12px', textAlign: 'center' }}>
+                  ✓ Mensagem copiada para a área de transferência!
+                </div>
+              )}
+
+              {/* BOTÕES DE ENVIO RÁPIDO */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {activeModalMessage.emp.phone && (
+                  <a
+                    href={`sms:${String(activeModalMessage.emp.phone).replace(/\D/g, '')}?body=${encodeURIComponent(activeModalMessage.message)}`}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <button type="button" style={{ ...styles.btnActionPrimary, width: '100%', backgroundColor: '#0284c7' }}>
+                      📱 Disparar SMS
+                    </button>
+                  </a>
+                )}
+
+                {activeModalMessage.emp.phone && (
+                  <a
+                    href={`https://wa.me/${String(activeModalMessage.emp.phone).replace(/\D/g, '').startsWith('258') ? String(activeModalMessage.emp.phone).replace(/\D/g, '') : `258${String(activeModalMessage.emp.phone).replace(/\D/g, '')}`}?text=${encodeURIComponent(activeModalMessage.message)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <button type="button" style={{ ...styles.btnActionPrimary, width: '100%', backgroundColor: '#059669' }}>
+                      💬 Abrir WhatsApp
+                    </button>
+                  </a>
+                )}
+
+                {activeModalMessage.emp.email && (
+                  <a
+                    href={`mailto:${activeModalMessage.emp.email}?subject=${encodeURIComponent('SERNIC DRH - Código de Ativação do Portal do Agente')}&body=${encodeURIComponent(activeModalMessage.message)}`}
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <button type="button" style={{ ...styles.btnActionPrimary, width: '100%', backgroundColor: '#1d4ed8' }}>
+                      ✉️ Enviar Email
+                    </button>
+                  </a>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(activeModalMessage.message)}
+                  style={{ ...styles.btnActionSecondary, width: '100%' }}
+                >
+                  📋 Copiar Texto
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
  * COMPONENTE PRINCIPAL: EMPLOYEE PORTAL (SERNIC)
  * ─────────────────────────────────────────────────────────────────────────────
  */
@@ -931,6 +1317,12 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
         >
           📜 Atos & Nomeações ({myAdminActs.length})
         </button>
+        <button 
+          className={`module-tab ${activePortalTab === 'activation_codes' ? 'active' : ''}`}
+          onClick={() => setActivePortalTab('activation_codes')}
+        >
+          🔐 Códigos de Acesso ({employees.length})
+        </button>
       </div>
 
       {/* ──────────────────────────────────────────────────────────────
@@ -1353,6 +1745,15 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
               </div>
             )}
           </div>
+        )}
+
+        {/* ABA 8: CÓDIGOS DE ACESSO (PRIMEIRO LOGIN SERNIC) */}
+        {activePortalTab === 'activation_codes' && (
+          <PortalActivationCodesTab
+            employees={employees}
+            orgData={orgData}
+            onUpdateEmployee={updateEmployee}
+          />
         )}
       </div>
 

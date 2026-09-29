@@ -3,21 +3,29 @@ import React, { useState, useEffect } from 'react';
 export default function PwaInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isIos, setIsIos] = useState(false);
-  const [showIosGuide, setShowIosGuide] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
   const [isDismissed, setIsDismissed] = useState(() => {
     return sessionStorage.getItem('sernic_pwa_dismissed') === 'true';
   });
 
   useEffect(() => {
-    // Detectar se já está instalado em modo standalone
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if (isStandalone) return;
+    // 1. Detectar se a aplicação já está instalada / em modo standalone
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || 
+                       window.navigator.standalone === true ||
+                       document.referrer.includes('android-app://');
+    setIsStandalone(standalone);
+    if (standalone) return;
 
-    // Detectar iOS Safari
-    const ua = window.navigator.userAgent.toLowerCase();
-    const isIosDevice = /iphone|ipad|ipod/.test(ua);
-    setIsIos(isIosDevice);
+    // 2. Detectar plataformas
+    const ua = (window.navigator.userAgent || '').toLowerCase();
+    const iosDevice = /iphone|ipad|ipod/.test(ua);
+    const androidDevice = /android/.test(ua);
+    setIsIos(iosDevice);
+    setIsAndroid(androidDevice);
 
+    // 3. Capturar o evento nativo do PWA no Android/Chrome
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -36,9 +44,10 @@ export default function PwaInstallBanner() {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
+        setIsDismissed(true);
       }
-    } else if (isIos) {
-      setShowIosGuide(true);
+    } else {
+      setShowGuide(true);
     }
   };
 
@@ -47,7 +56,8 @@ export default function PwaInstallBanner() {
     sessionStorage.setItem('sernic_pwa_dismissed', 'true');
   };
 
-  if (isDismissed || (!deferredPrompt && !isIos)) {
+  // Se já estiver em modo standalone ou fechado pelo utilizador nesta sessão
+  if (isStandalone || isDismissed) {
     return null;
   }
 
@@ -55,10 +65,10 @@ export default function PwaInstallBanner() {
     <>
       <div style={styles.banner}>
         <div style={styles.left}>
-          <span style={styles.icon}>📱</span>
+          <div style={styles.iconBadge}>📱</div>
           <div>
             <div style={styles.title}>Aplicativo Oficial SERNIC DRH</div>
-            <div style={styles.subtitle}>Instale no telemóvel para acesso rápido e direto</div>
+            <div style={styles.subtitle}>Instale no seu telemóvel para acesso rápido e seguro</div>
           </div>
         </div>
 
@@ -66,23 +76,48 @@ export default function PwaInstallBanner() {
           <button onClick={handleInstallClick} style={styles.btnInstall}>
             Instalar App
           </button>
-          <button onClick={handleDismiss} style={styles.btnClose}>
+          <button onClick={handleDismiss} style={styles.btnClose} title="Fechar aviso">
             ✕
           </button>
         </div>
       </div>
 
-      {/* GUIA IOS */}
-      {showIosGuide && (
-        <div style={styles.overlay} onClick={() => setShowIosGuide(false)}>
+      {/* GUIA PASSO-A-PASSO (PARA QUANDO O NAVEGADOR NÃO DISPARA INSTALAÇÃO AUTOMÁTICA) */}
+      {showGuide && (
+        <div style={styles.overlay} onClick={() => setShowGuide(false)}>
           <div style={styles.modal} onClick={e => e.stopPropagation()}>
-            <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary)' }}>📱 Como Instalar no iPhone / iPad</h4>
-            <ol style={{ paddingLeft: '20px', fontSize: '13px', lineHeight: '1.6', margin: '0 0 16px 0' }}>
-              <li>No Safari, toque no botão <strong>Partilhar</strong> (ícone com quadrado e seta para cima).</li>
-              <li>Deslize para baixo e toque em <strong>"Adicionar ao Ecrã Principal"</strong>.</li>
-              <li>Toque em <strong>"Adicionar"</strong> no canto superior direito.</li>
-            </ol>
-            <button onClick={() => setShowIosGuide(false)} style={styles.btnModalClose}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h3 style={{ margin: 0, color: 'var(--color-primary, #1B365D)', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📱 Como Instalar a Aplicação
+              </h3>
+              <button onClick={() => setShowGuide(false)} style={styles.btnGuideClose}>✕</button>
+            </div>
+
+            {isIos ? (
+              <div>
+                <p style={styles.guideIntro}>No seu iPhone / iPad (Safari):</p>
+                <ol style={styles.guideList}>
+                  <li>Toque no botão de <strong>Partilhar</strong> (ícone com quadrado e seta para cima <span style={{ fontSize: '16px' }}>⎋</span>).</li>
+                  <li>Deslize para baixo nas opções e toque em <strong>"Adicionar ao Ecrã Principal"</strong>.</li>
+                  <li>Toque em <strong>"Adicionar"</strong> no canto superior direito.</li>
+                </ol>
+              </div>
+            ) : (
+              <div>
+                <p style={styles.guideIntro}>No seu Telemóvel (Google Chrome ou Navegador):</p>
+                <ol style={styles.guideList}>
+                  <li>Toque no menu de <strong>Três Pontinhos (⋮)</strong> no canto superior direito do ecrã.</li>
+                  <li>Selecione a opção <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>.</li>
+                  <li>Confirme tocando em <strong>"Instalar"</strong>.</li>
+                </ol>
+              </div>
+            )}
+
+            <div style={{ backgroundColor: 'rgba(27, 54, 93, 0.06)', padding: '10px 14px', borderRadius: '8px', fontSize: '12px', color: 'var(--color-primary, #1B365D)', marginBottom: '14px' }}>
+              💡 O ícone oficial do SERNIC ficará disponível junto das suas outras aplicações no telemóvel.
+            </div>
+
+            <button onClick={() => setShowGuide(false)} style={styles.btnModalClose}>
               Entendi
             </button>
           </div>
@@ -102,53 +137,106 @@ const styles = {
     color: '#fff',
     padding: '10px 18px',
     borderRadius: '30px',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: '16px',
-    zIndex: 99999,
-    maxWidth: '92vw',
-    border: '1px solid rgba(255,255,255,0.2)'
+    zIndex: 999999,
+    width: '92%',
+    maxWidth: '480px',
+    border: '1px solid rgba(255,255,255,0.25)',
+    animation: 'slideUp 0.3s ease-out'
   },
-  left: { display: 'flex', alignItems: 'center', gap: '10px' },
-  icon: { fontSize: '20px' },
-  title: { fontSize: '13px', fontWeight: '700' },
-  subtitle: { fontSize: '11px', opacity: 0.85 },
-  right: { display: 'flex', alignItems: 'center', gap: '8px' },
+  left: { display: 'flex', alignItems: 'center', gap: '12px' },
+  iconBadge: {
+    width: '34px',
+    height: '34px',
+    borderRadius: '50%',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '18px',
+    flexShrink: 0
+  },
+  title: { fontSize: '13px', fontWeight: '800', letterSpacing: '0.2px' },
+  subtitle: { fontSize: '11px', opacity: 0.9, marginTop: '1px' },
+  right: { display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 },
   btnInstall: {
-    padding: '6px 14px',
+    padding: '7px 16px',
     backgroundColor: '#fff',
     color: 'var(--color-primary, #1B365D)',
     border: 'none',
     borderRadius: '20px',
     fontSize: '12px',
     fontWeight: '800',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+    whiteSpace: 'nowrap'
   },
   btnClose: {
     background: 'none',
     border: 'none',
     color: '#fff',
-    fontSize: '14px',
+    fontSize: '15px',
     cursor: 'pointer',
-    opacity: 0.7
+    opacity: 0.75,
+    padding: '4px'
   },
   overlay: {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 100000, padding: '20px'
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.72)',
+    backdropFilter: 'blur(4px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000000,
+    padding: '20px'
   },
   modal: {
-    backgroundColor: 'var(--color-bg-elevated, #fff)',
-    color: 'var(--color-text-base, #111)',
-    padding: '20px', borderRadius: '12px', maxWidth: '380px', width: '100%',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
+    backgroundColor: 'var(--color-bg-base, #ffffff)',
+    color: 'var(--color-text-base, #0f172a)',
+    padding: '22px',
+    borderRadius: '16px',
+    maxWidth: '420px',
+    width: '100%',
+    boxShadow: '0 25px 50px rgba(0,0,0,0.3)',
+    border: '1px solid var(--color-border, #cbd5e1)'
+  },
+  btnGuideClose: {
+    background: 'none',
+    border: 'none',
+    fontSize: '16px',
+    cursor: 'pointer',
+    color: 'var(--color-text-muted)'
+  },
+  guideIntro: {
+    fontSize: '13px',
+    fontWeight: '700',
+    color: 'var(--color-text-base)',
+    marginBottom: '10px'
+  },
+  guideList: {
+    paddingLeft: '20px',
+    fontSize: '13px',
+    lineHeight: '1.7',
+    color: 'var(--color-text-base)',
+    margin: '0 0 16px 0'
   },
   btnModalClose: {
-    width: '100%', padding: '10px',
+    width: '100%',
+    padding: '11px',
     backgroundColor: 'var(--color-primary, #1B365D)',
-    color: '#fff', border: 'none', borderRadius: '6px',
-    fontWeight: '700', cursor: 'pointer'
+    color: '#fff',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: '700',
+    fontSize: '13px',
+    cursor: 'pointer'
   }
 };

@@ -3,6 +3,8 @@ import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
 import useAuthData from '../hooks/useAuthData';
 import useSecuritySettings from '../hooks/useSecuritySettings';
 import useAuditLog from '../hooks/useAuditLog';
+import useEmployeeData from '../hooks/useEmployeeData';
+import AgentActivationWizard from './auth/AgentActivationWizard';
 
 /* ── Temas pré-definidos ── */
 const TEMAS = [
@@ -30,6 +32,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const { authenticate, addUser } = useAuthData();
   const { policies } = useSecuritySettings();
   const { logAction } = useAuditLog();
+  const { employees = [], updateEmployee } = useEmployeeData();
 
   const [username, setUsername]       = useState('');
   const [password, setPassword]       = useState('');
@@ -39,7 +42,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const [error, setError]             = useState('');
   const [successMsg, setSuccessMsg]   = useState('');
   const [isLoading, setIsLoading]     = useState(false);
-  const [view, setView]               = useState('login'); // 'login' | 'register' | 'recover'
+  const [view, setView]               = useState('login'); // 'login' | 'register' | 'recover' | 'agent_code'
   const [hoveredTema, setHoveredTema] = useState(null);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -570,6 +573,24 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               >
                 {t('login_request_access') || 'SOLICITAR ACESSO'}
               </button>
+              <button
+                type="button"
+                onClick={() => { clearCredentials(); setView('agent_code'); }}
+                style={{ 
+                  ...s.btnPrimary, 
+                  backgroundColor: '#1B365D', 
+                  marginTop: '12px', 
+                  textTransform: 'uppercase',
+                  boxShadow: '0 4px 14px rgba(27, 54, 93, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span>🔑</span>
+                <span>PRIMEIRO ACESSO COM CÓDIGO</span>
+              </button>
             </form>
           </>
         )}
@@ -619,6 +640,21 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <button type="button" onClick={() => { clearCredentials(); setView('login'); }} style={s.btnSecondary}>{t('recover_back')}</button>
             </form>
           </>
+        )}
+
+        {view === 'agent_code' && (
+          <AgentActivationWizard
+            employees={employees}
+            updateEmployee={updateEmployee}
+            onLoginSuccess={(userObj) => {
+              clearCredentials();
+              onLogin(userObj);
+            }}
+            onCancel={() => {
+              clearCredentials();
+              setView('login');
+            }}
+          />
         )}
       </div>
 
