@@ -327,13 +327,49 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     let unassignedCareer = { id: 'unassigned', name: 'Sem Carreira', count: 0, M: 0, F: 0, employees: [] };
 
     // 7. Distribution by Academic Level
+    const normalizeAcademicKey = (val) => {
+      if (!val) return 'Outro';
+      const s = String(val).trim().toLowerCase();
+      if (s.includes('doutor') || s.includes('phd')) return 'Doutoramento';
+      if (s.includes('mestr') || s.includes('master')) return 'Mestrado';
+      if (s.includes('licenc') || s.includes('superior') || s.includes('bacharel') || s.includes('gradua')) return 'Licenciatura';
+      if (s.includes('méd') || s.includes('med') || s.includes('técnic') || s.includes('tecnic') || s.includes('12')) return 'Ensino Médio';
+      if (s.includes('bás') || s.includes('bas') || s.includes('primár') || s.includes('primar') || s.includes('elementar')) return 'Ensino Básico';
+      return 'Outro';
+    };
+
+    const resolveEmpAcademicLevel = (emp) => {
+      // 1. Histórico Académico tem maior prioridade
+      if (Array.isArray(emp.academicHistory) && emp.academicHistory.length > 0) {
+        const order = { 'doutor': 5, 'phd': 5, 'mestr': 4, 'licenc': 3, 'superior': 3, 'bacharel': 3, 'gradua': 3, 'méd': 2, 'med': 2, 'técnic': 2, 'tecnic': 2, '12': 2, 'bás': 1, 'bas': 1, 'prim': 1 };
+        let highestFound = '';
+        let highestScore = -1;
+        emp.academicHistory.forEach(item => {
+          const lStr = (item.level || '').trim().toLowerCase();
+          for (const [key, score] of Object.entries(order)) {
+            if (lStr.includes(key)) {
+              if (score > highestScore) {
+                highestScore = score;
+                highestFound = item.level;
+              }
+              break;
+            }
+          }
+        });
+        if (highestFound) return normalizeAcademicKey(highestFound);
+      }
+      // 2. Propriedades diretas do empregado
+      const raw = emp.academic_level || emp.academicLevel || emp.academic_degree || emp.nivelAcademico || emp.education || '';
+      return normalizeAcademicKey(raw);
+    };
+
     const academicLevels = {
-      'Ensino Básico': 0,
-      'Ensino Médio': 0,
-      'Licenciatura': 0,
-      'Mestrado': 0,
-      'Doutoramento': 0,
-      'Outro': 0
+      'Doutoramento': { total: 0, M: 0, F: 0, icon: '🎓', color: '#7C3AED', label: 'Doutoramento' },
+      'Mestrado': { total: 0, M: 0, F: 0, icon: '📜', color: '#2563EB', label: 'Mestrado' },
+      'Licenciatura': { total: 0, M: 0, F: 0, icon: '🏛️', color: '#0D9488', label: 'Licenciatura' },
+      'Ensino Médio': { total: 0, M: 0, F: 0, icon: '📘', color: '#D97706', label: 'Ensino Médio' },
+      'Ensino Básico': { total: 0, M: 0, F: 0, icon: '📗', color: '#4B5563', label: 'Ensino Básico' },
+      'Outro': { total: 0, M: 0, F: 0, icon: '📋', color: '#6B7280', label: 'Outro' }
     };
 
     effectiveEmployees.forEach(emp => {
@@ -430,11 +466,15 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       }
 
       // Academic Level
-      const lvl = emp.academicLevel;
-      if (lvl && academicLevels[lvl] !== undefined) {
-        academicLevels[lvl]++;
-      } else if (lvl) {
-        academicLevels['Outro']++;
+      const lvlKey = resolveEmpAcademicLevel(emp);
+      if (academicLevels[lvlKey]) {
+        academicLevels[lvlKey].total++;
+        if (isM) academicLevels[lvlKey].M++;
+        if (isF) academicLevels[lvlKey].F++;
+      } else {
+        academicLevels['Outro'].total++;
+        if (isM) academicLevels['Outro'].M++;
+        if (isF) academicLevels['Outro'].F++;
       }
     });
 
@@ -487,6 +527,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       careers: activeCareers,
       unassignedCareer,
       academicLevels,
+      higherEdCount: (academicLevels['Doutoramento']?.total || 0) + (academicLevels['Mestrado']?.total || 0) + (academicLevels['Licenciatura']?.total || 0),
       isScopedToProvince: !isCentral,
       userDirectorateName: userDir?.name || 'Direcção Local'
     };
@@ -4355,14 +4396,180 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     </tbody>
                   </table>
 
-                  <h4 style={{ color: 'var(--color-primary)', marginBottom: '10px' }}>Nível Académico (Prioridade do Sistema)</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '30px' }}>
-                    {Object.entries(reportStats.academicLevels).map(([lvl, count]) => (
-                      <div key={lvl} style={{ border: '1px solid var(--color-border)', padding: '10px', borderRadius: '6px', textAlign: 'center', backgroundColor: 'var(--color-bg-base)' }}>
-                        <div style={{ fontSize: '18px', fontWeight: 'bold', color: 'var(--color-primary)' }}>{count}</div>
-                        <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{lvl}</div>
+                  {/* SECÇÃO NÍVEL ACADÉMICO / QUALIFICAÇÃO DO EFETIVO */}
+                  <div style={{
+                    marginTop: '25px',
+                    marginBottom: '30px',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    backgroundColor: 'var(--color-bg-card)',
+                    border: '1px solid var(--color-border)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.04)'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '12px',
+                      marginBottom: '18px',
+                      paddingBottom: '12px',
+                      borderBottom: '1px solid var(--color-border)'
+                    }}>
+                      <div>
+                        <h4 style={{
+                          color: 'var(--color-primary)',
+                          margin: 0,
+                          fontSize: '17px',
+                          fontWeight: '800',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px'
+                        }}>
+                          <span style={{ fontSize: '20px' }}>🎓</span>
+                          Nível Académico (Qualificação do Efetivo)
+                        </h4>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                          Prioridade do Sistema • Grau de escolaridade e formação do quadro
+                        </p>
                       </div>
-                    ))}
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 14px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          backgroundColor: 'rgba(13, 148, 136, 0.12)',
+                          color: '#0D9488',
+                          border: '1px solid rgba(13, 148, 136, 0.3)'
+                        }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0D9488' }}></span>
+                          Ensino Superior & Pós-Graduação: {reportStats.higherEdCount || 0} ({reportStats.total > 0 ? Math.round(((reportStats.higherEdCount || 0) / reportStats.total) * 100) : 0}%)
+                        </div>
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '6px 14px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                          color: 'var(--color-primary)',
+                          border: '1px solid var(--color-border)'
+                        }}>
+                          Total Efetivo: <strong>{reportStats.total}</strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                      gap: '14px'
+                    }}>
+                      {Object.entries(reportStats.academicLevels).map(([lvl, data]) => {
+                        const count = typeof data === 'number' ? data : (data?.total || 0);
+                        const mCount = typeof data === 'object' ? (data?.M || 0) : 0;
+                        const fCount = typeof data === 'object' ? (data?.F || 0) : 0;
+                        const icon = typeof data === 'object' && data?.icon ? data.icon : '🎓';
+                        const themeColor = typeof data === 'object' && data?.color ? data.color : 'var(--color-primary)';
+                        const pct = reportStats.total > 0 ? Math.round((count / reportStats.total) * 100) : 0;
+
+                        return (
+                          <div
+                            key={lvl}
+                            style={{
+                              border: '1px solid var(--color-border)',
+                              borderTop: `4px solid ${themeColor}`,
+                              padding: '16px 14px',
+                              borderRadius: '10px',
+                              textAlign: 'center',
+                              backgroundColor: 'var(--color-bg-base)',
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              position: 'relative',
+                              overflow: 'hidden'
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                              <span style={{ fontSize: '18px' }}>{icon}</span>
+                              <span style={{
+                                fontSize: '11px',
+                                fontWeight: '700',
+                                padding: '2px 8px',
+                                borderRadius: '12px',
+                                backgroundColor: count > 0 ? `${themeColor}18` : 'rgba(156, 163, 175, 0.15)',
+                                color: count > 0 ? themeColor : 'var(--color-text-muted)',
+                                border: count > 0 ? `1px solid ${themeColor}33` : '1px solid transparent'
+                              }}>
+                                {pct}%
+                              </span>
+                            </div>
+
+                            <div style={{
+                              fontSize: '34px',
+                              fontWeight: '900',
+                              color: count > 0 ? themeColor : 'var(--color-text-muted)',
+                              lineHeight: '1.1',
+                              margin: '4px 0 2px 0',
+                              letterSpacing: '-0.02em'
+                            }}>
+                              {count}
+                            </div>
+
+                            <div style={{
+                              fontSize: '13px',
+                              fontWeight: '700',
+                              color: 'var(--color-text-main)',
+                              marginBottom: '8px',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis'
+                            }} title={lvl}>
+                              {lvl}
+                            </div>
+
+                            {/* Barra de progresso visual */}
+                            <div style={{
+                              width: '100%',
+                              height: '4px',
+                              backgroundColor: 'var(--color-border)',
+                              borderRadius: '2px',
+                              overflow: 'hidden',
+                              marginBottom: '8px'
+                            }}>
+                              <div style={{
+                                width: `${pct}%`,
+                                height: '100%',
+                                backgroundColor: themeColor,
+                                borderRadius: '2px',
+                                transition: 'width 0.3s ease'
+                              }} />
+                            </div>
+
+                            <div style={{
+                              fontSize: '11px',
+                              color: 'var(--color-text-muted)',
+                              display: 'flex',
+                              justifyContent: 'center',
+                              gap: '8px',
+                              fontWeight: '600'
+                            }}>
+                              <span title="Homens">👨 {mCount}</span>
+                              <span>•</span>
+                              <span title="Mulheres">👩 {fCount}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 

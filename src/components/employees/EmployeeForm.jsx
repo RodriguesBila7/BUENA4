@@ -29,6 +29,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
         setFormData({
           ...emp,
           unitType: emp.unitType || 'normal',
+          academicLevel: emp.academicLevel || emp.academic_level || '',
           academicHistory: emp.academicHistory || []
         });
         const procs = getProcessesByEmployee(emp.id);
@@ -228,12 +229,18 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
     }
 
     // Calc highest academic level before saving
-    let highestLevel = formData.academicLevel || '';
+    let highestLevel = formData.academicLevel || formData.academic_level || '';
     if (formData.academicHistory && formData.academicHistory.length > 0) {
-      const levelOrder = { 'Básico': 0, 'Médio': 1, 'Superior (Licenciatura)': 2, 'Mestrado': 3, 'Doutoramento': 4 };
+      const levelOrder = { 
+        'Básico': 0, 'Basico': 0, 'Ensino Básico': 0,
+        'Médio': 1, 'Medio': 1, 'Ensino Médio': 1,
+        'Superior (Licenciatura)': 2, 'Licenciatura': 2, 'Superior': 2,
+        'Mestrado': 3, 
+        'Doutoramento': 4, 'Doutorado': 4
+      };
       let maxLevelIdx = -1;
       formData.academicHistory.forEach(item => {
-        const idx = levelOrder[item.level] || -1;
+        const idx = levelOrder[item.level] !== undefined ? levelOrder[item.level] : -1;
         if (idx > maxLevelIdx) {
           maxLevelIdx = idx;
           highestLevel = item.level;
@@ -244,6 +251,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
     const payload = {
       ...formData,
       academicLevel: highestLevel,
+      academic_level: highestLevel,
       // Se necessário manter compatibilidade
       academicDocs: {}
     };
