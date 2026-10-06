@@ -7,6 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { mozambiqueStructure } from '../utils/mozambiqueDistricts';
 import { getFallbackOrg, saveFallbackOrg } from '../services/storageFallback';
+import { safeApiCall } from '../services/apiClient';
 
 // ─── ID GENERATOR ─────────────────────────────────────────────────────────────
 const _id = () => `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 6)}`;
@@ -48,16 +49,10 @@ function notifyAll(data) {
 
 // ─── API HELPERS ──────────────────────────────────────────────────────────────
 async function api(method, path, body) {
-  const res = await fetch(`/api/org${path}`, {
+  return safeApiCall(`/api/org${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? body : undefined,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  return res.json();
 }
 
 // ─── CARREGAR DADOS DO SERVIDOR ───────────────────────────────────────────────

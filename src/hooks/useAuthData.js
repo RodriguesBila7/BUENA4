@@ -25,26 +25,13 @@ function notifyAll(users, roles) {
   _listeners.forEach(fn => fn(users, roles));
 }
 
+import { safeApiCall, isVercelHost } from '../services/apiClient';
+
 async function api(method, path, body) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 3500);
-  try {
-    const res = await fetch(`/api/auth${path}`, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-      signal: controller.signal
-    });
-    clearTimeout(timer);
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(err.error || res.statusText);
-    }
-    return res.json();
-  } catch (err) {
-    clearTimeout(timer);
-    throw err;
-  }
+  return safeApiCall(`/api/auth${path}`, {
+    method,
+    body: body !== undefined ? body : undefined
+  });
 }
 
 async function fetchData() {
@@ -139,6 +126,9 @@ export default function useAuthData() {
   }, []);
 
   const authenticate = useCallback(async (username, password, policies) => {
+    if (isVercelHost()) {
+      return authenticateOffline(username, password);
+    }
     try {
       const res = await api('POST', '/login', { username, password });
       return { success: true, user: { ...res.user, roleDetails: res.user.permissions ? { permissions: res.user.permissions } : null } };

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { getFallbackAdminActs, saveFallbackAdminActs } from '../services/storageFallback';
+import { safeApiCall } from '../services/apiClient';
 
 async function api(method, path, body) {
   let isSecondary = false;
@@ -20,20 +21,14 @@ async function api(method, path, body) {
     }
   } catch (e) {}
 
-  const res = await fetch(`/api/admin-acts${path}`, {
+  return safeApiCall(`/api/admin-acts${path}`, {
     method,
     headers: { 
-      'Content-Type': 'application/json',
       'X-Is-Secondary': isSecondary ? 'true' : 'false',
       'X-User-Role': userRole
     },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? body : undefined,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  return res.json();
 }
 
 export default function useAdminActsData() {

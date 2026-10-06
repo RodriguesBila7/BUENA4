@@ -1,0 +1,24 @@
+{
+  "framework": "vite",
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/sync",
+      "destination": "/api/sync.js"
+    },
+    {
+      "source": "/api/sync-photo",
+      "destination": "/api/sync-photo.js"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/sync.js"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

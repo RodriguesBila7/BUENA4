@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getFallbackDisciplinary, saveFallbackDisciplinary } from '../services/storageFallback';
+import { safeApiCall } from '../services/apiClient';
 
 let _cache = null;
 const _listeners = new Set();
@@ -10,16 +11,10 @@ function notifyAll(data) {
 }
 
 async function api(method, path, body) {
-  const res = await fetch(`/api/disciplinary${path}`, {
+  return safeApiCall(`/api/disciplinary${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? body : undefined,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  return res.json();
 }
 
 async function fetchData() {

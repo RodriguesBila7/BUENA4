@@ -12,6 +12,11 @@ const DB_PATH = path.resolve(__dirname, '..', 'server', 'sernic.db');
 const JSON_PATH = path.resolve(__dirname, '..', 'src', 'data', 'initialDbData.json');
 
 function syncDatabase() {
+  if (process.env.VERCEL) {
+    console.log('[sync_db] Ambiente Vercel detectado. A utilizar ficheiro initialDbData.json pré-gerado.');
+    return;
+  }
+
   if (!fs.existsSync(DB_PATH)) {
     console.warn(`[sync_db] Ficheiro SQLite não encontrado em: ${DB_PATH}. A ignorar sincronização.`);
     return;

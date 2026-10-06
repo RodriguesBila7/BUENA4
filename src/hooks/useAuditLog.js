@@ -1,18 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getFallbackAudit, saveFallbackAudit } from '../services/storageFallback';
+import { safeApiCall } from '../services/apiClient';
 
 async function api(method, path, body) {
-  const res = await fetch(`/api/audit${path}`, {
+  return safeApiCall(`/api/audit${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? body : undefined,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  return res.json();
 }
 
 function safeString(val, fallback = '') {

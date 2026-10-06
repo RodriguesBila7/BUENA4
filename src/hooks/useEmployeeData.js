@@ -18,17 +18,13 @@ function notifyAll(data) {
   _listeners.forEach(fn => fn(data));
 }
 
+import { safeApiCall } from '../services/apiClient';
+
 async function apiFetch(method, path, body) {
-  const res = await fetch(`/api/employees${path}`, {
+  return safeApiCall(`/api/employees${path}`, {
     method,
-    headers: { 'Content-Type': 'application/json' },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? body : undefined
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || res.statusText);
-  }
-  return res.json();
 }
 
 async function fetchEmployees() {

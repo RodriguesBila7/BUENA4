@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { EVALUATION_STATES } from '../utils/evaluationRules';
 import { getFallbackEvaluations, saveFallbackEvaluations } from '../services/storageFallback';
+import { safeApiCall } from '../services/apiClient';
 
 function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -20,16 +21,11 @@ function getAuthHeaders() {
 }
 
 async function api(method, path, body) {
-  const res = await fetch(`/api/evaluations${path}`, {
+  return safeApiCall(`/api/evaluations${path}`, {
     method,
     headers: getAuthHeaders(),
-    body: body !== undefined ? JSON.stringify(body) : undefined,
+    body: body !== undefined ? body : undefined,
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || err.message || res.statusText);
-  }
-  return res.json();
 }
 
 export default function useEvaluationData() {

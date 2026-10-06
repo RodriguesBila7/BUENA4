@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getFallbackActTypes, saveFallbackActTypes } from '../services/storageFallback';
+import { safeApiCall } from '../services/apiClient';
 
 export default function useActTypesData() {
   const [actTypes, setActTypes] = useState(() => getFallbackActTypes());
@@ -8,9 +9,8 @@ export default function useActTypesData() {
   const fetchActTypes = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/act-types');
-      if (res.ok) {
-        const data = await res.json();
+      const data = await safeApiCall('/api/act-types');
+      if (Array.isArray(data)) {
         setActTypes(data);
         saveFallbackActTypes(data);
       } else {
@@ -30,16 +30,12 @@ export default function useActTypesData() {
 
   const addActType = async (actTypeData) => {
     try {
-      const res = await fetch('/api/act-types', {
+      await safeApiCall('/api/act-types', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(actTypeData)
+        body: actTypeData
       });
-      if (res.ok) {
-        await fetchActTypes();
-        return { success: true };
-      }
-      throw new Error('Falha ao gravar tipo de acto');
+      await fetchActTypes();
+      return { success: true };
     } catch (e) {
       const current = getFallbackActTypes();
       const id = 'act_type_' + Date.now();
@@ -52,16 +48,12 @@ export default function useActTypesData() {
 
   const updateActType = async (id, actTypeData) => {
     try {
-      const res = await fetch(`/api/act-types/${id}`, {
+      await safeApiCall(`/api/act-types/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(actTypeData)
+        body: actTypeData
       });
-      if (res.ok) {
-        await fetchActTypes();
-        return { success: true };
-      }
-      throw new Error('Falha ao atualizar tipo de acto');
+      await fetchActTypes();
+      return { success: true };
     } catch (e) {
       const current = getFallbackActTypes();
       const updated = current.map(item => item.id === id ? { ...item, ...actTypeData } : item);
@@ -73,12 +65,9 @@ export default function useActTypesData() {
 
   const deleteActType = async (id) => {
     try {
-      const res = await fetch(`/api/act-types/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        await fetchActTypes();
-        return { success: true };
-      }
-      throw new Error('Falha ao eliminar tipo de acto');
+      await safeApiCall(`/api/act-types/${id}`, { method: 'DELETE' });
+      await fetchActTypes();
+      return { success: true };
     } catch (e) {
       const current = getFallbackActTypes();
       const updated = current.filter(item => item.id !== id);
