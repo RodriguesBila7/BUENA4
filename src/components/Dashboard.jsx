@@ -2029,7 +2029,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           {activeTab === 'evaluations' && (
             <div className="animate-fade-in" style={{...styles.tabContainer, padding: 0}}>
               <PermissionGuard module="Avaliação de Desempenho" action="Visualizar" showLockCard={true}>
-                <EvaluationManager user={user} />
+                <EvaluationManager 
+                  user={user} 
+                  orgData={{ data: orgData }} 
+                  employeesData={{ employees }} 
+                />
               </PermissionGuard>
             </div>
           )}
