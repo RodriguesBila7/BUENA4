@@ -6,7 +6,7 @@ import { getClassification } from '../../utils/evaluationRules';
 import { filterByProvincialScope } from '../../utils/scopeUtils';
 import ConfirmModal from '../ConfirmModal';
 
-export default function EvaluationForm({ user, onSave }) {
+export default function EvaluationForm({ user, onSave, onCancel }) {
   const { employees = [] } = useEmployeeData();
   const { data: orgData } = useOrgData();
   const { addEvaluation } = useEvaluationData();
@@ -76,7 +76,7 @@ export default function EvaluationForm({ user, onSave }) {
       );
     }
     
-    return result.slice(0, 15);
+    return result.slice(0, 20);
   }, [searchTerm, filters, employees, user, orgData]);
 
   const selectedEmp = useMemo(() => (employees || []).find(e => e && e.id === selectedEmpId), [employees, selectedEmpId]);
@@ -114,12 +114,12 @@ export default function EvaluationForm({ user, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedEmpId || !selectedEmp) {
-      setAlertModal({ isOpen: true, message: 'Por favor, selecione um funcionário da lista.' });
+      setAlertModal({ isOpen: true, message: 'Por favor, selecione um funcionário da lista para avaliar.' });
       return;
     }
     
     if (formData.score === '' || isNaN(parseFloat(formData.score)) || parseFloat(formData.score) < 0 || parseFloat(formData.score) > 20) {
-      setAlertModal({ isOpen: true, message: 'A pontuação deve ser um número válido entre 0 e 20.' });
+      setAlertModal({ isOpen: true, message: 'A pontuação deve ser um número válido compreendido entre 0 e 20.' });
       return;
     }
 
@@ -147,63 +147,116 @@ export default function EvaluationForm({ user, onSave }) {
         
         {/* Seção 1: Seleção do Funcionário */}
         <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>1. Identificação do Funcionário</h3>
-          <div style={styles.searchBox}>
-            <div style={styles.filtersGrid}>
-              <select name="directorateId" value={filters.directorateId} onChange={handleFilterChange} style={styles.filterSelect}>
+          <div style={styles.sectionHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>👤</span>
+              <h4 style={styles.sectionTitle}>1. Identificação do Funcionário</h4>
+            </div>
+            {selectedEmp && (
+              <span style={styles.selectedBadge}>
+                ✓ Funcionário Selecionado: <strong>{selectedEmp.name}</strong> ({selectedEmp.nip})
+              </span>
+            )}
+          </div>
+
+          <div style={styles.filterGrid}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Direcção / Unidade Orgânica</label>
+              <select name="directorateId" value={filters.directorateId} onChange={handleFilterChange} style={styles.select}>
                 <option value="">Todas as Direcções</option>
                 {(orgData?.directorates || []).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
-              
-              <select name="departmentId" value={filters.departmentId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.directorateId}>
-                <option value="">Todos os Departamentos / Distritos</option>
+            </div>
+            
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Departamento / Distrito</label>
+              <select name="departmentId" value={filters.departmentId} onChange={handleFilterChange} style={styles.select} disabled={!filters.directorateId}>
+                <option value="">{filters.directorateId ? 'Todos os Departamentos' : 'Selecione a Direcção primeiro'}</option>
                 {(orgData?.departments || []).filter(d => d.directorateId === filters.directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
+            </div>
 
-              <select name="divisionId" value={filters.divisionId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.departmentId}>
-                <option value="">Todas as Repartições</option>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Repartição / Repartição Central</label>
+              <select name="divisionId" value={filters.divisionId} onChange={handleFilterChange} style={styles.select} disabled={!filters.departmentId}>
+                <option value="">{filters.departmentId ? 'Todas as Repartições' : 'Selecione o Departamento primeiro'}</option>
                 {(orgData?.divisions || []).filter(d => d.departmentId === filters.departmentId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
+            </div>
 
-              <select name="sectionId" value={filters.sectionId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.departmentId && !filters.divisionId}>
-                <option value="">Todas as Secções</option>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Secção</label>
+              <select name="sectionId" value={filters.sectionId} onChange={handleFilterChange} style={styles.select} disabled={!filters.departmentId && !filters.divisionId}>
+                <option value="">{filters.departmentId || filters.divisionId ? 'Todas as Secções' : 'Selecione o Depto ou Repartição'}</option>
                 {(orgData?.sections || []).filter(s => filters.divisionId ? s.divisionId === filters.divisionId : s.departmentId === filters.departmentId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
+            </div>
 
-              <select name="careerId" value={filters.careerId} onChange={handleFilterChange} style={styles.filterSelect}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Carreira Profissional</label>
+              <select name="careerId" value={filters.careerId} onChange={handleFilterChange} style={styles.select}>
                 <option value="">Todas as Carreiras</option>
                 {(orgData?.careers || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
+            </div>
 
-              <select name="categoryId" value={filters.categoryId} onChange={handleFilterChange} style={styles.filterSelect} disabled={!filters.careerId}>
-                <option value="">Todas as Categorias</option>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Categoria</label>
+              <select name="categoryId" value={filters.categoryId} onChange={handleFilterChange} style={styles.select} disabled={!filters.careerId}>
+                <option value="">{filters.careerId ? 'Todas as Categorias' : 'Selecione a Carreira primeiro'}</option>
                 {(orgData?.categories || []).filter(c => c.careerId === filters.careerId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
+          </div>
 
+          <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={styles.label}>Pesquisa por NUIT ou Nome</label>
             <input 
               type="text" 
-              placeholder="Pesquisar por NUIT ou Nome..." 
+              placeholder="Digite o NUIT ou Nome do funcionário..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{...styles.input, marginTop: '10px'}}
+              style={styles.input}
             />
-            <div style={styles.empList}>
-              {filteredEmployees.map(emp => (
+          </div>
+
+          <div style={styles.resultsBar}>
+            <span style={styles.resultsBadge}>
+              👥 {filteredEmployees.length} funcionário(s) na listagem (clique para selecionar)
+            </span>
+          </div>
+
+          <div style={styles.empList}>
+            {filteredEmployees.map(emp => {
+              const isSelected = selectedEmpId === emp.id;
+              return (
                 <div 
                   key={emp.id} 
-                  style={{...styles.empItem, ...(selectedEmpId === emp.id ? styles.empItemSelected : {})}}
+                  style={{
+                    ...styles.empItem,
+                    ...(isSelected ? styles.empItemSelected : {})
+                  }}
                   onClick={() => setSelectedEmpId(emp.id)}
                 >
-                  <strong>{emp.nip}</strong> - {emp.name}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ 
+                      fontWeight: '700', 
+                      minWidth: '70px',
+                      color: isSelected ? '#ffffff' : 'var(--color-primary)' 
+                    }}>
+                      {emp.nip}
+                    </span>
+                    <span style={{ fontWeight: '500' }}>{emp.name}</span>
+                  </div>
+                  {isSelected && <span style={{ fontWeight: '700', fontSize: '13px' }}>✓ SELECIONADO</span>}
                 </div>
-              ))}
-              {filteredEmployees.length === 0 && (
-                <div style={{ padding: '15px', color: 'var(--color-text-muted)', fontSize: '13px', textAlign: 'center' }}>
-                  Nenhum funcionário encontrado no seu âmbito territorial ou critérios selecionados.
-                </div>
-              )}
-            </div>
+              );
+            })}
+            {filteredEmployees.length === 0 && (
+              <div style={{ padding: '20px', color: 'var(--color-text-muted)', fontSize: '13px', textAlign: 'center' }}>
+                Nenhum funcionário encontrado nos critérios ou pesquisa selecionada.
+              </div>
+            )}
           </div>
 
           {selectedEmp && (() => {
@@ -229,25 +282,32 @@ export default function EvaluationForm({ user, onSave }) {
                 </div>
                 <div style={styles.previewGrid}>
                   <div style={styles.previewItem}>
-                    <strong>Nome Completo:</strong> {selectedEmp.name}
+                    <span style={styles.previewLabel}>Nome Completo:</span>
+                    <span style={styles.previewValue}>{selectedEmp.name}</span>
                   </div>
                   <div style={styles.previewItem}>
-                    <strong>Nº Mecanográfico (NUIT):</strong> {selectedEmp.nip}
+                    <span style={styles.previewLabel}>Nº Mecanográfico (NUIT):</span>
+                    <span style={styles.previewValue}>{selectedEmp.nip}</span>
                   </div>
                   <div style={styles.previewItem}>
-                    <strong>Carreira:</strong> {getName(orgData?.careers || [], selectedEmp.careerId)}
+                    <span style={styles.previewLabel}>Carreira:</span>
+                    <span style={styles.previewValue}>{getName(orgData?.careers || [], selectedEmp.careerId)}</span>
                   </div>
                   <div style={styles.previewItem}>
-                    <strong>Categoria:</strong> {getName(orgData?.categories || [], selectedEmp.categoryId)}
+                    <span style={styles.previewLabel}>Categoria:</span>
+                    <span style={styles.previewValue}>{getName(orgData?.categories || [], selectedEmp.categoryId)}</span>
                   </div>
                   <div style={styles.previewItem}>
-                    <strong>Cargo:</strong> {selectedEmp.role || 'Nenhum'}
+                    <span style={styles.previewLabel}>Cargo:</span>
+                    <span style={styles.previewValue}>{selectedEmp.role || 'Nenhum'}</span>
                   </div>
                   <div style={styles.previewItem}>
-                    <strong>Unidade Orgânica:</strong> {getName(orgData?.directorates || [], selectedEmp.directorateId)}
+                    <span style={styles.previewLabel}>Unidade Orgânica:</span>
+                    <span style={styles.previewValue}>{getName(orgData?.directorates || [], selectedEmp.directorateId)}</span>
                   </div>
                   <div style={styles.previewItem}>
-                    <strong>Tempo de Serviço:</strong> {timeOfService}
+                    <span style={styles.previewLabel}>Tempo de Serviço:</span>
+                    <span style={styles.previewValue}>{timeOfService}</span>
                   </div>
                 </div>
               </div>
@@ -257,8 +317,14 @@ export default function EvaluationForm({ user, onSave }) {
 
         {/* Seção 2: Dados da Avaliação */}
         <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>2. Dados da Avaliação</h3>
-          <div style={styles.grid}>
+          <div style={styles.sectionHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>📋</span>
+              <h4 style={styles.sectionTitle}>2. Dados da Avaliação</h4>
+            </div>
+          </div>
+
+          <div style={styles.filterGrid}>
             <div style={styles.formGroup}>
               <label style={styles.label}>Ano da Avaliação *</label>
               <input type="number" name="year" value={formData.year} onChange={handleChange} style={styles.input} required min="2000" max="2100" />
@@ -281,42 +347,85 @@ export default function EvaluationForm({ user, onSave }) {
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Nº do Despacho</label>
-              <input type="text" name="dispatchNumber" value={formData.dispatchNumber} onChange={handleChange} style={styles.input} />
+              <input type="text" name="dispatchNumber" value={formData.dispatchNumber} onChange={handleChange} style={styles.input} placeholder="Ex: DP-042/2026" />
             </div>
-            <div style={{...styles.formGroup, gridColumn: '1 / -1'}}>
-              <label style={styles.label}>Observações</label>
-              <textarea name="observations" value={formData.observations} onChange={handleChange} style={{...styles.input, minHeight:'60px'}}></textarea>
-            </div>
+          </div>
+
+          <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label style={styles.label}>Observações</label>
+            <textarea 
+              name="observations" 
+              value={formData.observations} 
+              onChange={handleChange} 
+              placeholder="Notas adicionais sobre a avaliação..."
+              style={{ ...styles.input, minHeight: '70px', resize: 'vertical' }}
+            />
           </div>
         </div>
 
         {/* Seção 3: Pontuação e Ficheiro */}
         <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>3. Classificação e Anexos</h3>
-          <div style={styles.grid}>
+          <div style={styles.sectionHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '18px' }}>⚖️</span>
+              <h4 style={styles.sectionTitle}>3. Classificação e Anexos</h4>
+            </div>
+          </div>
+
+          <div style={styles.filterGrid}>
             <div style={styles.formGroup}>
               <label style={styles.label}>Pontuação (0 a 20) *</label>
-              <input type="number" name="score" value={formData.score} onChange={handleChange} style={styles.input} required min="0" max="20" step="0.1" />
+              <input 
+                type="number" 
+                name="score" 
+                value={formData.score} 
+                onChange={handleChange} 
+                style={styles.input} 
+                required 
+                min="0" 
+                max="20" 
+                step="0.1" 
+                placeholder="Ex: 15.5"
+              />
             </div>
+
             <div style={styles.formGroup}>
               <label style={styles.label}>Classificação Calculada</label>
               <div style={{
-                padding: '10px 14px', borderRadius: '8px', fontWeight: '700', fontSize: '14px',
-                backgroundColor: classification.hexLight, color: classification.hexDark, border: `1px solid ${classification.hexBadge}`
+                padding: '9px 14px',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: classification.hexLight,
+                color: classification.hexDark,
+                border: `1px solid ${classification.hexBadge}`,
+                minHeight: '38px'
               }}>
                 {classification.label}
               </div>
             </div>
-            <div style={{...styles.formGroup, gridColumn: '1 / -1'}}>
+
+            <div style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
               <label style={styles.label}>Declaração da Avaliação (PDF max 500KB)</label>
               <input type="file" accept=".pdf" onChange={handleFileChange} style={styles.fileInput} />
-              {formData.pdfBase64 && <span style={styles.fileSuccess}>✓ Ficheiro anexado com sucesso</span>}
+              {formData.pdfBase64 && <span style={styles.fileSuccess}>✓ Ficheiro PDF anexado com sucesso</span>}
             </div>
           </div>
         </div>
 
+        {/* Ações / Rodapé */}
         <div style={styles.footer}>
-          <button type="submit" style={styles.btnSave}>Gravar Avaliação</button>
+          {onCancel && (
+            <button type="button" onClick={onCancel} style={styles.btnCancel}>
+              Cancelar
+            </button>
+          )}
+          <button type="submit" style={styles.btnSave}>
+            💾 Gravar Avaliação
+          </button>
         </div>
       </form>
 
@@ -333,26 +442,215 @@ export default function EvaluationForm({ user, onSave }) {
 }
 
 const styles = {
-  container: { padding: '20px' },
-  formContainer: { maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '30px' },
-  section: { backgroundColor: 'var(--color-bg-card)', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' },
-  sectionTitle: { margin: '0 0 20px 0', fontSize: '16px', color: 'var(--color-primary)', borderBottom: '2px solid var(--color-border)', paddingBottom: '10px' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' },
-  formGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', fontWeight: '600', color: 'var(--color-text-muted)' },
-  input: { padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', outline: 'none', fontSize: '14px', transition: 'border-color 0.2s' },
-  fileInput: { padding: '8px', border: '1px dashed var(--color-border)', borderRadius: '8px', backgroundColor: 'var(--color-bg-base)' },
-  fileSuccess: { color: 'var(--color-success)', fontSize: '12px', marginTop: '4px', fontWeight: '600' },
-  searchBox: { display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' },
-  filtersGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' },
-  filterSelect: { padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', fontSize: '13px', outline: 'none' },
-  empList: { maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: '8px', backgroundColor: 'var(--color-bg-base)' },
-  empItem: { padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--color-border)', fontSize: '13px', transition: 'background-color 0.2s' },
-  empItemSelected: { backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' },
-  previewBox: { display: 'flex', alignItems: 'center', gap: '20px', padding: '20px', backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)', flexWrap: 'wrap' },
-  avatar: { width: '80px', height: '80px', borderRadius: '50%', backgroundColor: 'var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: '700', color: 'var(--color-text-muted)', flexShrink: 0 },
-  previewGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', flex: 1 },
-  previewItem: { fontSize: '13px', color: 'var(--color-text-base)' },
-  footer: { display: 'flex', justifyContent: 'flex-end', paddingTop: '10px' },
-  btnSave: { padding: '12px 24px', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px', transition: 'opacity 0.2s' }
+  container: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
+  },
+  formContainer: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
+  },
+  section: {
+    backgroundColor: 'var(--color-bg-card)',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border)',
+    padding: '18px 20px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+  },
+  sectionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+    paddingBottom: '10px',
+    borderBottom: '1px solid var(--color-border)',
+    flexWrap: 'wrap',
+    gap: '10px'
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: '15px',
+    fontWeight: '700',
+    color: 'var(--color-primary)'
+  },
+  selectedBadge: {
+    fontSize: '12px',
+    color: 'var(--color-primary)',
+    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    border: '1px solid rgba(220, 38, 38, 0.2)'
+  },
+  filterGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+    gap: '16px'
+  },
+  formGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  label: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: 'var(--color-text-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px',
+    whiteSpace: 'nowrap'
+  },
+  input: {
+    padding: '9px 12px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-base)',
+    color: 'var(--color-text-base)',
+    outline: 'none',
+    fontSize: '13px',
+    transition: 'border-color 0.2s',
+    width: '100%',
+    boxSizing: 'border-box'
+  },
+  select: {
+    padding: '9px 12px',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-base)',
+    color: 'var(--color-text-base)',
+    outline: 'none',
+    fontSize: '13px',
+    cursor: 'pointer',
+    width: '100%',
+    boxSizing: 'border-box'
+  },
+  resultsBar: {
+    marginTop: '12px',
+    display: 'flex',
+    justifyContent: 'flex-start'
+  },
+  resultsBadge: {
+    fontSize: '12px',
+    color: 'var(--color-text-muted)',
+    backgroundColor: 'var(--color-bg-base)',
+    padding: '4px 10px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border)'
+  },
+  empList: {
+    maxHeight: '160px',
+    overflowY: 'auto',
+    border: '1px solid var(--color-border)',
+    borderRadius: '8px',
+    backgroundColor: 'var(--color-bg-base)',
+    marginTop: '8px'
+  },
+  empItem: {
+    padding: '9px 14px',
+    cursor: 'pointer',
+    borderBottom: '1px solid var(--color-border)',
+    fontSize: '13px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    transition: 'background-color 0.15s'
+  },
+  empItemSelected: {
+    backgroundColor: 'var(--color-primary)',
+    color: '#ffffff'
+  },
+  previewBox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px',
+    padding: '16px 20px',
+    backgroundColor: 'var(--color-bg-base)',
+    borderRadius: '10px',
+    border: '1px solid var(--color-border)',
+    marginTop: '16px',
+    flexWrap: 'wrap'
+  },
+  avatar: {
+    width: '64px',
+    height: '64px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-border)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '24px',
+    fontWeight: '700',
+    color: 'var(--color-text-muted)',
+    flexShrink: 0
+  },
+  previewGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '10px',
+    flex: 1
+  },
+  previewItem: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px'
+  },
+  previewLabel: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: 'var(--color-text-muted)',
+    textTransform: 'uppercase'
+  },
+  previewValue: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: 'var(--color-text-base)'
+  },
+  fileInput: {
+    padding: '8px 12px',
+    border: '1px dashed var(--color-border)',
+    borderRadius: '8px',
+    backgroundColor: 'var(--color-bg-base)',
+    fontSize: '12px',
+    cursor: 'pointer'
+  },
+  fileSuccess: {
+    color: 'var(--color-success)',
+    fontSize: '12px',
+    marginTop: '4px',
+    fontWeight: '600'
+  },
+  footer: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: '12px',
+    paddingTop: '6px'
+  },
+  btnCancel: {
+    padding: '10px 20px',
+    backgroundColor: 'transparent',
+    color: 'var(--color-text-muted)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '8px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '13px',
+    transition: 'all 0.2s'
+  },
+  btnSave: {
+    padding: '10px 24px',
+    backgroundColor: 'var(--color-primary)',
+    color: 'var(--color-accent)',
+    border: 'none',
+    borderRadius: '8px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '13px',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+    transition: 'opacity 0.2s'
+  }
 };
+
