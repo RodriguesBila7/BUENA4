@@ -446,12 +446,13 @@ const styles = {
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
-    alignItems: 'center',
-    gap: '20px'
+    alignItems: 'flex-start',
+    gap: '20px',
+    padding: 0
   },
   formContainer: {
     width: '75%',
-    margin: '0 auto',
+    margin: 0,
     display: 'flex',
     flexDirection: 'column',
     gap: '20px'

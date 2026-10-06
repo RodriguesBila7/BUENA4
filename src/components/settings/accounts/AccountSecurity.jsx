@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 const styles = {
-  container: { display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '800px' },
+  container: { display: 'flex', flexDirection: 'column', gap: '20px', width: '75%', margin: 0 },
   section: { backgroundColor: 'var(--color-bg-card)', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)' },
   title: { fontSize: '18px', fontWeight: '600', color: 'var(--color-primary)', marginBottom: '16px' },
   description: { fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '20px' },

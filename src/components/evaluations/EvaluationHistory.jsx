@@ -141,8 +141,8 @@ export default function EvaluationHistory({ user }) {
 }
 
 const styles = {
-  container: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '25px' },
-  searchSection: { backgroundColor: 'var(--color-bg-card)', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', maxWidth: '600px' },
+  container: { padding: 0, display: 'flex', flexDirection: 'column', gap: '25px', width: '100%' },
+  searchSection: { backgroundColor: 'var(--color-bg-card)', padding: '24px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', width: '75%', margin: 0 },
   sectionTitle: { margin: '0 0 15px 0', fontSize: '15px', color: 'var(--color-text-base)' },
   input: { padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', outline: 'none', fontSize: '14px', width: '100%' },
   empList: { marginTop: '10px', maxHeight: '200px', overflowY: 'auto', border: '1px solid var(--color-border)', borderRadius: '8px', backgroundColor: 'var(--color-bg-base)' },

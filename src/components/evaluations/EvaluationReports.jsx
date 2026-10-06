@@ -162,7 +162,7 @@ export default function EvaluationReports({ user }) {
 }
 
 const styles = {
-  container: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '800px' },
+  container: { padding: 0, display: 'flex', flexDirection: 'column', gap: '20px', width: '75%', margin: 0 },
   title: { margin: 0, color: 'var(--color-primary)' },
   card: { backgroundColor: 'var(--color-bg-card)', padding: '25px', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' },
   filters: { display: 'flex', gap: '20px', marginBottom: '30px' },

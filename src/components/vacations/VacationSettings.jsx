@@ -131,7 +131,7 @@ export default function VacationSettings() {
 }
 
 const styles = {
-  container: { display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '800px' },
+  container: { display: 'flex', flexDirection: 'column', gap: '20px', width: '75%', margin: 0 },
   card: { backgroundColor: 'var(--color-bg-elevated)', borderRadius: '8px', padding: '24px', border: '1px solid var(--color-border)' },
   title: { fontSize: '18px', fontWeight: '600', color: 'var(--color-text-base)', margin: '0 0 8px 0' },
   desc: { fontSize: '14px', color: 'var(--color-text-muted)', margin: '0 0 24px 0', lineHeight: '1.5' },
