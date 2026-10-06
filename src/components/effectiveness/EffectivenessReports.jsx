@@ -449,14 +449,31 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
       {/* PAINEL DE CONFIGURAÇÃO DO RELATÓRIO */}
       <div style={styles.card}>
         <div style={styles.cardHeader}>
-          <h4 style={styles.cardTitle}>Emissão de Relatórios de Assiduidade e Faltas</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+            <h4 style={styles.cardTitle}>Emissão de Relatórios de Assiduidade e Faltas</h4>
+          </div>
         </div>
+        
         <div style={styles.cardBody}>
-          <div style={styles.filterGrid}>
+          <div style={styles.filterGrid} className="eff-filter-grid">
             
             {/* SELETOR DE PERFIL SECUNDÁRIO / DIRECÇÃO PROVINCIAL */}
             <div style={styles.formGroup}>
-              <label style={styles.label}>🏛️ Direcção Provincial / Perfil Secundário</label>
+              <label style={styles.label}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--color-primary)'}}>
+                  <path d="M3 21h18" />
+                  <path d="M5 21V7l8-4v18" />
+                  <path d="M19 21V11l-6-4" />
+                </svg>
+                <span>Direcção Provincial / Âmbito</span>
+              </label>
               <select 
                 value={selectedDirectorateId} 
                 onChange={(e) => {
@@ -464,17 +481,31 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
                   setSelectedDepartmentId('');
                 }} 
                 disabled={!isCentral}
-                style={{...styles.input, fontWeight: 'bold', borderColor: 'var(--color-primary)'}}
+                style={{
+                  ...styles.input, 
+                  fontWeight: '600', 
+                  borderColor: isCentral ? 'var(--color-primary)' : 'var(--color-border)',
+                  cursor: isCentral ? 'pointer' : 'default'
+                }}
               >
-                {isCentral && <option value="">🌐 Todas as Direcções (Consolidado Nacional)</option>}
+                {isCentral && <option value="">Todas as Direcções (Consolidado Nacional)</option>}
                 {(orgData?.directorates || []).map(d => (
-                  <option key={d.id} value={d.id}>📍 {d.name}</option>
+                  <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
             </div>
 
+            {/* TIPO DE PERÍODO */}
             <div style={styles.formGroup}>
-              <label style={styles.label}>Tipo de Período</label>
+              <label style={styles.label}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--color-text-muted)'}}>
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                <span>Tipo de Período</span>
+              </label>
               <select value={reportType} onChange={(e) => setReportType(e.target.value)} style={styles.input}>
                 <option value="directorate">Por Intervalo de Datas</option>
                 <option value="monthly">Mensal (Mês Selecionado)</option>
@@ -482,17 +513,24 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
               </select>
             </div>
 
+            {/* INTERVALO DE DATAS OU MÊS/ANO */}
             {reportType === 'monthly' ? (
               <div style={styles.formGroup}>
-                <label style={styles.label}>Mês / Ano</label>
-                <div style={{display:'flex', gap:'4px'}}>
-                  <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{...styles.input, flex:1}}>
+                <label style={styles.label}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--color-text-muted)'}}>
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span>Mês / Ano</span>
+                </label>
+                <div style={{display:'flex', gap:'8px'}}>
+                  <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{...styles.input, flex: 1}}>
                     {Array.from({length: 12}).map((_, i) => {
                       const m = (i + 1).toString().padStart(2, '0');
                       return <option key={m} value={m}>{m}</option>;
                     })}
                   </select>
-                  <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} style={{...styles.input, flex:1}}>
+                  <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} style={{...styles.input, flex: 1}}>
                     <option value="2026">2026</option>
                     <option value="2025">2025</option>
                   </select>
@@ -500,7 +538,13 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
               </div>
             ) : reportType === 'yearly' ? (
               <div style={styles.formGroup}>
-                <label style={styles.label}>Ano de Referência</label>
+                <label style={styles.label}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--color-text-muted)'}}>
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <span>Ano de Referência</span>
+                </label>
                 <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} style={styles.input}>
                   <option value="2026">2026</option>
                   <option value="2025">2025</option>
@@ -508,16 +552,45 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
               </div>
             ) : (
               <div style={styles.formGroup}>
-                <label style={styles.label}>Intervalo de Datas</label>
-                <div style={{display:'flex', gap:'4px'}}>
-                  <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} style={{...styles.input, flex:1}} />
-                  <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} style={{...styles.input, flex:1}} />
+                <label style={styles.label}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--color-text-muted)'}}>
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  <span>Intervalo de Datas</span>
+                </label>
+                <div style={{display:'flex', alignItems: 'center', gap:'6px'}}>
+                  <input 
+                    type="date" 
+                    value={dateFrom} 
+                    onChange={(e) => setDateFrom(e.target.value)} 
+                    style={{...styles.input, flex: 1, minWidth: '125px'}} 
+                    title="Data Inicial"
+                  />
+                  <span style={{fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: '600'}}>até</span>
+                  <input 
+                    type="date" 
+                    value={dateTo} 
+                    onChange={(e) => setDateTo(e.target.value)} 
+                    style={{...styles.input, flex: 1, minWidth: '125px'}} 
+                    title="Data Final"
+                  />
                 </div>
               </div>
             )}
 
+            {/* TIPO DE FALTA */}
             <div style={styles.formGroup}>
-              <label style={styles.label}>Tipo de Falta</label>
+              <label style={styles.label}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--color-text-muted)'}}>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>Tipo de Falta</span>
+              </label>
               <select value={selectedAbsenceType} onChange={(e) => setSelectedAbsenceType(e.target.value)} style={styles.input}>
                 <option value="">Todas (Justificadas e Injustificadas)</option>
                 <option value="Falta Justificada">Apenas Faltas Justificadas</option>
@@ -527,63 +600,123 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
 
           </div>
 
-          <div style={{display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '16px', flexWrap: 'wrap'}}>
-            {isPrincipal && (
+          {/* BARRA DE AÇÕES E EXPORTAÇÃO */}
+          <div style={styles.actionsBar}>
+            <div style={styles.actionsLeft}>
+              <div style={styles.countBadge}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+                <span><strong>{reportData.length}</strong> {reportData.length === 1 ? 'registo listado' : 'registos listados'}</span>
+              </div>
+            </div>
+
+            <div style={styles.actionsRight}>
+              {isPrincipal && (
+                <button 
+                  onClick={handlePrintAllNational} 
+                  style={styles.btnNational}
+                  title="Imprimir mapa consolidado nacional com todas as direcções do SERNIC"
+                  type="button"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                  <span>Consolidado Nacional</span>
+                </button>
+              )}
+
               <button 
-                onClick={handlePrintAllNational} 
-                style={{
-                  ...styles.btnPrint, 
-                  backgroundColor: '#DC2626', 
-                  color: '#FFFFFF',
-                  borderColor: '#DC2626',
-                  boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
-                }}
-                title="Imprimir todas as faltas de todas as direcções e unidades do SERNIC"
+                onClick={handleDirectPrint} 
+                style={styles.btnPrint}
+                title="Imprimir mapa oficial da selecção atual em formato A4"
+                type="button"
               >
-                🏛️ Imprimir Todas as Faltas (Todas as Direcções)
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
+                <span>Imprimir Mapa (A4 Oficial)</span>
               </button>
-            )}
-            <button onClick={handleDirectPrint} style={styles.btnPrint}>
-              🖨️ Imprimir Mapa de Efetividade (A4 Oficial)
-            </button>
-            <button onClick={handleExportPDF} style={styles.btnPdf}>
-              📄 Exportar PDF
-            </button>
-            <button onClick={handleExportExcel} style={styles.btnExcel}>
-              📊 Exportar Excel (.xlsx)
-            </button>
+
+              <button 
+                onClick={handleExportPDF} 
+                style={styles.btnPdf}
+                title="Exportar mapa atual para documento PDF"
+                type="button"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+                <span>Exportar PDF</span>
+              </button>
+
+              <button 
+                onClick={handleExportExcel} 
+                style={styles.btnExcel}
+                title="Exportar dados selecionados para folha de cálculo Excel (.xlsx)"
+                type="button"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                  <line x1="3" y1="9" x2="21" y2="9" />
+                  <line x1="9" y1="21" x2="9" y2="9" />
+                </svg>
+                <span>Exportar Excel (.xlsx)</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* QUADRO DE RESUMO ESTATÍSTICO DO RELATÓRIO */}
       <div style={styles.summaryGrid}>
-        <div style={styles.summaryCard}>
+        <div style={{...styles.summaryCard, borderTop: '3px solid var(--color-primary)'}}>
           <div style={styles.summaryTitle}>Âmbito Selecionado</div>
-          <div style={{fontSize: '14px', fontWeight: 'bold', color: 'var(--color-primary)'}}>{summary.unitName}</div>
+          <div style={{fontSize: '13.5px', fontWeight: '700', color: 'var(--color-primary)', textTransform: 'uppercase'}}>
+            {summary.unitName}
+          </div>
         </div>
-        <div style={styles.summaryCard}>
+        <div style={{...styles.summaryCard, borderTop: '3px solid #64748B'}}>
           <div style={styles.summaryTitle}>Efectivos Faltosos</div>
           <div style={styles.summaryVal}>{summary.faltososUnique}</div>
         </div>
-        <div style={styles.summaryCard}>
+        <div style={{...styles.summaryCard, borderTop: '3px solid #059669'}}>
           <div style={styles.summaryTitle}>Faltas Justificadas</div>
           <div style={{...styles.summaryVal, color: '#059669'}}>{summary.justifiedDays} Dias</div>
         </div>
-        <div style={styles.summaryCard}>
+        <div style={{...styles.summaryCard, borderTop: '3px solid #DC2626'}}>
           <div style={styles.summaryTitle}>Faltas Injustificadas</div>
-          <div style={{...styles.summaryVal, color: '#dc2626'}}>{summary.unjustifiedDays} Dias</div>
+          <div style={{...styles.summaryVal, color: '#DC2626'}}>{summary.unjustifiedDays} Dias</div>
         </div>
-        <div style={styles.summaryCard}>
+        <div style={{...styles.summaryCard, borderTop: '3px solid #2563EB'}}>
           <div style={styles.summaryTitle}>Total Geral de Dias</div>
-          <div style={styles.summaryVal}>{summary.totalDays} Dias</div>
+          <div style={{...styles.summaryVal, color: '#2563EB'}}>{summary.totalDays} Dias</div>
         </div>
       </div>
 
       {/* TABELA DE PRÉ-VISUALIZAÇÃO DO RELATÓRIO */}
       <div style={styles.card}>
         <div style={styles.cardHeader}>
-          <h4 style={styles.cardTitle}>Pré-visualização do Mapa de Efetividade ({reportData.length} Registos)</h4>
+          <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{color: 'var(--color-primary)'}}>
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <line x1="3" y1="9" x2="21" y2="9" />
+              <line x1="9" y1="21" x2="9" y2="9" />
+            </svg>
+            <h4 style={styles.cardTitle}>Pré-visualização do Mapa de Efetividade ({reportData.length} Registos)</h4>
+          </div>
         </div>
         <div style={styles.cardBody}>
           <div style={styles.tableContainer}>
@@ -594,7 +727,7 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
                   <th>Funcionário</th>
                   <th>Direcção Provincial</th>
                   <th>Tipo de Falta</th>
-                  <th>Dias</th>
+                  <th style={{textAlign: 'center'}}>Dias</th>
                   <th>Datas</th>
                   <th>Motivo</th>
                   <th>Registado Por</th>
@@ -616,20 +749,30 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
                       <td>{r.directorate}</td>
                       <td>
                         <span style={{
-                          padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
+                          padding: '3px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
                           backgroundColor: r.type === 'Falta Justificada' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
                           color: r.type === 'Falta Justificada' ? '#059669' : '#dc2626'
                         }}>
                           {r.type}
                         </span>
                       </td>
-                      <td><strong>{r.days} d</strong></td>
+                      <td style={{textAlign: 'center'}}><strong>{r.days} d</strong></td>
                       <td>{r.datesStr}</td>
                       <td>{r.reason}</td>
                       <td style={{fontSize: '11px', color: 'var(--color-text-muted)'}}>{r.registeredBy}</td>
-                      <td style={{textAlign: 'right'}}>
-                        <button onClick={() => handleEdit(r)} style={styles.btnActionEdit} title="Editar">✏️</button>
-                        <button onClick={() => handleDelete(r.id)} style={styles.btnActionDelete} title="Eliminar">🗑️</button>
+                      <td style={{textAlign: 'right', whiteSpace: 'nowrap'}}>
+                        <button onClick={() => handleEdit(r)} style={styles.btnActionEdit} title="Editar falta">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 20h9" />
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                          </svg>
+                        </button>
+                        <button onClick={() => handleDelete(r.id)} style={styles.btnActionDelete} title="Eliminar registo">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                          </svg>
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -689,30 +832,192 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
 
 const styles = {
   container: { display: 'flex', flexDirection: 'column', gap: '16px' },
-  card: { backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
-  cardHeader: { padding: '14px 18px', borderBottom: '1px solid var(--color-border)' },
-  cardTitle: { margin: 0, fontSize: '15px', fontWeight: 'bold', color: 'var(--color-primary)' },
-  cardBody: { padding: '16px' },
-  filterGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' },
-  formGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  label: { fontSize: '11.5px', fontWeight: '600', color: 'var(--color-text-muted)' },
-  input: { padding: '8px 10px', borderRadius: '5px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-main)', fontSize: '12.5px', outline: 'none' },
-  btnPrint: { padding: '9px 18px', backgroundColor: 'var(--color-primary, #1B365D)', color: 'var(--color-accent, #EAAA00)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
-  btnPdf: { padding: '9px 16px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
-  btnExcel: { padding: '9px 16px', backgroundColor: '#107c41', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+  card: { 
+    backgroundColor: 'var(--color-bg-base)', 
+    border: '1px solid var(--color-border)', 
+    borderRadius: '10px', 
+    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+    overflow: 'hidden'
+  },
+  cardHeader: { 
+    padding: '12px 18px', 
+    borderBottom: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-bg-card)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  cardTitle: { margin: 0, fontSize: '14.5px', fontWeight: '700', color: 'var(--color-text-main)' },
+  cardBody: { padding: '16px 18px' },
+  filterGrid: { 
+    display: 'grid', 
+    gridTemplateColumns: 'minmax(280px, 1.8fr) minmax(170px, 1.1fr) minmax(290px, 1.8fr) minmax(230px, 1.4fr)', 
+    gap: '14px',
+    alignItems: 'flex-end'
+  },
+  formGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },
+  label: { 
+    fontSize: '11.5px', 
+    fontWeight: '600', 
+    color: 'var(--color-text-muted)',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px'
+  },
+  input: { 
+    padding: '8px 11px', 
+    borderRadius: '6px', 
+    border: '1px solid var(--color-border)', 
+    backgroundColor: 'var(--color-bg-card)', 
+    color: 'var(--color-text-main)', 
+    fontSize: '12.5px', 
+    outline: 'none',
+    boxSizing: 'border-box',
+    width: '100%',
+    transition: 'border-color 0.15s ease'
+  },
+  actionsBar: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    gap: '12px', 
+    marginTop: '18px', 
+    paddingTop: '14px',
+    borderTop: '1px solid var(--color-border)',
+    flexWrap: 'wrap' 
+  },
+  actionsLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  actionsRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flexWrap: 'wrap'
+  },
+  countBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    backgroundColor: 'var(--color-bg-subtle)',
+    color: 'var(--color-text-muted)',
+    fontSize: '12px',
+    border: '1px solid var(--color-border)'
+  },
+  btnNational: { 
+    padding: '8px 14px', 
+    backgroundColor: '#DC2626', 
+    color: '#FFFFFF', 
+    border: 'none', 
+    borderRadius: '6px', 
+    cursor: 'pointer', 
+    fontWeight: '600', 
+    fontSize: '12.5px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '7px',
+    boxShadow: '0 1px 3px rgba(220, 38, 38, 0.25)',
+    transition: 'opacity 0.15s ease',
+    whiteSpace: 'nowrap'
+  },
+  btnPrint: { 
+    padding: '8px 15px', 
+    backgroundColor: 'var(--color-primary, #1B365D)', 
+    color: 'var(--color-accent, #FFFFFF)', 
+    border: 'none', 
+    borderRadius: '6px', 
+    cursor: 'pointer', 
+    fontWeight: '600', 
+    fontSize: '12.5px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '7px',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+    transition: 'opacity 0.15s ease',
+    whiteSpace: 'nowrap'
+  },
+  btnPdf: { 
+    padding: '8px 14px', 
+    backgroundColor: '#C53030', 
+    color: '#FFFFFF', 
+    border: 'none', 
+    borderRadius: '6px', 
+    cursor: 'pointer', 
+    fontWeight: '600', 
+    fontSize: '12.5px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '7px',
+    boxShadow: '0 1px 3px rgba(197, 48, 48, 0.25)',
+    transition: 'opacity 0.15s ease',
+    whiteSpace: 'nowrap'
+  },
+  btnExcel: { 
+    padding: '8px 14px', 
+    backgroundColor: '#0F766E', 
+    color: '#FFFFFF', 
+    border: 'none', 
+    borderRadius: '6px', 
+    cursor: 'pointer', 
+    fontWeight: '600', 
+    fontSize: '12.5px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '7px',
+    boxShadow: '0 1px 3px rgba(15, 118, 110, 0.25)',
+    transition: 'opacity 0.15s ease',
+    whiteSpace: 'nowrap'
+  },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' },
-  summaryCard: { padding: '14px', backgroundColor: 'var(--color-bg-base)', border: '1px solid var(--color-border)', borderRadius: '8px' },
-  summaryTitle: { fontSize: '11px', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600' },
-  summaryVal: { fontSize: '20px', fontWeight: 'bold', color: 'var(--color-text-main)' },
+  summaryCard: { 
+    padding: '13px 16px', 
+    backgroundColor: 'var(--color-bg-base)', 
+    border: '1px solid var(--color-border)', 
+    borderRadius: '8px',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+  },
+  summaryTitle: { fontSize: '11px', color: 'var(--color-text-muted)', textTransform: 'uppercase', marginBottom: '6px', fontWeight: '600', letterSpacing: '0.3px' },
+  summaryVal: { fontSize: '19px', fontWeight: '700', color: 'var(--color-text-main)' },
   tableContainer: { overflowX: 'auto' },
   tr: { borderBottom: '1px solid var(--color-border)' },
-  empty: { textAlign: 'center', padding: '24px', color: 'var(--color-text-muted)', fontStyle: 'italic' },
-  btnActionEdit: { padding: '3px 6px', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'none', cursor: 'pointer', fontSize: '11px', marginRight: '4px' },
-  btnActionDelete: { padding: '3px 6px', border: '1px solid #ef4444', borderRadius: '4px', background: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '11px' },
+  empty: { textAlign: 'center', padding: '28px', color: 'var(--color-text-muted)', fontStyle: 'italic', fontSize: '13px' },
+  btnActionEdit: { 
+    padding: '4px 8px', 
+    border: '1px solid var(--color-border)', 
+    borderRadius: '5px', 
+    backgroundColor: 'var(--color-bg-card)', 
+    color: 'var(--color-text-main)',
+    cursor: 'pointer', 
+    fontSize: '11px', 
+    marginRight: '6px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background-color 0.15s ease'
+  },
+  btnActionDelete: { 
+    padding: '4px 8px', 
+    border: '1px solid rgba(239, 68, 68, 0.3)', 
+    borderRadius: '5px', 
+    backgroundColor: 'rgba(239, 68, 68, 0.08)', 
+    color: '#EF4444', 
+    cursor: 'pointer', 
+    fontSize: '11px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background-color 0.15s ease'
+  },
   modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 },
-  modalContent: { backgroundColor: 'var(--color-bg-base)', borderRadius: '8px', border: '1px solid var(--color-border)', width: '450px', maxWidth: '95%' },
-  modalHeader: { padding: '12px 16px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  btnCloseDetail: { background: 'none', border: 'none', fontSize: '14px', cursor: 'pointer', color: 'var(--color-text-muted)' },
-  btnCancel: { padding: '6px 12px', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'none', cursor: 'pointer' },
-  btnSave: { padding: '6px 14px', border: 'none', borderRadius: '4px', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', fontWeight: 'bold', cursor: 'pointer' }
+  modalContent: { backgroundColor: 'var(--color-bg-base)', borderRadius: '10px', border: '1px solid var(--color-border)', width: '450px', maxWidth: '95%', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' },
+  modalHeader: { padding: '14px 18px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  btnCloseDetail: { background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: 'var(--color-text-muted)' },
+  btnCancel: { padding: '7px 14px', border: '1px solid var(--color-border)', borderRadius: '6px', background: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--color-text-muted)' },
+  btnSave: { padding: '7px 16px', border: 'none', borderRadius: '6px', backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }
 };

@@ -1136,6 +1136,18 @@ button.evaluation-tab.active:focus,
   }
 }
 
+/* ── Módulo de Efetividade: Grid de Filtros Limpa e Responsiva ── */
+@media (max-width: 1100px) {
+  .eff-filter-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+@media (max-width: 680px) {
+  .eff-filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* ── Impressão: nunca afetada pelo responsivo ── */
 @media print {
   .sidebar-desktop,

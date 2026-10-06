@@ -42,10 +42,50 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
   };
 
   const tabs = [
-    { id: 'query', label: '📋 Funcionários Faltosos' },
-    { id: 'register', label: '✍️ Registar Faltas' },
-    { id: 'reports', label: '🖨️ Relatórios & Impressão por Província' },
-    { id: 'stats', label: '📊 Estatísticas de Faltas' }
+    { 
+      id: 'query', 
+      label: 'Funcionários Faltosos',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+        </svg>
+      )
+    },
+    { 
+      id: 'register', 
+      label: 'Registar Faltas',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+      )
+    },
+    { 
+      id: 'reports', 
+      label: 'Relatórios & Impressão por Província',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="6 9 6 2 18 2 18 9" />
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+          <rect x="6" y="14" width="12" height="8" />
+        </svg>
+      )
+    },
+    { 
+      id: 'stats', 
+      label: 'Estatísticas de Faltas',
+      icon: (
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10" />
+          <line x1="12" y1="20" x2="12" y2="4" />
+          <line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+      )
+    }
   ];
 
   return (
@@ -60,8 +100,14 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
             style={styles.btnPrintAll}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
+            title="Imprimir Mapa Consolidado Nacional com todas as direcções"
           >
-            🖨️ Imprimir Todas as Faltas (Todas as Direcções)
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            <span>Imprimir Todas as Faltas (Todas as Direcções)</span>
           </button>
         )}
       </div>
@@ -75,7 +121,8 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
             className={`module-tab ${activeTab === tab.id ? 'active' : ''}`}
             onClick={() => setActiveTab(tab.id)} 
           >
-            {tab.label}
+            {tab.icon}
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
