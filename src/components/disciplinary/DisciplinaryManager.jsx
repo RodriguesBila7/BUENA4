@@ -3,7 +3,15 @@ import DisciplinaryDashboard from './DisciplinaryDashboard';
 import DisciplinaryList from './DisciplinaryList';
 
 export default function DisciplinaryManager({ orgData, employeesData, user, onNavigateTab }) {
-  const [activeTab, setActiveTab] = useState('list');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('sernic_disciplinary_active_tab') || 'list';
+  });
+
+  React.useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('sernic_disciplinary_active_tab', activeTab);
+    }
+  }, [activeTab]);
 
   return (
     <div style={styles.container}>

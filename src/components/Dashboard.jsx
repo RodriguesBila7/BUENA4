@@ -68,6 +68,17 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
+  // Sincronizar activeTab no localStorage e manter menus contextuais abertos
+  React.useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('sernic_active_tab', activeTab);
+      if (activeTab.startsWith('admin_acts') || activeTab === 'career') {
+        setExpandedMenu('admin_acts');
+        localStorage.setItem('sernic_expanded_menu', 'admin_acts');
+      }
+    }
+  }, [activeTab]);
+
   // Fechar sidebar mobile ao rodar o ecrã para landscape
   React.useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');

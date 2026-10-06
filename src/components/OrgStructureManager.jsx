@@ -23,7 +23,15 @@ export default function OrgStructureManager({ t }) {
     reorderItem, moveItem
   } = useOrgData();
 
-  const [activeTab, setActiveTab] = useState('dir'); // dir | dep | rep | sec | car | cat
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('sernic_org_active_tab') || 'dir';
+  }); // dir | dep | rep | sec | car | cat
+
+  React.useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('sernic_org_active_tab', activeTab);
+    }
+  }, [activeTab]);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   

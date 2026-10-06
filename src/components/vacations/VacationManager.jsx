@@ -8,7 +8,15 @@ import VacationSettings from './VacationSettings';
 import DraggableTabs from '../common/DraggableTabs';
 
 export default function VacationManager() {
-  const [activeTab, setActiveTab] = useState('management');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('sernic_vacations_active_tab') || 'management';
+  });
+
+  React.useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('sernic_vacations_active_tab', activeTab);
+    }
+  }, [activeTab]);
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard Geral' },

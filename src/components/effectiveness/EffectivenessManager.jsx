@@ -11,8 +11,21 @@ import { printAllAbsencesNationalMap } from './printAllEffectiveness';
 import ConfirmModal from '../ConfirmModal';
 
 export default function EffectivenessManager({ user, orgData, employeesData }) {
-  const [activeTab, setActiveTab] = useState('query');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('sernic_effectiveness_active_tab') || 'query';
+  });
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '' });
+
+  React.useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('sernic_effectiveness_active_tab', activeTab);
+    }
+  }, [activeTab]);
+
+  const handleSubTabChange = (tabId) => {
+    setActiveTab(tabId);
+    localStorage.setItem('sernic_effectiveness_active_tab', tabId);
+  };
   const { records = [] } = useEffectivenessData();
   const { employees = [] } = useEmployeeData();
   const { data: hookOrgData } = useOrgData();
@@ -119,7 +132,7 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
             key={tab.id}
             type="button"
             className={`module-tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)} 
+            onClick={() => handleSubTabChange(tab.id)} 
           >
             {tab.icon}
             <span>{tab.label}</span>
@@ -133,7 +146,7 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
             user={user}
             orgData={orgData}
             employeesData={employeesData}
-            onGoToRegister={() => setActiveTab('register')} 
+            onGoToRegister={() => handleSubTabChange('register')} 
           />
         )}
         {activeTab === 'register' && (
@@ -141,7 +154,7 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
             user={user}
             orgData={orgData}
             employeesData={employeesData}
-            onRegistrationComplete={() => setActiveTab('query')} 
+            onRegistrationComplete={() => handleSubTabChange('query')} 
           />
         )}
         {activeTab === 'reports' && (

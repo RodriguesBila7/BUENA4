@@ -9,7 +9,15 @@ import EvaluationSettings from './EvaluationSettings';
 import ErrorBoundary from '../common/ErrorBoundary';
 
 export default function EvaluationManager({ user }) {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('sernic_evaluations_active_tab') || 'dashboard';
+  });
+
+  React.useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('sernic_evaluations_active_tab', activeTab);
+    }
+  }, [activeTab]);
 
   const perms = user?.permissions || user?.roleDetails?.permissions || {};
   const isSuperAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(user?.roleId || user?.role) || user?.username === 'admin' || perms.all === true;
