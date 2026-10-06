@@ -106,9 +106,14 @@ export default function App() {
   const handleLogout = () => {
     logout();
     setLoginSessionKey(Date.now());
-    localStorage.removeItem('sernic_logged_user');
-    localStorage.removeItem('sernic_last_activity');
-    localStorage.setItem('sernic_active_tab', 'home');
+    try {
+      localStorage.removeItem('sernic_logged_user');
+      sessionStorage.removeItem('sernic_logged_user');
+      localStorage.removeItem('sernic_last_activity');
+      sessionStorage.removeItem('sernic_last_activity');
+      localStorage.setItem('sernic_active_tab', 'home');
+      sessionStorage.setItem('sernic_active_tab', 'home');
+    } catch (e) {}
   };
 
   const [alertModal, setAlertModal] = useState({ isOpen: false, message: '' });
@@ -116,34 +121,34 @@ export default function App() {
   // Controlo de Inatividade e Expiração da Sessão
   useEffect(() => {
     const isTimeoutEnabled = policies.autoLogout !== false;
-    const userTimeout = parseInt(policies.sessionTimeoutMinutes || policies.sessionTimeout || 15, 10);
-    const INACTIVITY_LIMIT_MS = Math.max(userTimeout * 60 * 1000, 60000); // Mínimo de 1 minuto
+    const userTimeout = Math.max(parseInt(policies.sessionTimeoutMinutes || policies.sessionTimeout || 30, 10), 15);
+    const INACTIVITY_LIMIT_MS = userTimeout * 60 * 1000;
     let inactivityTimer;
     let lastActivityTime = 0;
 
     const triggerSessionExpired = () => {
       // Mostrar alerta PRIMEIRO. O logout só ocorre quando o utilizador clica OK.
-      // Isto evita o flash branco causado pelo desmonte abrupto do Dashboard.
       setAlertModal({ isOpen: true, message: 'Sessão expirada por inatividade. Por favor, faça login novamente.' });
     };
 
     const resetTimer = () => {
       const now = Date.now();
-      // Evitar spam de writes na localStorage e reflows no navegador
-      if (now - lastActivityTime > 5000) {
-        if (user && isTimeoutEnabled) {
+      if (user && isTimeoutEnabled) {
+        // Throttling apenas para escritas no storage
+        if (now - lastActivityTime > 5000) {
           updateSessionActivity();
-          clearTimeout(inactivityTimer);
-          inactivityTimer = setTimeout(triggerSessionExpired, INACTIVITY_LIMIT_MS);
+          lastActivityTime = now;
         }
-        lastActivityTime = now;
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(triggerSessionExpired, INACTIVITY_LIMIT_MS);
       }
     };
 
     const handleVisibilityChange = () => {
       if (!document.hidden && user && isTimeoutEnabled) {
-        const lastActivity = parseInt(localStorage.getItem('sernic_last_activity') || '0', 10);
-        if (Date.now() - lastActivity > INACTIVITY_LIMIT_MS) {
+        const rawActivity = localStorage.getItem('sernic_last_activity') || sessionStorage.getItem('sernic_last_activity');
+        const lastActivity = parseInt(rawActivity || '0', 10);
+        if (lastActivity > 0 && Date.now() - lastActivity > INACTIVITY_LIMIT_MS) {
           triggerSessionExpired();
         } else {
           resetTimer();

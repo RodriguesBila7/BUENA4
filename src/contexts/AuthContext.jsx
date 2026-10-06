@@ -6,50 +6,65 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
-      const savedUser = localStorage.getItem('sernic_logged_user');
+      const savedUser = localStorage.getItem('sernic_logged_user') || sessionStorage.getItem('sernic_logged_user');
       if (savedUser) {
         let parsed = JSON.parse(savedUser);
-        // Migration patch for missing permissions in the currently logged user
-        if (parsed && parsed.roleDetails && parsed.roleDetails.permissions) {
-          const ALL_MODULES = [
-            'Dashboard',
-            'Funcionários',
-            'Estrutura Organizacional',
-            'Contencioso Laboral',
-            'Processos Disciplinares',
-            'Efetividade (Faltas)',
-            'Avaliação de Desempenho',
-            'Promoção e Progressão',
-            'Férias e Licenças',
-            'Mudança de Carreira',
-            'Provimento e Cessação',
-            'Reserva e Reforma',
-            'Saúde e Óbitos',
-            'Transferências e Mobilidade',
-            'Carreiras',
-            'Categorias Funcionais',
-            'Relatórios e Impressão',
-            'Configurações',
-            'Utilizadores',
-            'Auditoria',
-            'Acessos e Perfis'
-          ];
-          let updated = false;
-          const isAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(parsed.roleId || parsed.role) || parsed.username === 'admin' || parsed.roleDetails.permissions?.all === true;
+        if (parsed && typeof parsed === 'object') {
+          // Atualiza a atividade imediatamente no arranque/refresh para não expirar
+          const nowStr = Date.now().toString();
+          try {
+            localStorage.setItem('sernic_last_activity', nowStr);
+            sessionStorage.setItem('sernic_last_activity', nowStr);
+            localStorage.setItem('sernic_logged_user', savedUser);
+            sessionStorage.setItem('sernic_logged_user', savedUser);
+          } catch (e) {}
 
-          ALL_MODULES.forEach(mod => {
-            if (!parsed.roleDetails.permissions[mod] || (isAdmin && parsed.roleDetails.permissions[mod].length < 9)) {
-              parsed.roleDetails.permissions[mod] = isAdmin
-                ? ['Visualizar', 'Criar', 'Editar', 'Eliminar', 'Validar', 'Exportar', 'Importar', 'Imprimir', 'Administrar'] 
-                : (parsed.roleDetails.permissions[mod] || ['Visualizar']);
-              updated = true;
+          // Migration patch for missing permissions in the currently logged user
+          if (parsed.roleDetails && parsed.roleDetails.permissions) {
+            const ALL_MODULES = [
+              'Dashboard',
+              'Funcionários',
+              'Estrutura Organizacional',
+              'Contencioso Laboral',
+              'Processos Disciplinares',
+              'Efetividade (Faltas)',
+              'Avaliação de Desempenho',
+              'Promoção e Progressão',
+              'Férias e Licenças',
+              'Mudança de Carreira',
+              'Provimento e Cessação',
+              'Reserva e Reforma',
+              'Saúde e Óbitos',
+              'Transferências e Mobilidade',
+              'Carreiras',
+              'Categorias Funcionais',
+              'Relatórios e Impressão',
+              'Configurações',
+              'Utilizadores',
+              'Auditoria',
+              'Acessos e Perfis'
+            ];
+            let updated = false;
+            const isAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(parsed.roleId || parsed.role) || parsed.username === 'admin' || parsed.roleDetails.permissions?.all === true;
+
+            ALL_MODULES.forEach(mod => {
+              if (!parsed.roleDetails.permissions[mod] || (isAdmin && parsed.roleDetails.permissions[mod].length < 9)) {
+                parsed.roleDetails.permissions[mod] = isAdmin
+                  ? ['Visualizar', 'Criar', 'Editar', 'Eliminar', 'Validar', 'Exportar', 'Importar', 'Imprimir', 'Administrar'] 
+                  : (parsed.roleDetails.permissions[mod] || ['Visualizar']);
+                updated = true;
+              }
+            });
+            if (updated) {
+              const updatedStr = JSON.stringify(parsed);
+              try {
+                localStorage.setItem('sernic_logged_user', updatedStr);
+                sessionStorage.setItem('sernic_logged_user', updatedStr);
+              } catch (e) {}
             }
-          });
-          if (updated) {
-            localStorage.setItem('sernic_logged_user', JSON.stringify(parsed));
           }
+          return parsed;
         }
-        return parsed;
       }
       return null;
     } catch {
@@ -67,7 +82,11 @@ export const AuthProvider = ({ children }) => {
           setUser(prev => {
             if (!prev) return prev;
             const updated = { ...prev, photo: cloudPhoto, avatar: cloudPhoto };
-            localStorage.setItem('sernic_logged_user', JSON.stringify(updated));
+            try {
+              const str = JSON.stringify(updated);
+              localStorage.setItem('sernic_logged_user', str);
+              sessionStorage.setItem('sernic_logged_user', str);
+            } catch (e) {}
             return updated;
           });
         }
@@ -76,6 +95,7 @@ export const AuthProvider = ({ children }) => {
   }, [user?.username]);
 
   const login = (userData) => {
+    if (!userData) return;
     // Verificar se já existe foto salva localmente ou na nuvem
     const key = (userData.username || userData.nuit || userData.id || '').toLowerCase();
     const localPhoto = localStorage.getItem('sernic_user_photo_' + key);
@@ -85,8 +105,16 @@ export const AuthProvider = ({ children }) => {
     }
 
     setUser(userData);
-    localStorage.setItem('sernic_logged_user', JSON.stringify(userData));
-    localStorage.setItem('sernic_last_activity', Date.now().toString());
+    try {
+      const serialized = JSON.stringify(userData);
+      localStorage.setItem('sernic_logged_user', serialized);
+      sessionStorage.setItem('sernic_logged_user', serialized);
+      const nowStr = Date.now().toString();
+      localStorage.setItem('sernic_last_activity', nowStr);
+      sessionStorage.setItem('sernic_last_activity', nowStr);
+    } catch (e) {
+      console.warn('[AuthContext] Falha ao gravar credenciais de sessão:', e);
+    }
 
     // Buscar a foto mais recente na nuvem de forma assíncrona para garantir sincronização entre dispositivos
     getCloudPhotos(true).then(photos => {
@@ -96,7 +124,11 @@ export const AuthProvider = ({ children }) => {
           setUser(prev => {
             if (!prev) return prev;
             const updated = { ...prev, photo: cloudPhoto, avatar: cloudPhoto };
-            localStorage.setItem('sernic_logged_user', JSON.stringify(updated));
+            try {
+              const str = JSON.stringify(updated);
+              localStorage.setItem('sernic_logged_user', str);
+              sessionStorage.setItem('sernic_logged_user', str);
+            } catch (e) {}
             return updated;
           });
         }
@@ -106,13 +138,21 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('sernic_logged_user');
-    localStorage.removeItem('sernic_last_activity');
+    try {
+      localStorage.removeItem('sernic_logged_user');
+      sessionStorage.removeItem('sernic_logged_user');
+      localStorage.removeItem('sernic_last_activity');
+      sessionStorage.removeItem('sernic_last_activity');
+    } catch (e) {}
   };
 
   const updateSessionActivity = () => {
     if (user) {
-      localStorage.setItem('sernic_last_activity', Date.now().toString());
+      const nowStr = Date.now().toString();
+      try {
+        localStorage.setItem('sernic_last_activity', nowStr);
+        sessionStorage.setItem('sernic_last_activity', nowStr);
+      } catch (e) {}
     }
   };
 
@@ -120,7 +160,11 @@ export const AuthProvider = ({ children }) => {
     setUser(prev => {
       if (!prev) return prev;
       const updated = { ...prev, ...partialData };
-      localStorage.setItem('sernic_logged_user', JSON.stringify(updated));
+      try {
+        const str = JSON.stringify(updated);
+        localStorage.setItem('sernic_logged_user', str);
+        sessionStorage.setItem('sernic_logged_user', str);
+      } catch (e) {}
       return updated;
     });
   };
