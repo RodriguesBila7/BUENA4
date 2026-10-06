@@ -2424,40 +2424,315 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     {t('report_doc_body')} {settings.nome_instituicao} ({settings.sigla}){t('report_doc_body2')}
                   </p>
 
-                  {/* RESUMO GERAL E GÉNERO SIMPLIFICADOS */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '20px', marginTop: '16px' }}>
-                    <div style={{ border: '1px solid var(--color-border)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--color-bg-base)', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary, #1B365D)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        📊 Resumo Geral
-                      </h4>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>Total de Funcionários:</span>
-                        <strong style={{ fontSize: '18px', color: 'var(--color-text-main)' }}>{reportStats.total}</strong>
-                      </div>
-                      <div style={{ display: 'flex', gap: '12px', fontSize: '12.5px', color: 'var(--color-text-muted)' }}>
-                        <span>Ativos: <strong style={{ color: '#16a34a' }}>{reportStats.active}</strong></span>
-                        <span>•</span>
-                        <span>Inativos: <strong style={{ color: '#dc2626' }}>{reportStats.inactive}</strong></span>
-                      </div>
-                    </div>
+                  {/* RESUMO GERAL E GÉNERO DESTACADOS E ELEGANTES */}
+                  {(() => {
+                    const total = Number(reportStats.total) || 0;
+                    const active = Number(reportStats.active) || 0;
+                    const inactive = Number(reportStats.inactive) || 0;
+                    const men = Number(reportStats.men) || 0;
+                    const women = Number(reportStats.women) || 0;
+                    const menPct = total > 0 ? Math.round((men / total) * 100) : 0;
+                    const womenPct = total > 0 ? Math.round((women / total) * 100) : 0;
+                    const activePct = total > 0 ? Math.round((active / total) * 100) : 0;
 
-                    <div style={{ border: '1px solid var(--color-border)', padding: '16px', borderRadius: '10px', backgroundColor: 'var(--color-bg-base)', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                      <h4 style={{ margin: '0 0 10px 0', color: 'var(--color-primary, #1B365D)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        👥 Distribuição por Género
-                      </h4>
-                      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '42px' }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Homens: </span>
-                          <strong style={{ fontSize: '16px', color: 'var(--color-primary, #1B365D)' }}>{reportStats.men}</strong>
+                    return (
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+                        gap: '20px', 
+                        marginBottom: '24px', 
+                        marginTop: '18px' 
+                      }}>
+                        {/* CARD 1: RESUMO GERAL DO EFETIVO */}
+                        <div style={{ 
+                          border: '1px solid var(--color-border)', 
+                          padding: '20px 22px', 
+                          borderRadius: '14px', 
+                          backgroundColor: 'var(--color-bg-base)', 
+                          boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}>
+                          {/* Faixa decorativa sutil */}
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: '3px',
+                            background: 'linear-gradient(90deg, var(--color-primary, #1B365D), #3B82F6)'
+                          }} />
+
+                          {/* Topo do Card */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '8px',
+                                backgroundColor: 'rgba(27, 54, 93, 0.08)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '15px'
+                              }}>
+                                📊
+                              </div>
+                              <span style={{ 
+                                fontWeight: '700', 
+                                color: 'var(--color-primary, #1B365D)', 
+                                fontSize: '14.5px',
+                                letterSpacing: '0.2px'
+                              }}>
+                                Resumo Geral do Efetivo
+                              </span>
+                            </div>
+                            <span style={{ 
+                              fontSize: '11px', 
+                              fontWeight: '700', 
+                              padding: '3px 9px', 
+                              borderRadius: '20px', 
+                              backgroundColor: 'rgba(22, 163, 74, 0.1)', 
+                              color: '#15803D' 
+                            }}>
+                              {activePct}% Operacional
+                            </span>
+                          </div>
+
+                          {/* Destaque do Total de Funcionários */}
+                          <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'baseline', 
+                            justifyContent: 'space-between', 
+                            padding: '12px 16px',
+                            borderRadius: '12px',
+                            backgroundColor: 'rgba(27, 54, 93, 0.03)',
+                            border: '1px solid rgba(27, 54, 93, 0.08)',
+                            marginBottom: '14px'
+                          }}>
+                            <div>
+                              <div style={{ 
+                                fontSize: '11.5px', 
+                                fontWeight: '700', 
+                                textTransform: 'uppercase', 
+                                letterSpacing: '0.6px', 
+                                color: 'var(--color-text-muted)' 
+                              }}>
+                                Total de Funcionários
+                              </div>
+                              <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
+                                Quadro Geral Registado
+                              </div>
+                            </div>
+                            <div style={{ 
+                              fontSize: '38px', 
+                              fontWeight: '900', 
+                              color: 'var(--color-primary, #1B365D)',
+                              lineHeight: 1,
+                              fontFamily: 'system-ui, -apple-system, sans-serif'
+                            }}>
+                              {total}
+                            </div>
+                          </div>
+
+                          {/* Sub-métricas: Ativos vs Inativos */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div style={{ 
+                              padding: '8px 12px', 
+                              borderRadius: '10px', 
+                              backgroundColor: 'rgba(22, 163, 74, 0.06)', 
+                              border: '1px solid rgba(22, 163, 74, 0.2)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16a34a' }} />
+                                <span style={{ fontSize: '12px', fontWeight: '600', color: '#15803D' }}>Ativos</span>
+                              </div>
+                              <span style={{ fontSize: '17px', fontWeight: '800', color: '#15803D' }}>{active}</span>
+                            </div>
+
+                            <div style={{ 
+                              padding: '8px 12px', 
+                              borderRadius: '10px', 
+                              backgroundColor: 'rgba(220, 38, 38, 0.06)', 
+                              border: '1px solid rgba(220, 38, 38, 0.2)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#dc2626' }} />
+                                <span style={{ fontSize: '12px', fontWeight: '600', color: '#B91C1C' }}>Inativos</span>
+                              </div>
+                              <span style={{ fontSize: '17px', fontWeight: '800', color: '#B91C1C' }}>{inactive}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div style={{ width: '1px', height: '24px', backgroundColor: 'var(--color-border)' }}></div>
-                        <div style={{ textAlign: 'center' }}>
-                          <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Mulheres: </span>
-                          <strong style={{ fontSize: '16px', color: '#db2777' }}>{reportStats.women}</strong>
+
+                        {/* CARD 2: DISTRIBUIÇÃO POR GÉNERO */}
+                        <div style={{ 
+                          border: '1px solid var(--color-border)', 
+                          padding: '20px 22px', 
+                          borderRadius: '14px', 
+                          backgroundColor: 'var(--color-bg-base)', 
+                          boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}>
+                          {/* Faixa decorativa sutil de género */}
+                          <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: '3px',
+                            background: 'linear-gradient(90deg, #2563EB 50%, #DB2777 50%)'
+                          }} />
+
+                          {/* Topo do Card */}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{
+                                width: '30px',
+                                height: '30px',
+                                borderRadius: '8px',
+                                backgroundColor: 'rgba(219, 39, 119, 0.08)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '15px'
+                              }}>
+                                👥
+                              </div>
+                              <span style={{ 
+                                fontWeight: '700', 
+                                color: 'var(--color-primary, #1B365D)', 
+                                fontSize: '14.5px',
+                                letterSpacing: '0.2px'
+                              }}>
+                                Distribuição por Género
+                              </span>
+                            </div>
+                            <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontWeight: '600' }}>
+                              Efetivo Total ({total})
+                            </span>
+                          </div>
+
+                          {/* Blocos Destacados de Homens e Mulheres */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                            {/* BLOCO HOMENS */}
+                            <div style={{ 
+                              padding: '12px 14px', 
+                              borderRadius: '12px', 
+                              backgroundColor: 'rgba(37, 99, 235, 0.05)', 
+                              border: '1px solid rgba(37, 99, 235, 0.18)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '6px'
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '11.5px', fontWeight: '700', color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                  👨 Homens
+                                </span>
+                                <span style={{ 
+                                  fontSize: '11px', 
+                                  fontWeight: '800', 
+                                  padding: '2px 6px', 
+                                  borderRadius: '6px', 
+                                  backgroundColor: 'rgba(37, 99, 235, 0.12)', 
+                                  color: '#1D4ED8' 
+                                }}>
+                                  {menPct}%
+                                </span>
+                              </div>
+                              <div style={{ 
+                                fontSize: '32px', 
+                                fontWeight: '900', 
+                                color: '#1D4ED8', 
+                                lineHeight: 1,
+                                marginTop: '4px'
+                              }}>
+                                {men}
+                              </div>
+                              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                                Colaboradores
+                              </span>
+                            </div>
+
+                            {/* BLOCO MULHERES */}
+                            <div style={{ 
+                              padding: '12px 14px', 
+                              borderRadius: '12px', 
+                              backgroundColor: 'rgba(219, 39, 119, 0.05)', 
+                              border: '1px solid rgba(219, 39, 119, 0.18)',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '6px'
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '11.5px', fontWeight: '700', color: '#BE185D', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                  👩 Mulheres
+                                </span>
+                                <span style={{ 
+                                  fontSize: '11px', 
+                                  fontWeight: '800', 
+                                  padding: '2px 6px', 
+                                  borderRadius: '6px', 
+                                  backgroundColor: 'rgba(219, 39, 119, 0.12)', 
+                                  color: '#BE185D' 
+                                }}>
+                                  {womenPct}%
+                                </span>
+                              </div>
+                              <div style={{ 
+                                fontSize: '32px', 
+                                fontWeight: '900', 
+                                color: '#DB2777', 
+                                lineHeight: 1,
+                                marginTop: '4px'
+                              }}>
+                                {women}
+                              </div>
+                              <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                                Colaboradoras
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Barra de Proporção Visual de Género */}
+                          <div style={{ width: '100%' }}>
+                            <div style={{ 
+                              width: '100%', 
+                              height: '8px', 
+                              borderRadius: '10px', 
+                              backgroundColor: 'rgba(0,0,0,0.06)', 
+                              overflow: 'hidden', 
+                              display: 'flex' 
+                            }}>
+                              <div style={{ 
+                                width: `${menPct}%`, 
+                                backgroundColor: '#2563EB', 
+                                transition: 'width 0.4s ease' 
+                              }} title={`Homens: ${men} (${menPct}%)`} />
+                              <div style={{ 
+                                width: `${womenPct}%`, 
+                                backgroundColor: '#DB2777', 
+                                transition: 'width 0.4s ease' 
+                              }} title={`Mulheres: ${women} (${womenPct}%)`} />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
 
                   {/* AVISO DE ESCOPO PROVINCIAL (QUANDO PERFIL SECUNDÁRIO) */}
                   {reportStats.isScopedToProvince && (
