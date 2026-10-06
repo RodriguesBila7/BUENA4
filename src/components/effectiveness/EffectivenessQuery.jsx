@@ -733,7 +733,8 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                 fontSize: '13px',
                 fontWeight: '700',
                 cursor: 'pointer',
-                outline: 'none'
+                outline: 'none',
+                minWidth: '280px'
               }}
             >
               <option value="">🌐 Todas as Direcções Provinciais (Consolidado Nacional)</option>
@@ -743,49 +744,6 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                 </option>
               ))}
             </select>
-
-            <button
-              onClick={handlePrintProvincialMap}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: 'var(--color-primary, #1B365D)',
-                color: 'var(--color-accent, #EAAA00)',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                fontSize: '12.5px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-              title="Imprimir Mapa Oficial de Faltas desta Direcção"
-            >
-              🖨️ Imprimir Mapa
-            </button>
-
-            {isPrincipal && (
-              <button
-                onClick={handlePrintAllNational}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#DC2626',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '12.5px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
-                }}
-                title="Imprimir todas as faltas de todas as direcções e unidades (Consolidado Nacional)"
-              >
-                🏛️ Imprimir Todas as Direcções
-              </button>
-            )}
           </div>
         </div>
       ) : (
@@ -799,32 +757,13 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
           fontWeight: '600',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
           gap: '8px',
-          marginBottom: '16px',
-          flexWrap: 'wrap'
+          marginBottom: '16px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>📍</span>
-            <span>
-              <strong>Gerência Provincial Ativa:</strong> {userDirObj?.name || 'Direcção Local'} — Visualização restrita aos efectivos sob sua alçada.
-            </span>
-          </div>
-          <button
-            onClick={handlePrintProvincialMap}
-            style={{
-              padding: '6px 12px',
-              backgroundColor: 'var(--color-primary, #1B365D)',
-              color: 'var(--color-accent, #EAAA00)',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '12px'
-            }}
-          >
-            🖨️ Imprimir Mapa Provincial
-          </button>
+          <span>📍</span>
+          <span>
+            <strong>Gerência Provincial Ativa:</strong> {userDirObj?.name || 'Direcção Local'} — Visualização restrita aos efectivos sob sua alçada.
+          </span>
         </div>
       )}
       
@@ -1064,28 +1003,14 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
               <h4 style={styles.cardTitle}>
                 Lista de Funcionários com Faltas ({faltososList.length})
               </h4>
-              <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
-                {isPrincipal && (
-                  <button 
-                    onClick={handlePrintAllNational} 
-                    style={{
-                      ...styles.btnGoToRegister, 
-                      backgroundColor: '#DC2626', 
-                      color: '#FFFFFF',
-                      boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
-                    }}
-                    title="Imprimir todas as faltas de todas as direcções e unidades do SERNIC"
-                  >
-                    🏛️ Imprimir Todas as Faltas (Todas as Direcções)
-                  </button>
-                )}
-                <button onClick={handlePrintProvincialMap} style={{...styles.btnGoToRegister, backgroundColor: 'var(--color-primary, #1B365D)'}}>
+              <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                <button onClick={handlePrintProvincialMap} style={{...styles.btnGoToRegister, backgroundColor: 'var(--color-primary, #1B365D)'}} title="Imprimir Mapa Oficial">
                   🖨️ Imprimir Mapa
                 </button>
-                <button onClick={exportToExcel} style={{...styles.btnGoToRegister, backgroundColor: '#107c41'}}>
+                <button onClick={exportToExcel} style={{...styles.btnGoToRegister, backgroundColor: '#107c41'}} title="Exportar para Excel">
                   📊 Exportar Excel
                 </button>
-                <button onClick={() => handleOpenRegister(null)} style={styles.btnGoToRegister}>
+                <button onClick={() => handleOpenRegister(null)} style={styles.btnGoToRegister} title="Registar Nova Falta">
                   + Registar Falta
                 </button>
               </div>

@@ -7,7 +7,6 @@ import useEffectivenessData from '../../hooks/useEffectivenessData';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useOrgData from '../../hooks/useOrgData';
 import { isPrimaryCentralAdmin, isCentralUser } from '../../utils/scopeUtils';
-import { printAllAbsencesNationalMap } from './printAllEffectiveness';
 import ConfirmModal from '../ConfirmModal';
 
 export default function EffectivenessManager({ user, orgData, employeesData }) {
@@ -32,27 +31,7 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
 
   const finalOrgData = orgData?.data || orgData || hookOrgData || {};
   const finalEmployees = employeesData?.employees || (Array.isArray(employeesData) ? employeesData : null) || employees || [];
-
   const isPrincipal = isPrimaryCentralAdmin(user) || isCentralUser(user);
-
-  const handlePrintAll = () => {
-    if (!records || records.length === 0) {
-      setConfirmModal({
-        isOpen: true,
-        title: 'Aviso',
-        message: 'Não existem registos de faltas no sistema para imprimir.',
-        hideCancel: true,
-        confirmText: 'OK'
-      });
-      return;
-    }
-    printAllAbsencesNationalMap({
-      records,
-      employees: finalEmployees,
-      orgData: finalOrgData,
-      user
-    });
-  };
 
   const tabs = [
     { 
@@ -107,22 +86,6 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
         <div>
           <h2 style={styles.title}>Módulo de Efetividade (Gestão de Faltas)</h2>
         </div>
-        {isPrincipal && (
-          <button 
-            onClick={handlePrintAll}
-            style={styles.btnPrintAll}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
-            title="Imprimir Mapa Consolidado Nacional com todas as direcções"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6 9 6 2 18 2 18 9" />
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-              <rect x="6" y="14" width="12" height="8" />
-            </svg>
-            <span>Imprimir Todas as Faltas (Todas as Direcções)</span>
-          </button>
-        )}
       </div>
 
       {/* Navegação interna do módulo */}
