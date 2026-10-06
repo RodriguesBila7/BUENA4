@@ -68,18 +68,13 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   });
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [showMobileFabMenu, setShowMobileFabMenu] = useState(false);
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
 
+  // Fechar sidebar mobile ao rodar o ecrã para landscape
   React.useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth <= 768;
-      setIsMobile(mobile);
-      if (!mobile) setIsMobileSidebarOpen(false);
-    };
-    window.addEventListener('resize', handleResize);
-    document.body.style.backgroundColor = 'var(--color-bg-base)';
-    return () => window.removeEventListener('resize', handleResize);
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => { if (!e.matches) setIsMobileSidebarOpen(false); };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
   }, []);
 
   // ─── HISTÓRICO DE NAVEGAÇÃO ────────────────────────────────────────────────
@@ -549,7 +544,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const [profilePhoto, setProfilePhoto] = useState(() => {
     return localStorage.getItem('sernic_user_photo_' + (user?.username || 'admin')) || user?.photo || user?.avatar || null;
   });
-  const [photoError, setPhotoError] = useState(false);
   const [photoFeedback, setPhotoFeedback] = useState('');
 
   // Atualizar quando o user mudar ou quando chegar foto da nuvem (sincronização PC e Telemóvel)
@@ -973,29 +967,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             <span style={styles.sidebarSigla}>{settings.sigla}</span>
             <span style={styles.sidebarDRH}>{t('sidebar_hr')}</span>
           </div>
-          {isMobile && (
-            <button 
-              type="button"
-              onClick={() => setIsMobileSidebarOpen(false)}
-              aria-label="Fechar Menu"
-              style={{
-                marginLeft: 'auto',
-                background: 'rgba(255,255,255,0.12)',
-                border: 'none',
-                color: '#FFFFFF',
-                width: '32px',
-                height: '32px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '16px'
-              }}
-            >
-              ✕
-            </button>
-          )}
         </div>
 
         <nav style={styles.sidebarNav}>
@@ -1473,25 +1444,14 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       {/* CONTEÚDO PRINCIPAL DA APLICAÇÃO */}
       <main className="app-main-content" style={styles.mainContent}>
         {/* NAVBAR SUPERIOR (Oculta na impressão) */}
-        <header className="no-print app-header" style={isMobile ? styles.headerMobile : styles.header}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '10px' }}>
+        <header className="no-print app-header" style={styles.header}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {/* BOTÃO HAMBURGER — apenas visível em mobile */}
             <button
               className="btn-hamburger"
               onClick={() => setIsMobileSidebarOpen(true)}
               title="Abrir Menu"
               aria-label="Abrir Menu de Navegação"
-              style={{
-                color: isMobile ? '#FFFFFF' : 'var(--color-text-base)',
-                backgroundColor: isMobile ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                border: isMobile ? '1px solid rgba(255, 255, 255, 0.25)' : 'none',
-                borderRadius: '8px',
-                padding: '6px',
-                display: isMobile ? 'flex' : 'none',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer'
-              }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <line x1="3" y1="6" x2="21" y2="6"/>
@@ -1499,250 +1459,184 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                 <line x1="3" y1="18" x2="21" y2="18"/>
               </svg>
             </button>
-
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={styles.headerTitle}>
               {settings.logotipo ? (
-                <img 
-                  src={settings.logotipo} 
-                  alt="Logo" 
-                  style={{ 
-                    ...styles.headerLogo, 
-                    width: isMobile ? '34px' : '42px', 
-                    height: isMobile ? '34px' : '42px', 
-                    filter: isMobile ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none',
-                    imageRendering: '-webkit-optimize-contrast' 
-                  }} 
-                />
+                <img src={settings.logotipo} alt="Logo" style={{ ...styles.headerLogo, width: '42px', height: '42px', imageRendering: '-webkit-optimize-contrast' }} />
               ) : (
-                <img 
-                  src="/logo-sernic-transparente.png" 
-                  alt="Logo Padrão" 
-                  style={{ 
-                    ...styles.headerLogo, 
-                    width: isMobile ? '34px' : '42px', 
-                    height: isMobile ? '34px' : '42px', 
-                    filter: isMobile ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none',
-                    imageRendering: '-webkit-optimize-contrast' 
-                  }} 
-                />
+                <img src="/logo-sernic-transparente.png" alt="Logo Padrão" style={{ ...styles.headerLogo, width: '42px', height: '42px', imageRendering: '-webkit-optimize-contrast' }} />
               )}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                {isMobile ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '0.5px' }}>SERNIC</span>
-                    <span style={{ fontSize: '10.5px', fontWeight: '700', color: '#FDE047', backgroundColor: 'rgba(0,0,0,0.22)', padding: '1px 6px', borderRadius: '4px' }}>DRH</span>
-                  </div>
-                ) : (
-                  <>
-                    <h2 style={{ ...styles.institutionTitle, margin: 0, fontSize: '13px', color: 'var(--color-text-muted, #64748b)', fontWeight: '600', lineHeight: '1.2' }}>
-                      {settings.nome_instituicao} ({settings.sigla})
-                    </h2>
-                    {userDirectorate && (
-                      <span style={{ 
-                        fontSize: '20px', 
-                        fontWeight: '800', 
-                        color: 'var(--color-primary, #B71C1C)', 
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.6px',
-                        marginTop: '2px',
-                        lineHeight: '1.2'
-                      }}>
-                        {userDirectorate.name.toUpperCase()}
-                      </span>
-                    )}
-                  </>
+                <h2 style={{ ...styles.institutionTitle, margin: 0, fontSize: '13px', color: 'var(--color-text-muted, #64748b)', fontWeight: '600', lineHeight: '1.2' }}>
+                  {settings.nome_instituicao} ({settings.sigla})
+                </h2>
+                {userDirectorate && (
+                  <span style={{ 
+                    fontSize: '20px', 
+                    fontWeight: '800', 
+                    color: 'var(--color-primary, #B71C1C)', 
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.6px',
+                    marginTop: '2px',
+                    lineHeight: '1.2'
+                  }}>
+                    {userDirectorate.name.toUpperCase()}
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* SETAS DE NAVEGAÇÃO (Apenas Desktop) */}
-          {!isMobile && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '12px' }}>
-              <button
-                onClick={handleNavBack}
-                disabled={!canGoBack}
-                title="Voltar (Alt+←)"
-                style={{
-                  width: '30px',
-                  height: '30px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: canGoBack ? 'var(--color-bg-base)' : 'transparent',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '8px',
-                  cursor: canGoBack ? 'pointer' : 'not-allowed',
-                  opacity: canGoBack ? 1 : 0.35,
-                  color: 'var(--color-text-muted)',
-                  transition: 'all 0.15s',
-                  flexShrink: 0,
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-              </button>
-              <button
-                onClick={handleNavForward}
-                disabled={!canGoForward}
-                title="Avançar (Alt+→)"
-                style={{
-                  width: '30px',
-                  height: '30px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: canGoForward ? 'var(--color-bg-base)' : 'transparent',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '8px',
-                  cursor: canGoForward ? 'pointer' : 'not-allowed',
-                  opacity: canGoForward ? 1 : 0.35,
-                  color: 'var(--color-text-muted)',
-                  transition: 'all 0.15s',
-                  flexShrink: 0,
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-            </div>
-          )}
+          {/* SETAS DE NAVEGAÇÃO */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '12px' }}>
+            <button
+              onClick={handleNavBack}
+              disabled={!canGoBack}
+              title="Voltar (Alt+←)"
+              style={{
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: canGoBack ? 'var(--color-bg-base)' : 'transparent',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                cursor: canGoBack ? 'pointer' : 'not-allowed',
+                opacity: canGoBack ? 1 : 0.35,
+                color: 'var(--color-text-muted)',
+                transition: 'all 0.15s',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <button
+              onClick={handleNavForward}
+              disabled={!canGoForward}
+              title="Avançar (Alt+→)"
+              style={{
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: canGoForward ? 'var(--color-bg-base)' : 'transparent',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                cursor: canGoForward ? 'pointer' : 'not-allowed',
+                opacity: canGoForward ? 1 : 0.35,
+                color: 'var(--color-text-muted)',
+                transition: 'all 0.15s',
+                flexShrink: 0,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          </div>
 
-          <div style={{ ...styles.headerActions, gap: isMobile ? '8px' : '16px' }}>
+          <div style={styles.headerActions}>
             {/* Botão de Acesso Rápido ao Portal do Funcionário */}
             <button
               onClick={() => handleTabChange(activeTab === 'portal' ? 'home' : 'portal')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '5px',
-                padding: isMobile ? '5px 10px' : '6px 12px',
+                gap: '6px',
+                padding: '6px 12px',
                 borderRadius: '20px',
-                border: isMobile 
-                  ? '1px solid rgba(255, 255, 255, 0.3)' 
-                  : (activeTab === 'portal' ? '1px solid #059669' : '1px solid var(--color-border)'),
-                backgroundColor: isMobile 
-                  ? (activeTab === 'portal' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.16)') 
-                  : (activeTab === 'portal' ? '#ecfdf5' : 'var(--color-bg-base)'),
-                color: isMobile 
-                  ? (activeTab === 'portal' ? '#B71C1C' : '#FFFFFF') 
-                  : (activeTab === 'portal' ? '#059669' : 'var(--color-text-base)'),
-                fontSize: isMobile ? '11px' : '12px',
+                border: activeTab === 'portal' ? '1px solid #059669' : '1px solid var(--color-border)',
+                backgroundColor: activeTab === 'portal' ? '#ecfdf5' : 'var(--color-bg-base)',
+                color: activeTab === 'portal' ? '#059669' : 'var(--color-text-base)',
+                fontSize: '12px',
                 fontWeight: '700',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                backdropFilter: isMobile ? 'blur(8px)' : 'none'
+                transition: 'all 0.2s'
               }}
               title="Alternar entre Painel Geral e Portal do Agente"
             >
-              <span>{activeTab === 'portal' ? '⬅️ Geral' : (isMobile ? '🛡️ Portal' : '🛡️ Meu Portal')}</span>
+              <span>{activeTab === 'portal' ? '⬅️ Modo Geral' : '🛡️ Meu Portal'}</span>
             </button>
 
-            {/* Seletor de Idioma no Header (Apenas Desktop) */}
-            {!isMobile && (
-              <div style={{ position: 'relative' }} ref={langMenuRef}>
-                <button
-                  onClick={() => setShowLangMenu(!showLangMenu)}
-                  style={{ ...styles.langBtnHeader, display: 'flex', alignItems: 'center', gap: '4px', opacity: 1, fontWeight: '700' }}
-                  title={t('language')}
-                >
-                  {language.toUpperCase()}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </button>
-                
-                {showLangMenu && (
-                  <div style={styles.langDropdownHeader}>
-                    {['pt', 'en'].filter(l => l !== language).map(lang => (
-                      <button
-                        key={lang}
-                        onClick={() => { setLanguage(lang); setShowLangMenu(false); }}
-                        style={{ ...styles.langBtnHeader, opacity: 0.7, width: '100%', textAlign: 'left', marginTop: '4px' }}
-                      >
-                        {lang.toUpperCase()}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Seletor de Idioma no Header */}
+            <div style={{ position: 'relative' }} ref={langMenuRef}>
+              <button
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                style={{ ...styles.langBtnHeader, display: 'flex', alignItems: 'center', gap: '4px', opacity: 1, fontWeight: '700' }}
+                title={t('language')}
+              >
+                {language.toUpperCase()}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              
+              {showLangMenu && (
+                <div style={styles.langDropdownHeader}>
+                  {['pt', 'en'].filter(l => l !== language).map(lang => (
+                    <button
+                      key={lang}
+                      onClick={() => { setLanguage(lang); setShowLangMenu(false); }}
+                      style={{ ...styles.langBtnHeader, opacity: 0.7, width: '100%', textAlign: 'left', marginTop: '4px' }}
+                    >
+                      {lang.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Seletor Rápido de Tema (Claro / Escuro) */}
             <button 
               onClick={() => {
                 updateSettings({ ...settings, modo_tema: settings.modo_tema === 'light' ? 'dark' : 'light', usuario_responsavel: user?.username || 'Utilizador' });
               }}
-              style={isMobile ? {
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(255, 255, 255, 0.16)',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                color: '#FFFFFF',
-                cursor: 'pointer'
-              } : styles.themeToggleBtn}
+              style={styles.themeToggleBtn}
               title={t('theme_toggle_title')}
             >
               {settings.modo_tema === 'dark' ? (
-                <svg width={isMobile ? "16" : "20"} height={isMobile ? "16" : "20"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
               ) : (
-                <svg width={isMobile ? "16" : "20"} height={isMobile ? "16" : "20"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
               )}
-              {!isMobile && (
-                <span style={{ fontSize: '13px', fontWeight: '500' }}>
-                  {t('theme_mode')}: {settings.modo_tema === 'dark' ? t('theme_dark') : t('theme_light')}
-                </span>
-              )}
+              <span style={{ fontSize: '13px', fontWeight: '500' }}>
+                {t('theme_mode')}: {settings.modo_tema === 'dark' ? t('theme_dark') : t('theme_light')}
+              </span>
             </button>
 
-            {/* Botão Guia de Atalhos de Teclado (F1) - Apenas Desktop */}
-            {!isMobile && (
-              <button 
-                type="button"
-                onClick={() => setShowShortcutsModal(true)}
-                style={styles.keyboardShortcutsBtn}
-                title="Atalhos do Teclado e Navegação (F1)"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
-                  <line x1="6" y1="8" x2="6" y2="8"></line>
-                  <line x1="10" y1="8" x2="10" y2="8"></line>
-                  <line x1="14" y1="8" x2="14" y2="8"></line>
-                  <line x1="18" y1="8" x2="18" y2="8"></line>
-                  <line x1="6" y1="12" x2="6" y2="12"></line>
-                  <line x1="10" y1="12" x2="10" y2="12"></line>
-                  <line x1="14" y1="12" x2="14" y2="12"></line>
-                  <line x1="18" y1="12" x2="18" y2="12"></line>
-                  <line x1="7" y1="16" x2="17" y2="16"></line>
-                </svg>
-                <span style={{ fontSize: '11px', fontWeight: '800', padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--color-bg-muted, rgba(0,0,0,0.06))', border: '1px solid var(--color-border)', color: 'var(--color-text-base)' }}>F1</span>
-              </button>
-            )}
+            {/* Botão Guia de Atalhos de Teclado (F1) */}
+            <button 
+              type="button"
+              onClick={() => setShowShortcutsModal(true)}
+              style={styles.keyboardShortcutsBtn}
+              title="Atalhos do Teclado e Navegação (F1)"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                <line x1="6" y1="8" x2="6" y2="8"></line>
+                <line x1="10" y1="8" x2="10" y2="8"></line>
+                <line x1="14" y1="8" x2="14" y2="8"></line>
+                <line x1="18" y1="8" x2="18" y2="8"></line>
+                <line x1="6" y1="12" x2="6" y2="12"></line>
+                <line x1="10" y1="12" x2="10" y2="12"></line>
+                <line x1="14" y1="12" x2="14" y2="12"></line>
+                <line x1="18" y1="12" x2="18" y2="12"></line>
+                <line x1="7" y1="16" x2="17" y2="16"></line>
+              </svg>
+              <span style={{ fontSize: '11px', fontWeight: '800', padding: '1px 5px', borderRadius: '4px', backgroundColor: 'var(--color-bg-muted, rgba(0,0,0,0.06))', border: '1px solid var(--color-border)', color: 'var(--color-text-base)' }}>F1</span>
+            </button>
 
             {/* Perfil do Administrador Moderno, Elegante e Minimalista */}
             <div style={{ position: 'relative' }} ref={profileMenuRef}>
               <button
                 type="button"
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-                style={isMobile ? {
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '2px',
-                  borderRadius: '50%',
-                  border: '1.5px solid rgba(255, 255, 255, 0.4)',
-                  backgroundColor: 'transparent',
-                  cursor: 'pointer',
-                  width: '36px',
-                  height: '36px',
-                  flexShrink: 0
-                } : {
+                style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '9px',
@@ -1760,13 +1654,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   outline: 'none',
                 }}
                 onMouseEnter={(e) => {
-                  if (!isMobile) {
-                    e.currentTarget.style.borderColor = 'var(--color-primary, #B71C1C)';
-                    e.currentTarget.style.boxShadow = '0 3px 10px rgba(0,0,0,0.06)';
-                  }
+                  e.currentTarget.style.borderColor = 'var(--color-primary, #B71C1C)';
+                  e.currentTarget.style.boxShadow = '0 3px 10px rgba(0,0,0,0.06)';
                 }}
                 onMouseLeave={(e) => {
-                  if (!isMobile && !showProfileMenu) {
+                  if (!showProfileMenu) {
                     e.currentTarget.style.borderColor = 'var(--color-border)';
                     e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.03)';
                   }
@@ -1774,15 +1666,14 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                 title="Perfil do Utilizador"
               >
                 {/* Avatar com Indicador Discreto */}
-                <div style={{ position: 'relative', width: '32px', height: '32px', flexShrink: 0 }}>
-                  {profilePhoto && !photoError ? (
+                <div style={{ position: 'relative', width: '34px', height: '34px', flexShrink: 0 }}>
+                  {profilePhoto ? (
                     <img 
                       src={profilePhoto} 
-                      onError={() => setPhotoError(true)}
-                      alt="" 
+                      alt="Foto de Perfil" 
                       style={{
-                        width: '32px',
-                        height: '32px',
+                        width: '34px',
+                        height: '34px',
                         borderRadius: '50%',
                         objectFit: 'cover',
                         border: '1.5px solid var(--color-border)',
@@ -1791,8 +1682,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     />
                   ) : (
                     <div style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '34px',
+                      height: '34px',
                       borderRadius: '50%',
                       background: isSuperAdmin 
                         ? 'linear-gradient(135deg, #B71C1C 0%, #DC2626 100%)' 
@@ -1802,7 +1693,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontWeight: '700',
-                      fontSize: '13px',
+                      fontSize: '13.5px',
                       letterSpacing: '0.3px',
                       boxShadow: '0 1px 3px rgba(183, 28, 28, 0.25)'
                     }}>
@@ -1815,64 +1706,60 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     position: 'absolute',
                     bottom: '0px',
                     right: '0px',
-                    width: '7px',
-                    height: '7px',
+                    width: '8px',
+                    height: '8px',
                     borderRadius: '50%',
                     backgroundColor: '#10B981',
                     border: '1.5px solid var(--color-bg-base, #ffffff)'
                   }}></span>
                 </div>
 
-                {/* Nome e Cargo / Nível (Apenas Desktop) */}
-                {!isMobile && (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: '1.25' }}>
-                    <span style={{ 
-                      fontSize: '13px', 
-                      fontWeight: '600', 
-                      color: 'var(--color-text-base)', 
-                      maxWidth: '150px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {userDisplayName}
-                    </span>
-                    <span style={{
-                      color: 'var(--color-text-muted)',
-                      fontSize: '11px',
-                      fontWeight: '500',
-                      maxWidth: '150px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {isSuperAdmin ? 'Super Administrador' : (user?.roleName || user?.role || 'Utilizador')}
-                    </span>
-                  </div>
-                )}
+                {/* Nome e Cargo / Nível Conciso e Elegante (Sem poluição redundante) */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', lineHeight: '1.25' }}>
+                  <span style={{ 
+                    fontSize: '13px', 
+                    fontWeight: '600', 
+                    color: 'var(--color-text-base)', 
+                    maxWidth: '150px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {userDisplayName}
+                  </span>
+                  <span style={{
+                    color: 'var(--color-text-muted)',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    maxWidth: '150px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {isSuperAdmin ? 'Super Administrador' : (user?.roleName || user?.role || 'Utilizador')}
+                  </span>
+                </div>
 
-                {/* Seta / Chevron Minimalista (Apenas Desktop) */}
-                {!isMobile && (
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2.2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                    style={{
-                      color: 'var(--color-text-muted)',
-                      transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      transform: showProfileMenu ? 'rotate(180deg)' : 'rotate(0deg)',
-                      marginLeft: '2px',
-                      opacity: 0.7
-                    }}
-                  >
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                )}
+                {/* Seta / Chevron Minimalista */}
+                <svg 
+                  width="12" 
+                  height="12" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  style={{
+                    color: 'var(--color-text-muted)',
+                    transition: 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: showProfileMenu ? 'rotate(180deg)' : 'rotate(0deg)',
+                    marginLeft: '2px',
+                    opacity: 0.7
+                  }}
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
               </button>
 
               {/* Menu Dropdown Sofisticado e Limpo */}
@@ -2101,14 +1988,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         </header>
 
         {/* ÁREA DE CONTEÚDO DINÂMICO */}
-        <div style={{
-          ...styles.contentArea,
-          padding: isMobile ? '12px 10px' : '24px 28px',
-          width: '100%',
-          maxWidth: '100vw',
-          boxSizing: 'border-box',
-          overflowX: 'hidden'
-        }}>
+        <div style={styles.contentArea}>
           <ErrorBoundary key={activeTab}>
           
           {/* TAB 1: INÍCIO (DASHBOARD) */}
@@ -4289,151 +4169,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}
       />
-
-      {/* ── BARRA DE NAVEGAÇÃO INFERIOR PARA SMARTPHONES (NATIVE APP FEEL) ── */}
-      <nav className="mobile-bottom-nav no-print" aria-label="Navegação Rápida Móvel">
-        <button 
-          type="button"
-          className={`mobile-nav-item ${activeTab === 'home' ? 'active' : ''}`}
-          onClick={() => handleTabChange('home')}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-          <span>Início</span>
-        </button>
-
-        <button 
-          type="button"
-          className={`mobile-nav-item ${['emp_list', 'emp_form', 'emp_import', 'emp_deleted'].includes(activeTab) ? 'active' : ''}`}
-          onClick={() => handleTabChange('emp_list')}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          <span>Efetivos</span>
-        </button>
-
-        {/* BOTÃO CENTRAL FAB DE AÇÃO RÁPIDA (CRUD) */}
-        <div className="mobile-fab-container">
-          <button 
-            type="button"
-            className="mobile-fab-button"
-            onClick={() => setShowMobileFabMenu(!showMobileFabMenu)}
-            title="Ações Rápidas (CRUD)"
-            aria-label="Adicionar / Criar Registo"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" style={{ transform: showMobileFabMenu ? 'rotate(45deg)' : 'none', transition: 'transform 0.22s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-              <line x1="12" y1="5" x2="12" y2="19"></line>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-          </button>
-        </div>
-
-        <button 
-          type="button"
-          className={`mobile-nav-item ${activeTab.startsWith('admin_acts_') ? 'active' : ''}`}
-          onClick={() => handleTabChange('admin_acts_dynamic_Provimento_e_Posse')}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          <span>Actos</span>
-        </button>
-
-        {/* BOTÃO MENU: ABRE A GAVETA LATERAL COM 100% DOS MÓDULOS */}
-        <button 
-          type="button"
-          className={`mobile-nav-item ${isMobileSidebarOpen ? 'active' : ''}`}
-          onClick={() => setIsMobileSidebarOpen(true)}
-          title="Aceder a todos os módulos e menus"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-          <span>Menu</span>
-        </button>
-      </nav>
-
-      {/* MODAL / SHEET FLUTUANTE DE AÇÕES RÁPIDAS (CRUD MÓVEL) */}
-      {showMobileFabMenu && (
-        <div className="mobile-fab-sheet-overlay" onClick={() => setShowMobileFabMenu(false)}>
-          <div className="mobile-fab-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="mobile-fab-sheet-header">
-              <span style={{ fontSize: '15px', fontWeight: '700', color: 'var(--color-text-base)' }}>Ações Rápidas (CRUD)</span>
-              <button 
-                type="button"
-                onClick={() => setShowMobileFabMenu(false)}
-                style={{ background: 'none', border: 'none', fontSize: '18px', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '4px 8px' }}
-              >✕</button>
-            </div>
-            <div className="mobile-fab-sheet-grid">
-              <button 
-                type="button"
-                className="mobile-fab-action-item"
-                onClick={() => { setShowMobileFabMenu(false); handleTabChange('emp_form'); }}
-              >
-                <div className="action-icon-badge" style={{ backgroundColor: 'rgba(220, 38, 38, 0.12)', color: '#DC2626' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                </div>
-                <div>
-                  <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--color-text-base)' }}>Novo Funcionário</div>
-                  <div style={{ fontSize: '10.5px', color: 'var(--color-text-muted)' }}>Cadastrar novo efetivo no sistema</div>
-                </div>
-              </button>
-
-              <button 
-                type="button"
-                className="mobile-fab-action-item"
-                onClick={() => { setShowMobileFabMenu(false); handleTabChange('emp_list'); }}
-              >
-                <div className="action-icon-badge" style={{ backgroundColor: 'rgba(59, 130, 246, 0.12)', color: '#2563EB' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                </div>
-                <div>
-                  <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--color-text-base)' }}>Gerir Efetivos (CRUD)</div>
-                  <div style={{ fontSize: '10.5px', color: 'var(--color-text-muted)' }}>Consultar, editar ou eliminar</div>
-                </div>
-              </button>
-
-              <button 
-                type="button"
-                className="mobile-fab-action-item"
-                onClick={() => { setShowMobileFabMenu(false); handleTabChange('admin_acts_dynamic_Provimento_e_Posse'); }}
-              >
-                <div className="action-icon-badge" style={{ backgroundColor: 'rgba(168, 85, 247, 0.12)', color: '#9333EA' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                </div>
-                <div>
-                  <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--color-text-base)' }}>Registar Acto Administrativo</div>
-                  <div style={{ fontSize: '10.5px', color: 'var(--color-text-muted)' }}>Provimento, posse, promoções</div>
-                </div>
-              </button>
-
-              <button 
-                type="button"
-                className="mobile-fab-action-item"
-                onClick={() => { setShowMobileFabMenu(false); handleTabChange('vacations'); }}
-              >
-                <div className="action-icon-badge" style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', color: '#059669' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                </div>
-                <div>
-                  <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--color-text-base)' }}>Marcar Férias / Licença</div>
-                  <div style={{ fontSize: '10.5px', color: 'var(--color-text-muted)' }}>Agendamento de descanso do agente</div>
-                </div>
-              </button>
-
-              <button 
-                type="button"
-                className="mobile-fab-action-item"
-                onClick={() => { setShowMobileFabMenu(false); handleTabChange('effectiveness'); }}
-              >
-                <div className="action-icon-badge" style={{ backgroundColor: 'rgba(234, 88, 12, 0.12)', color: '#EA580C' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <div>
-                  <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--color-text-base)' }}>Lançar Efectividade / Faltas</div>
-                  <div style={{ fontSize: '10.5px', color: 'var(--color-text-muted)' }}>Faltas justificadas e injustificadas</div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
@@ -4441,7 +4176,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 const styles = {
   appContainer: {
     display: 'flex',
-    minHeight: '100dvh',
     height: '100vh',
     maxHeight: '100vh',
     overflow: 'hidden',
@@ -4601,20 +4335,6 @@ const styles = {
     padding: '8px 30px',
     flexShrink: 0,
     transition: 'background-color var(--transition-normal), border-color var(--transition-normal)',
-  },
-  headerMobile: {
-    minHeight: '60px',
-    background: 'linear-gradient(135deg, #B71C1C 0%, #991B1B 100%)',
-    borderBottom: '1px solid rgba(0, 0, 0, 0.15)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '8px 12px',
-    flexShrink: 0,
-    boxShadow: '0 2px 10px rgba(183, 28, 28, 0.28)',
-    position: 'sticky',
-    top: 0,
-    zIndex: 35,
   },
   headerTitle: {
     display: 'flex',
