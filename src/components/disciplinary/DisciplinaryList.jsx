@@ -735,80 +735,57 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
         maxWidth="780px"
       >
         <form onSubmit={handleSaveProcess} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* SELEÇÃO E PESQUISA DO FUNCIONÁRIO NO MODAL */}
-          <div style={{
-            padding: '12px 14px',
-            borderRadius: '8px',
-            backgroundColor: 'rgba(27, 54, 93, 0.05)',
-            border: '1px solid var(--color-primary)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label style={{ ...styles.label, color: 'var(--color-primary)', fontWeight: 'bold' }}>
-                🔍 Pesquisar & Seleccionar Funcionário *
-              </label>
-              {formData.employeeId && (
-                <span style={{ fontSize: '11px', color: 'var(--color-success, #059669)', fontWeight: 'bold' }}>
-                  ✓ Funcionário Seleccionado
-                </span>
+          {/* SELEÇÃO DO FUNCIONÁRIO */}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Funcionário *</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {!isViewOnly && !editingProcess && (
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    placeholder="Pesquisar por nome ou NIP..."
+                    value={empModalSearchQuery}
+                    onChange={(e) => setEmpModalSearchQuery(e.target.value)}
+                    style={{
+                      ...styles.input,
+                      paddingLeft: '32px',
+                      fontSize: '13px'
+                    }}
+                  />
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }}>
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
               )}
+
+              <select
+                name="employeeId"
+                value={formData.employeeId}
+                onChange={handleFormChange}
+                disabled={isViewOnly || (editingProcess && formData.employeeId)}
+                style={{ ...styles.input, cursor: 'pointer' }}
+                required
+              >
+                <option value="">-- Selecionar Funcionário --</option>
+                {filteredModalEmployees.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name} {emp.nip ? `(NIP: ${emp.nip})` : ''} - {getName(data?.directorates, emp.directorateId)}
+                  </option>
+                ))}
+              </select>
             </div>
-
-            {!isViewOnly && !editingProcess && (
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  placeholder="Digite o nome, NIP, NUIT ou Direcção para pesquisar..."
-                  value={empModalSearchQuery}
-                  onChange={(e) => setEmpModalSearchQuery(e.target.value)}
-                  style={{
-                    ...styles.input,
-                    paddingLeft: '32px',
-                    fontSize: '13px',
-                    backgroundColor: 'var(--color-bg-base)',
-                    borderColor: 'var(--color-primary)'
-                  }}
-                />
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }}>
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
-              </div>
-            )}
-
-            <select
-              name="employeeId"
-              value={formData.employeeId}
-              onChange={handleFormChange}
-              disabled={isViewOnly || (editingProcess && formData.employeeId)}
-              style={{ ...styles.input, fontWeight: 'bold', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', cursor: 'pointer' }}
-              required
-            >
-              <option value="">
-                -- Seleccione o Funcionário ({filteredModalEmployees.length} {filteredModalEmployees.length === 1 ? 'encontrado' : 'encontrados'}) --
-              </option>
-              {filteredModalEmployees.map(emp => (
-                <option key={emp.id} value={emp.id}>
-                  👤 {emp.name} {emp.nip ? `(NIP: ${emp.nip})` : (emp.nuit ? `(NUIT: ${emp.nuit})` : '')} - {getName(data?.directorates, emp.directorateId)}
-                </option>
-              ))}
-            </select>
-            <p style={{ margin: 0, fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-              💡 {!isCentral ? 'Lista restrita aos funcionários sob gerência da sua Província.' : 'Pode pesquisar pelo nome ou NIP para filtrar o funcionário.'}
-            </p>
           </div>
 
           <div style={styles.grid2}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Nº do Processo Disciplinar *</label>
+              <label style={styles.label}>Nº do Processo *</label>
               <input
                 type="text"
                 name="processNumber"
                 value={formData.processNumber}
                 onChange={handleFormChange}
-                placeholder="Ex: PROC-DISC-024/2026"
+                placeholder="Ex: PROC-024/2026"
                 disabled={isViewOnly}
                 style={styles.input}
                 required
@@ -816,7 +793,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Sanção Proposta / Em Averiguação *</label>
+              <label style={styles.label}>Sanção Proposta *</label>
               <select
                 name="type"
                 value={formData.type}
@@ -829,15 +806,15 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                 <option value="Repreensão Pública">Repreensão Pública</option>
                 <option value="Multa">Multa</option>
                 <option value="Despromoção">Despromoção</option>
-                <option value="Demissão">Demissão (Cessação)</option>
-                <option value="Expulsão">Expulsão (Cessação)</option>
+                <option value="Demissão">Demissão</option>
+                <option value="Expulsão">Expulsão</option>
               </select>
             </div>
           </div>
 
           <div style={styles.grid3}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Estado do Processo</label>
+              <label style={styles.label}>Estado</label>
               <select
                 name="status"
                 value={formData.status}
@@ -845,27 +822,22 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                 disabled={isViewOnly || !formData.despachoNumero}
                 style={styles.input}
               >
-                <option value="Em Instrução">Em Instrução (Pendente Despacho)</option>
+                <option value="Em Instrução">Em Instrução</option>
                 <option value="Aberto">Aberto</option>
                 <option value="Suspenso">Suspenso</option>
-                {formData.despachoNumero && <option value="Concluído">Concluído (Despacho Adicionado)</option>}
+                {formData.despachoNumero && <option value="Concluído">Concluído</option>}
                 {formData.despachoNumero && <option value="Arquivado">Arquivado</option>}
               </select>
-              {!formData.despachoNumero && (
-                <span style={{ fontSize: '10.5px', color: '#d97706', fontStyle: 'italic' }}>
-                  * Conclusão requer inserção do Despacho Final.
-                </span>
-              )}
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Autoridade Instrutora / Sancionadora</label>
+              <label style={styles.label}>Instrutor / Autoridade</label>
               <input
                 type="text"
                 name="authority"
                 value={formData.authority}
                 onChange={handleFormChange}
-                placeholder="Ex: Instrutor do Processo / DRH"
+                placeholder="Ex: Instrutor / DRH"
                 disabled={isViewOnly}
                 style={styles.input}
               />
@@ -886,7 +858,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
 
           <div style={styles.grid2}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Data de Abertura / Instauração</label>
+              <label style={styles.label}>Data de Instauração</label>
               <input
                 type="date"
                 name="openDate"
@@ -898,7 +870,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Data Prevista / Decisão</label>
+              <label style={styles.label}>Previsão de Decisão</label>
               <input
                 type="date"
                 name="decisionDate"
@@ -911,26 +883,26 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>Descrição dos Factos e Infração Imputada</label>
+            <label style={styles.label}>Descrição dos Factos</label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleFormChange}
               disabled={isViewOnly}
-              placeholder="Descreva os factos ocorridos e a matéria disciplinar em averiguação..."
+              placeholder="Descreva sucintamente os factos..."
               style={styles.textarea}
             />
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>Fundamentação Legal / Artigo do Regulamento</label>
+            <label style={styles.label}>Fundamentação Legal</label>
             <input
               type="text"
               name="legalFoundation"
               value={formData.legalFoundation}
               onChange={handleFormChange}
               disabled={isViewOnly}
-              placeholder="Ex: Artigo 123º e seguintes do EGFAE / Estatuto do SERNIC"
+              placeholder="Ex: Artigo 123º do EGFAE"
               style={styles.input}
             />
           </div>
@@ -943,13 +915,13 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
               backgroundColor: 'rgba(16, 185, 129, 0.08)',
               border: '1px solid rgba(16, 185, 129, 0.3)'
             }}>
-              <h5 style={{ margin: '0 0 8px 0', color: '#059669', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                📜 Despacho Final Homologado
+              <h5 style={{ margin: '0 0 8px 0', color: '#059669', fontSize: '13px', fontWeight: 'bold' }}>
+                Despacho Final Homologado
               </h5>
               <div style={styles.grid2}>
                 <div><strong>Nº Despacho:</strong> {formData.despachoNumero}</div>
-                <div><strong>Data Despacho:</strong> {formData.despachoData || '-'}</div>
-                <div><strong>Decisão / Sanção:</strong> {formData.despachoDecisao || formData.type}</div>
+                <div><strong>Data:</strong> {formData.despachoData || '-'}</div>
+                <div><strong>Decisão:</strong> {formData.despachoDecisao || formData.type}</div>
                 <div><strong>Autoridade:</strong> {formData.despachoAutoridade || '-'}</div>
               </div>
               {formData.despachoFundamentacao && (
@@ -962,7 +934,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
 
           {!isViewOnly && (
             <div style={styles.formGroup}>
-              <label style={styles.label}>Anexar Documentos dos Autos (PDF, DOCX, Imagens)</label>
+              <label style={styles.label}>Anexar Documentos</label>
               <input type="file" multiple onChange={handleFileChange} style={styles.input} />
               {formData.files && formData.files.length > 0 && (
                 <ul style={{ fontSize: '12px', marginTop: '6px', color: 'var(--color-text-muted)' }}>
@@ -1006,24 +978,23 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
           <div style={{
             padding: '12px 14px',
             borderRadius: '8px',
-            backgroundColor: 'rgba(27, 54, 93, 0.05)',
-            border: '1px solid var(--color-primary)',
+            backgroundColor: 'var(--color-bg-base)',
+            border: '1px solid var(--color-border)',
             fontSize: '13px'
           }}>
-            <strong style={{ color: 'var(--color-primary)' }}>Funcionário Notificado:</strong> {despachoData.employeeName} ({despachoData.employeeNip})
-            <br />
-            <strong style={{ color: 'var(--color-primary)' }}>Processo Disciplinar:</strong> {despachoData.processNumber}
+            <div><strong>Funcionário:</strong> {despachoData.employeeName} {despachoData.employeeNip ? `(${despachoData.employeeNip})` : ''}</div>
+            <div><strong>Processo:</strong> {despachoData.processNumber}</div>
           </div>
 
           <div style={styles.grid2}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Nº / Referência Oficial do Despacho *</label>
+              <label style={styles.label}>Nº do Despacho *</label>
               <input
                 type="text"
                 name="despachoNumero"
                 value={despachoData.despachoNumero}
                 onChange={handleDespachoChange}
-                placeholder="Ex: Despacho nº 045/GDG-SERNIC/2026"
+                placeholder="Ex: Despacho nº 045/2026"
                 style={styles.input}
                 required
               />
@@ -1044,20 +1015,20 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
 
           <div style={styles.grid2}>
             <div style={styles.formGroup}>
-              <label style={styles.label}>Entidade Decisora / Despachante *</label>
+              <label style={styles.label}>Autoridade Decisora *</label>
               <input
                 type="text"
                 name="despachoAutoridade"
                 value={despachoData.despachoAutoridade}
                 onChange={handleDespachoChange}
-                placeholder="Ex: Director-Geral do SERNIC / DRH"
+                placeholder="Ex: Director-Geral"
                 style={styles.input}
                 required
               />
             </div>
 
             <div style={styles.formGroup}>
-              <label style={styles.label}>Decisão / Sanção Aplicada *</label>
+              <label style={styles.label}>Decisão Aplicada *</label>
               <select
                 name="despachoDecisao"
                 value={despachoData.despachoDecisao}
@@ -1069,18 +1040,18 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                 <option value="Repreensão Pública">Repreensão Pública</option>
                 <option value="Multa">Multa</option>
                 <option value="Despromoção">Despromoção</option>
-                <option value="Demissão" style={{ color: '#dc2626', fontWeight: 'bold' }}>🚨 Demissão (Cessação Funcional)</option>
-                <option value="Expulsão" style={{ color: '#dc2626', fontWeight: 'bold' }}>🚨 Expulsão (Cessação Funcional)</option>
-                <option value="Absolvição / Arquivamento">Absolvição / Arquivamento</option>
+                <option value="Demissão" style={{ color: '#dc2626', fontWeight: 'bold' }}>Demissão</option>
+                <option value="Expulsão" style={{ color: '#dc2626', fontWeight: 'bold' }}>Expulsão</option>
+                <option value="Absolvição / Arquivamento">Arquivamento / Absolvição</option>
               </select>
             </div>
           </div>
 
           {/* DETALHES DE MULTA QUANDO APLICÁVEL */}
           {despachoData.despachoDecisao === 'Multa' && (
-            <div style={{ backgroundColor: 'rgba(255, 152, 0, 0.1)', padding: '12px', borderRadius: '6px', border: '1px solid var(--color-warning)' }}>
+            <div style={{ backgroundColor: 'rgba(255, 152, 0, 0.08)', padding: '12px', borderRadius: '6px', border: '1px solid var(--color-warning)' }}>
               <h5 style={{ margin: '0 0 10px 0', color: 'var(--color-text-main)', fontSize: '13px', fontWeight: 'bold' }}>
-                Condições da Sanção por Multa
+                Condições da Multa
               </h5>
               <div style={styles.grid3}>
                 <div style={styles.formGroup}>
@@ -1120,30 +1091,30 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
           {/* ALERTA SE FOR EXPULSÃO OU DEMISSÃO */}
           {['Expulsão', 'Demissão'].includes(despachoData.despachoDecisao) && (
             <div style={{
-              padding: '12px 14px',
+              padding: '10px 14px',
               borderRadius: '8px',
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              border: '1.5px solid #ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid #ef4444',
               color: '#991b1b',
-              fontSize: '12.5px'
+              fontSize: '12px'
             }}>
-              <strong>⚠️ Atenção (Sanção de Cessação Funcional):</strong> Ao confirmar o despacho de <strong>{despachoData.despachoDecisao}</strong>, o sistema solicitará a imediata execução da decisão no registo do funcionário e formalização do Acto Administrativo correspondente.
+              <strong>Atenção:</strong> A decisão de <strong>{despachoData.despachoDecisao}</strong> implicará a cessação funcional no cadastro do funcionário.
             </div>
           )}
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>Fundamentação do Despacho / Síntese Decisória</label>
+            <label style={styles.label}>Fundamentação do Despacho</label>
             <textarea
               name="despachoFundamentacao"
               value={despachoData.despachoFundamentacao}
               onChange={handleDespachoChange}
-              placeholder="Descreva a fundamentação legal e as conclusões do despacho decisor..."
+              placeholder="Descreva a fundamentação legal e as conclusões..."
               style={{ ...styles.textarea, minHeight: '80px' }}
             />
           </div>
 
           <div style={styles.formGroup}>
-            <label style={styles.label}>Anexar Despacho Digitalizado (PDF / Imagem)</label>
+            <label style={styles.label}>Anexar Despacho Digitalizado</label>
             <input type="file" multiple onChange={handleDespachoFileChange} style={styles.input} />
             {despachoData.despachoFiles && despachoData.despachoFiles.length > 0 && (
               <ul style={{ fontSize: '12px', marginTop: '6px', color: 'var(--color-text-muted)' }}>
@@ -1180,25 +1151,11 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
       {isExecutionModalOpen && executionPayload && (
         <DraggableModal
           isOpen={isExecutionModalOpen}
-          title={`🚨 Execução do Despacho de ${executionPayload.despachoDecisao}`}
+          title={`Execução de Decisão: ${executionPayload.despachoDecisao}`}
           onClose={() => setIsExecutionModalOpen(false)}
-          maxWidth="650px"
+          maxWidth="600px"
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{
-              padding: '16px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(239, 68, 68, 0.08)',
-              border: '1.5px solid #ef4444'
-            }}>
-              <h4 style={{ margin: '0 0 10px 0', color: '#991b1b', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>⚠️</span> Decisão Punitiva Gravosa: {executionPayload.despachoDecisao.toUpperCase()}
-              </h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#7f1d1d', lineHeight: '1.5' }}>
-                O Despacho Final <strong>{executionPayload.despachoNumero}</strong> determinou a <strong>{executionPayload.despachoDecisao}</strong> do funcionário <strong>{executionPayload.employeeName}</strong> (NIP: {executionPayload.employeeNip}).
-              </p>
-            </div>
-
             <div style={{
               padding: '14px',
               borderRadius: '8px',
@@ -1206,13 +1163,13 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
               border: '1px solid var(--color-border)',
               fontSize: '13px'
             }}>
-              <p style={{ margin: '4px 0' }}><strong>Processo Disciplinar:</strong> {executionPayload.processNumber}</p>
-              <p style={{ margin: '4px 0' }}><strong>Data do Despacho:</strong> {executionPayload.despachoData}</p>
-              <p style={{ margin: '4px 0' }}><strong>Sanção Aplicada:</strong> <span style={{ color: '#dc2626', fontWeight: 'bold' }}>{executionPayload.despachoDecisao}</span></p>
+              <div><strong>Funcionário:</strong> {executionPayload.employeeName} {executionPayload.employeeNip ? `(${executionPayload.employeeNip})` : ''}</div>
+              <div><strong>Processo:</strong> {executionPayload.processNumber}</div>
+              <div><strong>Decisão:</strong> <span style={{ color: '#dc2626', fontWeight: 'bold' }}>{executionPayload.despachoDecisao}</span> (Despacho {executionPayload.despachoNumero})</div>
             </div>
 
-            <p style={{ margin: '4px 0', fontSize: '13.5px', color: 'var(--color-text-main)', fontWeight: '600' }}>
-              Selecione o procedimento de execução pretendido:
+            <p style={{ margin: '4px 0', fontSize: '13px', color: 'var(--color-text-main)', fontWeight: '600' }}>
+              Selecione o procedimento de execução:
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -1221,21 +1178,20 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                 disabled={executing}
                 onClick={() => handleExecuteSanctionAct(true)}
                 style={{
-                  padding: '14px 18px',
+                  padding: '12px 16px',
                   backgroundColor: 'var(--color-primary, #1B365D)',
                   color: 'var(--color-accent, #EAAA00)',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   cursor: 'pointer',
                   fontWeight: 'bold',
-                  fontSize: '13.5px',
+                  fontSize: '13px',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                  justifyContent: 'space-between'
                 }}
               >
-                <span>🚀 Executar Decisão e Ir para o Acto Administrativo</span>
+                <span>Executar e Criar Acto Administrativo</span>
                 <span>➔</span>
               </button>
 
@@ -1248,7 +1204,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                   backgroundColor: '#dc2626',
                   color: '#fff',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   cursor: 'pointer',
                   fontWeight: 'bold',
                   fontSize: '13px',
@@ -1257,7 +1213,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                   justifyContent: 'space-between'
                 }}
               >
-                <span>⚡ Executar Apenas no Cadastro do Funcionário (Inativar como {executionPayload.despachoDecisao})</span>
+                <span>Executar Apenas no Cadastro</span>
                 <span>✓</span>
               </button>
 
