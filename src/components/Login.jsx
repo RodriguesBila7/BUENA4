@@ -92,6 +92,22 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     bwMode === 'claro' ? '#F8FAFC' :
     (settings.cor_principal && settings.cor_principal !== '#1B365D' ? settings.cor_principal : '#B71C1C');
 
+  /* Deteção de fundo claro (modo claro ou tema personalizado de alta luminosidade) */
+  const isLightBg = () => {
+    if (bwMode === 'claro') return true;
+    if (bwMode === 'noite') return false;
+    const hex = (bgColor || '').replace('#', '');
+    if (hex.length === 6) {
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+      return yiq >= 160;
+    }
+    return false;
+  };
+  const lightActive = isLightBg();
+
   /* ciclo: theme → noite → claro → theme */
   const toggleBwMode = () => {
     const nextMode =
@@ -472,17 +488,33 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <div style={s.logoContainer}>
           <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
         </div>
-        <h1 style={s.instNome}>
+        <h1 style={{
+          ...s.instNome,
+          color: lightActive ? '#0F172A' : '#FFFFFF',
+          textShadow: lightActive ? 'none' : '0 1px 4px rgba(0,0,0,0.35)'
+        }}>
           SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL
         </h1>
-        <div style={s.sysTitleBold}>
+        <div style={{
+          ...s.sysTitleBold,
+          color: lightActive ? '#1E293B' : '#FFFFFF',
+          textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+        }}>
           DIRECÇÃO GERAL
         </div>
-        <div style={s.sysTitleBold}>
+        <div style={{
+          ...s.sysTitleBold,
+          color: lightActive ? '#1E293B' : '#FFFFFF',
+          textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+        }}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
         <div style={{ marginTop: 'calc(18px + 1.0cm)', marginBottom: '10px' }}>
-          <p style={s.sysTitleSub}>
+          <p style={{
+            ...s.sysTitleSub,
+            color: lightActive ? '#1E293B' : '#FFFFFF',
+            textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+          }}>
             SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
           </p>
         </div>
@@ -623,7 +655,13 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       </div>
 
       {/* ══════════════ RODAPÉ ══════════════ */}
-      <footer style={{...s.footer, color: bwMode === 'claro' ? '#64748B' : 'rgba(255,255,255,0.85)', fontSize: '11.5px', marginTop: '26px'}}>
+      <footer style={{
+        ...s.footer,
+        color: lightActive ? '#334155' : 'rgba(255,255,255,0.85)',
+        fontSize: '11.5px',
+        marginTop: '26px',
+        fontWeight: lightActive ? '600' : '400'
+      }}>
         <p>Copyright © 2026 – Serviço Nacional de Investigação Criminal (SERNIC). Todos os direitos reservados. | Versão: 05.01.00</p>
       </footer>
     </div>
