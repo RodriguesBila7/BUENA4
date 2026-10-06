@@ -1003,7 +1003,21 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
               <h4 style={styles.cardTitle}>
                 Lista de Funcionários com Faltas ({faltososList.length})
               </h4>
-              <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+              <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center'}}>
+                {isPrincipal && (
+                  <button 
+                    onClick={handlePrintAllNational} 
+                    style={{
+                      ...styles.btnGoToRegister, 
+                      backgroundColor: '#DC2626', 
+                      color: '#FFFFFF',
+                      boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)'
+                    }}
+                    title="Imprimir mapa consolidado de todas as direcções do SERNIC"
+                  >
+                    🏛️ Imprimir Todas as Direcções
+                  </button>
+                )}
                 <button onClick={handlePrintProvincialMap} style={{...styles.btnGoToRegister, backgroundColor: 'var(--color-primary, #1B365D)'}} title="Imprimir Mapa Oficial">
                   🖨️ Imprimir Mapa
                 </button>
