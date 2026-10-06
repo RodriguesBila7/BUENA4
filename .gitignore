@@ -26,3 +26,9 @@ dist-ssr
 # Scratch scripts
 scratch/
 
+# SQLite temporary and WAL files
+*.db-shm
+*.db-wal
+*.sqlite-shm
+*.sqlite-wal
+
