@@ -203,7 +203,7 @@ const styles = {
     width: '40px',
     height: '40px',
     borderRadius: '8px',
-    backgroundColor: 'var(--color-primary, #B71C1C)',
+    backgroundColor: 'var(--color-primary, #1B365D)',
     color: '#ffffff',
     flexShrink: 0
   },
@@ -240,7 +240,7 @@ const styles = {
     borderBottom: '1px solid var(--color-border, #f1f5f9)'
   },
   groupHeaderIcon: {
-    color: 'var(--color-primary, #B71C1C)',
+    color: 'var(--color-primary, #1B365D)',
     display: 'flex',
     alignItems: 'center'
   },
@@ -302,14 +302,14 @@ const styles = {
     textTransform: 'uppercase',
     borderRadius: '4px',
     backgroundColor: 'rgba(27, 54, 93, 0.1)',
-    color: 'var(--color-primary, #B71C1C)'
+    color: 'var(--color-primary, #1B365D)'
   },
   closeBtn: {
     padding: '7px 16px',
     fontSize: '12.5px',
     fontWeight: '600',
     color: '#ffffff',
-    backgroundColor: 'var(--color-primary, #B71C1C)',
+    backgroundColor: 'var(--color-primary, #1B365D)',
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',

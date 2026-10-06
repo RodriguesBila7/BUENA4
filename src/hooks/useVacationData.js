@@ -12,21 +12,17 @@ const getInitialVacations = () => {
     return `${y}-${m}-${day}`;
   };
 
-  // Gatilho 1: Inicia Hoje
-  const startToday = new Date(now.getTime());
-  const startTodayEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const ongoingStart = new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000);
+  const ongoingEnd = new Date(now.getTime() + 18 * 24 * 60 * 60 * 1000);
 
-  // Gatilho 2: Faltam 5 dias para o término
-  const endingSoonStart = new Date(now.getTime() - 25 * 24 * 60 * 60 * 1000);
-  const endingSoonEnd = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+  const endingSoonStart = new Date(now.getTime() - 26 * 24 * 60 * 60 * 1000);
+  const endingSoonEnd = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
-  // Gatilho 3: 1 dia para reinício das atividades (Término hoje, regresso amanhã)
-  const returnTomorrowStart = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000);
-  const returnTomorrowEnd = new Date(now.getTime());
+  const scheduledStart = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+  const scheduledEnd = new Date(now.getTime() + 44 * 24 * 60 * 60 * 1000);
 
-  // Concluída anteriormente
-  const completedStart = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-  const completedEnd = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const completedStart = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000);
+  const completedEnd = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
 
   const curYear = String(now.getFullYear());
 
@@ -36,21 +32,21 @@ const getInitialVacations = () => {
       employeeId: 'EMP001',
       employeeNip: '1001',
       employeeName: 'João da Silva',
-      phone: '+258841234567',
       year: curYear,
       type: 'Férias Anuais',
-      startDate: formatD(startToday),
-      endDate: formatD(startTodayEnd),
+      startDate: formatD(ongoingStart),
+      endDate: formatD(ongoingEnd),
       daysCount: 30,
-      status: 'Aprovada',
+      status: 'Em gozo',
       reason: 'Férias anuais regulares',
-      notes: 'Início hoje - Notificação de início de férias',
+      notes: 'Plano aprovado pela Direcção',
       createdBy: 'Admin RH',
-      createdAt: startToday.toISOString(),
+      createdAt: ongoingStart.toISOString(),
       updatedAt: now.toISOString(),
       history: [
-        { action: 'Submetida', date: startToday.toISOString(), user: 'João da Silva', notes: '' },
-        { action: 'Aprovada', date: startToday.toISOString(), user: 'Admin RH', notes: 'Aprovado pelo RH' }
+        { action: 'Submetida', date: ongoingStart.toISOString(), user: 'João da Silva', notes: '' },
+        { action: 'Aprovada', date: ongoingStart.toISOString(), user: 'Admin RH', notes: 'Aprovado pelo RH' },
+        { action: 'Em gozo', date: ongoingStart.toISOString(), user: 'Sistema', notes: 'Início do gozo de férias' }
       ]
     },
     {
@@ -58,7 +54,6 @@ const getInitialVacations = () => {
       employeeId: 'EMP002',
       employeeNip: '1002',
       employeeName: 'Maria Antónia Santos',
-      phone: '+258823456789',
       year: curYear,
       type: 'Férias Anuais',
       startDate: formatD(endingSoonStart),
@@ -66,7 +61,7 @@ const getInitialVacations = () => {
       daysCount: 30,
       status: 'Em gozo',
       reason: 'Férias regulares',
-      notes: 'Atenção: Término próximo em exatamente 5 dias',
+      notes: 'Atenção: Término próximo em menos de 5 dias',
       createdBy: 'Admin RH',
       createdAt: endingSoonStart.toISOString(),
       updatedAt: now.toISOString(),
@@ -81,21 +76,20 @@ const getInitialVacations = () => {
       employeeId: 'EMP003',
       employeeNip: '1003',
       employeeName: 'Carlos Alberto Mondlane',
-      phone: '+258865432109',
       year: curYear,
       type: 'Férias Anuais',
-      startDate: formatD(returnTomorrowStart),
-      endDate: formatD(returnTomorrowEnd),
+      startDate: formatD(scheduledStart),
+      endDate: formatD(scheduledEnd),
       daysCount: 30,
-      status: 'Em gozo',
-      reason: 'Férias anuais a concluir hoje',
-      notes: 'Aviso: Reinício das atividades amanhã (07:30)',
+      status: 'Aprovada',
+      reason: 'Férias programadas',
+      notes: 'Aguardando data de início',
       createdBy: 'Admin RH',
-      createdAt: returnTomorrowStart.toISOString(),
+      createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
       history: [
-        { action: 'Submetida', date: returnTomorrowStart.toISOString(), user: 'Carlos Alberto Mondlane', notes: '' },
-        { action: 'Aprovada', date: returnTomorrowStart.toISOString(), user: 'Admin RH', notes: 'Aprovado' }
+        { action: 'Submetida', date: now.toISOString(), user: 'Carlos Alberto Mondlane', notes: '' },
+        { action: 'Aprovada', date: now.toISOString(), user: 'Admin RH', notes: 'Aprovado' }
       ]
     },
     {
@@ -103,7 +97,6 @@ const getInitialVacations = () => {
       employeeId: 'EMP004',
       employeeNip: '1004',
       employeeName: 'Ana Paula Cossa',
-      phone: '+258876543210',
       year: curYear,
       type: 'Férias Anuais',
       startDate: formatD(completedStart),
@@ -144,21 +137,6 @@ const loadStoredData = () => {
       const parsed = JSON.parse(raw);
       _sharedRequests = parsed.requests || [];
       _sharedSettings = parsed.settings || initialSettings;
-      
-      // Se não houver pedidos activos recentes, mesclar os pedidos com gatilhos actuais
-      const initial = getInitialVacations();
-      if (_sharedRequests.length === 0) {
-        _sharedRequests = initial;
-      } else {
-        // Garantir telefones nos registos de exemplo
-        _sharedRequests = _sharedRequests.map(r => {
-          if (!r.phone) {
-            const match = initial.find(initR => initR.employeeName === r.employeeName || initR.employeeNip === r.employeeNip);
-            if (match) return { ...r, phone: match.phone };
-          }
-          return r;
-        });
-      }
     } else {
       _sharedRequests = getInitialVacations();
       _sharedSettings = initialSettings;

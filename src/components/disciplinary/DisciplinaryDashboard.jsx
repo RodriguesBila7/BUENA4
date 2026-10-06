@@ -105,7 +105,7 @@ export default function DisciplinaryDashboard({ orgData, employeesData, user }) 
                     <XAxis dataKey="name" tick={{fontSize: 12}} />
                     <YAxis allowDecimals={false} />
                     <RechartsTooltip cursor={{fill: '#f8fafc'}} />
-                    <Bar dataKey="value" fill="var(--color-primary, #B71C1C)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="var(--color-primary, #1B365D)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
              ) : (

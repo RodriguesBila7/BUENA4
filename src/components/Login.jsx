@@ -3,12 +3,10 @@ import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
 import useAuthData from '../hooks/useAuthData';
 import useSecuritySettings from '../hooks/useSecuritySettings';
 import useAuditLog from '../hooks/useAuditLog';
-import useEmployeeData from '../hooks/useEmployeeData';
-import AgentActivationWizard from './auth/AgentActivationWizard';
 
 /* ── Temas pré-definidos ── */
 const TEMAS = [
-  { nome: 'Azul Institucional', cor: '#B71C1C' },
+  { nome: 'Azul Institucional', cor: '#1B365D' },
   { nome: 'Azul Escuro',        cor: '#0D1B4B' },
   { nome: 'Azul Real',          cor: '#1565C0' },
   { nome: 'Azul Aço',          cor: '#0277BD' },
@@ -32,7 +30,6 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const { authenticate, addUser } = useAuthData();
   const { policies } = useSecuritySettings();
   const { logAction } = useAuditLog();
-  const { employees = [], updateEmployee } = useEmployeeData();
 
   const [username, setUsername]       = useState('');
   const [password, setPassword]       = useState('');
@@ -42,7 +39,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const [error, setError]             = useState('');
   const [successMsg, setSuccessMsg]   = useState('');
   const [isLoading, setIsLoading]     = useState(false);
-  const [view, setView]               = useState('login'); // 'login' | 'register' | 'recover' | 'agent_code'
+  const [view, setView]               = useState('login'); // 'login' | 'register' | 'recover'
   const [hoveredTema, setHoveredTema] = useState(null);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -50,15 +47,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const [bwMode, setBwMode] = useState(() => {
     return settings.modo_tema === 'dark' ? 'noite' : 'theme';
   });
-  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
   const themeMenuRef = React.useRef(null);
   const langMenuRef = React.useRef(null);
-
-  React.useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   React.useEffect(() => {
     if (settings.modo_tema === 'dark' && bwMode !== 'noite') {
@@ -87,8 +77,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     // handled by useAuthData defaults
   }, []);
 
-  // Logótipo em alta resolução com nitidez aprimorada para mobile
-  const logoSrc = settings.logotipo || '/logo-sernic-transparente.png';
+  // Ignorar o logotipo em cache temporariamente para forçar o transparente
+  const logoSrc = SERNIC_LOGO_B64;
 
   const isDark = bwMode === 'noite' || settings.modo_tema === 'dark';
 
@@ -100,21 +90,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const bgColor =
     bwMode === 'noite' ? '#1C2433' :
     bwMode === 'claro' ? '#F8FAFC' :
-    (settings.cor_principal || '#B71C1C');
-
-  // Assegurar que o fundo do documento (html e body) e o meta theme-color cobrem 100% da tela até o topo e fundo com a cor do tema
-  React.useEffect(() => {
-    document.documentElement.style.backgroundColor = bgColor;
-    document.body.style.backgroundColor = bgColor;
-    const metaTags = document.querySelectorAll('meta[name="theme-color"]');
-    metaTags.forEach(tag => tag.setAttribute('content', bgColor));
-    const navBtnColor = document.querySelector('meta[name="msapplication-navbutton-color"]');
-    if (navBtnColor) navBtnColor.setAttribute('content', bgColor);
-    return () => {
-      document.documentElement.style.backgroundColor = '';
-      document.body.style.backgroundColor = '';
-    };
-  }, [bgColor]);
+    (settings.cor_principal && settings.cor_principal !== '#1B365D' ? settings.cor_principal : '#B71C1C');
 
   /* ciclo: theme → noite → claro → theme */
   const toggleBwMode = () => {
@@ -143,35 +119,6 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     setShowPassword(false);
     setError('');
   };
-
-  // Navegação de vistas com histórico do navegador/telemóvel (suporte para botão Voltar e Seguir nativo)
-  const navigateToView = (newView, pushHistory = true) => {
-    clearCredentials();
-    setView(newView);
-    if (pushHistory && typeof window !== 'undefined') {
-      window.history.pushState({ view: newView, step: 1 }, '');
-    }
-  };
-
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (!window.history.state || !window.history.state.view) {
-      window.history.replaceState({ view: 'login' }, '');
-    }
-
-    const handlePopState = (event) => {
-      const state = event.state;
-      if (state && state.view) {
-        setView(state.view);
-      } else {
-        setView('login');
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
 
   // Limpa campos apenas quando o utilizador alterna intencionalmente de vista (Login <-> Pedir Acesso <-> Recuperar)
   const prevViewRef = React.useRef(view);
@@ -305,7 +252,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             style={{
               ...s.langBtn,
               backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.18)',
-              color: bwMode === 'claro' ? '#B71C1C' : '#FFFFFF',
+              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
               border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
               display: 'flex',
               alignItems: 'center',
@@ -335,7 +282,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                   style={{
                     ...s.langBtn,
                     backgroundColor: 'transparent',
-                    color: bwMode === 'claro' ? '#B71C1C' : '#FFFFFF',
+                    color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
                     opacity: 0.95,
                     width: '100%',
                     textAlign: 'left',
@@ -364,7 +311,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               bwMode === 'claro' ? 'rgba(0,0,0,0.08)' :
               'rgba(255,255,255,0.2)',
             color:
-              bwMode === 'claro' ? '#B71C1C' : '#FFFFFF',
+              bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
             border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
           }}
         >
@@ -403,7 +350,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             style={{
               ...s.iconBtn,
               backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.2)',
-              color: bwMode === 'claro' ? '#B71C1C' : '#FFFFFF',
+              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
               border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
             }}
           >
@@ -435,26 +382,11 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                       style={{
                         ...s.temaSwatch,
                         backgroundColor: tema.cor,
-                        transform: isActive || isHover ? 'scale(1.18)' : 'scale(1)',
-                        boxShadow: isActive 
-                          ? `0 0 0 2px #FFFFFF, 0 0 0 4px ${tema.cor}, 0 4px 10px rgba(0,0,0,0.35)`
-                          : isHover
-                            ? `0 0 0 2px #FFFFFF, 0 3px 8px rgba(0,0,0,0.25)`
-                            : '0 2px 6px rgba(0,0,0,0.18)',
+                        transform: isActive || isHover ? 'scale(1.3)' : 'scale(1)',
+                        outline: isActive ? '2px solid #333' : isHover ? '2px solid rgba(0,0,0,0.4)' : 'none',
+                        outlineOffset: '2px',
                       }}
-                    >
-                      {isActive && (
-                        <span style={{ 
-                          color: '#FFFFFF', 
-                          fontSize: '11px', 
-                          fontWeight: '900', 
-                          textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-                          lineHeight: 1
-                        }}>
-                          ✓
-                        </span>
-                      )}
-                    </button>
+                    />
                   );
                 })}
               </div>
@@ -467,39 +399,14 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <div style={s.dropdownDivider} />
               <p style={s.dropdownTitle}>{t('themes_custom')}</p>
               <div style={s.colorPickerRow}>
-                <div style={{
-                  width: '30px',
-                  height: '30px',
-                  borderRadius: '50%',
-                  overflow: 'hidden',
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-                  border: '2px solid rgba(255,255,255,0.95)',
-                  backgroundColor: settings.cor_principal,
-                  flexShrink: 0
-                }}>
-                  <input
-                    type="color"
-                    id="custom-color-picker"
-                    defaultValue={settings.cor_principal}
-                    onChange={(e) => aplicarTema(e.target.value)}
-                    style={{
-                      position: 'absolute',
-                      top: '-10px',
-                      left: '-10px',
-                      width: '54px',
-                      height: '54px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      opacity: 0
-                    }}
-                    title={t('themes_pick')}
-                  />
-                  <span style={{ fontSize: '13px', pointerEvents: 'none' }}>🎨</span>
-                </div>
+                <input
+                  type="color"
+                  id="custom-color-picker"
+                  defaultValue={settings.cor_principal}
+                  onChange={(e) => aplicarTema(e.target.value)}
+                  style={s.colorPicker}
+                  title={t('themes_pick')}
+                />
                 <label htmlFor="custom-color-picker" style={s.colorPickerLabel}>
                   {t('themes_pick')}
                 </label>
@@ -559,10 +466,9 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         </div>
       </div>
 
-      {/* ══════════════ CONTEÚDO CENTRALIZADO (MAIS AO CENTRO) ══════════════ */}
-      <div style={s.centerContentWrap}>
-        {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
-        <div style={s.header}>
+      {/* ══════════════ CABEÇALHO INSTITUCIONAL ELEGANTE E MINIMALISTA ══════════════ */}
+      {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
+      <div style={s.header}>
         <div style={s.logoContainer}>
           <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
         </div>
@@ -575,7 +481,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <div style={s.sysTitleBold}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
-        <div style={{ marginTop: isMobile ? 'calc(12px + 0.7cm)' : 'calc(22px + 0.7cm)', marginBottom: isMobile ? '8px' : '12px' }}>
+        <div style={{ marginTop: 'calc(18px + 1.0cm)', marginBottom: '10px' }}>
           <p style={s.sysTitleSub}>
             SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
           </p>
@@ -640,7 +546,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               </button>
               <button
                 type="button"
-                onClick={() => navigateToView('recover')}
+                onClick={() => { clearCredentials(); setView('recover'); }}
                 style={{ 
                   ...s.btnPrimary, 
                   backgroundColor: '#BA1B1D', 
@@ -653,7 +559,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               </button>
               <button
                 type="button"
-                onClick={() => navigateToView('register')}
+                onClick={() => { clearCredentials(); setView('register'); }}
                 style={{ 
                   ...s.btnPrimary, 
                   backgroundColor: '#BA1B1D', 
@@ -663,24 +569,6 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 }}
               >
                 {t('login_request_access') || 'SOLICITAR ACESSO'}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigateToView('agent_code')}
-                style={{ 
-                  ...s.btnPrimary, 
-                  backgroundColor: '#BA1B1D', 
-                  marginTop: '12px', 
-                  textTransform: 'uppercase',
-                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <span>🔑</span>
-                <span>PRIMEIRO ACESSO COM CÓDIGO</span>
               </button>
             </form>
           </>
@@ -712,19 +600,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <button type="submit" style={{...s.btnPrimary, opacity: isLoading ? 0.7 : 1}} disabled={isLoading}>
                 {isLoading ? t('register_submit_loading') : t('register_submit')}
               </button>
-              <button 
-                type="button" 
-                onClick={() => {
-                  if (typeof window !== 'undefined' && window.history.length > 1) {
-                    window.history.back();
-                  } else {
-                    navigateToView('login', false);
-                  }
-                }} 
-                style={s.btnSecondary}
-              >
-                {t('register_back')}
-              </button>
+              <button type="button" onClick={() => { clearCredentials(); setView('login'); }} style={s.btnSecondary}>{t('register_back')}</button>
             </form>
           </>
         )}
@@ -740,46 +616,14 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <button type="submit" style={{...s.btnPrimary, opacity: isLoading ? 0.7 : 1}} disabled={isLoading}>
                 {isLoading ? t('recover_submit_loading') : t('recover_submit')}
               </button>
-              <button 
-                type="button" 
-                onClick={() => {
-                  if (typeof window !== 'undefined' && window.history.length > 1) {
-                    window.history.back();
-                  } else {
-                    navigateToView('login', false);
-                  }
-                }} 
-                style={s.btnSecondary}
-              >
-                {t('recover_back')}
-              </button>
+              <button type="button" onClick={() => { clearCredentials(); setView('login'); }} style={s.btnSecondary}>{t('recover_back')}</button>
             </form>
           </>
         )}
-
-        {view === 'agent_code' && (
-          <AgentActivationWizard
-            employees={employees}
-            updateEmployee={updateEmployee}
-            onLoginSuccess={(userObj) => {
-              clearCredentials();
-              onLogin(userObj);
-            }}
-            onCancel={() => {
-              clearCredentials();
-              if (typeof window !== 'undefined' && window.history.state?.view === 'agent_code') {
-                window.history.back();
-              } else {
-                setView('login');
-              }
-            }}
-          />
-        )}
-        </div>
       </div>
 
       {/* ══════════════ RODAPÉ ══════════════ */}
-      <footer style={{...s.footer, color: bwMode === 'claro' ? '#64748B' : 'rgba(255,255,255,0.85)', fontSize: '11.5px', marginTop: 'auto', paddingTop: '26px', paddingBottom: '28px'}}>
+      <footer style={{...s.footer, color: bwMode === 'claro' ? '#64748B' : 'rgba(255,255,255,0.85)', fontSize: '11.5px', marginTop: '26px'}}>
         <p>Copyright © 2026 – Serviço Nacional de Investigação Criminal (SERNIC). Todos os direitos reservados. | Versão: 05.01.00</p>
       </footer>
     </div>
@@ -789,28 +633,14 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
 /* ════════════════ ESTILOS ════════════════ */
 const s = {
   page: {
-    minHeight: '100dvh',
-    minHeight: 'calc(100vh / 0.85)',
-    width: '100%',
+    minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '28px 16px 24px',
+    justifyContent: 'flex-start',
+    padding: '36px 16px 20px',
     transition: 'background-color 0.35s ease',
     fontFamily: "'Inter', system-ui, sans-serif",
-    boxSizing: 'border-box',
-    flex: 1,
-  },
-
-  centerContentWrap: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    flex: '1 0 auto',
-    margin: 'auto 0',
   },
 
   /* ── Cabeçalho ── */
@@ -820,21 +650,18 @@ const s = {
     alignItems: 'center',
     marginBottom: '0',
     textAlign: 'center',
-    marginTop: '-2.5cm',
   },
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '2px',
+    marginBottom: '14px',
   },
   logo: {
-    width: '215px',
-    height: '215px',
+    width: '160px',
+    height: '160px',
     objectFit: 'contain',
-    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.25)) contrast(1.05)',
-    imageRendering: '-webkit-optimize-contrast',
-    imageRendering: 'crisp-edges',
+    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.25))',
     transition: 'transform 0.2s ease',
   },
   instNome: {
@@ -1007,13 +834,12 @@ const s = {
     right: '0',
     backgroundColor: 'var(--color-bg-card, #243044)',
     border: '1px solid var(--color-border, #3A4A66)',
-    borderRadius: '16px',
+    borderRadius: '12px',
     padding: '18px 16px 14px',
-    boxShadow: '0 16px 44px rgba(0,0,0,0.45)',
-    width: '260px',
-    zIndex: 100,
-    color: 'var(--color-text-base, #F8FAFC)',
-    backdropFilter: 'blur(12px)',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+    width: '252px',
+    zIndex: 10,
+    color: 'var(--color-text-base, #F8FAFC)'
   },
   dropdownTitle: {
     fontSize: '10px',
@@ -1029,59 +855,49 @@ const s = {
     margin: '12px 0',
   },
   temaSwatches: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(6, 1fr)',
-    gap: '10px 8px',
-    alignItems: 'center',
-    justifyItems: 'center',
-    padding: '6px 2px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '10px',
   },
   temaSwatch: {
-    width: '28px',
-    height: '28px',
-    minWidth: '28px',
-    minHeight: '28px',
-    maxWidth: '28px',
-    maxHeight: '28px',
+    width: '22px',
+    height: '22px',
     borderRadius: '50%',
-    aspectRatio: '1 / 1',
-    border: '2px solid rgba(255, 255, 255, 0.95)',
+    border: '1px solid rgba(0,0,0,0.12)',
     cursor: 'pointer',
-    transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+    transition: 'transform 0.15s ease, outline 0.15s ease',
     padding: 0,
-    margin: 0,
-    outline: 'none',
-    flexShrink: 0,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxSizing: 'border-box',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.22), inset 0 1px 2px rgba(255,255,255,0.3)',
-    appearance: 'none',
-    WebkitAppearance: 'none',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
   },
   temaTooltip: {
     fontSize: '11px',
-    fontWeight: '700',
-    color: 'var(--color-text-muted, #A8B7CD)',
+    fontWeight: '600',
+    color: '#555',
     margin: '8px 0 0',
     textAlign: 'center',
     minHeight: '16px',
-    letterSpacing: '0.3px',
   },
   colorPickerRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    marginTop: '4px',
-    padding: '4px 2px',
+    gap: '10px',
+    marginTop: '2px',
+  },
+  colorPicker: {
+    width: '38px',
+    height: '38px',
+    border: '1px solid #E0E0E0',
+    borderRadius: '8px',
+    padding: '2px',
+    cursor: 'pointer',
+    background: 'none',
+    flexShrink: 0,
   },
   colorPickerLabel: {
-    fontSize: '12px',
-    color: 'var(--color-text-base, #F8FAFC)',
+    fontSize: '13px',
+    color: '#555',
     cursor: 'pointer',
-    fontWeight: '600',
-    userSelect: 'none',
+    fontWeight: '500',
   },
 
   /* ── Seletor de Idioma ── */

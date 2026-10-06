@@ -341,7 +341,7 @@ export default function VacationManagement() {
   return (
     <div style={styles.container}>
       <div style={styles.kpiGrid}>
-        <div style={{ ...styles.kpiCard, borderLeft: '4px solid var(--color-primary, #B71C1C)' }}>
+        <div style={{ ...styles.kpiCard, borderLeft: '4px solid var(--color-primary, #1B365D)' }}>
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Total de Registos</span>
             <span style={styles.kpiIcon}>📋</span>
@@ -532,7 +532,7 @@ export default function VacationManagement() {
               fontSize: '11px', 
               fontWeight: '600', 
               backgroundColor: 'rgba(27, 54, 93, 0.06)', 
-              color: 'var(--color-primary, #B71C1C)',
+              color: 'var(--color-primary, #1B365D)',
               padding: '2px 8px',
               borderRadius: '12px'
             }}>
@@ -748,10 +748,10 @@ export default function VacationManagement() {
                 <div style={styles.liveCountdownCard}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
-                      <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#B71C1C', fontWeight: '700' }}>
+                      <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', color: '#1B365D', fontWeight: '700' }}>
                         ⏱️ Contagem Regressiva em Tempo Real (Férias em Curso)
                       </div>
-                      <div style={{ fontSize: '18px', fontWeight: '800', color: viewingRecord.countdown.isEndingSoon ? '#DC2626' : '#B71C1C', marginTop: '2px' }}>
+                      <div style={{ fontSize: '18px', fontWeight: '800', color: viewingRecord.countdown.isEndingSoon ? '#DC2626' : '#1B365D', marginTop: '2px' }}>
                         Férias terminam em: {viewingRecord.countdown.endDateFormatted}
                       </div>
                     </div>
@@ -782,7 +782,7 @@ export default function VacationManagement() {
                   </div>
 
                   <div style={{ marginTop: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#B71C1C' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '600', marginBottom: '6px', color: '#1B365D' }}>
                       <span>Início: {formatDate(viewingRecord.startDate)} ({viewingRecord.countdown.elapsedDays} dias gozados)</span>
                       <span>Restam: {viewingRecord.countdown.remainingDays} dias de {viewingRecord.countdown.totalDurationDays}</span>
                     </div>
@@ -1196,7 +1196,7 @@ const styles = {
   },
   btnPrimary: {
     padding: '8px 16px',
-    backgroundColor: 'var(--color-primary, #B71C1C)',
+    backgroundColor: 'var(--color-primary, #1B365D)',
     color: '#fff',
     border: 'none',
     borderRadius: '6px',
@@ -1546,7 +1546,7 @@ const styles = {
   timerNumber: {
     fontSize: '24px',
     fontWeight: '900',
-    color: 'var(--color-primary, #B71C1C)'
+    color: 'var(--color-primary, #1B365D)'
   },
   timerLabel: {
     fontSize: '9px',

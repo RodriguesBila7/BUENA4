@@ -1,95 +1,14 @@
 <!doctype html>
-<html lang="pt" style="background-color: #B71C1C;">
+<html lang="pt">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/icon-192.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="icon" type="image/png" href="/logo-sernic-transparente.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SERNIC DRH - Gestão de Recursos Humanos</title>
     <meta name="description" content="Portal de Gestão de Recursos Humanos e Identidade Visual Institucional do Serviço Nacional de Investigação Criminal (SERNIC) de Moçambique." />
-    
-    <!-- PWA e Suporte Móvel (Android & Apple iOS) -->
-    <link rel="manifest" href="/manifest.json?v=4" />
-    <meta name="theme-color" content="#B71C1C" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#B71C1C" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#B71C1C" />
-    <meta name="msapplication-navbutton-color" content="#B71C1C" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="SERNIC DRH" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-
-    <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        background-color: #B71C1C;
-        overflow-x: hidden;
-      }
-      #initial-loader {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background-color: #B71C1C;
-        z-index: 99999;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        color: #ffffff;
-      }
-      .loader-logo {
-        width: 145px;
-        height: 145px;
-        object-fit: contain;
-        image-rendering: -webkit-optimize-contrast;
-        image-rendering: crisp-edges;
-        filter: drop-shadow(0 8px 24px rgba(0,0,0,0.35)) contrast(1.06);
-        animation: loaderPulse 2s infinite ease-in-out;
-      }
-      .loader-spinner {
-        width: 28px;
-        height: 28px;
-        margin-top: 24px;
-        border: 3px solid rgba(255,255,255,0.3);
-        border-top-color: #ffffff;
-        border-radius: 50%;
-        animation: loaderSpin 0.8s linear infinite;
-      }
-      .loader-text {
-        margin-top: 14px;
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.8px;
-        color: rgba(255,255,255,0.95);
-        text-transform: uppercase;
-      }
-      @keyframes loaderPulse {
-        0%, 100% { transform: scale(1); opacity: 0.95; }
-        50% { transform: scale(1.05); opacity: 1; }
-      }
-      @keyframes loaderSpin {
-        to { transform: rotate(360deg); }
-      }
-    </style>
   </head>
-  <body style="margin: 0; padding: 0; background-color: #B71C1C;">
-    <div id="root">
-      <div id="initial-loader">
-        <img src="/logo-sernic-transparente.png" alt="SERNIC DRH" class="loader-logo" />
-        <div class="loader-spinner"></div>
-        <div class="loader-text">A Carregar Sistema...</div>
-      </div>
-    </div>
+  <body>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
-        });
-      }
-    </script>
   </body>
 </html>

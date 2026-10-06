@@ -3,13 +3,12 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import useTranslation from './hooks/useTranslation';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
-import PwaInstallBanner from './components/common/PwaInstallBanner';
 
 const DEFAULT_SETTINGS = {
   nome_instituicao: 'Serviço Nacional de Investigação Criminal',
   sigla: 'SERNIC',
   logotipo: null, // Nulo por padrão. Será exibido o logotipo padrão do sistema
-  cor_principal: '#B71C1C',
+  cor_principal: '#1B365D',
   cor_secundaria: '#2D3748',
   cor_destaque: '#FFFFFF',
   modo_tema: 'light',
@@ -19,9 +18,9 @@ const DEFAULT_SETTINGS = {
 };
 
 const CORES_PALETA = [
-  '#B71C1C', '#C62828', '#880E4F', '#4A148C', '#6A1B9A',
   '#1B365D', '#0D1B4B', '#1565C0', '#0277BD', '#1B5E20', '#00695C',
-  '#33691E', '#212121', '#37474F', '#BF360C', '#F57F17', '#004D40', '#01579B'
+  '#33691E', '#B71C1C', '#C62828', '#880E4F', '#4A148C', '#6A1B9A',
+  '#212121', '#37474F', '#BF360C', '#F57F17', '#004D40', '#01579B'
 ];
 
 import { useAuth } from './contexts/AuthContext';
@@ -30,55 +29,46 @@ import useSecuritySettings from './hooks/useSecuritySettings';
 export default function App() {
   const { user, login, logout, updateSessionActivity } = useAuth();
   const { policies } = useSecuritySettings();
-  const [settings, setSettings] = useState(() => {
-    try {
-      const saved = localStorage.getItem('sernic_identity_settings');
-      if (saved) {
+  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const { t, language, setLanguage } = useTranslation();
+
+  // Carregar configurações do localStorage ao iniciar (simulação de carregamento do DB)
+  useEffect(() => {
+    const saved = localStorage.getItem('sernic_identity_settings');
+    if (saved) {
+      try {
         const parsed = JSON.parse(saved);
-        // Migrar imediatamente qualquer cor azul antiga (#1B365D / #0D1B4B) para o vermelho oficial
-        if (!parsed.cor_principal || parsed.cor_principal.toUpperCase() === '#1B365D' || parsed.cor_principal.toUpperCase() === '#0D1B4B') {
-          parsed.cor_principal = '#B71C1C';
-          localStorage.setItem('sernic_identity_settings', JSON.stringify(parsed));
-        }
+        // Se a opção de cores aleatórias estiver ativa, sorteia uma cor ao iniciar/recarregar a página
         if (parsed.cores_aleatorias) {
           const randomCor = CORES_PALETA[Math.floor(Math.random() * CORES_PALETA.length)];
           parsed.cor_principal = randomCor;
           localStorage.setItem('sernic_identity_settings', JSON.stringify(parsed));
         }
-        return { ...DEFAULT_SETTINGS, ...parsed, cor_principal: parsed.cor_principal || '#B71C1C' };
+        setSettings(parsed);
+      } catch (e) {
+        console.error("Erro ao carregar configurações salvas, usando padrão.", e);
+        setSettings(DEFAULT_SETTINGS);
       }
-    } catch (e) {
-      console.error("Erro ao carregar configurações salvas, usando padrão.", e);
     }
-    return DEFAULT_SETTINGS;
-  });
-  const { t, language, setLanguage } = useTranslation();
+  }, []);
 
   // Aplicar cores e tema globalmente sempre que houver alteração
   useEffect(() => {
-    const activeColor = settings.cor_principal || '#B71C1C';
     // Injeção de variáveis CSS customizadas
     if (settings.modo_tema === 'dark') {
-      const primaryColor = (settings.cor_principal && settings.cor_principal.toUpperCase() !== '#1B365D')
-        ? settings.cor_principal
-        : '#EF4444';
+      const isDefaultDarkNavy = !settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D';
+      const primaryColor = isDefaultDarkNavy ? '#4F8DF7' : settings.cor_principal;
       document.documentElement.style.setProperty('--color-primary', primaryColor);
       document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria || '#3A4A66');
       document.documentElement.style.setProperty('--color-accent', settings.cor_destaque || '#FFFFFF');
     } else {
-      document.documentElement.style.setProperty('--color-primary', activeColor);
+      document.documentElement.style.setProperty('--color-primary', settings.cor_principal);
       document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria);
       document.documentElement.style.setProperty('--color-accent', settings.cor_destaque);
     }
     
     // Injeção do modo de tema no html/root
     document.documentElement.setAttribute('data-theme', settings.modo_tema);
-
-    // Sincronizar todas as meta tags theme-color para navegadores móveis (Safari, Chrome barra de navegação/status)
-    const metaTags = document.querySelectorAll('meta[name="theme-color"]');
-    metaTags.forEach(tag => tag.setAttribute('content', activeColor));
-    const navBtnColor = document.querySelector('meta[name="msapplication-navbutton-color"]');
-    if (navBtnColor) navBtnColor.setAttribute('content', activeColor);
   }, [settings]);
 
   // Função para actualizar e salvar configurações (simulação de UPDATE SQL)
@@ -212,7 +202,6 @@ export default function App() {
           handleLogout();
         }}
       />
-      <PwaInstallBanner />
     </>
   );
 }

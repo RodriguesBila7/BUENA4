@@ -340,14 +340,14 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
           <style>
             @page { size: A4 landscape; margin: 12mm; }
             body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; margin: 0; padding: 15px; font-size: 11px; }
-            .header { text-align: center; border-bottom: 2px solid #B71C1C; padding-bottom: 10px; margin-bottom: 14px; }
-            .header h2 { margin: 0 0 3px 0; font-size: 13.5px; text-transform: uppercase; color: #B71C1C; }
+            .header { text-align: center; border-bottom: 2px solid #1B365D; padding-bottom: 10px; margin-bottom: 14px; }
+            .header h2 { margin: 0 0 3px 0; font-size: 13.5px; text-transform: uppercase; color: #1B365D; }
             .header h3 { margin: 0 0 3px 0; font-size: 11.5px; font-weight: 600; }
-            .header h4 { margin: 0 0 4px 0; font-size: 12.5px; color: #B71C1C; font-weight: 800; text-transform: uppercase; }
+            .header h4 { margin: 0 0 4px 0; font-size: 12.5px; color: #1B365D; font-weight: 800; text-transform: uppercase; }
             .meta-box { display: flex; justify-content: space-between; background-color: #f8fafc; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 12px; }
             .meta-box div { font-size: 10.5px; line-height: 1.5; }
             table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; }
-            th { background-color: #B71C1C; color: #ffffff; padding: 5px 6px; border: 1px solid #0f2442; text-align: left; font-weight: 700; }
+            th { background-color: #1B365D; color: #ffffff; padding: 5px 6px; border: 1px solid #0f2442; text-align: left; font-weight: 700; }
             td { padding: 4px 6px; border: 1px solid #cbd5e1; text-align: left; }
             tr:nth-child(even) { background-color: #f8fafc; }
             .totals-bar { margin-top: 12px; padding: 8px 12px; background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; display: flex; justify-content: space-around; font-weight: bold; font-size: 10.5px; }
@@ -360,9 +360,9 @@ export default function EffectivenessReports({ user, orgData: passedOrgData, emp
             <h2>REPÚBLICA DE MOÇAMBIQUE</h2>
             <h3>MINISTÉRIO DO INTERIOR</h3>
             <h4>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL (SERNIC)</h4>
-            <div style="font-weight: 800; font-size: 11.5px; color: #B71C1C; text-transform: uppercase;">DIRECÇÃO GERAL</div>
-            <div style="font-weight: 700; font-size: 11px; color: #B71C1C; text-transform: uppercase;">DIRECÇÃO DE RECURSOS HUMANOS</div>
-            <div style="margin-top: 4px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #B71C1C;">
+            <div style="font-weight: 800; font-size: 11.5px; color: #1B365D; text-transform: uppercase;">DIRECÇÃO GERAL</div>
+            <div style="font-weight: 700; font-size: 11px; color: #1B365D; text-transform: uppercase;">DIRECÇÃO DE RECURSOS HUMANOS</div>
+            <div style="margin-top: 4px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #1B365D;">
               MAPA OFICIAL DE EFETIVIDADE E ASSIDUIDADE DE PESSOAL
             </div>
           </div>
@@ -697,7 +697,7 @@ const styles = {
   formGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
   label: { fontSize: '11.5px', fontWeight: '600', color: 'var(--color-text-muted)' },
   input: { padding: '8px 10px', borderRadius: '5px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', color: 'var(--color-text-main)', fontSize: '12.5px', outline: 'none' },
-  btnPrint: { padding: '9px 18px', backgroundColor: 'var(--color-primary, #B71C1C)', color: 'var(--color-accent, #EAAA00)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
+  btnPrint: { padding: '9px 18px', backgroundColor: 'var(--color-primary, #1B365D)', color: 'var(--color-accent, #EAAA00)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
   btnPdf: { padding: '9px 16px', backgroundColor: '#dc2626', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
   btnExcel: { padding: '9px 16px', backgroundColor: '#107c41', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' },

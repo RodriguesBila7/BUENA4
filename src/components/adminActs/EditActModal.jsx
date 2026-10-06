@@ -231,7 +231,7 @@ const styles = {
     backgroundColor: 'var(--color-bg-base, #f8fafc)',
     borderBottom: '1px solid var(--color-border, #e2e8f0)',
     fontSize: '13px',
-    color: 'var(--color-primary, #B71C1C)'
+    color: 'var(--color-primary, #1B365D)'
   },
   content: {
     padding: '20px 22px',
@@ -293,7 +293,7 @@ const styles = {
     padding: '8px 18px',
     borderRadius: '6px',
     border: 'none',
-    backgroundColor: 'var(--color-primary, #B71C1C)',
+    backgroundColor: 'var(--color-primary, #1B365D)',
     color: 'white',
     cursor: 'pointer',
     fontWeight: '600',
