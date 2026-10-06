@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import useEmployeeData from '../../hooks/useEmployeeData';
 import useOrgData from '../../hooks/useOrgData';
@@ -498,10 +498,417 @@ function PortalAbsenceModal({ isOpen, onClose, absenceForm, setAbsenceForm, onSu
 
 /**
  * ─────────────────────────────────────────────────────────────────────────────
+ * SUB-MODAL MÓVEL: DISPARO DE CREDENCIAIS & CÓDIGO DE ACESSO DO AGENTE (SERNIC)
+ * Padrão nativo do BUENA4 (useResizableModal + Portal)
+ * Permite envio direto por WhatsApp, SMS, Email e gravação imediata de contacto.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+function PortalSendCredentialsModal({ isOpen, onClose, employee, onUpdateEmployee }) {
+  const {
+    modalRef,
+    onPointerDown,
+    isMaximized,
+    toggleMaximize,
+    handleResizePointerDown,
+    handleHeaderDoubleClick,
+    getOverlayProps,
+    modalStyle
+  } = useResizableModal({ defaultWidth: '580px', minWidth: 420, minHeight: 460 });
+
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [codeData, setCodeData] = useState(null);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    if (employee && isOpen) {
+      setPhone(employee.phone || employee.contacto || '');
+      setEmail(employee.email || '');
+      let active = getActiveCodeForEmployee(employee.id);
+      if (!active || active.isExpired) {
+        const gen = generateAgentAccessCode(employee.id, 'WhatsApp');
+        active = { code: gen.code, durationMinutes: gen.durationMinutes };
+      }
+      setCodeData(active);
+      setCopySuccess(false);
+      setSaveSuccess(false);
+    }
+  }, [employee, isOpen]);
+
+  if (!isOpen || !employee) return null;
+
+  const currentCode = codeData?.code || '------';
+  const cleanPhone = String(phone || '').replace(/\D/g, '');
+  const mozPhone = cleanPhone.startsWith('258') ? cleanPhone : (cleanPhone ? `258${cleanPhone}` : '');
+
+  const messageText = `SERNIC DRH: Caro(a) Investigador(a)/Agente ${employee.name}, o seu código de acesso ao Portal do Agente é ${currentCode}. Aceda ao aplicativo móvel/web, selecione [🛡️ Portal], introduza o seu NUIT ${employee.nuit || employee.nip || ''} e este código para definir a sua palavra-passe definitiva (validade de 15 minutos ao iniciar o acesso).`;
+
+  const handleRenewCode = () => {
+    const res = generateAgentAccessCode(employee.id, 'WhatsApp');
+    setCodeData({ code: res.code, durationMinutes: res.durationMinutes });
+    setCopySuccess(false);
+  };
+
+  const handleSaveContact = async () => {
+    if (!employee.id) return;
+    if (onUpdateEmployee) {
+      await onUpdateEmployee(employee.id, { phone, email });
+    }
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2500);
+  };
+
+  const handleOpenWhatsApp = () => {
+    if (!mozPhone || mozPhone.length < 9) {
+      alert('Por favor preencha um contacto de telefone/WhatsApp moçambicano antes de abrir o WhatsApp.');
+      return;
+    }
+    const url = `https://wa.me/${mozPhone}?text=${encodeURIComponent(messageText)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleOpenSMS = () => {
+    if (!mozPhone || mozPhone.length < 9) {
+      alert('Por favor preencha o contacto de telefone antes de disparar SMS.');
+      return;
+    }
+    window.location.href = `sms:${mozPhone}?body=${encodeURIComponent(messageText)}`;
+  };
+
+  const handleOpenEmail = () => {
+    if (!email) {
+      alert('Por favor preencha o e-mail institucional antes de enviar.');
+      return;
+    }
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent('SERNIC DRH - Código de Ativação do Portal do Agente')}&body=${encodeURIComponent(messageText)}`;
+  };
+
+  const handleCopyMessage = () => {
+    navigator.clipboard.writeText(messageText);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2500);
+  };
+
+  const overlayProps = getOverlayProps(onClose);
+
+  return ReactDOM.createPortal(
+    <div
+      style={modalStyles.overlay}
+      onMouseDown={overlayProps.onMouseDown}
+      onClick={overlayProps.onClick}
+    >
+      <div
+        ref={modalRef}
+        style={{ ...modalStyles.modalBox, ...modalStyle }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* CABEÇALHO */}
+        <div
+          className={isMaximized ? '' : 'drag-handle'}
+          style={modalStyles.modalHeader}
+          onPointerDown={isMaximized ? undefined : onPointerDown}
+          onDoubleClick={handleHeaderDoubleClick}
+          title="💡 Arraste para mover ou dê duplo clique para expandir/reduzir"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '18px' }}>📡</span>
+            <div>
+              <h3 style={modalStyles.headerTitle}>Enviar Credenciais & Código de Acesso</h3>
+              <div style={modalStyles.headerSubtitle}>
+                {employee.name} • NUIT: {employee.nuit || employee.nip || 'N/A'}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <button
+              type="button"
+              onClick={toggleMaximize}
+              style={modalStyles.expandBtn}
+              title={isMaximized ? 'Reduzir' : 'Expandir'}
+            >
+              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+            </button>
+            <button onClick={onClose} style={modalStyles.closeBtn} title="Fechar">✕</button>
+          </div>
+        </div>
+
+        {/* CORPO DO MODAL */}
+        <div style={{ ...modalStyles.modalBody, padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          
+          {/* CARTÃO DE DESTAQUE DO CÓDIGO */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: 'rgba(183, 28, 28, 0.05)',
+            border: '1.5px solid rgba(183, 28, 28, 0.25)',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            flexWrap: 'wrap',
+            gap: '12px'
+          }}>
+            <div>
+              <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--color-primary, #B71C1C)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                🔑 Código de Acesso do Agente (6 Dígitos)
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: '900', color: 'var(--color-primary, #B71C1C)', letterSpacing: '4px', margin: '2px 0' }}>
+                {currentCode}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                ⏱️ Validade de 15 minutos ao iniciar o acesso no aplicativo.
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleRenewCode}
+              style={{
+                backgroundColor: 'var(--color-bg-base, #ffffff)',
+                color: 'var(--color-text-main)',
+                border: '1px solid var(--color-border)',
+                padding: '7px 12px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+              title="Gerar outro código aleatório"
+            >
+              🔄 Gerar Novo Código
+            </button>
+          </div>
+
+          {/* DADOS DE CONTACTO DO AGENTE (COM POSSIBILIDADE DE ATUALIZAR) */}
+          <div style={{ backgroundColor: 'var(--color-bg-subtle, #f8fafc)', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-base)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>📱 Destinatário e Contacto de Envio:</span>
+              {saveSuccess && <span style={{ color: '#059669', fontSize: '11px', fontWeight: '700' }}>✓ Guardado na ficha!</span>}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-muted)', display: 'block', marginBottom: '3px' }}>
+                  Telefone / WhatsApp (+258):
+                </label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="+258 84 123 4567"
+                    style={{ ...styles.fieldInput, flex: 1, padding: '7px 10px', fontSize: '12px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveContact}
+                    style={{
+                      padding: '6px 10px',
+                      backgroundColor: 'var(--color-primary, #B71C1C)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                    title="Gravar este contacto na ficha do funcionário"
+                  >
+                    💾 Guardar
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: '600', color: 'var(--color-text-muted)', display: 'block', marginBottom: '3px' }}>
+                  Email Institucional:
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="exemplo@sernic.gov.mz"
+                  style={{ ...styles.fieldInput, width: '100%', padding: '7px 10px', fontSize: '12px' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* MENSAGEM OFICIAL FORMATADA */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--color-text-base)' }}>
+                ✉️ Mensagem Oficial SERNIC DRH:
+              </label>
+              {copySuccess && (
+                <span style={{ fontSize: '11px', fontWeight: '700', color: '#059669' }}>
+                  ✓ Copiado para a área de transferência!
+                </span>
+              )}
+            </div>
+            <textarea
+              readOnly
+              rows={3}
+              value={messageText}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-bg-base)',
+                color: 'var(--color-text-base)',
+                fontSize: '12px',
+                lineHeight: '1.4',
+                boxSizing: 'border-box',
+                resize: 'none'
+              }}
+            />
+          </div>
+
+          {/* BOTÕES DE DISPARO OFICIAL */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={handleOpenWhatsApp}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '10px 14px',
+                backgroundColor: '#059669',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '12.5px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(5, 150, 105, 0.25)'
+              }}
+              title="Abrir o WhatsApp com a mensagem oficial preenchida"
+            >
+              <span>💬</span>
+              <span>Abrir WhatsApp</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleOpenSMS}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '10px 14px',
+                backgroundColor: '#0284c7',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '12.5px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(2, 132, 199, 0.25)'
+              }}
+              title="Disparar por SMS no telemóvel"
+            >
+              <span>📱</span>
+              <span>Disparar SMS</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleOpenEmail}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '10px 14px',
+                backgroundColor: '#1d4ed8',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '12.5px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(29, 78, 216, 0.25)'
+              }}
+              title="Enviar por e-mail institucional"
+            >
+              <span>✉️</span>
+              <span>Enviar Email</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCopyMessage}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '10px 14px',
+                backgroundColor: 'var(--color-bg-base)',
+                color: 'var(--color-text-main)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                fontWeight: '700',
+                fontSize: '12.5px',
+                cursor: 'pointer'
+              }}
+              title="Copiar texto completo das credenciais"
+            >
+              <span>📋</span>
+              <span>Copiar Texto</span>
+            </button>
+          </div>
+
+          {/* GUIA PASSO A PASSO PARA O AGENTE */}
+          <div style={{
+            padding: '10px 14px',
+            backgroundColor: 'rgba(2, 132, 199, 0.06)',
+            borderRadius: '8px',
+            border: '1px solid rgba(2, 132, 199, 0.2)',
+            fontSize: '11.5px',
+            color: 'var(--color-text-base)',
+            lineHeight: '1.4'
+          }}>
+            <strong>💡 Como o Agente Entra no Sistema:</strong>
+            <ol style={{ margin: '4px 0 0 16px', padding: 0 }}>
+              <li>Acede ao aplicativo no telemóvel ou computador.</li>
+              <li>Na tela inicial de login, clica no botão <strong>[🛡️ Portal]</strong> no topo direito.</li>
+              <li>Digita o seu <strong>NUIT ({employee.nuit || employee.nip || '...'})</strong> e o código temporário <strong>{currentCode}</strong>.</li>
+              <li>Cria e confirma a sua <strong>palavra-passe pessoal definitiva</strong> para ter acesso total.</li>
+            </ol>
+          </div>
+        </div>
+
+        {/* Resizer Canto Inferior */}
+        {!isMaximized && (
+          <div onPointerDown={handleResizePointerDown} style={modalStyles.resizeHandle} title="Arraste para redimensionar">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="14" y1="3" x2="3" y2="14" />
+              <line x1="14" y1="8" x2="8" y2="14" />
+              <line x1="14" y1="13" x2="13" y2="14" />
+            </svg>
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
  * SUB-ABA: CENTRAL DE EMISSÃO E ENVIO DE CÓDIGOS DE ACESSO (PRIMEIRO LOGIN)
  * ─────────────────────────────────────────────────────────────────────────────
  */
-function PortalActivationCodesTab({ employees = [], orgData, onUpdateEmployee }) {
+function PortalActivationCodesTab({ employees = [], orgData, onUpdateEmployee, onSendCredentials }) {
   const [search, setSearch] = useState('');
   const [dirFilter, setDirFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -514,6 +921,10 @@ function PortalActivationCodesTab({ employees = [], orgData, onUpdateEmployee })
   };
 
   const handleGenerate = (emp, channel = 'SMS') => {
+    if (onSendCredentials) {
+      onSendCredentials(emp);
+      return;
+    }
     const res = generateAgentAccessCode(emp.id, channel);
     refreshCodes();
     const message = buildActivationMessage(emp, res.code);
@@ -540,6 +951,10 @@ function PortalActivationCodesTab({ employees = [], orgData, onUpdateEmployee })
   };
 
   const handleOpenChannel = (emp, channel) => {
+    if (onSendCredentials) {
+      onSendCredentials(emp);
+      return;
+    }
     const existing = getActiveCodeForEmployee(emp.id);
     let code = existing?.code;
     let expiresAt = existing?.expiresAt;
@@ -921,6 +1336,8 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '' });
 
   // Controlos de Modais
+  const [isCredentialsModalOpen, setIsCredentialsModalOpen] = useState(false);
+  const [credentialsModalEmp, setCredentialsModalEmp] = useState(null);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isVacationModalOpen, setIsVacationModalOpen] = useState(false);
   const [vacationForm, setVacationForm] = useState({
@@ -1195,6 +1612,29 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
         {/* FERRAMENTAS DE PESQUISA, SELEÇÃO E CONTROLO */}
         <div style={styles.instActions}>
           <button 
+            type="button"
+            onClick={() => setActivePortalTab('activation_codes')} 
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              backgroundColor: activePortalTab === 'activation_codes' ? 'var(--color-primary, #B71C1C)' : 'rgba(183, 28, 28, 0.08)',
+              color: activePortalTab === 'activation_codes' ? '#ffffff' : 'var(--color-primary, #B71C1C)',
+              border: '1.5px solid var(--color-primary, #B71C1C)',
+              borderRadius: '8px',
+              fontSize: '12.5px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            title="Aceder à lista de emissão de códigos de ativação e envio de credenciais"
+          >
+            <span style={{ fontSize: '15px' }}>🔐</span>
+            <span>Central de Credenciais</span>
+          </button>
+
+          <button 
             onClick={() => setIsSearchModalOpen(true)} 
             style={styles.btnSearchTrigger}
             title="Pesquisar e filtrar qualquer funcionário cadastrado"
@@ -1253,6 +1693,58 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
               <span>🏬 {empOrgInfo.departmentName}</span>
               <span>•</span>
               <span style={{ color: 'var(--color-primary)', fontWeight: '600' }}>🎖️ {empOrgInfo.categoryName}</span>
+            </div>
+
+            {/* BOTÕES DE DISPARO RÁPIDO DE CREDENCIAIS DO AGENTE SELECIONADO */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setCredentialsModalEmp(currentEmp);
+                  setIsCredentialsModalOpen(true);
+                }}
+                style={{
+                  backgroundColor: '#059669',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '8px 16px',
+                  fontSize: '12.5px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  boxShadow: '0 2px 8px rgba(5, 150, 105, 0.25)',
+                  transition: 'all 0.15s ease'
+                }}
+                title="Enviar credenciais e código de acesso para este funcionário via WhatsApp, SMS ou Email"
+              >
+                <span>💬</span>
+                <span>Enviar Credenciais / Código de Acesso</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActivePortalTab('activation_codes')}
+                style={{
+                  backgroundColor: 'var(--color-bg-base, #ffffff)',
+                  color: 'var(--color-primary, #B71C1C)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '6px',
+                  padding: '8px 14px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+                title="Ver lista geral de códigos e envio em lote de todos os funcionários"
+              >
+                <span>🔐</span>
+                <span>Central de Códigos ({employees.length})</span>
+              </button>
             </div>
           </div>
         </div>
@@ -1322,8 +1814,14 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
         <button 
           className={`module-tab ${activePortalTab === 'activation_codes' ? 'active' : ''}`}
           onClick={() => setActivePortalTab('activation_codes')}
+          style={{
+            fontWeight: '700',
+            border: activePortalTab === 'activation_codes' ? '1.5px solid var(--color-primary, #B71C1C)' : '1.5px solid rgba(183, 28, 28, 0.4)',
+            backgroundColor: activePortalTab === 'activation_codes' ? 'var(--color-primary, #B71C1C)' : 'rgba(183, 28, 28, 0.08)',
+            color: activePortalTab === 'activation_codes' ? '#ffffff' : 'var(--color-primary, #B71C1C)'
+          }}
         >
-          🔐 Códigos de Acesso ({employees.length})
+          🔐 Códigos de Acesso & Credenciais ({employees.length})
         </button>
       </div>
 
@@ -1755,6 +2253,10 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
             employees={employees}
             orgData={orgData}
             onUpdateEmployee={updateEmployee}
+            onSendCredentials={(emp) => {
+              setCredentialsModalEmp(emp);
+              setIsCredentialsModalOpen(true);
+            }}
           />
         )}
       </div>
@@ -1762,6 +2264,16 @@ export default function EmployeePortal({ user, onBackToAdmin }) {
       {/* ──────────────────────────────────────────────────────────────
           MODAIS MÓVEIS (PORTAIS ROBUSTOS E PADRONIZADOS)
          ────────────────────────────────────────────────────────────── */}
+      <PortalSendCredentialsModal
+        isOpen={isCredentialsModalOpen}
+        onClose={() => {
+          setIsCredentialsModalOpen(false);
+          setCredentialsModalEmp(null);
+        }}
+        employee={credentialsModalEmp || currentEmp}
+        onUpdateEmployee={updateEmployee}
+      />
+
       <PortalAgentSearchModal
         isOpen={isSearchModalOpen}
         onClose={() => setIsSearchModalOpen(false)}
