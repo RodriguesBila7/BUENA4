@@ -83,7 +83,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
   
   const classification = useMemo(() => getClassification(formData.score), [formData.score]);
 
-  const getName = (list, id) => (list || []).find(item => item && item.id === id)?.name || '-';
+  const getName = (list, id) => (list || []).find(item => item && String(item.id) === String(id))?.name || '-';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -238,76 +238,169 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                   }}
                   onClick={() => setSelectedEmpId(emp.id)}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      backgroundColor: isSelected ? 'rgba(255,255,255,0.22)' : 'rgba(27, 54, 93, 0.08)',
+                      color: isSelected ? '#ffffff' : 'var(--color-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: '800',
+                      flexShrink: 0,
+                      border: isSelected ? '1px solid rgba(255,255,255,0.3)' : '1px solid var(--color-border)'
+                    }}>
+                      {(emp.name || 'F').charAt(0).toUpperCase()}
+                    </div>
                     <span style={{ 
                       fontWeight: '700', 
-                      minWidth: '70px',
+                      minWidth: '65px',
+                      fontFamily: 'monospace',
+                      fontSize: '12px',
                       color: isSelected ? '#ffffff' : 'var(--color-primary)' 
                     }}>
-                      {emp.nip}
+                      {emp.nip || emp.nuit}
                     </span>
-                    <span style={{ fontWeight: '500' }}>{emp.name}</span>
+                    <span style={{ fontWeight: isSelected ? '700' : '600', fontSize: '13.5px' }}>{emp.name}</span>
                   </div>
-                  {isSelected && <span style={{ fontWeight: '700', fontSize: '13px' }}>✓ SELECIONADO</span>}
+                  {isSelected && (
+                    <span style={styles.selectedBadge}>
+                      ✓ SELECIONADO
+                    </span>
+                  )}
                 </div>
               );
             })}
             {filteredEmployees.length === 0 && (
-              <div style={{ padding: '20px', color: 'var(--color-text-muted)', fontSize: '13px', textAlign: 'center' }}>
-                Nenhum funcionário encontrado nos critérios ou pesquisa selecionada.
+              <div style={{ padding: '24px', color: 'var(--color-text-muted)', fontSize: '13px', textAlign: 'center' }}>
+                🔍 Nenhum funcionário encontrado nos critérios ou pesquisa selecionada.
               </div>
             )}
           </div>
 
           {selectedEmp && (() => {
             const timeOfService = (() => {
-              if (!selectedEmp.admissionDate) return '-';
+              if (!selectedEmp.admissionDate) return null;
               const start = new Date(selectedEmp.admissionDate);
+              if (isNaN(start.getTime())) return null;
               const end = new Date();
               const diffTime = Math.abs(end - start);
               const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
               const years = Math.floor(diffDays / 365);
               const months = Math.floor((diffDays % 365) / 30);
-              return years > 0 ? `${years} ano(s) e ${months} mês(es)` : `${months} mês(es)`;
+              if (years > 0) {
+                return months > 0 ? `${years} ano(s) e ${months} mês(es)` : `${years} ano(s)`;
+              }
+              return `${months} mês(es)`;
             })();
 
+            const careerName = getName(orgData?.careers || [], selectedEmp.careerId);
+            const categoryName = getName(orgData?.categories || [], selectedEmp.categoryId);
+            const directorateName = getName(orgData?.directorates || [], selectedEmp.directorateId);
+            const departmentName = selectedEmp.departmentId ? getName(orgData?.departments || [], selectedEmp.departmentId) : null;
+            const districtDirName = (selectedEmp.districtDirectorateId || selectedEmp.districtId)
+              ? getName(orgData?.districtDirectorates || [], selectedEmp.districtDirectorateId || selectedEmp.districtId)
+              : null;
+            const rankName = selectedEmp.rank || selectedEmp.patente || null;
+            const roleName = selectedEmp.role || selectedEmp.position || null;
+
             return (
-              <div style={styles.previewBox}>
-                <div style={styles.avatar}>
-                  {selectedEmp.photo ? (
-                    <img src={selectedEmp.photo} alt="Avatar" style={{width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%'}} />
-                  ) : (
-                    (selectedEmp.name || 'F').charAt(0)
-                  )}
+              <div style={styles.profileCard}>
+                {/* CABEÇALHO DO PERFIL */}
+                <div style={styles.profileHeader}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '15px' }}>👤</span>
+                    <span style={styles.profileHeaderTitle}>Funcionário Selecionado para Avaliação</span>
+                    <span style={styles.statusBadge}>
+                      <span style={styles.statusDot}></span>
+                      {selectedEmp.isActive !== false ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedEmpId('')}
+                    style={styles.btnClearSelection}
+                    title="Remover seleção e escolher outro funcionário"
+                  >
+                    ✕ Alterar Funcionário
+                  </button>
                 </div>
-                <div style={styles.previewGrid}>
-                  <div style={styles.previewItem}>
-                    <span style={styles.previewLabel}>Nome Completo:</span>
-                    <span style={styles.previewValue}>{selectedEmp.name}</span>
+
+                {/* IDENTIDADE PRINCIPAL: AVATAR & DADOS */}
+                <div style={styles.profileMain}>
+                  <div style={styles.avatarWrapper}>
+                    {selectedEmp.photo ? (
+                      <img src={selectedEmp.photo} alt={selectedEmp.name} style={styles.avatarImg} />
+                    ) : (
+                      <div style={styles.avatarFallback}>
+                        {(selectedEmp.name || 'F').charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </div>
-                  <div style={styles.previewItem}>
-                    <span style={styles.previewLabel}>Nº Mecanográfico (NUIT):</span>
-                    <span style={styles.previewValue}>{selectedEmp.nip}</span>
+
+                  <div style={styles.profileIdentity}>
+                    <h3 style={styles.profileName}>{selectedEmp.name}</h3>
+                    <div style={styles.profileTagRow}>
+                      <span style={styles.nuitBadge}>
+                        NUIT: <strong>{selectedEmp.nip || selectedEmp.nuit || '-'}</strong>
+                      </span>
+                      {rankName && rankName !== '-' && (
+                        <span style={styles.rankBadge}>
+                          ⭐ {rankName}
+                        </span>
+                      )}
+                      {roleName && roleName !== '-' && roleName.toLowerCase() !== 'nenhum' && (
+                        <span style={styles.roleBadge}>
+                          🏷️ {roleName}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div style={styles.previewItem}>
-                    <span style={styles.previewLabel}>Carreira:</span>
-                    <span style={styles.previewValue}>{getName(orgData?.careers || [], selectedEmp.careerId)}</span>
+                </div>
+
+                {/* GRADE DE METADADOS ESTRUTURADOS */}
+                <div style={styles.metaGrid}>
+                  <div style={styles.metaCard}>
+                    <div style={styles.metaIcon}>💼</div>
+                    <div style={styles.metaContent}>
+                      <span style={styles.metaLabel}>Carreira Profissional</span>
+                      <strong style={styles.metaValue}>{careerName !== '-' ? careerName : 'Não atribuída'}</strong>
+                    </div>
                   </div>
-                  <div style={styles.previewItem}>
-                    <span style={styles.previewLabel}>Categoria:</span>
-                    <span style={styles.previewValue}>{getName(orgData?.categories || [], selectedEmp.categoryId)}</span>
+
+                  <div style={styles.metaCard}>
+                    <div style={styles.metaIcon}>🎖️</div>
+                    <div style={styles.metaContent}>
+                      <span style={styles.metaLabel}>Categoria Funcional</span>
+                      <strong style={styles.metaValue}>{categoryName !== '-' ? categoryName : 'Não atribuída'}</strong>
+                    </div>
                   </div>
-                  <div style={styles.previewItem}>
-                    <span style={styles.previewLabel}>Cargo:</span>
-                    <span style={styles.previewValue}>{selectedEmp.role || 'Nenhum'}</span>
+
+                  <div style={styles.metaCard}>
+                    <div style={styles.metaIcon}>🏢</div>
+                    <div style={styles.metaContent}>
+                      <span style={styles.metaLabel}>Unidade Orgânica / Lotação</span>
+                      <strong style={styles.metaValue}>{directorateName !== '-' ? directorateName : 'Sede Central'}</strong>
+                      {(departmentName || districtDirName) && (
+                        <span style={styles.metaSub}>
+                          ↳ {departmentName ? `Depto: ${departmentName}` : `Distrito: ${districtDirName}`}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div style={styles.previewItem}>
-                    <span style={styles.previewLabel}>Unidade Orgânica:</span>
-                    <span style={styles.previewValue}>{getName(orgData?.directorates || [], selectedEmp.directorateId)}</span>
-                  </div>
-                  <div style={styles.previewItem}>
-                    <span style={styles.previewLabel}>Tempo de Serviço:</span>
-                    <span style={styles.previewValue}>{timeOfService}</span>
+
+                  <div style={styles.metaCard}>
+                    <div style={styles.metaIcon}>⏳</div>
+                    <div style={styles.metaContent}>
+                      <span style={styles.metaLabel}>Tempo de Serviço</span>
+                      <strong style={styles.metaValue}>{timeOfService || 'Sem data de admissão'}</strong>
+                      {selectedEmp.admissionDate && (
+                        <span style={styles.metaSub}>Admissão: {selectedEmp.admissionDate}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -481,12 +574,14 @@ const styles = {
     color: 'var(--color-primary)'
   },
   selectedBadge: {
-    fontSize: '12px',
-    color: 'var(--color-primary)',
-    backgroundColor: 'rgba(220, 38, 38, 0.08)',
+    fontSize: '11px',
+    fontWeight: '700',
+    color: '#ffffff',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     padding: '4px 10px',
-    borderRadius: '6px',
-    border: '1px solid rgba(220, 38, 38, 0.2)'
+    borderRadius: '12px',
+    border: '1px solid rgba(255, 255, 255, 0.35)',
+    letterSpacing: '0.5px'
   },
   filterGrid: {
     display: 'grid',
@@ -552,64 +647,209 @@ const styles = {
     marginTop: '8px'
   },
   empItem: {
-    padding: '9px 14px',
+    padding: '10px 14px',
     cursor: 'pointer',
     borderBottom: '1px solid var(--color-border)',
     fontSize: '13px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    transition: 'background-color 0.15s'
+    transition: 'all 0.15s ease'
   },
   empItemSelected: {
     backgroundColor: 'var(--color-primary)',
-    color: '#ffffff'
+    color: '#ffffff',
+    boxShadow: 'inset 4px 0 0 #3b82f6'
   },
-  previewBox: {
+  /* NOVO CARD EXECUTIVO DE PERFIL DO FUNCIONÁRIO */
+  profileCard: {
+    backgroundColor: 'var(--color-bg-base)',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border)',
+    padding: '20px',
+    marginTop: '16px',
+    boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '18px'
+  },
+  profileHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: '12px',
+    borderBottom: '1px solid var(--color-border)',
+    flexWrap: 'wrap',
+    gap: '10px'
+  },
+  profileHeaderTitle: {
+    fontSize: '12px',
+    fontWeight: '700',
+    color: 'var(--color-text-muted)',
+    textTransform: 'uppercase',
+    letterSpacing: '0.4px'
+  },
+  statusBadge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '3px 10px',
+    borderRadius: '12px',
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    color: '#10b981',
+    fontSize: '11px',
+    fontWeight: '700',
+    border: '1px solid rgba(16, 185, 129, 0.25)'
+  },
+  statusDot: {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: '#10b981'
+  },
+  btnClearSelection: {
+    backgroundColor: 'transparent',
+    border: '1px solid var(--color-border)',
+    color: 'var(--color-text-muted)',
+    padding: '5px 12px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.15s ease'
+  },
+  profileMain: {
     display: 'flex',
     alignItems: 'center',
-    gap: '20px',
-    padding: '16px 20px',
-    backgroundColor: 'var(--color-bg-base)',
-    borderRadius: '10px',
-    border: '1px solid var(--color-border)',
-    marginTop: '16px',
+    gap: '18px',
     flexWrap: 'wrap'
   },
-  avatar: {
-    width: '64px',
-    height: '64px',
+  avatarWrapper: {
+    width: '68px',
+    height: '68px',
     borderRadius: '50%',
-    backgroundColor: 'var(--color-border)',
+    padding: '2px',
+    background: 'linear-gradient(135deg, var(--color-primary), #3b82f6)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '24px',
-    fontWeight: '700',
-    color: 'var(--color-text-muted)',
-    flexShrink: 0
+    flexShrink: 0,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
   },
-  previewGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '10px',
-    flex: 1
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    objectFit: 'cover'
   },
-  previewItem: {
+  avatarFallback: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    backgroundColor: 'var(--color-bg-card)',
+    color: 'var(--color-primary)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '26px',
+    fontWeight: '800'
+  },
+  profileIdentity: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '2px'
+    gap: '6px',
+    flex: 1
   },
-  previewLabel: {
-    fontSize: '11px',
+  profileName: {
+    margin: 0,
+    fontSize: '18px',
+    fontWeight: '800',
+    color: 'var(--color-text-base)',
+    letterSpacing: '-0.2px'
+  },
+  profileTagRow: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '8px'
+  },
+  nuitBadge: {
+    fontSize: '12px',
+    color: 'var(--color-text-base)',
+    backgroundColor: 'var(--color-bg-card)',
+    padding: '3px 9px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border)',
+    fontFamily: 'monospace'
+  },
+  rankBadge: {
+    fontSize: '12px',
+    color: 'var(--color-primary)',
+    backgroundColor: 'rgba(27, 54, 93, 0.08)',
+    padding: '3px 9px',
+    borderRadius: '6px',
+    border: '1px solid rgba(27, 54, 93, 0.16)',
+    fontWeight: '600'
+  },
+  roleBadge: {
+    fontSize: '12px',
+    color: 'var(--color-text-muted)',
+    backgroundColor: 'var(--color-bg-card)',
+    padding: '3px 9px',
+    borderRadius: '6px',
+    border: '1px solid var(--color-border)',
+    fontWeight: '500'
+  },
+  metaGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '12px'
+  },
+  metaCard: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '12px',
+    padding: '12px 14px',
+    backgroundColor: 'var(--color-bg-card)',
+    borderRadius: '10px',
+    border: '1px solid var(--color-border)',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+  },
+  metaIcon: {
+    fontSize: '18px',
+    lineHeight: 1,
+    padding: '8px',
+    borderRadius: '8px',
+    backgroundColor: 'rgba(27, 54, 93, 0.05)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0
+  },
+  metaContent: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    minWidth: 0,
+    flex: 1
+  },
+  metaLabel: {
+    fontSize: '10.5px',
     fontWeight: '700',
     color: 'var(--color-text-muted)',
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px'
   },
-  previewValue: {
+  metaValue: {
     fontSize: '13px',
     fontWeight: '600',
-    color: 'var(--color-text-base)'
+    color: 'var(--color-text-base)',
+    wordBreak: 'break-word'
+  },
+  metaSub: {
+    fontSize: '11px',
+    color: 'var(--color-text-muted)',
+    marginTop: '2px'
   },
   fileInput: {
     padding: '8px 12px',
