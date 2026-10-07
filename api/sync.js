@@ -2,20 +2,60 @@
  * api/sync.js
  * Vercel Serverless Function para sincronização total em nuvem de todo o sistema SERNIC DRH
  * (Perfis, Utilizadores, Colaboradores, Atos Administrativos, Transferências, Disciplinar, Avaliações, etc.)
- * Permite que todas as alterações feitas num computador reflitam no telemóvel e vice-versa.
  */
 
-const GIST_ID = 'dd985f35807d842a90cc097c26c07e47';
+const GIST_ID = process.env.GIST_ID || 'dd985f35807d842a90cc097c26c07e47';
 const GIST_FILENAME = 'sernic_sync.json';
-const GITHUB_TOKEN = process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN || ['g','h','o','_','L','E','T','I','d','x','y','3','t','a','n','i','4','1','f','7','R','P','1','x','Z','j','F','o','P','c','D','6','G','u','3','g','G','c','1','u'].join('');
+// Credencial obtida ESTRITAMENTE de variáveis de ambiente seguras (sem credenciais hardcoded)
+const GITHUB_TOKEN = process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN;
+const SYNC_SECRET = process.env.SYNC_API_SECRET;
+
+function isOriginAllowed(origin, host) {
+  if (!origin) return true;
+  if (process.env.ALLOWED_ORIGIN) {
+    const list = process.env.ALLOWED_ORIGIN.split(',').map(s => s.trim().toLowerCase());
+    return list.includes(origin.toLowerCase());
+  }
+  // Permitir por padrão o próprio host, domínios vercel.app e localhost
+  const cleanOrigin = origin.replace(/^https?:\/\//, '').toLowerCase();
+  const cleanHost = host ? host.toLowerCase() : '';
+  if (cleanHost && cleanOrigin === cleanHost) return true;
+  if (cleanOrigin.includes('vercel.app') || cleanOrigin.includes('localhost') || cleanOrigin.includes('127.0.0.1')) {
+    return true;
+  }
+  return false;
+}
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  const host = req.headers.host;
+
+  // CORS restrito e seguro
+  if (isOriginAllowed(origin, host)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-sync-secret');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // 1. Verificação de credencial de ambiente
+  if (!GITHUB_TOKEN) {
+    return res.status(500).json({
+      error: 'Servidor não configurado. Defina a variável de ambiente GITHUB_SYNC_TOKEN nas configurações do Vercel.'
+    });
+  }
+
+  // 2. Proteção de autenticação opcional por segredo da API
+  if (SYNC_SECRET) {
+    const authHeader = req.headers.authorization || '';
+    const secretHeader = req.headers['x-sync-secret'] || '';
+    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
+    if (bearer !== SYNC_SECRET && secretHeader !== SYNC_SECRET) {
+      return res.status(401).json({ error: 'Acesso não autorizado. Chave de autenticação inválida.' });
+    }
   }
 
   try {
