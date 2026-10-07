@@ -243,15 +243,15 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                       width: '28px',
                       height: '28px',
                       borderRadius: '50%',
-                      backgroundColor: isSelected ? 'rgba(234, 88, 12, 0.15)' : 'rgba(27, 54, 93, 0.08)',
-                      color: isSelected ? '#EA580C' : 'var(--color-primary)',
+                      backgroundColor: isSelected ? 'rgba(255,255,255,0.22)' : 'rgba(27, 54, 93, 0.08)',
+                      color: isSelected ? '#ffffff' : 'var(--color-primary)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '12px',
                       fontWeight: '800',
                       flexShrink: 0,
-                      border: isSelected ? '1px solid rgba(234, 88, 12, 0.4)' : '1px solid var(--color-border)'
+                      border: isSelected ? '1px solid rgba(255,255,255,0.3)' : '1px solid var(--color-border)'
                     }}>
                       {(emp.name || 'F').charAt(0).toUpperCase()}
                     </div>
@@ -260,14 +260,14 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                       minWidth: '65px',
                       fontFamily: 'monospace',
                       fontSize: '12px',
-                      color: isSelected ? '#EA580C' : 'var(--color-primary)' 
+                      color: isSelected ? '#ffffff' : 'var(--color-primary)' 
                     }}>
                       {emp.nip || emp.nuit}
                     </span>
                     <span style={{ 
                       fontWeight: isSelected ? '700' : '600', 
                       fontSize: '13.5px',
-                      color: isSelected ? 'var(--color-text-base)' : 'var(--color-text-base)'
+                      color: isSelected ? '#ffffff' : 'inherit'
                     }}>
                       {emp.name}
                     </span>
@@ -583,14 +583,11 @@ const styles = {
     fontSize: '11px',
     fontWeight: '700',
     color: '#ffffff',
-    backgroundColor: '#EA580C',
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     padding: '3px 10px',
     borderRadius: '12px',
-    boxShadow: '0 2px 6px rgba(234, 88, 12, 0.35)',
-    letterSpacing: '0.4px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '4px'
+    border: '1px solid rgba(255, 255, 255, 0.35)',
+    letterSpacing: '0.5px'
   },
   filterGrid: {
     display: 'grid',
@@ -666,9 +663,8 @@ const styles = {
     transition: 'all 0.15s ease'
   },
   empItemSelected: {
-    backgroundColor: 'rgba(234, 88, 12, 0.08)',
-    boxShadow: 'inset 5px 0 0 #EA580C',
-    borderBottomColor: 'rgba(234, 88, 12, 0.25)'
+    backgroundColor: 'var(--color-primary)',
+    color: '#ffffff'
   },
   /* NOVO CARD EXECUTIVO DE PERFIL DO FUNCIONÁRIO */
   profileCard: {
