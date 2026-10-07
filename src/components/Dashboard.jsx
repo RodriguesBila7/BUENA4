@@ -2415,7 +2415,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             </div>
           )}
 
-          {/* TAB 3: RELATÓRIOS E IMPRESSÕES */}
+          {/* TAB 3: RELATÓRIO DO EFECTIVO */}
           {activeTab === 'reports' && (
             <div className="animate-fade-in" style={styles.tabContainer}>
               <div className="no-print" style={styles.sectionHeader}>

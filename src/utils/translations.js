@@ -59,7 +59,7 @@ const translations = {
     /* ── Sidebar / Menus ── */
     menu_home: 'Início',
     menu_identity: 'Identidade Visual',
-    menu_reports: 'Relatórios e Impressão',
+    menu_reports: 'Relatório do Efectivo',
     menu_logout: 'Sair',
     menu_settings: 'Definições',
     menu_personalization: 'Personalização',
@@ -132,8 +132,8 @@ const translations = {
     db_null_logo: 'Padrão Institucional',
 
     /* ── Relatórios ── */
-    reports_title: 'Módulo de Relatórios Institucionais',
-    reports_desc: 'Visualize os relatórios e gere impressões oficiais ou arquivos PDF com cabeçalho e assinatura padrão.',
+    reports_title: 'Módulo de Relatório do Efectivo',
+    reports_desc: 'Visualize o relatório do efectivo e gere impressões oficiais ou arquivos PDF com cabeçalho e assinatura padrão.',
     reports_print: 'Imprimir Relatório (PDF)',
     report_republic: 'REPÚBLICA DE MOÇAMBIQUE',
     report_department: 'DIRECÇÃO DE RECURSOS HUMANOS',
@@ -273,7 +273,7 @@ const translations = {
     /* ── Sidebar / Menus ── */
     menu_home: 'Home',
     menu_identity: 'Visual Identity',
-    menu_reports: 'Reports & Printing',
+    menu_reports: 'Staff Report',
     menu_logout: 'Logout',
     menu_settings: 'Settings',
     menu_personalization: 'Personalization',
@@ -346,7 +346,7 @@ const translations = {
     db_null_logo: 'Institutional Default',
 
     /* ── Reports ── */
-    reports_title: 'Institutional Reports Module',
+    reports_title: 'Staff Report Module',
     reports_desc: 'View reports and generate official printouts or PDF files with standard header and signature.',
     reports_print: 'Print Report (PDF)',
     report_republic: 'REPUBLIC OF MOZAMBIQUE',

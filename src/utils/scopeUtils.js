@@ -132,6 +132,7 @@ export const PROVINCIAL_DEFAULT_MODULES = [
   'Férias e Licenças',
   'Saúde e Óbitos',
   'Transferências e Mobilidade',
+  'Relatório do Efectivo',
   'Relatórios e Impressão',
   'Configurações'
 ];

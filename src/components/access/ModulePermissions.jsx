@@ -6,7 +6,7 @@ const MODULES = [
   'Efetividade (Faltas)', 'Gestão de Desempenho Individual', 'Promoção e Progressão',
   'Férias e Licenças', 'Mudança de Carreira', 'Provimento e Cessação',
   'Reserva e Reforma', 'Saúde e Óbitos', 'Transferências e Mobilidade',
-  'Carreiras', 'Categorias Funcionais', 'Relatórios e Impressão', 'Configurações',
+  'Carreiras', 'Categorias Funcionais', 'Relatório do Efectivo', 'Configurações',
   'Utilizadores', 'Auditoria', 'Acessos e Perfis'
 ];
 

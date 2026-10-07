@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }) => {
               'Transferências e Mobilidade',
               'Carreiras',
               'Categorias Funcionais',
+              'Relatório do Efectivo',
               'Relatórios e Impressão',
               'Configurações',
               'Utilizadores',
