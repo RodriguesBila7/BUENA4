@@ -23,13 +23,15 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
     return raw;
   }, [employeesData, allEmployees, isCentral, user, orgData]);
 
-  // Structure selection states
+  // Structure & classification selection states
   const [provinceId, setProvinceId] = useState('');
   const [districtId, setDistrictId] = useState('');
   const [directorateId, setDirectorateId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [divisionId, setDivisionId] = useState('');
   const [sectionId, setSectionId] = useState('');
+  const [careerId, setCareerId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
 
   // Active employee for individual absence registration modal
   const [selectedEmp, setSelectedEmp] = useState(null);
@@ -45,7 +47,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
   // Reset pagination on filter changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, provinceId, directorateId, departmentId, divisionId, sectionId, districtId, employees]);
+  }, [searchTerm, provinceId, directorateId, departmentId, divisionId, sectionId, districtId, careerId, categoryId, employees]);
 
   // Form states for the absence
   const [absenceType, setAbsenceType] = useState('Falta Justificada');
@@ -84,26 +86,189 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
     setIsDragging(false);
   };
 
-  const getName = (list, id) => list?.find(item => item.id === id)?.name || '-';
+  const getName = (list, id) => (list || []).find(item => String(item.id) === String(id))?.name || '-';
+
+  // Comparação normalizada de nomes de província
+  const isSameProvince = (p1, p2) => {
+    if (!p1 || !p2) return false;
+    const s1 = String(p1).toLowerCase().replace(/prov[íi]ncia( de)?/gi, '').trim();
+    const s2 = String(p2).toLowerCase().replace(/prov[íi]ncia( de)?/gi, '').trim();
+    return s1 === s2 || s1.includes(s2) || s2.includes(s1);
+  };
+
+  // Resolução inteligente da Província do Funcionário
+  const getEmployeeProvince = (e) => {
+    if (e.provinceId) return e.provinceId;
+    if (e.province) return e.province;
+
+    // Verificar pela Direcção alocada
+    const dir = (orgData?.directorates || []).find(d => String(d.id) === String(e.directorateId));
+    if (dir?.province) return dir.province;
+    if (dir?.name) {
+      for (const p of mozambiqueStructure) {
+        if (isSameProvince(dir.name, p.province)) return p.province;
+      }
+    }
+
+    // Verificar pela Direcção Distrital alocada
+    const distDir = (orgData?.districtDirectorates || []).find(dd => 
+      String(dd.id) === String(e.districtDirectorateId || e.districtId || e.departmentId)
+    );
+    if (distDir?.province) return distDir.province;
+    return null;
+  };
+
+  // Resolução inteligente do Distrito do Funcionário
+  const matchesDistrict = (e, distName) => {
+    if (!distName) return true;
+    const targetLower = String(distName).toLowerCase().trim();
+
+    if (e.districtId && String(e.districtId).toLowerCase().includes(targetLower)) return true;
+    if (e.district && String(e.district).toLowerCase().includes(targetLower)) return true;
+
+    const distDir = (orgData?.districtDirectorates || []).find(dd => 
+      String(dd.id) === String(e.districtDirectorateId || e.districtId || e.departmentId)
+    );
+    if (distDir && distDir.name.toLowerCase().includes(targetLower)) return true;
+    return false;
+  };
+
+  // Formatação amigável do Local de Trabalho do Funcionário para exibição no cartão
+  const formatEmpLocation = (e) => {
+    const prov = getEmployeeProvince(e);
+    const distDir = (orgData?.districtDirectorates || []).find(dd => 
+      String(dd.id) === String(e.districtDirectorateId || e.districtId)
+    );
+    const dist = distDir?.name || e.district || e.districtId;
+    const dir = (orgData?.directorates || []).find(d => String(d.id) === String(e.directorateId))?.name;
+
+    if (prov && dist) return `${prov} • ${dist}`;
+    if (prov) return prov;
+    if (dir) return dir;
+    return 'Direcção Geral (Sede)';
+  };
 
   // Province districts cascading
-  const selectedProvinceData = mozambiqueStructure.find(p => p.province === provinceId);
+  const selectedProvinceData = mozambiqueStructure.find(p => isSameProvince(p.province, provinceId));
   const availableDistricts = selectedProvinceData ? selectedProvinceData.districts : [];
+
+  // Cascading lists for organizational structures
+  const availableDirectorates = useMemo(() => {
+    const list = orgData?.directorates || [];
+    if (!provinceId) return list;
+    return list.filter(d => !d.province || isSameProvince(d.province, provinceId) || isSameProvince(d.name, provinceId) || d.name === 'Direcção Geral');
+  }, [orgData?.directorates, provinceId]);
+
+  const availableDepartments = useMemo(() => {
+    if (!directorateId) return [];
+    const depts = (orgData?.departments || []).filter(d => String(d.directorateId) === String(directorateId));
+    // Se a direcção for provincial, adicionar também as direcções distritais associadas
+    const distDirs = (orgData?.districtDirectorates || []).filter(dd => 
+      String(dd.provincialDirectorateId) === String(directorateId)
+    ).map(dd => ({
+      id: dd.id,
+      name: dd.name + ' (Distrital)',
+      directorateId: dd.provincialDirectorateId,
+      isDistrictDirectorate: true
+    }));
+    return [...depts, ...distDirs];
+  }, [orgData?.departments, orgData?.districtDirectorates, directorateId]);
+
+  const availableDivisions = useMemo(() => {
+    if (!departmentId) return [];
+    return (orgData?.divisions || []).filter(div => String(div.departmentId) === String(departmentId));
+  }, [orgData?.divisions, departmentId]);
+
+  const availableSections = useMemo(() => {
+    if (divisionId) {
+      return (orgData?.sections || []).filter(s => String(s.divisionId) === String(divisionId));
+    }
+    if (departmentId) {
+      return (orgData?.sections || []).filter(s => String(s.departmentId) === String(departmentId));
+    }
+    return [];
+  }, [orgData?.sections, divisionId, departmentId]);
+
+  const availableCategories = useMemo(() => {
+    if (!careerId) return orgData?.categories || [];
+    return (orgData?.categories || []).filter(c => String(c.careerId) === String(careerId));
+  }, [orgData?.categories, careerId]);
+
+  const hasActiveFilters = Boolean(provinceId || districtId || directorateId || departmentId || divisionId || sectionId || careerId || categoryId || searchTerm);
+
+  const handleClearFilters = () => {
+    setProvinceId('');
+    setDistrictId('');
+    setDirectorateId('');
+    setDepartmentId('');
+    setDivisionId('');
+    setSectionId('');
+    setCareerId('');
+    setCategoryId('');
+    setSearchTerm('');
+  };
 
   // Filter employees belonging to the selected unit
   const filteredEmployees = useMemo(() => {
-    return employees.filter(e => {
-      if (!e.isActive) return false;
-      if (searchTerm && !e.name.toLowerCase().includes(searchTerm.toLowerCase()) && !(e.nip && e.nip.toLowerCase().includes(searchTerm.toLowerCase()))) return false;
-      if (provinceId && e.provinceId !== provinceId) return false;
-      if (directorateId && e.directorateId !== directorateId) return false;
-      if (departmentId && e.departmentId !== departmentId) return false;
-      if (divisionId && e.divisionId !== divisionId) return false;
-      if (sectionId && e.sectionId !== sectionId) return false;
-      if (districtId && e.districtId !== districtId) return false;
+    return (employees || []).filter(e => {
+      // Excluir inactivos ou expulsos/demitidos
+      if (e.isActive === false || e.status === 'Inativo' || e.status === 'Expulsão' || e.status === 'Demissão') return false;
+
+      // Pesquisa por Nome, NUIT ou NIP
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase().trim();
+        const matchName = e.name && e.name.toLowerCase().includes(term);
+        const matchNip = e.nip && String(e.nip).toLowerCase().includes(term);
+        const matchNuit = e.nuit && String(e.nuit).toLowerCase().includes(term);
+        if (!matchName && !matchNip && !matchNuit) return false;
+      }
+
+      // Filtro por Província (resolvido por provinceId, province ou Direcção Provincial)
+      if (provinceId) {
+        const empProv = getEmployeeProvince(e);
+        if (!isSameProvince(empProv, provinceId)) return false;
+      }
+
+      // Filtro por Distrito
+      if (districtId && !matchesDistrict(e, districtId)) {
+        return false;
+      }
+
+      // Filtro por Direcção
+      if (directorateId && String(e.directorateId) !== String(directorateId)) {
+        return false;
+      }
+
+      // Filtro por Departamento / Direcção Distrital
+      if (departmentId) {
+        const matchDep = String(e.departmentId) === String(departmentId);
+        const matchDistDir = String(e.districtDirectorateId || e.districtId) === String(departmentId);
+        if (!matchDep && !matchDistDir) return false;
+      }
+
+      // Filtro por Repartição
+      if (divisionId && String(e.divisionId) !== String(divisionId)) {
+        return false;
+      }
+
+      // Filtro por Secção
+      if (sectionId && String(e.sectionId) !== String(sectionId)) {
+        return false;
+      }
+
+      // Filtro por Carreira
+      if (careerId && String(e.careerId) !== String(careerId)) {
+        return false;
+      }
+
+      // Filtro por Categoria
+      if (categoryId && String(e.categoryId) !== String(categoryId)) {
+        return false;
+      }
+
       return true;
     });
-  }, [employees, provinceId, districtId, directorateId, departmentId, divisionId, sectionId, searchTerm]);
+  }, [employees, provinceId, districtId, directorateId, departmentId, divisionId, sectionId, careerId, categoryId, searchTerm, orgData]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
@@ -264,62 +429,143 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
   return (
     <div style={styles.container}>
       
-      {/* Bloco 1: Seleção de Unidade Organizacional */}
+      {/* Bloco 1: Seleção de Unidade Organizacional e Carreira */}
       <div style={styles.card}>
-        <div style={styles.cardHeader}>
-          <div style={styles.stepBadge}>1</div>
-          <h4 style={styles.cardTitle}>Localização e Unidade de Trabalho</h4>
+        <div style={styles.cardHeaderWithInfo}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={styles.stepBadge}>1</div>
+            <h4 style={styles.cardTitle}>Localização e Unidade de Trabalho</h4>
+          </div>
+          {hasActiveFilters && (
+            <button 
+              type="button" 
+              onClick={handleClearFilters}
+              style={styles.btnClearFilters}
+              title="Limpar todos os filtros ativos"
+            >
+              ✕ Limpar Filtros
+            </button>
+          )}
         </div>
         <div style={styles.cardBody}>
           
           <div style={styles.selectRow}>
             <div style={styles.formGroup}>
               <label style={styles.label}>Província</label>
-              <select value={provinceId} onChange={(e) => { setProvinceId(e.target.value); setDistrictId(''); }} style={styles.input}>
-                <option value="">Selecione...</option>
+              <select 
+                value={provinceId} 
+                onChange={(e) => { 
+                  setProvinceId(e.target.value); 
+                  setDistrictId(''); 
+                }} 
+                style={styles.input}
+              >
+                <option value="">Todas as Províncias</option>
                 {mozambiqueStructure.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}
               </select>
             </div>
 
             <div style={styles.formGroup}>
               <label style={styles.label}>Distrito</label>
-              <select value={districtId} onChange={(e) => setDistrictId(e.target.value)} style={styles.input} disabled={!provinceId}>
-                <option value="">Selecione...</option>
+              <select 
+                value={districtId} 
+                onChange={(e) => setDistrictId(e.target.value)} 
+                style={styles.input} 
+                disabled={!provinceId}
+              >
+                <option value="">{provinceId ? 'Todos os Distritos' : 'Selecione a Província primeiro'}</option>
                 {availableDistricts.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
 
             <div style={styles.formGroup}>
               <label style={styles.label}>Direcção</label>
-              <select value={directorateId} onChange={(e) => { setDirectorateId(e.target.value); setDepartmentId(''); setDivisionId(''); setSectionId(''); }} style={styles.input}>
-                <option value="">Selecione...</option>
-                {orgData.directorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              <select 
+                value={directorateId} 
+                onChange={(e) => { 
+                  const val = e.target.value;
+                  setDirectorateId(val); 
+                  setDepartmentId(''); 
+                  setDivisionId(''); 
+                  setSectionId(''); 
+                  // Sincronizar automaticamente a província se a direcção for provincial
+                  if (val) {
+                    const dirObj = (orgData?.directorates || []).find(d => String(d.id) === String(val));
+                    if (dirObj?.province) {
+                      setProvinceId(dirObj.province);
+                    }
+                  }
+                }} 
+                style={styles.input}
+              >
+                <option value="">Todas as Direcções</option>
+                {availableDirectorates.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Departamento / Direcção Distrital</label>
+              <select 
+                value={departmentId} 
+                onChange={(e) => { setDepartmentId(e.target.value); setDivisionId(''); setSectionId(''); }} 
+                style={styles.input} 
+                disabled={!directorateId}
+              >
+                <option value="">{directorateId ? 'Todos os Departamentos / Distritais' : 'Selecione a Direcção primeiro'}</option>
+                {availableDepartments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
           </div>
 
-          <div style={{...styles.selectRow, marginTop: '16px'}}>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Departamento / Direcção Distrital</label>
-              <select value={departmentId} onChange={(e) => { setDepartmentId(e.target.value); setDivisionId(''); setSectionId(''); }} style={styles.input} disabled={!directorateId}>
-                <option value="">Todos</option>
-                {orgData.departments.filter(d => d.directorateId === directorateId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </div>
-
+          <div style={{ ...styles.selectRow, marginTop: '16px' }}>
             <div style={styles.formGroup}>
               <label style={styles.label}>Repartição (Opcional)</label>
-              <select value={divisionId} onChange={(e) => { setDivisionId(e.target.value); setSectionId(''); }} style={styles.input} disabled={!departmentId}>
-                <option value="">Todas</option>
-                {orgData.divisions.filter(d => d.departmentId === departmentId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              <select 
+                value={divisionId} 
+                onChange={(e) => { setDivisionId(e.target.value); setSectionId(''); }} 
+                style={styles.input} 
+                disabled={!departmentId}
+              >
+                <option value="">{departmentId ? 'Todas as Repartições' : 'Selecione o Departamento primeiro'}</option>
+                {availableDivisions.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
             </div>
 
             <div style={styles.formGroup}>
               <label style={styles.label}>Secção</label>
-              <select value={sectionId} onChange={(e) => setSectionId(e.target.value)} style={styles.input} disabled={!divisionId}>
-                <option value="">Todas</option>
-                {orgData.sections.filter(d => d.divisionId === divisionId).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              <select 
+                value={sectionId} 
+                onChange={(e) => setSectionId(e.target.value)} 
+                style={styles.input} 
+                disabled={!divisionId && !departmentId}
+              >
+                <option value="">{divisionId || departmentId ? 'Todas as Secções' : 'Selecione a Repartição primeiro'}</option>
+                {availableSections.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Carreira Profissional</label>
+              <select 
+                value={careerId} 
+                onChange={(e) => { setCareerId(e.target.value); setCategoryId(''); }} 
+                style={styles.input}
+              >
+                <option value="">Todas as Carreiras</option>
+                {(orgData?.careers || []).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Categoria Funcional</label>
+              <select 
+                value={categoryId} 
+                onChange={(e) => setCategoryId(e.target.value)} 
+                style={styles.input}
+                disabled={!careerId}
+              >
+                <option value="">{careerId ? 'Todas as Categorias' : 'Selecione a Carreira primeiro'}</option>
+                {availableCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
           </div>
@@ -404,7 +650,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
                       </div>
                       <div style={styles.infoRow}>
                         <span style={styles.infoLabel}>Local:</span>
-                        <strong style={styles.infoVal}>{emp.provinceId ? `${emp.provinceId} • ${emp.districtId || '-'}` : '-'}</strong>
+                        <strong style={styles.infoVal} title={formatEmpLocation(emp)}>{formatEmpLocation(emp)}</strong>
                       </div>
                     </div>
 
@@ -451,7 +697,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
                             </div>
                           </td>
                           <td>{emp.role || '-'}</td>
-                          <td>{emp.provinceId} • {emp.districtId || '-'}</td>
+                          <td>{formatEmpLocation(emp)}</td>
                           <td style={{...styles.td, textAlign: 'right'}}>
                             <button 
                               type="button" 
@@ -702,6 +948,17 @@ const styles = {
   stepBadge: { width: '26px', height: '26px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: '800', boxShadow: '0 2px 6px rgba(220, 38, 38, 0.4)' },
   cardTitle: { margin: 0, fontSize: '15.5px', fontWeight: '700', color: 'var(--color-text-base)' },
   badgeCount: { fontSize: '12px', backgroundColor: 'var(--color-bg-base)', padding: '5px 12px', borderRadius: '20px', fontWeight: '700', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' },
+  btnClearFilters: {
+    padding: '6px 14px',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    border: '1px solid rgba(239, 68, 68, 0.25)',
+    color: '#dc2626',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'all 0.15s'
+  },
   cardBody: { padding: '20px' },
   selectRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' },
   formGroup: { display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 },
