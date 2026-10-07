@@ -4,7 +4,7 @@
  * entre computadores, telemóveis e diferentes dispositivos.
  */
 
-const GIST_ID = process.env.GIST_ID || 'dd985f35807d842a90cc097c26c07e47';
+const GIST_ID = process.env.GIST_ID;
 const GIST_FILENAME = 'sernic_sync.json';
 // Credencial obtida ESTRITAMENTE de variáveis de ambiente seguras (sem credenciais hardcoded)
 const GITHUB_TOKEN = process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN;
@@ -40,14 +40,20 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // 1. Verificação de credencial de ambiente
+  // 1. Verificação de variáveis de ambiente obrigatórias
   if (!GITHUB_TOKEN) {
     return res.status(500).json({
       error: 'Servidor não configurado. Defina a variável de ambiente GITHUB_SYNC_TOKEN nas configurações do Vercel.'
     });
   }
 
-  // 2. Proteção de autenticação opcional por segredo da API
+  if (!GIST_ID) {
+    return res.status(500).json({
+      error: 'Servidor não configurado. Defina a variável de ambiente GIST_ID nas configurações do Vercel com o ID do seu Gist secreto.'
+    });
+  }
+
+  // 2. Proteção de autenticação por segredo da API
   if (SYNC_SECRET) {
     const authHeader = req.headers.authorization || '';
     const secretHeader = req.headers['x-sync-secret'] || '';

@@ -6,9 +6,6 @@
  * no telemóvel e vice-versa.
  */
 
-const GIST_ID = 'dd985f35807d842a90cc097c26c07e47';
-const GIST_FILENAME = 'sernic_sync.json';
-
 // Chaves locais mapeadas para coleções na nuvem
 export const COLLECTION_MAP = {
   users: 'sernic_db_users',
@@ -29,6 +26,22 @@ let _cloudCache = null;
 let _lastFetchTime = 0;
 const CACHE_TTL_MS = 6000; // 6 segundos
 
+const getSyncHeaders = (extra = {}) => {
+  const secret = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SYNC_API_SECRET)
+    || (typeof window !== 'undefined' && window.__SYNC_API_SECRET__)
+    || '';
+  const token = typeof window !== 'undefined'
+    ? (sessionStorage.getItem('sernic_jwt_token') || localStorage.getItem('sernic_jwt_token'))
+    : null;
+
+  return {
+    'Accept': 'application/json',
+    ...(secret ? { 'x-sync-secret': secret } : {}),
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    ...extra
+  };
+};
+
 /**
  * Obtém todo o estado da base de dados sincronizada na nuvem
  * e atualiza o localStorage deste dispositivo
@@ -39,11 +52,11 @@ export async function getCloudFullData(forceRefresh = false) {
     return _cloudCache;
   }
 
-  // 1. Tentar endpoint da Vercel /api/sync
+  // Tentar endpoint da Vercel /api/sync de forma autenticada e segura
   try {
     const res = await fetch(`/api/sync?t=${now}`, {
       method: 'GET',
-      headers: { 'Accept': 'application/json' }
+      headers: getSyncHeaders()
     });
     if (res.ok) {
       const json = await res.json();
@@ -54,29 +67,8 @@ export async function getCloudFullData(forceRefresh = false) {
         return json.data;
       }
     }
-  } catch (err) {}
-
-  // 2. Fallback direto ao GitHub Gist público
-  try {
-    const res = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${now}`, {
-      headers: {
-        'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'sernic-drh-frontend'
-      }
-    });
-
-    if (res.ok) {
-      const gistData = await res.json();
-      const content = gistData.files && gistData.files[GIST_FILENAME] ? gistData.files[GIST_FILENAME].content : '{}';
-      const parsed = JSON.parse(content || '{}');
-
-      _cloudCache = parsed;
-      _lastFetchTime = now;
-      applyCloudDataToLocal(parsed);
-      return parsed;
-    }
   } catch (err) {
-    console.warn('[cloudSyncService] Aviso: Modo offline ativo.');
+    console.warn('[cloudSyncService] Aviso ao contactar a nuvem:', err.message);
   }
 
   return _cloudCache || {};
@@ -91,7 +83,7 @@ export async function saveCloudCollection(collection, data) {
   try {
     const res = await fetch('/api/sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ collection, data })
     });
     return res.ok;
@@ -131,7 +123,7 @@ export async function saveCloudPhoto(username, photoBase64) {
   try {
     const res = await fetch('/api/sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getSyncHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ username: key, photo: photoBase64 })
     });
     return res.ok;
