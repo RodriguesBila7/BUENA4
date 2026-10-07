@@ -58,7 +58,7 @@ export default function EffectivenessManager({ user, orgData, employeesData }) {
     },
     { 
       id: 'reports', 
-      label: 'Relatórios & Impressão por Província',
+      label: 'Relatórios & Impressão',
       icon: (
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="6 9 6 2 18 2 18 9" />

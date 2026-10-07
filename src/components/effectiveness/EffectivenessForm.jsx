@@ -24,9 +24,8 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
   }, [employeesData, allEmployees, isCentral, user, orgData]);
 
   // Structure & classification selection states
-  const [provinceId, setProvinceId] = useState('');
-  const [districtId, setDistrictId] = useState('');
   const [directorateId, setDirectorateId] = useState('');
+  const [districtId, setDistrictId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [divisionId, setDivisionId] = useState('');
   const [sectionId, setSectionId] = useState('');
@@ -47,7 +46,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
   // Reset pagination on filter changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, provinceId, directorateId, departmentId, divisionId, sectionId, districtId, careerId, categoryId, employees]);
+  }, [searchTerm, directorateId, departmentId, divisionId, sectionId, districtId, careerId, categoryId, employees]);
 
   // Form states for the absence
   const [absenceType, setAbsenceType] = useState('Falta Justificada');
@@ -148,16 +147,33 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
     return 'Direcção Geral (Sede)';
   };
 
-  // Province districts cascading
-  const selectedProvinceData = mozambiqueStructure.find(p => isSameProvince(p.province, provinceId));
-  const availableDistricts = selectedProvinceData ? selectedProvinceData.districts : [];
+  // Resolução inteligente da Direcção selecionada para obter seus distritos
+  const selectedDirectorateObj = (orgData?.directorates || []).find(d => String(d.id) === String(directorateId));
 
-  // Cascading lists for organizational structures
+  // Distritos subordinados à Direcção selecionada
+  const availableDistricts = useMemo(() => {
+    if (!directorateId) return [];
+    
+    // 1. Distritos pelas Direcções Distritais subordinadas a esta direcção provincial
+    const childDistDirs = (orgData?.districtDirectorates || []).filter(dd => 
+      String(dd.provincialDirectorateId) === String(directorateId) || String(dd.directorateId) === String(directorateId)
+    );
+    const distNames = childDistDirs.map(dd => dd.name.replace(/^Direcçã?o\s+Distrital\s+(de|da|do)\s+/i, '').trim());
+
+    // 2. Se a direcção tiver uma província identificada na estrutura de Moçambique
+    const provName = selectedDirectorateObj?.province || selectedDirectorateObj?.name;
+    const foundProv = mozambiqueStructure.find(p => isSameProvince(p.province, provName));
+    if (foundProv && foundProv.districts) {
+      foundProv.districts.forEach(d => distNames.push(d));
+    }
+
+    return Array.from(new Set(distNames)).filter(Boolean).sort();
+  }, [directorateId, selectedDirectorateObj, orgData?.districtDirectorates]);
+
+  // Lista de Direcções disponíveis
   const availableDirectorates = useMemo(() => {
-    const list = orgData?.directorates || [];
-    if (!provinceId) return list;
-    return list.filter(d => !d.province || isSameProvince(d.province, provinceId) || isSameProvince(d.name, provinceId) || d.name === 'Direcção Geral');
-  }, [orgData?.directorates, provinceId]);
+    return orgData?.directorates || [];
+  }, [orgData?.directorates]);
 
   const availableDepartments = useMemo(() => {
     if (!directorateId) return [];
@@ -194,12 +210,11 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
     return (orgData?.categories || []).filter(c => String(c.careerId) === String(careerId));
   }, [orgData?.categories, careerId]);
 
-  const hasActiveFilters = Boolean(provinceId || districtId || directorateId || departmentId || divisionId || sectionId || careerId || categoryId || searchTerm);
+  const hasActiveFilters = Boolean(directorateId || districtId || departmentId || divisionId || sectionId || careerId || categoryId || searchTerm);
 
   const handleClearFilters = () => {
-    setProvinceId('');
-    setDistrictId('');
     setDirectorateId('');
+    setDistrictId('');
     setDepartmentId('');
     setDivisionId('');
     setSectionId('');
@@ -223,19 +238,13 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
         if (!matchName && !matchNip && !matchNuit) return false;
       }
 
-      // Filtro por Província (resolvido por provinceId, province ou Direcção Provincial)
-      if (provinceId) {
-        const empProv = getEmployeeProvince(e);
-        if (!isSameProvince(empProv, provinceId)) return false;
+      // Filtro por Direcção
+      if (directorateId && String(e.directorateId) !== String(directorateId)) {
+        return false;
       }
 
       // Filtro por Distrito
       if (districtId && !matchesDistrict(e, districtId)) {
-        return false;
-      }
-
-      // Filtro por Direcção
-      if (directorateId && String(e.directorateId) !== String(directorateId)) {
         return false;
       }
 
@@ -450,34 +459,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
         <div style={styles.cardBody}>
           
           <div style={styles.selectRow}>
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Província</label>
-              <select 
-                value={provinceId} 
-                onChange={(e) => { 
-                  setProvinceId(e.target.value); 
-                  setDistrictId(''); 
-                }} 
-                style={styles.input}
-              >
-                <option value="">Todas as Províncias</option>
-                {mozambiqueStructure.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}
-              </select>
-            </div>
-
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Distrito</label>
-              <select 
-                value={districtId} 
-                onChange={(e) => setDistrictId(e.target.value)} 
-                style={styles.input} 
-                disabled={!provinceId}
-              >
-                <option value="">{provinceId ? 'Todos os Distritos' : 'Selecione a Província primeiro'}</option>
-                {availableDistricts.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-
+            {/* 1. DIRECÇÃO (no lugar onde estava Província) */}
             <div style={styles.formGroup}>
               <label style={styles.label}>Direcção</label>
               <select 
@@ -485,16 +467,10 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
                 onChange={(e) => { 
                   const val = e.target.value;
                   setDirectorateId(val); 
+                  setDistrictId(''); 
                   setDepartmentId(''); 
                   setDivisionId(''); 
                   setSectionId(''); 
-                  // Sincronizar automaticamente a província se a direcção for provincial
-                  if (val) {
-                    const dirObj = (orgData?.directorates || []).find(d => String(d.id) === String(val));
-                    if (dirObj?.province) {
-                      setProvinceId(dirObj.province);
-                    }
-                  }
                 }} 
                 style={styles.input}
               >
@@ -503,6 +479,25 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
               </select>
             </div>
 
+            {/* 2. DISTRITO */}
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Distrito</label>
+              <select 
+                value={districtId} 
+                onChange={(e) => setDistrictId(e.target.value)} 
+                style={styles.input} 
+                disabled={!directorateId || availableDistricts.length === 0}
+              >
+                <option value="">
+                  {!directorateId 
+                    ? 'Selecione a Direcção primeiro' 
+                    : (availableDistricts.length === 0 ? 'Sem distritos registados' : 'Todos os Distritos')}
+                </option>
+                {availableDistricts.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+
+            {/* 3. DEPARTAMENTO / DIRECÇÃO DISTRITAL */}
             <div style={styles.formGroup}>
               <label style={styles.label}>Departamento / Direcção Distrital</label>
               <select 

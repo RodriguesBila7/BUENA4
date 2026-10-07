@@ -51,9 +51,8 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
 
   // Search/Filters states
   const [searchTerm, setSearchTerm] = useState('');
-  const [provinceId, setProvinceId] = useState(!isCentral && userDirObj ? (userDirObj.province || '') : '');
-  const [districtId, setDistrictId] = useState('');
   const [directorateId, setDirectorateId] = useState(!isCentral ? userDirId : '');
+  const [districtId, setDistrictId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [divisionId, setDivisionId] = useState('');
   const [sectionId, setSectionId] = useState('');
@@ -105,9 +104,30 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
     }).join(', ');
   };
 
-  // Province districts cascading
-  const selectedProvinceData = mozambiqueStructure.find(p => p.province === provinceId);
-  const availableDistricts = selectedProvinceData ? selectedProvinceData.districts : [];
+  // Selected directorate object
+  const selectedDirectorateObj = (orgData?.directorates || []).find(d => String(d.id) === String(directorateId));
+
+  // Distritos disponíveis com base na Direcção selecionada
+  const availableDistricts = useMemo(() => {
+    if (!directorateId) return [];
+    const childDistDirs = (orgData?.districtDirectorates || []).filter(dd => 
+      String(dd.provincialDirectorateId) === String(directorateId) || String(dd.directorateId) === String(directorateId)
+    );
+    const distNames = childDistDirs.map(dd => dd.name.replace(/^Direcçã?o\s+Distrital\s+(de|da|do)\s+/i, '').trim());
+
+    const provName = selectedDirectorateObj?.province || selectedDirectorateObj?.name;
+    const foundProv = mozambiqueStructure.find(p => {
+      if (!p || !provName) return false;
+      const s1 = String(p.province).toLowerCase().replace(/prov[íi]ncia( de)?/gi, '').trim();
+      const s2 = String(provName).toLowerCase().replace(/prov[íi]ncia( de)?/gi, '').trim();
+      return s1 === s2 || s1.includes(s2) || s2.includes(s1);
+    });
+    if (foundProv && foundProv.districts) {
+      foundProv.districts.forEach(d => distNames.push(d));
+    }
+
+    return Array.from(new Set(distNames)).filter(Boolean).sort();
+  }, [directorateId, selectedDirectorateObj, orgData?.districtDirectorates]);
 
   const empMap = useMemo(() => {
     const m = new Map();
@@ -173,9 +193,13 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
       const rDiv = String(rec.divisionId || emp?.divisionId || '');
 
       // Structure filters
-      if (provinceId && rec.provinceId !== provinceId) return false;
-      if (districtId && rec.districtId !== districtId) return false;
       if (directorateId && rDir !== String(directorateId)) return false;
+      if (districtId) {
+        const empDist = emp?.districtId || emp?.district;
+        const distMatch = (rec.districtId && String(rec.districtId).toLowerCase().includes(districtId.toLowerCase())) ||
+                          (empDist && String(empDist).toLowerCase().includes(districtId.toLowerCase()));
+        if (!distMatch) return false;
+      }
       if (departmentId && rDep !== String(departmentId)) return false;
       if (divisionId && rDiv !== String(divisionId)) return false;
       if (sectionId && String(rec.sectionId || emp?.sectionId || '') !== String(sectionId)) return false;
@@ -207,7 +231,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
 
       return true;
     });
-  }, [scopedRecords, searchTerm, provinceId, districtId, directorateId, departmentId, divisionId, sectionId, careerId, categoryId, roleFilter, absenceType, dateFrom, dateTo, yearFilter, monthFilter, empMap]);
+  }, [scopedRecords, searchTerm, districtId, directorateId, departmentId, divisionId, sectionId, careerId, categoryId, roleFilter, absenceType, dateFrom, dateTo, yearFilter, monthFilter, empMap]);
 
   // Group absences by employee to build the "Funcionários Faltosos" view
   const faltososList = useMemo(() => {
@@ -795,24 +819,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
               </select>
             </div>
 
-            {isCentral && (
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Província</label>
-                <select value={provinceId} onChange={(e) => { setProvinceId(e.target.value); setDistrictId(''); }} style={styles.input}>
-                  <option value="">Todas</option>
-                  {mozambiqueStructure.map(p => <option key={p.province} value={p.province}>{p.province}</option>)}
-                </select>
-              </div>
-            )}
-
-            <div style={styles.formGroup}>
-              <label style={styles.label}>Distrito</label>
-              <select value={districtId} onChange={(e) => setDistrictId(e.target.value)} style={styles.input} disabled={!provinceId}>
-                <option value="">Todos</option>
-                {availableDistricts.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-
+            {/* DIREÇÃO / UNIDADE ORGÂNICA (no lugar onde estava Província) */}
             {isCentral ? (
               <div style={styles.formGroup}>
                 <label style={styles.label}>Direcção / Unidade Orgânica</label>
@@ -820,6 +827,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                   value={directorateId} 
                   onChange={(e) => { 
                     setDirectorateId(e.target.value); 
+                    setDistrictId(''); 
                     setDepartmentId(''); 
                     setDivisionId(''); 
                   }} 
@@ -839,6 +847,24 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                 </select>
               </div>
             )}
+
+            {/* DISTRITO */}
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Distrito</label>
+              <select 
+                value={districtId} 
+                onChange={(e) => setDistrictId(e.target.value)} 
+                style={styles.input} 
+                disabled={!directorateId || availableDistricts.length === 0}
+              >
+                <option value="">
+                  {!directorateId 
+                    ? 'Selecione a Direcção primeiro' 
+                    : (availableDistricts.length === 0 ? 'Sem distritos registados' : 'Todos os Distritos')}
+                </option>
+                {availableDistricts.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
 
             <div style={styles.formGroup}>
               <label style={styles.label}>Departamento</label>
@@ -938,7 +964,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
               type="button" 
               onClick={() => {
                 setSearchTerm(''); 
-                if (isCentral) { setProvinceId(''); setDirectorateId(''); }
+                if (isCentral) { setDirectorateId(''); }
                 setDistrictId('');
                 setDepartmentId(''); setDivisionId(''); setSectionId(''); setCareerId('');
                 setCategoryId(''); setRoleFilter(''); setAbsenceType(''); setDateFrom('');
