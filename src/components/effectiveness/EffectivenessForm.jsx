@@ -277,7 +277,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
 
       return true;
     });
-  }, [employees, provinceId, districtId, directorateId, departmentId, divisionId, sectionId, careerId, categoryId, searchTerm, orgData]);
+  }, [employees, districtId, directorateId, departmentId, divisionId, sectionId, careerId, categoryId, searchTerm, orgData]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
