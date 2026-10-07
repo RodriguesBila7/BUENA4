@@ -10,6 +10,7 @@ import EvaluationManager from './evaluations/EvaluationManager';
 import AccessManager from './access/AccessManager';
 import PermissionGuard from './PermissionGuard';
 import ConfirmModal from './ConfirmModal';
+import OrganicAllocationModal from './OrganicAllocationModal';
 import useEmployeeData from '../hooks/useEmployeeData';
 import useOrgData from '../hooks/useOrgData';
 import useActTypesData from '../hooks/useActTypesData';
@@ -101,9 +102,108 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const [selectedReportDistrict, setSelectedReportDistrict] = useState('ALL');
   const [searchReportText, setSearchReportText] = useState('');
 
-  const { employees } = useEmployeeData();
+  const { employees, updateEmployee } = useEmployeeData();
   const { data: orgData } = useOrgData();
   const { actTypes } = useActTypesData();
+
+  // Estados e Handlers para CRUD de Lotação Orgânica de Efectivo
+  const [allocationModal, setAllocationModal] = useState({
+    isOpen: false,
+    employee: null,
+    availableEmployees: [],
+    directorateId: '',
+    directorateName: '',
+    initialTargetType: 'department',
+    initialTargetId: ''
+  });
+  const [allocationSuccessToast, setAllocationSuccessToast] = useState('');
+
+  const handleOpenAllocation = (emp, targetType = 'department', targetId = '', dirId = '', dirName = '', empsList = []) => {
+    setAllocationModal({
+      isOpen: true,
+      employee: emp || null,
+      availableEmployees: empsList.length > 0 ? empsList : (emp ? [emp] : []),
+      directorateId: dirId || (emp?.directorateId ? String(emp.directorateId) : (selectedReportDirectorate !== 'ALL' ? String(selectedReportDirectorate) : '')),
+      directorateName: dirName || '',
+      initialTargetType: targetType,
+      initialTargetId: targetId
+    });
+  };
+
+  const handleSaveAllocation = async (empId, payload) => {
+    await updateEmployee(empId, payload);
+    setAllocationSuccessToast('Lotação orgânica de efetivo atualizada com sucesso!');
+    setTimeout(() => setAllocationSuccessToast(''), 4000);
+  };
+
+  const handleUnassignEmployee = async (empId) => {
+    await updateEmployee(empId, {
+      departmentId: null,
+      divisionId: null,
+      sectionId: null,
+      districtDirectorateId: null,
+      districtId: null
+    });
+    setAllocationSuccessToast('Lotação removida com sucesso. O funcionário permanece na Sede Provincial.');
+    setTimeout(() => setAllocationSuccessToast(''), 4000);
+  };
+
+  const renderEmpPlacementBadge = (emp) => {
+    const distId = emp.districtDirectorateId || emp.districtId;
+    if (distId) {
+      const dist = (orgData?.districtDirectorates || []).find(d => String(d.id) === String(distId));
+      const sec = emp.sectionId || emp.seccaoId ? (orgData?.sections || []).find(s => String(s.id) === String(emp.sectionId || emp.seccaoId)) : null;
+      const name = dist ? dist.name : 'Direcção Distrital';
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
+            backgroundColor: 'rgba(13, 148, 136, 0.12)', color: '#0d9488', border: '1px solid rgba(13, 148, 136, 0.25)',
+            width: 'fit-content'
+          }}>
+            📍 {name}
+          </span>
+          {sec && <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>↳ {sec.name}</span>}
+        </div>
+      );
+    }
+
+    if (emp.departmentId) {
+      const dep = (orgData?.departments || []).find(d => String(d.id) === String(emp.departmentId));
+      const div = emp.divisionId || emp.reparticaoId ? (orgData?.divisions || []).find(v => String(v.id) === String(emp.divisionId || emp.reparticaoId)) : null;
+      const sec = emp.sectionId || emp.seccaoId ? (orgData?.sections || []).find(s => String(s.id) === String(emp.sectionId || emp.seccaoId)) : null;
+      const depName = dep ? dep.name : 'Departamento';
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
+            backgroundColor: 'rgba(37, 99, 235, 0.12)', color: '#2563eb', border: '1px solid rgba(37, 99, 235, 0.25)',
+            width: 'fit-content'
+          }}>
+            🏬 {depName}
+          </span>
+          {(div || sec) && (
+            <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>
+              {div ? `↳ Rep: ${div.name}` : ''} {sec ? `↳ Sec: ${sec.name}` : ''}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: '4px',
+        padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
+        backgroundColor: 'rgba(217, 119, 6, 0.12)', color: '#d97706', border: '1px solid rgba(217, 119, 6, 0.25)',
+        width: 'fit-content'
+      }}>
+        ⚠️ Sede Provincial (Pendente)
+      </span>
+    );
+  };
 
   const userDirectorate = React.useMemo(() => {
     if (!user || isCentralUser(user)) return null;
@@ -396,7 +496,15 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       }
 
       // Department
-      const depId = emp.departmentId ? String(emp.departmentId) : null;
+      let depId = emp.departmentId ? String(emp.departmentId) : null;
+      if (!depId && (emp.divisionId || emp.reparticaoId)) {
+        const div = orgData?.divisions?.find(d => String(d.id) === String(emp.divisionId || emp.reparticaoId));
+        if (div && div.departmentId) depId = String(div.departmentId);
+      }
+      if (!depId && (emp.sectionId || emp.seccaoId)) {
+        const sec = orgData?.sections?.find(s => String(s.id) === String(emp.sectionId || emp.seccaoId));
+        if (sec && sec.departmentId) depId = String(sec.departmentId);
+      }
       if (depId && byDepartment[depId]) {
         byDepartment[depId].count++;
         byDepartment[depId].employees.push(emp);
@@ -410,7 +518,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       }
 
       // Division (Repartição)
-      const divId = emp.divisionId || emp.reparticaoId ? String(emp.divisionId || emp.reparticaoId) : null;
+      let divId = emp.divisionId || emp.reparticaoId ? String(emp.divisionId || emp.reparticaoId) : null;
+      if (!divId && (emp.sectionId || emp.seccaoId)) {
+        const sec = orgData?.sections?.find(s => String(s.id) === String(emp.sectionId || emp.seccaoId));
+        if (sec && sec.divisionId) divId = String(sec.divisionId);
+      }
       if (divId && byDivision[divId]) {
         byDivision[divId].count++;
         byDivision[divId].employees.push(emp);
@@ -438,7 +550,13 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       }
 
       // District
-      const distId = emp.districtDirectorateId ? String(emp.districtDirectorateId) : null;
+      let distId = emp.districtDirectorateId ? String(emp.districtDirectorateId) : (emp.districtId ? String(emp.districtId) : null);
+      if (!distId && (emp.sectionId || emp.seccaoId)) {
+        const sec = orgData?.sections?.find(s => String(s.id) === String(emp.sectionId || emp.seccaoId));
+        if (sec && (sec.districtDirectorateId || sec.districtId)) {
+          distId = String(sec.districtDirectorateId || sec.districtId);
+        }
+      }
       if (distId && byDistrict[distId]) {
         byDistrict[distId].count++;
         byDistrict[distId].employees.push(emp);
@@ -3076,9 +3194,11 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           const pct = reportStats.total > 0 ? ((selectedObj.count / reportStats.total) * 100).toFixed(1) : 0;
 
                           // Departamentos pertencentes a esta direcção
-                          const childDeps = reportStats.allDepartmentsList.filter(dep => String(dep.directorateId) === String(selectedReportDirectorate));
+                          const selDirObj = reportStats.allDirectoratesList.find(d => String(d.id) === String(selectedReportDirectorate) || (d.ids && d.ids.includes(String(selectedReportDirectorate))));
+                          const dirIds = selDirObj?.ids ? selDirObj.ids : [String(selectedReportDirectorate)];
+                          const childDeps = reportStats.allDepartmentsList.filter(dep => dirIds.includes(String(dep.directorateId)));
                           // Direcções Distritais pertencentes a esta direcção provincial
-                          const childDistricts = reportStats.allDistrictsList.filter(dist => String(dist.provincialDirectorateId) === String(selectedReportDirectorate));
+                          const childDistricts = reportStats.allDistrictsList.filter(dist => dirIds.includes(String(dist.provincialDirectorateId)));
 
                           return (
                             <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
@@ -3110,15 +3230,15 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               {/* TABELA DE DEPARTAMENTOS DESTA DIRECÇÃO (SE HOUVER) */}
                               {childDeps.length > 0 && (
                                 <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                                     <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                       🏬 Departamentos Pertencentes a esta Direcção ({childDeps.length})
                                     </h5>
                                     <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                                      Clique num departamento para filtrar repartições e funcionários
+                                      Clique num departamento para filtrar ou clique em "+ Alocar" para vincular efetivos
                                     </span>
                                   </div>
-                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '8px' }}>
                                     {childDeps.map(dep => (
                                       <div
                                         key={dep.id}
@@ -3132,12 +3252,39 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                           border: '1px solid var(--color-border)',
                                           backgroundColor: 'var(--color-bg-base)',
                                           cursor: 'pointer',
-                                          transition: 'all 0.2s'
+                                          transition: 'all 0.2s',
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          justifyContent: 'space-between'
                                         }}
                                       >
-                                        <div style={{ fontWeight: 'bold', fontSize: '12px', color: 'var(--color-text-main)' }}>{dep.name}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '2px' }}>
-                                          {dep.count} {dep.count === 1 ? 'funcionário' : 'funcionários'} ({dep.M} H / {dep.F} M)
+                                        <div>
+                                          <div style={{ fontWeight: 'bold', fontSize: '12px', color: 'var(--color-text-main)' }}>{dep.name}</div>
+                                          <div style={{ fontSize: '11px', color: 'var(--color-primary)', marginTop: '2px', fontWeight: '600' }}>
+                                            {dep.count} {dep.count === 1 ? 'funcionário' : 'funcionários'} ({dep.M} H / {dep.F} M)
+                                          </div>
+                                        </div>
+                                        <div style={{ marginTop: '6px', display: 'flex', justifyContent: 'flex-end' }}>
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleOpenAllocation(null, 'department', dep.id, selectedObj.id, selectedObj.name, selectedObj.employees);
+                                            }}
+                                            style={{
+                                              padding: '2px 8px',
+                                              borderRadius: '4px',
+                                              border: '1px solid var(--color-primary)',
+                                              backgroundColor: 'rgba(27, 54, 93, 0.08)',
+                                              color: 'var(--color-primary)',
+                                              fontSize: '10px',
+                                              fontWeight: 'bold',
+                                              cursor: 'pointer'
+                                            }}
+                                            title={`Alocar funcionário a ${dep.name}`}
+                                          >
+                                            ➕ Alocar
+                                          </button>
                                         </div>
                                       </div>
                                     ))}
@@ -3158,7 +3305,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                       </p>
                                     </div>
                                     <span style={{ fontSize: '11px', color: 'var(--color-primary)', fontWeight: 'bold' }}>
-                                      Clique numa Direcção Distrital para ver o seu Efetivo e Secções
+                                      Clique numa Direcção Distrital para ver o seu Efetivo ou em "+ Alocar" para alocar funcionários
                                     </span>
                                   </div>
 
@@ -3177,17 +3324,44 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                           backgroundColor: 'var(--color-bg-base)',
                                           cursor: 'pointer',
                                           boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-                                          transition: 'transform 0.15s, border-color 0.15s'
+                                          transition: 'transform 0.15s, border-color 0.15s',
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          justifyContent: 'space-between'
                                         }}
                                       >
-                                        <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)' }}>
-                                          📍 {dist.name}
+                                        <div>
+                                          <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)' }}>
+                                            📍 {dist.name}
+                                          </div>
+                                          <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-text-main)', marginTop: '4px' }}>
+                                            {dist.count} {dist.count === 1 ? 'funcionário' : 'funcionários'} ({dist.M} H / {dist.F} M)
+                                          </div>
+                                          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                                            🔖 {dist.sections ? dist.sections.length : 0} Secção(ões) Registadas
+                                          </div>
                                         </div>
-                                        <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-text-main)', marginTop: '4px' }}>
-                                          {dist.count} {dist.count === 1 ? 'funcionário' : 'funcionários'} ({dist.M} H / {dist.F} M)
-                                        </div>
-                                        <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                                          🔖 {dist.sections ? dist.sections.length : 0} Secção(ões) Registadas
+                                        <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'flex-end' }}>
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleOpenAllocation(null, 'district', dist.id, selectedObj.id, selectedObj.name, selectedObj.employees);
+                                            }}
+                                            style={{
+                                              padding: '3px 9px',
+                                              borderRadius: '4px',
+                                              border: '1px solid #0d9488',
+                                              backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                                              color: '#0d9488',
+                                              fontSize: '11px',
+                                              fontWeight: 'bold',
+                                              cursor: 'pointer'
+                                            }}
+                                            title={`Alocar funcionário a ${dist.name}`}
+                                          >
+                                            ➕ Alocar
+                                          </button>
                                         </div>
                                       </div>
                                     ))}
@@ -3195,9 +3369,35 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 </div>
                               )}
 
-                              <h5 style={{ color: 'var(--color-text-main)', marginBottom: '8px', fontSize: '13px', fontWeight: 'bold' }}>
-                                Lista Nominal dos Funcionários Afetos ({selectedObj.count})
-                              </h5>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                                <h5 style={{ color: 'var(--color-text-main)', margin: 0, fontSize: '13px', fontWeight: 'bold' }}>
+                                  Lista Nominal dos Funcionários Afetos ({selectedObj.count})
+                                </h5>
+
+                                {selectedObj.employees && selectedObj.employees.length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenAllocation(null, 'department', '', selectedObj.id, selectedObj.name, selectedObj.employees)}
+                                    style={{
+                                      padding: '6px 12px',
+                                      borderRadius: '6px',
+                                      border: 'none',
+                                      backgroundColor: 'var(--color-primary)',
+                                      color: '#ffffff',
+                                      fontSize: '12px',
+                                      fontWeight: 'bold',
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    }}
+                                    title="Alocar funcionário desta província a um departamento ou distrito"
+                                  >
+                                    ⚡ Alocar Efectivo da Província
+                                  </button>
+                                )}
+                              </div>
 
                               {selectedObj.employees && selectedObj.employees.length > 0 ? (
                                 <table className="premium-table">
@@ -3208,7 +3408,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                       <th>Cargo / Carreira</th>
                                       <th>Patente</th>
                                       <th>Género</th>
+                                      <th>Lotação Orgânica</th>
                                       <th>Estado</th>
+                                      <th style={{ textAlign: 'center' }}>Ações</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -3221,6 +3423,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                           <td>{carObj ? carObj.name : (emp.position || emp.career || '-')}</td>
                                           <td>{emp.rank || emp.patente || '-'}</td>
                                           <td>{emp.gender === 'M' || emp.gender === 'Masculino' ? 'Homem' : (emp.gender === 'F' || emp.gender === 'Feminino' ? 'Mulher' : '-')}</td>
+                                          <td>{renderEmpPlacementBadge(emp)}</td>
                                           <td>
                                             <span style={{
                                               padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
@@ -3229,6 +3432,32 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                             }}>
                                               {emp.isActive !== false ? 'Ativo' : 'Inativo'}
                                             </span>
+                                          </td>
+                                          <td style={{ textAlign: 'center' }}>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenAllocation(emp, 'department', '', selectedObj.id, selectedObj.name, selectedObj.employees);
+                                              }}
+                                              style={{
+                                                padding: '4px 10px',
+                                                borderRadius: '6px',
+                                                border: '1px solid var(--color-primary)',
+                                                backgroundColor: 'rgba(27, 54, 93, 0.08)',
+                                                color: 'var(--color-primary)',
+                                                fontSize: '11px',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                whiteSpace: 'nowrap'
+                                              }}
+                                              title="Definir ou alterar lotação orgânica deste funcionário"
+                                            >
+                                              ⚙️ Lotação
+                                            </button>
                                           </td>
                                         </tr>
                                       );
@@ -3498,7 +3727,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                       <th>Cargo / Carreira</th>
                                       <th>Patente</th>
                                       <th>Género</th>
+                                      <th>Lotação Orgânica</th>
                                       <th>Estado</th>
+                                      <th style={{ textAlign: 'center' }}>Ações</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -3511,6 +3742,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                           <td>{carObj ? carObj.name : (emp.position || emp.career || '-')}</td>
                                           <td>{emp.rank || emp.patente || '-'}</td>
                                           <td>{emp.gender === 'M' || emp.gender === 'Masculino' ? 'Homem' : (emp.gender === 'F' || emp.gender === 'Feminino' ? 'Mulher' : '-')}</td>
+                                          <td>{renderEmpPlacementBadge(emp)}</td>
                                           <td>
                                             <span style={{
                                               padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
@@ -3519,6 +3751,32 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                             }}>
                                               {emp.isActive !== false ? 'Ativo' : 'Inativo'}
                                             </span>
+                                          </td>
+                                          <td style={{ textAlign: 'center' }}>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenAllocation(emp, 'department', selectedObj.id, selectedObj.directorateId, selectedObj.directorateName, selectedObj.employees);
+                                              }}
+                                              style={{
+                                                padding: '4px 10px',
+                                                borderRadius: '6px',
+                                                border: '1px solid var(--color-primary)',
+                                                backgroundColor: 'rgba(27, 54, 93, 0.08)',
+                                                color: 'var(--color-primary)',
+                                                fontSize: '11px',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                whiteSpace: 'nowrap'
+                                              }}
+                                              title="Alterar lotação orgânica deste funcionário"
+                                            >
+                                              ⚙️ Lotação
+                                            </button>
                                           </td>
                                         </tr>
                                       );
@@ -4326,7 +4584,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                       <th>Cargo / Carreira</th>
                                       <th>Patente</th>
                                       <th>Género</th>
+                                      <th>Lotação Orgânica</th>
                                       <th>Estado</th>
+                                      <th style={{ textAlign: 'center' }}>Ações</th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -4339,6 +4599,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                           <td>{carObj ? carObj.name : (emp.position || emp.career || '-')}</td>
                                           <td>{emp.rank || emp.patente || '-'}</td>
                                           <td>{emp.gender === 'M' || emp.gender === 'Masculino' ? 'Homem' : (emp.gender === 'F' || emp.gender === 'Feminino' ? 'Mulher' : '-')}</td>
+                                          <td>{renderEmpPlacementBadge(emp)}</td>
                                           <td>
                                             <span style={{
                                               padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold',
@@ -4347,6 +4608,32 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                             }}>
                                               {emp.isActive !== false ? 'Ativo' : 'Inativo'}
                                             </span>
+                                          </td>
+                                          <td style={{ textAlign: 'center' }}>
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleOpenAllocation(emp, 'district', selectedObj.id, selectedObj.provincialDirectorateId, selectedObj.provinceName, selectedObj.employees);
+                                              }}
+                                              style={{
+                                                padding: '4px 10px',
+                                                borderRadius: '6px',
+                                                border: '1px solid var(--color-primary)',
+                                                backgroundColor: 'rgba(27, 54, 93, 0.08)',
+                                                color: 'var(--color-primary)',
+                                                fontSize: '11px',
+                                                fontWeight: 'bold',
+                                                cursor: 'pointer',
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '4px',
+                                                whiteSpace: 'nowrap'
+                                              }}
+                                              title="Alterar lotação orgânica deste funcionário"
+                                            >
+                                              ⚙️ Lotação
+                                            </button>
                                           </td>
                                         </tr>
                                       );
@@ -4615,6 +4902,42 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         isOpen={showShortcutsModal}
         onClose={() => setShowShortcutsModal(false)}
       />
+
+      {/* MODAL DE CRUD DE LOTAÇÃO ORGÂNICA */}
+      <OrganicAllocationModal
+        isOpen={allocationModal.isOpen}
+        onClose={() => setAllocationModal(prev => ({ ...prev, isOpen: false }))}
+        employee={allocationModal.employee}
+        availableEmployees={allocationModal.availableEmployees}
+        directorateId={allocationModal.directorateId}
+        directorateName={allocationModal.directorateName}
+        orgData={orgData || {}}
+        onSave={handleSaveAllocation}
+        onUnassign={handleUnassignEmployee}
+      />
+
+      {/* NOTIFICAÇÃO TOAST FLUTUANTE DE SUCESSO */}
+      {allocationSuccessToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 999999,
+          backgroundColor: '#1b365d',
+          color: '#ffffff',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontSize: '13px',
+          fontWeight: 'bold',
+          borderLeft: '4px solid #10b981'
+        }}>
+          <span>✅</span> {allocationSuccessToast}
+        </div>
+      )}
     </div>
   );
 }
