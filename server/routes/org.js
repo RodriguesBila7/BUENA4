@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import { getDb } from '../db.js';
+import { getDb, logServerAudit } from '../db.js';
 
 const router = Router();
 
@@ -577,18 +577,32 @@ router.delete('/divisions/:id', (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECCOES
+// SECCOES (REGRA ESTRUTURAL CORRIGIDA & AUDITORIA NO SERVIDOR)
 // ═══════════════════════════════════════════════════════════════════════════════
 router.post('/sections', (req, res) => {
   const { id, parentId, parentType, name } = req.body;
   if (!name?.trim() || !parentId) return res.status(400).json({ error: 'Campos obrigatorios' });
   try {
     const db = getDb();
-    const depId = parentType === 'departmentId' ? parentId : null;
-    const divId = parentType === 'divisionId'   ? parentId : null;
-    const distId = (parentType === 'districtId' || parentType === 'district_directorate_id') ? parentId : null;
+    let depId = parentType === 'departmentId' ? parentId : null;
+    let divId = parentType === 'divisionId'   ? parentId : null;
+    let distId = (parentType === 'districtId' || parentType === 'district_directorate_id') ? parentId : null;
+
+    // Regra Estrutural Corrigida: Secção criada sob Repartição herda e vincula o Departamento correspondente
+    if (divId) {
+      const parentDiv = db.prepare('SELECT department_id FROM divisions WHERE id = ?').get(divId);
+      if (parentDiv && parentDiv.department_id) {
+        depId = parentDiv.department_id;
+      }
+    }
+
     const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM sections').get().m;
     db.prepare('INSERT INTO sections (id, department_id, division_id, district_directorate_id, name, is_active, sort_order) VALUES (?, ?, ?, ?, ?, 1, ?)').run(id, depId, divId, distId, name.trim(), maxOrder + 1);
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logServerAudit(actor, 'Criação de Secção', 'Estrutura Orgânica', { id, name: name.trim(), parentType, depId, divId, distId }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -598,10 +612,24 @@ router.put('/sections/:id', (req, res) => {
   if (!name?.trim()) return res.status(400).json({ error: 'Nome obrigatorio' });
   try {
     const db = getDb();
-    const depId = parentType === 'departmentId' ? parentId : null;
-    const divId = parentType === 'divisionId'   ? parentId : null;
-    const distId = (parentType === 'districtId' || parentType === 'district_directorate_id') ? parentId : null;
+    let depId = parentType === 'departmentId' ? parentId : null;
+    let divId = parentType === 'divisionId'   ? parentId : null;
+    let distId = (parentType === 'districtId' || parentType === 'district_directorate_id') ? parentId : null;
+
+    // Regra Estrutural Corrigida: Secção atualizada sob Repartição herda e vincula o Departamento correspondente
+    if (divId) {
+      const parentDiv = db.prepare('SELECT department_id FROM divisions WHERE id = ?').get(divId);
+      if (parentDiv && parentDiv.department_id) {
+        depId = parentDiv.department_id;
+      }
+    }
+
     db.prepare('UPDATE sections SET name = ?, department_id = ?, division_id = ?, district_directorate_id = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name.trim(), depId, divId, distId, req.params.id);
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logServerAudit(actor, 'Actualização de Secção', 'Estrutura Orgânica', { id: req.params.id, name: name.trim() }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -610,6 +638,11 @@ router.patch('/sections/:id/status', (req, res) => {
   try {
     const db = getDb();
     db.prepare('UPDATE sections SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?').run(req.params.id);
+    
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logServerAudit(actor, 'Alteração de Estado de Secção', 'Estrutura Orgânica', { id: req.params.id }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -620,6 +653,11 @@ router.delete('/sections/:id', (req, res) => {
     const hasEmployees = db.prepare('SELECT id FROM employees WHERE section_id = ? LIMIT 1').get(req.params.id);
     if (hasEmployees) return res.status(409).json({ error: 'has_employees' });
     db.prepare('DELETE FROM sections WHERE id = ?').run(req.params.id);
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logServerAudit(actor, 'Eliminação de Secção', 'Estrutura Orgânica', { id: req.params.id }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

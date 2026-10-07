@@ -30,6 +30,10 @@ export async function safeApiCall(url, options = {}) {
     fetchOptions.body = JSON.stringify(fetchOptions.body);
   }
 
+  const token = typeof window !== 'undefined'
+    ? (sessionStorage.getItem('sernic_jwt_token') || localStorage.getItem('sernic_jwt_token'))
+    : null;
+
   try {
     const res = await fetch(url, {
       ...fetchOptions,
@@ -37,6 +41,7 @@ export async function safeApiCall(url, options = {}) {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...(fetchOptions.headers || {})
       }
     });

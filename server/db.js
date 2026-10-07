@@ -628,5 +628,35 @@ function initSchema(db) {
     console.log('[DB] Seeding de Direções Distritais e Secções concluído.');
   }
 
+  // Regra Estrutural Corrigida: Garantir que secções vinculadas a repartições possuam o department_id correspondente
+  try {
+    db.prepare(`
+      UPDATE sections 
+      SET department_id = (SELECT department_id FROM divisions WHERE divisions.id = sections.division_id)
+      WHERE division_id IS NOT NULL AND division_id != '' 
+        AND (department_id IS NULL OR department_id = '')
+        AND EXISTS (SELECT 1 FROM divisions WHERE divisions.id = sections.division_id AND department_id IS NOT NULL)
+    `).run();
+  } catch (err) {
+    console.warn('[DB] Correção de regra estrutural:', err.message);
+  }
+
   console.log('[DB] Schema inicializado em:', DB_PATH);
 }
+
+/**
+ * Função utilitária centralizada de auditoria no servidor
+ */
+export function logServerAudit(user, action, module, details, ip) {
+  try {
+    const database = getDb();
+    const detailsStr = details && typeof details === 'object' ? JSON.stringify(details) : (details ? String(details) : null);
+    database.prepare(`
+      INSERT INTO audit_log (user, action, module, details, ip, timestamp)
+      VALUES (?, ?, ?, ?, ?, datetime('now'))
+    `).run(user || 'Sistema', action || 'Ação', module || 'Geral', detailsStr, ip || null);
+  } catch (err) {
+    console.warn('[SERVER AUDIT ERROR]:', err.message);
+  }
+}
+

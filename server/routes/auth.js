@@ -1,13 +1,30 @@
 /**
  * server/routes/auth.js
- * Autenticacao, Utilizadores e Perfis (Roles)
+ * Autenticacao, Utilizadores e Perfis (Roles) — Conformidade Tabela 21:
+ * - Token JWT Obrigatório
+ * - Fim definitivo das senhas-mestras (autenticação estrita por hash bcrypt)
+ * - Auditoria de autenticação e operações registada no servidor
  */
 
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { getDb } from '../db.js';
+import { generateToken } from '../middleware/auth.js';
 
 const router = Router();
+
+// Utilitário de auditoria no servidor
+function logAudit(db, user, action, module, details, ip) {
+  try {
+    const detailsStr = details && typeof details === 'object' ? JSON.stringify(details) : (details ? String(details) : null);
+    db.prepare(`
+      INSERT INTO audit_log (user, action, module, details, timestamp)
+      VALUES (?, ?, ?, ?, datetime('now'))
+    `).run(user || 'Sistema', action, module, detailsStr);
+  } catch (err) {
+    console.warn('[SERVER AUDIT WARNING]:', err.message);
+  }
+}
 
 // ─── ROLES ────────────────────────────────────────────────────────────────────
 router.get('/roles', (req, res) => {
@@ -24,6 +41,11 @@ router.post('/roles', (req, res) => {
   try {
     const db = getDb();
     db.prepare('INSERT INTO roles (id, name, description, permissions) VALUES (?, ?, ?, ?)').run(id, name, description || '', JSON.stringify(permissions || {}));
+    
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logAudit(db, actor, 'Criação de Perfil', 'Gestão de Acessos', { roleId: id, roleName: name }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -33,6 +55,11 @@ router.put('/roles/:id', (req, res) => {
   try {
     const db = getDb();
     db.prepare('UPDATE roles SET name = ?, description = ?, permissions = ?, updated_at = datetime(\'now\') WHERE id = ?').run(name, description || '', JSON.stringify(permissions || {}), req.params.id);
+    
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logAudit(db, actor, 'Actualização de Perfil', 'Gestão de Acessos', { roleId: req.params.id, roleName: name }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -43,6 +70,11 @@ router.delete('/roles/:id', (req, res) => {
     const hasUsers = db.prepare('SELECT id FROM users WHERE role_id = ? LIMIT 1').get(req.params.id);
     if (hasUsers) return res.status(409).json({ error: 'has_users' });
     db.prepare('DELETE FROM roles WHERE id = ?').run(req.params.id);
+    
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logAudit(db, actor, 'Eliminação de Perfil', 'Gestão de Acessos', { roleId: req.params.id }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -67,6 +99,11 @@ router.post('/users', (req, res) => {
     const photoVal = u.avatar !== undefined ? u.avatar : (u.photo !== undefined ? u.photo : null);
     db.prepare(`INSERT INTO users (id, name, username, nuit, email, contact, password, role_id, delegated_role_id, delegation_start_date, delegation_end_date, delegation_status, delegation_requested_by, delegation_approved_by, status, directorate_id, department_id, division_id, section_id, avatar)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(u.id, u.name, u.username, u.nuit||null, u.email||null, u.contact||null, hashedPassword, u.roleId||null, u.delegatedRoleId||null, u.delegationStartDate||null, u.delegationEndDate||null, u.delegationStatus||'Aprovado', u.delegationRequestedBy||null, u.delegationApprovedBy||null, u.status||'Ativo', u.directorateId||null, u.departmentId||null, u.divisionId||null, u.sectionId||null, photoVal);
+    
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logAudit(db, actor, 'Criação de Utilizador', 'Gestão de Utilizadores', { userId: u.id, username: u.username, name: u.name, roleId: u.roleId }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -111,16 +148,19 @@ router.put('/users/:id', (req, res) => {
     } else {
       db.prepare(`UPDATE users SET ${fields} WHERE id = ?`).run(...params, req.params.id);
     }
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logAudit(db, actor, 'Actualização de Utilizador', 'Gestão de Utilizadores', { userId: req.params.id, username, roleId }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Endpoint dedicado para substituir a foto de perfil diretamente no banco de dados (economizando espaço com codificação)
 router.put('/users/:id/photo', (req, res) => {
   const { photo } = req.body;
   try {
     const db = getDb();
-    // Substitui a fotografia existente pelo novo base64 codificado (ou null caso apagado), nunca duplicando
     db.prepare(`UPDATE users SET avatar = ?, updated_at = datetime('now') WHERE id = ? OR username = ? OR (nuit IS NOT NULL AND nuit = ?)`).run(photo || null, req.params.id, req.params.id, req.params.id);
     res.json({ success: true, photo: photo || null });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -132,6 +172,11 @@ router.put('/users/:id/confirm-delegation', (req, res) => {
     const { approvedBy } = req.body;
     db.prepare(`UPDATE users SET delegation_status = 'Aprovado', delegation_approved_by = ? WHERE id = ?`)
       .run(approvedBy || 'Perfil Superior Central', req.params.id);
+    
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || approvedBy || 'Administrador';
+    logAudit(db, actor, 'Aprovação de Delegação de Perfil', 'Segurança', { userId: req.params.id }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -140,6 +185,11 @@ router.put('/users/:id/reject-delegation', (req, res) => {
   try {
     const db = getDb();
     db.prepare(`UPDATE users SET delegation_status = 'Rejeitado' WHERE id = ?`).run(req.params.id);
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logAudit(db, actor, 'Rejeição de Delegação de Perfil', 'Segurança', { userId: req.params.id }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -147,12 +197,18 @@ router.put('/users/:id/reject-delegation', (req, res) => {
 router.delete('/users/:id', (req, res) => {
   try {
     const db = getDb();
+    const existing = db.prepare('SELECT username FROM users WHERE id = ?').get(req.params.id);
     db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logAudit(db, actor, 'Eliminação de Utilizador', 'Gestão de Utilizadores', { userId: req.params.id, username: existing?.username }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
+// ─── LOGIN — CONFORMIDADE TABELA 21 (JWT OBRIGATÓRIO, FIM DAS SENHAS-MESTRAS) ─
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'username e password obrigatorios' });
@@ -174,26 +230,27 @@ router.post('/login', (req, res) => {
         AND u.status = 'Ativo'
     `).all(username, username, username, username, username);
     
+    const clientIp = req.ip || req.socket.remoteAddress || req.headers['x-forwarded-for'] || '127.0.0.1';
+
     if (!candidateUsers || candidateUsers.length === 0) {
+      logAudit(db, username, 'Tentativa de Login Falhada', 'Autenticação', { motivo: 'Utilizador não encontrado ou inativo', ip: clientIp }, clientIp);
       return res.status(401).json({ error: 'invalid_credentials' });
     }
     
-    // Encontrar o utilizador cuja palavra-passe coincide com a palavra-passe fornecida
+    // FIM DAS SENHAS-MESTRAS: Validação estrita por hash bcrypt ou correspondência exata de senha cadastrada
     const cleanPwd = (password || '').trim();
     const matchingUser = candidateUsers.find(user => {
-      // Aceita senhas padrão mestras de administrador/gestor
-      const isAdm = user.username?.toLowerCase() === 'admin' || user.role_id === 'super_admin' || user.role_id === 'super_admin_1' || user.role_id === 'usuario_admin';
-      if (isAdm && (cleanPwd === 'admin123' || cleanPwd === '55555' || cleanPwd === 'admin')) {
-        return true;
-      }
       return user.password.startsWith('$2a$') || user.password.startsWith('$2b$') 
         ? bcrypt.compareSync(cleanPwd, user.password)
         : cleanPwd === user.password;
     });
 
-    if (!matchingUser) return res.status(401).json({ error: 'invalid_credentials' });
+    if (!matchingUser) {
+      logAudit(db, username, 'Tentativa de Login Falhada', 'Autenticação', { motivo: 'Palavra-passe incorreta', ip: clientIp }, clientIp);
+      return res.status(401).json({ error: 'invalid_credentials' });
+    }
     
-    // Atualizar hash se a senha na BD estava em texto simples
+    // Atualizar hash seguro caso a senha antiga na BD estivesse em texto simples
     if (matchingUser.password === password) {
       db.prepare('UPDATE users SET password = ? WHERE id = ?').run(bcrypt.hashSync(password, 10), matchingUser.id);
     }
@@ -204,7 +261,7 @@ router.post('/login', (req, res) => {
     let activePermissions = matchingUser.rolePermissions;
     let isDelegated = false;
 
-    // Ativar perfil secundario/delegado APENAS SE ESTIVER APROVADO pelos perfis superiores
+    // Ativar perfil secundário/delegado APENAS SE ESTIVER APROVADO
     const isApproved = matchingUser.delegationStatus === 'Aprovado' || !matchingUser.delegationStatus;
 
     if (isApproved && matchingUser.delegated_role_id && matchingUser.delegation_start_date && matchingUser.delegation_end_date) {
@@ -224,8 +281,25 @@ router.post('/login', (req, res) => {
     safeUser.photo = matchingUser.avatar || null;
     safeUser.avatar = matchingUser.avatar || null;
     
-    res.json({ success: true, user: { ...safeUser, permissions: activePermissions ? JSON.parse(activePermissions) : {} } });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+    // TOKEN JWT OBRIGATÓRIO gerado no servidor
+    const token = generateToken(safeUser);
+
+    // AUDITORIA NO SERVIDOR: Registada com sucesso no SQLite
+    logAudit(db, safeUser.username, 'Login Bem-Sucedido', 'Autenticação', { 
+      ip: clientIp, 
+      role: activeRoleName,
+      userAgent: req.headers['user-agent'] 
+    }, clientIp);
+
+    res.json({ 
+      success: true, 
+      token, 
+      user: { ...safeUser, permissions: activePermissions ? JSON.parse(activePermissions) : {} } 
+    });
+  } catch (e) { 
+    console.error('[auth/login error]:', e);
+    res.status(500).json({ error: e.message }); 
+  }
 });
 
 // ─── MIGRATE — importar do localStorage ────────────────────────────────────────

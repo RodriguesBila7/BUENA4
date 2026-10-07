@@ -77,16 +77,7 @@ export default function StartVacationModal({ request, onClose, onStart }) {
       const cleanP = (password || '').trim();
       let isSuccess = false;
 
-      // 1. Senhas mestras e padrão de administrador / gestor do sistema
-      const ADMIN_MASTER_PASSWORDS = [
-        'admin123', 'admin', '55555', 'user123', 
-        '123456', '12345678', 'sernic', 'sernic2026', 'password'
-      ];
-      if (ADMIN_MASTER_PASSWORDS.includes(cleanP)) {
-        isSuccess = true;
-      }
-
-      // 2. Verificar se coincide diretamente com a senha do utilizador logado em sessão
+      // 1. Verificar se coincide diretamente com a senha do utilizador logado em sessão
       if (!isSuccess) {
         try {
           const savedUserStr = localStorage.getItem('sernic_logged_user');

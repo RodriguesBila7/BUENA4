@@ -144,6 +144,8 @@ export const AuthProvider = ({ children }) => {
       sessionStorage.removeItem('sernic_logged_user');
       localStorage.removeItem('sernic_last_activity');
       sessionStorage.removeItem('sernic_last_activity');
+      localStorage.removeItem('sernic_jwt_token');
+      sessionStorage.removeItem('sernic_jwt_token');
     } catch (e) {}
   };
 

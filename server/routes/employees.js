@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'express';
-import { getDb } from '../db.js';
+import { getDb, logServerAudit } from '../db.js';
 
 const router = Router();
 
@@ -122,6 +122,11 @@ router.post('/', (req, res) => {
         @unit_type, @directorate_id, @department_id, @division_id, @district_directorate_id, @section_id, @career_id, @category_id,
         @province_id, @district_id, @status, @is_active, @admission_date, @extra_data)
     `).run(row);
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logServerAudit(actor, 'Criação de Funcionário', 'Funcionários', { id: row.id, name: row.name, nip: row.nip, nuit: row.nuit }, req.ip);
+
     res.json({ success: true, id: row.id });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -155,6 +160,10 @@ router.put('/:id', (req, res) => {
       db.prepare(`DELETE FROM functional_history WHERE employee_id = ?`).run(req.params.id);
     }
 
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logServerAudit(actor, 'Actualização de Funcionário', 'Funcionários', { id: req.params.id, name: row.name, nip: row.nip, status: row.status }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -164,6 +173,11 @@ router.delete('/:id', (req, res) => {
   try {
     const db = getDb();
     db.prepare(`UPDATE employees SET status = 'Apagado', is_active = 0 WHERE id = ?`).run(req.params.id);
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logServerAudit(actor, 'Desativação de Funcionário', 'Funcionários', { id: req.params.id }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -181,6 +195,11 @@ router.delete('/:id/permanent', (req, res) => {
     db.prepare(`DELETE FROM functional_history WHERE employee_id = ?`).run(req.params.id);
     
     db.prepare('DELETE FROM employees WHERE id = ?').run(req.params.id);
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logServerAudit(actor, 'Eliminação Permanente de Funcionário', 'Funcionários', { id: req.params.id }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -190,6 +209,11 @@ router.put('/:id/restore', (req, res) => {
   try {
     const db = getDb();
     db.prepare(`UPDATE employees SET status = 'Ativo', is_active = 1 WHERE id = ?`).run(req.params.id);
+
+    // Auditoria no servidor
+    const actor = req.user?.username || req.user?.id || 'Administrador';
+    logServerAudit(actor, 'Restauração de Funcionário', 'Funcionários', { id: req.params.id }, req.ip);
+
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

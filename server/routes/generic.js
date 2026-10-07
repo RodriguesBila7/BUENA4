@@ -164,11 +164,11 @@ auditRouter.get('/', (req, res) => {
 
 auditRouter.post('/', (req, res) => {
   let { user, action, module, details } = req.body;
-  if (!user || !action || !module) return res.status(400).json({ error: 'user, action, module obrigatorios' });
+  if (!action || !module) return res.status(400).json({ error: 'action e module obrigatorios' });
   
-  if (typeof user === 'object' && user !== null) {
-    user = user.username || user.name || 'Sistema';
-  }
+  // Conformidade Tabela 21: O utilizador é extraído com integridade a partir do token JWT verificado
+  const authenticatedUser = req.user?.username || req.user?.id || (typeof user === 'object' && user !== null ? (user.username || user.name) : user) || 'Sistema';
+
   if (typeof action === 'object' && action !== null) {
     action = action.action || action.name || 'Ação';
   }
@@ -179,14 +179,12 @@ auditRouter.post('/', (req, res) => {
     details = JSON.stringify(details);
   }
 
-  user = String(user);
-  action = String(action);
-  module = String(module);
-  details = details !== undefined && details !== null ? String(details) : null;
+  const clientIp = req.ip || req.socket.remoteAddress || req.headers['x-forwarded-for'] || null;
 
   try {
     const db = getDb();
-    const result = db.prepare('INSERT INTO audit_log (user, action, module, details) VALUES (?, ?, ?, ?)').run(user, action, module, details);
+    const result = db.prepare('INSERT INTO audit_log (user, action, module, details, ip) VALUES (?, ?, ?, ?, ?)')
+      .run(String(authenticatedUser), String(action), String(module), details !== undefined && details !== null ? String(details) : null, clientIp);
     res.json({ success: true, id: result.lastInsertRowid });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

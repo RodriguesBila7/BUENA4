@@ -267,7 +267,7 @@ export function authenticateOffline(username, password) {
   const users = getFallbackUsers();
   const found = users.find(u => (u.username || '').toLowerCase() === cleanU || (u.nuit || '').toLowerCase() === cleanU);
   if (found) {
-    if (cleanP === 'buenaverte7' || cleanP === 'admin123' || cleanP === 'user123' || cleanP === '55555' || cleanP === found.password) {
+    if (cleanP === found.password) {
       const uRole = roles.find(r => r.id === (found.role_id || found.role)) || superRole;
       const photo = found.avatar || found.photo || getSavedPhoto(found.username) || (found.nuit ? getSavedPhoto(found.nuit) : null);
       return {

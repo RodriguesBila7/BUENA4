@@ -131,7 +131,17 @@ export default function useAuthData() {
     }
     try {
       const res = await api('POST', '/login', { username, password });
-      return { success: true, user: { ...res.user, roleDetails: res.user.permissions ? { permissions: res.user.permissions } : null } };
+      if (res && res.token) {
+        try {
+          sessionStorage.setItem('sernic_jwt_token', res.token);
+          localStorage.setItem('sernic_jwt_token', res.token);
+        } catch (e) {}
+      }
+      return { 
+        success: true, 
+        token: res.token, 
+        user: { ...res.user, roleDetails: res.user.permissions ? { permissions: res.user.permissions } : null } 
+      };
     } catch (e) {
       if (e.message === 'invalid_credentials') {
         const offlineCheck = authenticateOffline(username, password);

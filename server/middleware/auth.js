@@ -1,10 +1,11 @@
 /**
  * server/middleware/auth.js
- * Middleware de Autenticação e Verificação de Permissões para o Backend Express (SERNIC)
+ * Middleware de Autenticação Estrita e Verificação de Permissões (Conformidade Tabela 21)
+ * - Token JWT Obrigatório assinado pelo servidor em todas as rotas protegidas
+ * - Eliminação total de bypass por cabeçalhos x-user-role / x-user-id
  */
 
 import jwt from 'jsonwebtoken';
-import { getDb } from '../db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'sernic-super-secret-key-2026';
 
@@ -12,14 +13,17 @@ if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
   console.warn('⚠️  [SEGURANÇA] JWT_SECRET não configurado nas variáveis de ambiente em modo de produção!');
 }
 
+/**
+ * Gera um token JWT seguro assinado pelo servidor
+ */
 export function generateToken(user) {
   return jwt.sign(
     { 
       id: user.id, 
       username: user.username, 
-      role: user.role_id, 
-      delegatedRole: user.delegated_role_id,
-      directorateId: user.directorate_id
+      role: user.roleId || user.role_id || user.role, 
+      delegatedRole: user.delegatedRoleId || user.delegated_role_id || null,
+      directorateId: user.directorateId || user.directorate_id || null
     },
     JWT_SECRET,
     { expiresIn: '8h' }
@@ -27,57 +31,63 @@ export function generateToken(user) {
 }
 
 /**
- * Express Middleware: Autentica o utilizador por JWT Bearer Token ou Headers HTTP de Sessão (x-user-role / x-user-id)
+ * Express Middleware: Autentica o utilizador OBRIGATORIAMENTE por JWT Bearer Token.
+ * Rejeita qualquer tentativa de personificação por cabeçalhos HTTP livres (Fim do bypass).
  */
 export function authenticateUser(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET);
-      req.user = decoded;
-      return next();
-    } catch (err) {
-      // Falha no token JWT, avança para tentar verificar headers customizados
-    }
-  }
+  // Rotas públicas que não requerem token JWT
+  const publicPaths = ['/api/auth/login', '/api/health', '/api/sync-photo'];
+  const currentPath = (req.originalUrl || req.url || '').split('?')[0];
 
-  // Identificação complementar de sessão por headers HTTP
-  const userId = req.headers['x-user-id'] || req.headers['user-id'];
-  const userRole = req.headers['x-user-role'] || req.headers['user-role'] || req.headers['x-role-id'];
-
-  if (userId || userRole) {
-    req.user = {
-      id: userId || 'usr_session',
-      role: userRole || 'usuario_normal',
-      delegatedRole: req.headers['x-delegated-role'] || null,
-      directorateId: req.headers['x-directorate-id'] || null
-    };
+  if (publicPaths.some(p => currentPath === p || currentPath.startsWith(p))) {
     return next();
   }
 
-  req.user = null;
-  next();
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'Não Autenticado (401 Unauthorized)',
+      message: 'Token JWT obrigatório. Forneça o cabeçalho Authorization: Bearer <token> para aceder a esta funcionalidade.'
+    });
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({
+      error: 'Token Inválido ou Expirado (401 Unauthorized)',
+      message: 'A sua sessão expirou ou o token de segurança é inválido. Por favor, autentique-se novamente.'
+    });
+  }
 }
 
 /**
- * Middleware Guard para Verificação de Permissão de Perfis de Utilizador no Backend
- * Retorna HTTP 403 Forbidden se o utilizador não possuir o perfil/papel autorizado.
+ * Middleware Guard para Verificação de Permissão de Perfis de Utilizador no Backend.
+ * Obtém o perfil EXCLUSIVAMENTE do token JWT validado pelo servidor.
  */
 export function requireRole(allowedRoles = []) {
   return (req, res, next) => {
-    const userRole = req.user ? (req.user.delegatedRole || req.user.role) : (req.headers['x-user-role'] || req.headers['user-role'] || req.headers['x-role-id']);
-
-    if (!userRole) {
+    if (!req.user) {
       return res.status(401).json({ 
         error: 'Não Autenticado (401 Unauthorized)',
-        message: 'Nenhum utilizador ou sessão foi fornecida para executar esta ação.' 
+        message: 'Nenhum utilizador autenticado via JWT foi identificado.' 
+      });
+    }
+
+    const userRole = req.user.delegatedRole || req.user.role;
+    if (!userRole) {
+      return res.status(403).json({ 
+        error: 'Acesso Negado (403 Forbidden)', 
+        message: 'O token fornecido não possui perfil atribuído.' 
       });
     }
 
     const normalizedRole = String(userRole).toLowerCase();
 
-    // Perfis Centrais Superiores (1º Nível Super Admin Principal e 2º Nível Super Admin) têm permissão total por padrão
+    // Perfis Centrais Superiores têm acesso administrativo completo
     if (
       normalizedRole === 'super_admin_1' || 
       normalizedRole === 'admin_1' || 
@@ -99,7 +109,7 @@ export function requireRole(allowedRoles = []) {
       if (!isAllowed) {
         return res.status(403).json({ 
           error: 'Acesso Negado (403 Forbidden)', 
-          message: `Ação não autorizada. O seu perfil (${userRole}) não possui permissão para modificar as configurações do sistema.` 
+          message: `Ação não autorizada. O seu perfil (${userRole}) não possui permissão para esta operação.` 
         });
       }
     }
@@ -110,13 +120,10 @@ export function requireRole(allowedRoles = []) {
 
 /**
  * Guard Específico para Rotas de Configuração do Sistema e Definições de Segurança
- * Permite leitura GET a todos os perfis ativos, mas EXIGE PERFIL ADMINISTRATIVO para alterações (PUT, POST, DELETE).
  */
 export function requireSystemSettingsPermission(req, res, next) {
   if (req.method === 'GET') {
     return next();
   }
-
-  // Apenas Perfis Centrais e Administradores (1º, 2º, 3º e 4º Níveis) podem alterar configurações do sistema
   return requireRole(['super_admin_1', 'admin_1', 'admin_2', 'usuario_admin', 'admin_central'])(req, res, next);
 }
