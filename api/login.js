@@ -8,7 +8,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sernic-super-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET;
 const GIST_ID = process.env.GIST_ID;
 const GIST_FILENAME = 'sernic_sync.json';
 const GITHUB_TOKEN = process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN;
@@ -91,6 +91,12 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido.' });
+  }
+
+  if (!JWT_SECRET) {
+    return res.status(500).json({
+      error: 'Servidor não configurado. Defina a variável de ambiente JWT_SECRET no Vercel.'
+    });
   }
 
   const { username, password } = req.body || {};

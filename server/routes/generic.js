@@ -14,6 +14,18 @@ import { Router } from 'express';
 import { getDb } from '../db.js';
 import { requireSystemSettingsPermission } from '../middleware/auth.js';
 
+function logAuditGeneric(db, user, action, module, details) {
+  try {
+    const detailsStr = details && typeof details === 'object' ? JSON.stringify(details) : (details ? String(details) : null);
+    db.prepare(`
+      INSERT INTO audit_log (user, action, module, details, timestamp)
+      VALUES (?, ?, ?, ?, datetime('now'))
+    `).run(user || 'Sistema', action, module, detailsStr);
+  } catch (err) {
+    console.warn('[GENERIC AUDIT ERROR]:', err.message);
+  }
+}
+
 /**
  * Cria um router CRUD simples para uma tabela que guarda registos como JSON.
  * A tabela deve ter: id TEXT PRIMARY KEY, data TEXT NOT NULL
@@ -47,6 +59,15 @@ export function createGenericRouter(tableName) {
     try {
       const db = getDb();
       db.prepare(`INSERT INTO ${tableName} (id, data) VALUES (?, ?)`).run(record.id, JSON.stringify(record));
+      
+      // TF08b / TF10: Auditoria com valores anteriores e novos
+      const actor = req.user?.username || req.user?.name || 'Sistema';
+      logAuditGeneric(db, actor, 'Criação', tableName, {
+        recordId: record.id,
+        previousValue: null,
+        newValue: record
+      });
+
       res.json({ success: true, id: record.id });
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
@@ -56,14 +77,24 @@ export function createGenericRouter(tableName) {
     try {
       const db = getDb();
       const existingRow = db.prepare(`SELECT data FROM ${tableName} WHERE id = ?`).get(req.params.id);
+      let previousValue = null;
       let dataToSave = req.body;
       if (existingRow) {
         try {
-          const oldData = JSON.parse(existingRow.data);
-          dataToSave = { ...oldData, ...req.body };
+          previousValue = JSON.parse(existingRow.data);
+          dataToSave = { ...previousValue, ...req.body };
         } catch (_) {}
       }
       db.prepare(`UPDATE ${tableName} SET data = ?, updated_at = datetime('now') WHERE id = ?`).run(JSON.stringify(dataToSave), req.params.id);
+      
+      // TF08b / TF10: Auditoria com valores anteriores e novos
+      const actor = req.user?.username || req.user?.name || 'Sistema';
+      logAuditGeneric(db, actor, 'Actualização', tableName, {
+        recordId: req.params.id,
+        previousValue: previousValue,
+        newValue: dataToSave
+      });
+
       res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
@@ -72,7 +103,21 @@ export function createGenericRouter(tableName) {
   router.delete('/:id', (req, res) => {
     try {
       const db = getDb();
+      const existingRow = db.prepare(`SELECT data FROM ${tableName} WHERE id = ?`).get(req.params.id);
+      let previousValue = null;
+      if (existingRow) {
+        try { previousValue = JSON.parse(existingRow.data); } catch (_) {}
+      }
       db.prepare(`DELETE FROM ${tableName} WHERE id = ?`).run(req.params.id);
+      
+      // TF08b / TF10: Auditoria com valores anteriores e novos
+      const actor = req.user?.username || req.user?.name || 'Sistema';
+      logAuditGeneric(db, actor, 'Eliminação', tableName, {
+        recordId: req.params.id,
+        previousValue: previousValue,
+        newValue: null
+      });
+
       res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
   });

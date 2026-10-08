@@ -136,7 +136,7 @@ export default function useAuthData() {
       if (res && res.token) {
         try {
           sessionStorage.setItem('sernic_jwt_token', res.token);
-          localStorage.setItem('sernic_jwt_token', res.token);
+          localStorage.removeItem('sernic_jwt_token');
         } catch (e) {}
         return { 
           success: true, 

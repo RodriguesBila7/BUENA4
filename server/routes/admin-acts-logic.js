@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDb } from '../db.js';
+import { getDb, logServerAudit } from '../db.js';
 
 const router = Router();
 
@@ -41,7 +41,17 @@ router.post('/', (req, res) => {
   const db = getDb();
   try {
     const actData = req.body;
-    db.prepare('INSERT INTO admin_acts (id, data) VALUES (?, ?)').run(actData.id || `act_${Date.now()}`, JSON.stringify(actData));
+    const recordId = actData.id || `act_${Date.now()}`;
+    db.prepare('INSERT INTO admin_acts (id, data) VALUES (?, ?)').run(recordId, JSON.stringify(actData));
+    
+    // TF08b / TF10: Auditoria com valores anteriores e novos
+    const actor = req.user?.username || req.user?.name || actData.user || 'Sistema';
+    logServerAudit(actor, 'Criação de Acto', 'Actos Administrativos', {
+      recordId,
+      previousValue: null,
+      newValue: actData
+    }, req.ip);
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -217,6 +227,18 @@ router.post('/register', (req, res) => {
     });
 
     tx();
+
+    // TF08b / TF10: Auditoria com valores anteriores e novos
+    const actor = userResponsible || req.user?.username || req.user?.name || 'Sistema';
+    logServerAudit(actor, `Registo de Acto (${actType})`, 'Actos Administrativos', {
+      recordId: actId,
+      employeeId,
+      actType,
+      previousValue: oldState,
+      newValue: newState,
+      details: { despacho, br, ...details, status }
+    }, req.ip);
+
     res.json({ success: true, message: 'Acto Administrativo registado com sucesso.' });
 
   } catch (error) {
@@ -236,6 +258,15 @@ router.put('/:id', (req, res) => {
     const newData = { ...existingData, ...req.body };
     
     db.prepare('UPDATE admin_acts SET data = ? WHERE id = ?').run(JSON.stringify(newData), req.params.id);
+
+    // TF08b / TF10: Auditoria com valores anteriores e novos
+    const actor = req.user?.username || req.user?.name || 'Sistema';
+    logServerAudit(actor, 'Actualização de Acto', 'Actos Administrativos', {
+      recordId: req.params.id,
+      previousValue: existingData,
+      newValue: newData
+    }, req.ip);
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -249,8 +280,17 @@ router.delete('/:id', (req, res) => {
     const actRow = db.prepare('SELECT * FROM admin_acts WHERE id = ?').get(req.params.id);
     if (!actRow) return res.status(404).json({ error: 'Ato não encontrado' });
 
-    // Reverse employee state if it's a death/óbiito? Let's just delete the record for now
+    const existingData = JSON.parse(actRow.data);
     db.prepare('DELETE FROM admin_acts WHERE id = ?').run(req.params.id);
+
+    // TF08b / TF10: Auditoria com valores anteriores e novos
+    const actor = req.user?.username || req.user?.name || 'Sistema';
+    logServerAudit(actor, 'Eliminação de Acto', 'Actos Administrativos', {
+      recordId: req.params.id,
+      previousValue: existingData,
+      newValue: null
+    }, req.ip);
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -318,6 +358,17 @@ router.post('/confirm/:id', (req, res) => {
     });
 
     tx();
+
+    // TF08b / TF10: Auditoria com valores anteriores e novos
+    const actor = req.user?.username || req.user?.name || 'Sistema';
+    logServerAudit(actor, 'Confirmação de Acto', 'Actos Administrativos', {
+      recordId: actId,
+      employeeId: actData.employeeId,
+      actType: actData.actType,
+      previousValue: { status: 'Pendente', extraData },
+      newValue: { status: 'Confirmado', extraData: newExtraData }
+    }, req.ip);
+
     res.json({ success: true, message: 'Acto confirmado com sucesso.' });
   } catch (error) {
     console.error('Erro ao confirmar acto:', error);
@@ -428,6 +479,17 @@ router.post('/provimento/create', (req, res) => {
     };
 
     db.prepare('INSERT INTO admin_acts (id, data) VALUES (?, ?)').run(actId, JSON.stringify(newAct));
+
+    // TF08b / TF10: Auditoria com valores anteriores e novos
+    const actor = userResponsible || req.user?.username || req.user?.name || 'Utilizador';
+    logServerAudit(actor, `Criação de Processo (${actType})`, 'Actos Administrativos', {
+      recordId: actId,
+      employeeId,
+      actType,
+      previousValue: null,
+      newValue: newAct
+    }, req.ip);
+
     res.json({ success: true, act: newAct, message: `Processo de ${actType} criado com sucesso!` });
   } catch (error) {
     console.error('Erro ao criar processo de provimento:', error);
@@ -450,6 +512,8 @@ router.post('/provimento/:id/despacho', (req, res) => {
     if (!actRow) return res.status(404).json({ error: 'Processo não encontrado.' });
 
     let actData = JSON.parse(actRow.data);
+    const prevStatus = actData.status;
+    const prevDespacho = actData.despacho;
 
     if (actData.status === 'Finalizado' || actData.status === 'Rejeitado') {
       return res.status(400).json({ error: `Não é possível adicionar despacho a um processo no estado "${actData.status}".` });
@@ -475,6 +539,16 @@ router.post('/provimento/:id/despacho', (req, res) => {
     });
 
     db.prepare('UPDATE admin_acts SET data = ? WHERE id = ?').run(JSON.stringify(actData), actId);
+
+    // TF08b / TF10: Auditoria com valores anteriores e novos
+    const actor = userResponsible || req.user?.username || req.user?.name || 'Chefe da DRH';
+    logServerAudit(actor, 'Inserção de Despacho', 'Actos Administrativos', {
+      recordId: actId,
+      employeeId: actData.employeeId,
+      previousValue: { status: prevStatus, despacho: prevDespacho },
+      newValue: { status: actData.status, despacho: actData.despacho }
+    }, req.ip);
+
     res.json({ success: true, act: actData, message: 'Despacho registado com sucesso. Processo em fase de aprovação!' });
   } catch (error) {
     console.error('Erro ao adicionar despacho:', error);
@@ -498,6 +572,8 @@ router.post('/provimento/:id/approve', (req, res) => {
     if (!actRow) return res.status(404).json({ error: 'Processo não encontrado.' });
 
     let actData = JSON.parse(actRow.data);
+    const prevStatus = actData.status;
+    const prevApprovals = actData.approvals ? JSON.parse(JSON.stringify(actData.approvals)) : {};
 
     if (actData.status !== 'Pendente de Aprovação') {
       return res.status(400).json({ error: `O processo deve estar no estado "Pendente de Aprovação" (Estado atual: ${actData.status}). Certifique-se de que o despacho foi emitido.` });
@@ -611,6 +687,16 @@ router.post('/provimento/:id/approve', (req, res) => {
 
     tx();
 
+    // TF08b / TF10: Auditoria com valores anteriores e novos
+    const actor = userName || userResponsible || req.user?.username || 'Administrador';
+    logServerAudit(actor, `Aprovação de Processo (${roleKey})`, 'Actos Administrativos', {
+      recordId: actId,
+      employeeId: actData.employeeId,
+      actType: actData.actType,
+      previousValue: { approvals: prevApprovals, status: prevStatus },
+      newValue: { approvals: actData.approvals, status: actData.status }
+    }, req.ip);
+
     res.json({ 
       success: true, 
       act: actData, 
@@ -639,6 +725,8 @@ router.post('/provimento/:id/reject', (req, res) => {
     if (!actRow) return res.status(404).json({ error: 'Processo não encontrado.' });
 
     let actData = JSON.parse(actRow.data);
+    const prevStatus = actData.status;
+    const prevRejection = actData.rejection;
 
     if (actData.status === 'Finalizado') {
       return res.status(400).json({ error: 'Não é possível rejeitar um processo já finalizado.' });
@@ -663,6 +751,17 @@ router.post('/provimento/:id/reject', (req, res) => {
     });
 
     db.prepare('UPDATE admin_acts SET data = ? WHERE id = ?').run(JSON.stringify(actData), actId);
+
+    // TF08b / TF10: Auditoria com valores anteriores e novos
+    const actor = userName || userResponsible || req.user?.username || 'Administrador';
+    logServerAudit(actor, 'Rejeição de Processo', 'Actos Administrativos', {
+      recordId: actId,
+      employeeId: actData.employeeId,
+      actType: actData.actType,
+      previousValue: { status: prevStatus, rejection: prevRejection },
+      newValue: { status: 'Rejeitado', rejection: actData.rejection }
+    }, req.ip);
+
     res.json({ success: true, act: actData, message: 'Processo rejeitado com sucesso.' });
   } catch (error) {
     console.error('Erro ao rejeitar processo:', error);

@@ -10,7 +10,7 @@ const GIST_ID = process.env.GIST_ID;
 const GIST_FILENAME = 'sernic_sync.json';
 // Credencial obtida ESTRITAMENTE de variáveis de ambiente seguras (sem credenciais hardcoded)
 const GITHUB_TOKEN = process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN;
-const JWT_SECRET = process.env.JWT_SECRET || 'sernic-super-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function isOriginAllowed(origin, host) {
   if (!origin) return true;
@@ -55,6 +55,12 @@ export default async function handler(req, res) {
     });
   }
 
+  if (!JWT_SECRET) {
+    return res.status(500).json({
+      error: 'Servidor não configurado. Defina a variável de ambiente JWT_SECRET nas configurações do Vercel.'
+    });
+  }
+
   // 2. Autenticação Estrita via Token JWT do Utilizador
   const authHeader = req.headers.authorization || '';
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -67,7 +73,7 @@ export default async function handler(req, res) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
-  } catch (err) {
+  } catch (_err) {
     return res.status(401).json({
       error: 'Sessão inválida ou expirada. Por favor, autentique-se novamente no sistema.'
     });
@@ -92,7 +98,7 @@ export default async function handler(req, res) {
       let parsed = { photos: {} };
       try {
         parsed = JSON.parse(content);
-      } catch (e) {}
+      } catch (_e) {}
 
       return res.status(200).json({
         success: true,
@@ -118,7 +124,7 @@ export default async function handler(req, res) {
         const content = gistData.files && gistData.files[GIST_FILENAME] ? gistData.files[GIST_FILENAME].content : '{}';
         try {
           currentData = JSON.parse(content);
-        } catch (e) {}
+        } catch (_e) {}
       }
       currentData.photos = currentData.photos || {};
 
@@ -183,7 +189,7 @@ export default async function handler(req, res) {
         const content = gistData.files && gistData.files[GIST_FILENAME] ? gistData.files[GIST_FILENAME].content : '{}';
         try {
           currentData = JSON.parse(content);
-        } catch (e) {}
+        } catch (_e) {}
       }
       currentData.photos = currentData.photos || {};
       delete currentData.photos[key];

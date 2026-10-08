@@ -208,12 +208,32 @@ router.delete('/users/:id', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// ─── LOGIN — CONFORMIDADE TABELA 21 (JWT OBRIGATÓRIO, FIM DAS SENHAS-MESTRAS) ─
+// Rate Limiting para proteção contra força bruta (TS09)
+const failedAttempts = new Map();
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutos de bloqueio
+
+// ─── LOGIN — CONFORMIDADE TABELA 21 (JWT OBRIGATÓRIO, FIM DAS SENHAS-MESTRAS, TS08b, TS09) ─
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.status(400).json({ error: 'username e password obrigatorios' });
   try {
     const db = getDb();
+    const clientIp = req.ip || req.socket.remoteAddress || req.headers['x-forwarded-for'] || '127.0.0.1';
+    const trackKey = `${clientIp}_${String(username).toLowerCase().trim()}`;
+    const now = Date.now();
+    const attemptInfo = failedAttempts.get(trackKey);
+
+    // TS09: Bloqueio automático se excedeu tentativas
+    if (attemptInfo && attemptInfo.lockUntil && now < attemptInfo.lockUntil) {
+      const waitMinutes = Math.ceil((attemptInfo.lockUntil - now) / 60000);
+      return res.status(429).json({
+        error: 'account_locked',
+        message: `Conta temporariamente bloqueada por excesso de tentativas falhadas. Tente novamente em ${waitMinutes} minutos.`
+      });
+    }
+
+    // TS08b: Apenas username, nuit ou email do utilizador (eliminada busca por nome ou id de perfil r.name/r.id)
     const candidateUsers = db.prepare(`
       SELECT 
         u.id, u.name, u.username, u.nuit, u.email, u.contact, u.password, u.status, u.avatar,
@@ -226,15 +246,31 @@ router.post('/login', (req, res) => {
       FROM users u 
       LEFT JOIN roles r ON u.role_id = r.id 
       LEFT JOIN roles dr ON u.delegated_role_id = dr.id
-      WHERE (LOWER(u.username) = LOWER(?) OR LOWER(u.nuit) = LOWER(?) OR LOWER(u.email) = LOWER(?) OR LOWER(r.name) = LOWER(?) OR LOWER(r.id) = LOWER(?))
+      WHERE (LOWER(u.username) = LOWER(?) OR LOWER(u.nuit) = LOWER(?) OR LOWER(u.email) = LOWER(?))
         AND u.status = 'Ativo'
-    `).all(username, username, username, username, username);
-    
-    const clientIp = req.ip || req.socket.remoteAddress || req.headers['x-forwarded-for'] || '127.0.0.1';
+    `).all(username, username, username);
+
+    const recordFailedAttempt = (motivo) => {
+      const currentCount = (attemptInfo ? attemptInfo.count : 0) + 1;
+      if (currentCount >= MAX_FAILED_ATTEMPTS) {
+        failedAttempts.set(trackKey, { count: currentCount, lockUntil: now + LOCKOUT_DURATION_MS });
+        logAudit(db, username, 'Bloqueio de Conta (TS09)', 'Autenticação', {
+          motivo: 'Excesso de 5 tentativas consecutivas',
+          ip: clientIp,
+          bloqueadoAte: new Date(now + LOCKOUT_DURATION_MS).toISOString()
+        }, clientIp);
+        return res.status(429).json({
+          error: 'account_locked',
+          message: 'Conta temporariamente bloqueada após 5 tentativas falhadas. Tente novamente após 15 minutos.'
+        });
+      }
+      failedAttempts.set(trackKey, { count: currentCount, lockUntil: 0 });
+      logAudit(db, username, 'Tentativa de Login Falhada', 'Autenticação', { motivo, ip: clientIp, tentativa: currentCount }, clientIp);
+      return res.status(401).json({ error: 'invalid_credentials' });
+    };
 
     if (!candidateUsers || candidateUsers.length === 0) {
-      logAudit(db, username, 'Tentativa de Login Falhada', 'Autenticação', { motivo: 'Utilizador não encontrado ou inativo', ip: clientIp }, clientIp);
-      return res.status(401).json({ error: 'invalid_credentials' });
+      return recordFailedAttempt('Utilizador não encontrado ou inativo');
     }
     
     // FIM DAS SENHAS-MESTRAS: Validação estrita por hash bcrypt ou correspondência exata de senha cadastrada
@@ -246,9 +282,11 @@ router.post('/login', (req, res) => {
     });
 
     if (!matchingUser) {
-      logAudit(db, username, 'Tentativa de Login Falhada', 'Autenticação', { motivo: 'Palavra-passe incorreta', ip: clientIp }, clientIp);
-      return res.status(401).json({ error: 'invalid_credentials' });
+      return recordFailedAttempt('Palavra-passe incorreta');
     }
+    
+    // Sucesso: limpar contador de tentativas falhadas (TS09)
+    failedAttempts.delete(trackKey);
     
     // Atualizar hash seguro caso a senha antiga na BD estivesse em texto simples
     if (matchingUser.password === password) {

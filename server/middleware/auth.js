@@ -7,10 +7,11 @@
 
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sernic-super-secret-key-2026';
+const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'test' ? 'test-secret-vitest-only' : undefined);
 
-if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
-  console.warn('⚠️  [SEGURANÇA] JWT_SECRET não configurado nas variáveis de ambiente em modo de produção!');
+if (!JWT_SECRET) {
+  console.error('❌ [ERRO CRÍTICO TS11] A variável de ambiente JWT_SECRET não está definida. O servidor recusa-se a arrancar por motivos de segurança.');
+  throw new Error('JWT_SECRET obrigatório nas variáveis de ambiente. Defina JWT_SECRET antes de iniciar o servidor.');
 }
 
 /**

@@ -125,7 +125,14 @@ router.post('/', (req, res) => {
 
     // Auditoria no servidor
     const actor = req.user?.username || req.user?.id || 'Administrador';
-    logServerAudit(actor, 'Criação de Funcionário', 'Funcionários', { id: row.id, name: row.name, nip: row.nip, nuit: row.nuit }, req.ip);
+    logServerAudit(actor, 'Criação de Funcionário', 'Funcionários', {
+      id: row.id,
+      name: row.name,
+      nip: row.nip,
+      nuit: row.nuit,
+      previousValue: null,
+      newValue: rowToEmp(row)
+    }, req.ip);
 
     res.json({ success: true, id: row.id });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -136,8 +143,10 @@ router.put('/:id', (req, res) => {
   const emp = req.body;
   try {
     const db = getDb();
-    const existing = db.prepare('SELECT id FROM employees WHERE id = ?').get(req.params.id);
+    const existing = db.prepare('SELECT * FROM employees WHERE id = ?').get(req.params.id);
     if (!existing) return res.status(404).json({ error: 'not_found' });
+    const previousValue = rowToEmp(existing);
+
     const dup = db.prepare('SELECT id FROM employees WHERE nip = ? AND id != ?').get(emp.nip, req.params.id);
     if (dup) return res.status(409).json({ error: 'nip_duplicate' });
     const row = empToRow({ ...emp, id: req.params.id });
@@ -162,7 +171,14 @@ router.put('/:id', (req, res) => {
 
     // Auditoria no servidor
     const actor = req.user?.username || req.user?.id || 'Administrador';
-    logServerAudit(actor, 'Actualização de Funcionário', 'Funcionários', { id: req.params.id, name: row.name, nip: row.nip, status: row.status }, req.ip);
+    logServerAudit(actor, 'Actualização de Funcionário', 'Funcionários', {
+      id: req.params.id,
+      name: row.name,
+      nip: row.nip,
+      status: row.status,
+      previousValue,
+      newValue: rowToEmp(row)
+    }, req.ip);
 
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -172,11 +188,18 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', (req, res) => {
   try {
     const db = getDb();
+    const existing = db.prepare('SELECT * FROM employees WHERE id = ?').get(req.params.id);
+    const previousValue = existing ? rowToEmp(existing) : null;
+
     db.prepare(`UPDATE employees SET status = 'Apagado', is_active = 0 WHERE id = ?`).run(req.params.id);
 
     // Auditoria no servidor
     const actor = req.user?.username || req.user?.id || 'Administrador';
-    logServerAudit(actor, 'Desativação de Funcionário', 'Funcionários', { id: req.params.id }, req.ip);
+    logServerAudit(actor, 'Desativação de Funcionário', 'Funcionários', {
+      id: req.params.id,
+      previousValue,
+      newValue: previousValue ? { ...previousValue, status: 'Apagado', isActive: false } : null
+    }, req.ip);
 
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -186,6 +209,8 @@ router.delete('/:id', (req, res) => {
 router.delete('/:id/permanent', (req, res) => {
   try {
     const db = getDb();
+    const existing = db.prepare('SELECT * FROM employees WHERE id = ?').get(req.params.id);
+    const previousValue = existing ? rowToEmp(existing) : null;
     
     // Sincronização profunda: remover em todas as funções associadas
     db.prepare(`DELETE FROM admin_acts WHERE json_extract(data, '$.employeeId') = ? OR json_extract(data, '$.empId') = ?`).run(req.params.id, req.params.id);
@@ -198,7 +223,11 @@ router.delete('/:id/permanent', (req, res) => {
 
     // Auditoria no servidor
     const actor = req.user?.username || req.user?.id || 'Administrador';
-    logServerAudit(actor, 'Eliminação Permanente de Funcionário', 'Funcionários', { id: req.params.id }, req.ip);
+    logServerAudit(actor, 'Eliminação Permanente de Funcionário', 'Funcionários', {
+      id: req.params.id,
+      previousValue,
+      newValue: null
+    }, req.ip);
 
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -208,11 +237,18 @@ router.delete('/:id/permanent', (req, res) => {
 router.put('/:id/restore', (req, res) => {
   try {
     const db = getDb();
+    const existing = db.prepare('SELECT * FROM employees WHERE id = ?').get(req.params.id);
+    const previousValue = existing ? rowToEmp(existing) : null;
+
     db.prepare(`UPDATE employees SET status = 'Ativo', is_active = 1 WHERE id = ?`).run(req.params.id);
 
     // Auditoria no servidor
     const actor = req.user?.username || req.user?.id || 'Administrador';
-    logServerAudit(actor, 'Restauração de Funcionário', 'Funcionários', { id: req.params.id }, req.ip);
+    logServerAudit(actor, 'Restauração de Funcionário', 'Funcionários', {
+      id: req.params.id,
+      previousValue,
+      newValue: previousValue ? { ...previousValue, status: 'Ativo', isActive: true } : null
+    }, req.ip);
 
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }

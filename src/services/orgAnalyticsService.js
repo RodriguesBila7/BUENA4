@@ -96,9 +96,9 @@ export const getAuditIssues = (data) => {
   const depIds = new Set(deps.map(d => d.id));
   const divIds = new Set(divs.map(d => d.id));
 
-  // Órfãos
+  // TF07: Verificação estrita de integridade referencial (órfãos reais com IDs inexistentes)
   deps.forEach(dep => {
-    if (!dirIds.has(dep.directorateId)) {
+    if (dep.directorateId && !dirIds.has(dep.directorateId)) {
       issues.push({ type: 'orphan', level: 'Departamento', name: dep.name, msg: `O Departamento "${dep.name}" aponta para uma Direcção inexistente.` });
     }
   });
@@ -106,32 +106,21 @@ export const getAuditIssues = (data) => {
   divs.forEach(div => {
     if (div.departmentId && !depIds.has(div.departmentId)) {
       issues.push({ type: 'orphan', level: 'Repartição', name: div.name, msg: `A Repartição "${div.name}" aponta para um Departamento inexistente.` });
-    } else if (!div.departmentId && (!div.directorateId || !dirIds.has(div.directorateId))) {
-      issues.push({ type: 'orphan', level: 'Repartição', name: div.name, msg: `A Repartição "${div.name}" não está associada a uma Direcção válida.` });
+    } else if (div.directorateId && !dirIds.has(div.directorateId)) {
+      issues.push({ type: 'orphan', level: 'Repartição', name: div.name, msg: `A Repartição "${div.name}" aponta para uma Direcção inexistente.` });
     }
   });
 
   secs.forEach(sec => {
-    if (!divIds.has(sec.divisionId) && !depIds.has(sec.departmentId)) {
-      issues.push({ type: 'orphan', level: 'Secção', name: sec.name, msg: `A Secção "${sec.name}" aponta para uma Repartição ou Departamento inexistente.` });
+    if (sec.divisionId && !divIds.has(sec.divisionId)) {
+      issues.push({ type: 'orphan', level: 'Secção', name: sec.name, msg: `A Secção "${sec.name}" aponta para uma Repartição inexistente.` });
+    } else if (sec.departmentId && !depIds.has(sec.departmentId)) {
+      issues.push({ type: 'orphan', level: 'Secção', name: sec.name, msg: `A Secção "${sec.name}" aponta para um Departamento inexistente.` });
+    } else if (sec.directorateId && !dirIds.has(sec.directorateId)) {
+      issues.push({ type: 'orphan', level: 'Secção', name: sec.name, msg: `A Secção "${sec.name}" aponta para uma Direcção inexistente.` });
     }
   });
 
-  // Estruturas Incompletas (Vazias)
-  dirs.forEach(dir => {
-    const hasChild = deps.some(d => d.directorateId === dir.id) || divs.some(div => div.directorateId === dir.id);
-    if (!hasChild) issues.push({ type: 'empty', level: 'Direcção', name: dir.name, msg: `A Direcção "${dir.name}" não tem Departamentos nem Repartições directas.` });
-  });
-
-  deps.forEach(dep => {
-    const hasChild = divs.some(d => d.departmentId === dep.id);
-    if (!hasChild) issues.push({ type: 'empty', level: 'Departamento', name: dep.name, msg: `O Departamento "${dep.name}" não tem Repartições.` });
-  });
-
-  divs.forEach(div => {
-    const hasChild = secs.some(s => s.divisionId === div.id);
-    if (!hasChild) issues.push({ type: 'empty', level: 'Repartição', name: div.name, msg: `A Repartição "${div.name}" não tem Secções.` });
-  });
-
+  // TF07: Eliminada a regra de "unidades vazias" que gerava 1.587 alertas falsos (unidades sem subdivisões são legais e válidas)
   return issues;
 };

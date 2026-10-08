@@ -6,19 +6,22 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
-      const savedUser = localStorage.getItem('sernic_logged_user') || sessionStorage.getItem('sernic_logged_user');
-      const savedToken = localStorage.getItem('sernic_jwt_token') || sessionStorage.getItem('sernic_jwt_token');
+      // Ao fechar e reabrir o navegador, a sessão expira obrigatoriamente (regra de segurança)
+      localStorage.removeItem('sernic_logged_user');
+      localStorage.removeItem('sernic_jwt_token');
 
-      // Exigir token JWT criptografado ativo para restaurar a sessão (sessões antigas sem token vão para o login)
+      // A sessão ativa é mantida EXCLUSIVAMENTE em sessionStorage enquanto o navegador estiver aberto
+      const savedUser = sessionStorage.getItem('sernic_logged_user');
+      const savedToken = sessionStorage.getItem('sernic_jwt_token');
+
+      // Se o navegador foi fechado, sessionStorage é nulo -> vai direto para o Login
       if (savedUser && savedToken) {
         let parsed = JSON.parse(savedUser);
         if (parsed && typeof parsed === 'object') {
           // Atualiza a atividade imediatamente no arranque/refresh para não expirar
           const nowStr = Date.now().toString();
           try {
-            localStorage.setItem('sernic_last_activity', nowStr);
             sessionStorage.setItem('sernic_last_activity', nowStr);
-            localStorage.setItem('sernic_logged_user', savedUser);
             sessionStorage.setItem('sernic_logged_user', savedUser);
           } catch (e) {}
 
@@ -145,11 +148,12 @@ export const AuthProvider = ({ children }) => {
     setUser(userData);
     try {
       const serialized = JSON.stringify(userData);
-      localStorage.setItem('sernic_logged_user', serialized);
       sessionStorage.setItem('sernic_logged_user', serialized);
       const nowStr = Date.now().toString();
-      localStorage.setItem('sernic_last_activity', nowStr);
       sessionStorage.setItem('sernic_last_activity', nowStr);
+      // NUNCA persistir no localStorage permanente para que ao fechar o navegador a sessão encerre
+      localStorage.removeItem('sernic_logged_user');
+      localStorage.removeItem('sernic_last_activity');
     } catch (e) {
       console.warn('[AuthContext] Falha ao gravar credenciais de sessão:', e);
     }
