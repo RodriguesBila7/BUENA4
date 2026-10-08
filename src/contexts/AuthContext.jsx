@@ -78,11 +78,27 @@ export const AuthProvider = ({ children }) => {
 
   // Sincronizar fotografias da nuvem logo que o contexto inicializa (PC e Telemóvel)
   useEffect(() => {
+    if (!user) return;
+    const candidates = [
+      user.username,
+      user.name,
+      user.nuit,
+      user.id,
+      '123922328',
+      'buenaverte'
+    ].filter(Boolean).map(k => String(k).trim().toLowerCase());
+
     getCloudPhotos().then(photos => {
-      if (photos && user) {
-        const key = (user.username || user.nuit || user.id || '').toLowerCase();
-        const cloudPhoto = photos[key] || photos[(user.nuit || '').toLowerCase()] || photos[(user.username || '').toLowerCase()];
+      if (photos && typeof photos === 'object') {
+        let cloudPhoto = null;
+        for (const c of candidates) {
+          if (photos[c]) {
+            cloudPhoto = photos[c];
+            break;
+          }
+        }
         if (cloudPhoto && cloudPhoto !== user.photo) {
+          candidates.forEach(c => localStorage.setItem('sernic_user_photo_' + c, cloudPhoto));
           setUser(prev => {
             if (!prev) return prev;
             const updated = { ...prev, photo: cloudPhoto, avatar: cloudPhoto };
@@ -100,12 +116,30 @@ export const AuthProvider = ({ children }) => {
 
   const login = (userData) => {
     if (!userData) return;
-    // Verificar se já existe foto salva localmente ou na nuvem
-    const key = (userData.username || userData.nuit || userData.id || '').toLowerCase();
-    const localPhoto = localStorage.getItem('sernic_user_photo_' + key);
-    if (localPhoto && !userData.photo) {
+    const candidates = [
+      userData.username,
+      userData.name,
+      userData.nuit,
+      userData.id,
+      '123922328',
+      'buenaverte'
+    ].filter(Boolean).map(k => String(k).trim().toLowerCase());
+
+    // Verificar se já existe foto salva localmente sob qualquer uma das chaves
+    let localPhoto = userData.photo || userData.avatar || null;
+    if (!localPhoto) {
+      for (const c of candidates) {
+        const saved = localStorage.getItem('sernic_user_photo_' + c);
+        if (saved) {
+          localPhoto = saved;
+          break;
+        }
+      }
+    }
+    if (localPhoto) {
       userData.photo = localPhoto;
       userData.avatar = localPhoto;
+      candidates.forEach(c => localStorage.setItem('sernic_user_photo_' + c, localPhoto));
     }
 
     setUser(userData);
@@ -122,9 +156,16 @@ export const AuthProvider = ({ children }) => {
 
     // Buscar a foto mais recente na nuvem de forma assíncrona para garantir sincronização entre dispositivos
     getCloudPhotos(true).then(photos => {
-      if (photos) {
-        const cloudPhoto = photos[key] || photos[(userData.nuit || '').toLowerCase()] || photos[(userData.username || '').toLowerCase()];
+      if (photos && typeof photos === 'object') {
+        let cloudPhoto = null;
+        for (const c of candidates) {
+          if (photos[c]) {
+            cloudPhoto = photos[c];
+            break;
+          }
+        }
         if (cloudPhoto && cloudPhoto !== userData.photo) {
+          candidates.forEach(c => localStorage.setItem('sernic_user_photo_' + c, cloudPhoto));
           setUser(prev => {
             if (!prev) return prev;
             const updated = { ...prev, photo: cloudPhoto, avatar: cloudPhoto };

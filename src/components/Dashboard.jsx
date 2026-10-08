@@ -709,34 +709,61 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const profileMenuRef = React.useRef(null);
   const fileInputRef = React.useRef(null);
 
+  // Função auxiliar para procurar foto salva em múltiplas chaves (username, name, nuit, id)
+  const getUserPhotoCandidates = React.useCallback((u) => {
+    if (!u) return ['admin'];
+    return [
+      u.username,
+      u.name,
+      u.nuit,
+      u.id,
+      '123922328',
+      'buenaverte',
+      'admin'
+    ].filter(Boolean).map(k => String(k).trim().toLowerCase());
+  }, []);
+
+  const resolveCurrentPhoto = React.useCallback((u) => {
+    const candidates = getUserPhotoCandidates(u);
+    for (const c of candidates) {
+      const saved = localStorage.getItem('sernic_user_photo_' + c);
+      if (saved) return saved;
+    }
+    return u?.photo || u?.avatar || null;
+  }, [getUserPhotoCandidates]);
+
   // Foto de perfil persistida no banco / localStorage ou vinda do utilizador
-  const [profilePhoto, setProfilePhoto] = useState(() => {
-    return localStorage.getItem('sernic_user_photo_' + (user?.username || 'admin')) || user?.photo || user?.avatar || null;
-  });
+  const [profilePhoto, setProfilePhoto] = useState(() => resolveCurrentPhoto(user));
   const [photoFeedback, setPhotoFeedback] = useState('');
 
   // Atualizar quando o user mudar ou quando chegar foto da nuvem (sincronização PC e Telemóvel)
   React.useEffect(() => {
-    const currentPhoto = localStorage.getItem('sernic_user_photo_' + (user?.username || 'admin')) || user?.photo || user?.avatar || null;
+    const currentPhoto = resolveCurrentPhoto(user);
     if (currentPhoto && currentPhoto !== profilePhoto) {
       setProfilePhoto(currentPhoto);
     }
 
     // Sincronização em nuvem ativa para computadores e telemóveis
-    const userKey = (user?.username || user?.nuit || 'admin').toLowerCase();
+    const candidates = getUserPhotoCandidates(user);
     getCloudPhotos().then(photos => {
-      if (photos) {
-        const cloudPhoto = photos[userKey] || photos[(user?.nuit || '').toLowerCase()] || photos[(user?.username || '').toLowerCase()];
+      if (photos && typeof photos === 'object') {
+        let cloudPhoto = null;
+        for (const c of candidates) {
+          if (photos[c]) {
+            cloudPhoto = photos[c];
+            break;
+          }
+        }
         if (cloudPhoto && cloudPhoto !== profilePhoto) {
           setProfilePhoto(cloudPhoto);
-          localStorage.setItem('sernic_user_photo_' + (user?.username || 'admin'), cloudPhoto);
+          candidates.forEach(c => localStorage.setItem('sernic_user_photo_' + c, cloudPhoto));
           if (updateUserSession) {
             updateUserSession({ photo: cloudPhoto, avatar: cloudPhoto });
           }
         }
       }
     }).catch(() => {});
-  }, [user?.username, user?.photo, user?.avatar]);
+  }, [user?.username, user?.photo, user?.avatar, resolveCurrentPhoto, getUserPhotoCandidates]);
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -753,12 +780,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         mimeType: 'image/jpeg'
       });
 
-      // 1. Substituir foto imediatamente na interface (sem duplicar)
+      // 1. Substituir foto imediatamente na interface
       setProfilePhoto(compressedBase64);
 
-      // 2. Substituir no localStorage local para carregamento instantâneo
-      const photoKey = 'sernic_user_photo_' + (user?.username || 'admin');
-      localStorage.setItem(photoKey, compressedBase64);
+      // 2. Substituir em todas as chaves do localStorage para carregamento instantâneo
+      const candidates = getUserPhotoCandidates(user);
+      candidates.forEach(c => localStorage.setItem('sernic_user_photo_' + c, compressedBase64));
 
       // 3. Substituir na sessão ativa do utilizador
       if (updateUserSession) {
@@ -778,13 +805,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       // 5. Substituir no Banco Fallback local (Vercel e offline)
       updateFallbackUserPhoto(targetId, compressedBase64);
 
-      // 6. Sincronizar na Nuvem Global (garante que no telemóvel e noutros PCs a foto apareça instantaneamente)
-      await saveCloudPhoto(targetId, compressedBase64);
-      if (user?.username && user.username !== targetId) {
-        saveCloudPhoto(user.username, compressedBase64);
-      }
-      if (user?.nuit && user.nuit !== targetId) {
-        saveCloudPhoto(user.nuit, compressedBase64);
+      // 6. Sincronizar na Nuvem Global sob todas as chaves identificadoras
+      for (const c of candidates) {
+        await saveCloudPhoto(c, compressedBase64);
       }
 
       setPhotoFeedback('Foto sincronizada no banco de dados!');

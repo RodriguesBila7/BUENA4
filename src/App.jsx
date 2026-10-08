@@ -8,7 +8,7 @@ const DEFAULT_SETTINGS = {
   nome_instituicao: 'Serviço Nacional de Investigação Criminal',
   sigla: 'SERNIC',
   logotipo: null, // Nulo por padrão. Será exibido o logotipo padrão do sistema
-  cor_principal: '#1B365D',
+  cor_principal: '#B71C1C', // Vermelho Moçambique / SERNIC oficial
   cor_secundaria: '#2D3748',
   cor_destaque: '#FFFFFF',
   modo_tema: 'light',
@@ -18,9 +18,9 @@ const DEFAULT_SETTINGS = {
 };
 
 const CORES_PALETA = [
-  '#1B365D', '#0D1B4B', '#1565C0', '#0277BD', '#1B5E20', '#00695C',
-  '#33691E', '#B71C1C', '#C62828', '#880E4F', '#4A148C', '#6A1B9A',
-  '#212121', '#37474F', '#BF360C', '#F57F17', '#004D40', '#01579B'
+  '#B71C1C', '#C62828', '#880E4F', '#DC2626', '#BF360C', '#1B365D',
+  '#0D1B4B', '#1565C0', '#0277BD', '#1B5E20', '#00695C', '#33691E',
+  '#212121', '#37474F', '#F57F17', '#004D40', '#01579B', '#4A148C'
 ];
 
 import { useAuth } from './contexts/AuthContext';
@@ -32,43 +32,52 @@ export default function App() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const { t, language, setLanguage } = useTranslation();
 
-  // Carregar configurações do localStorage ao iniciar (simulação de carregamento do DB)
+  // Carregar configurações do localStorage ao iniciar
   useEffect(() => {
     const saved = localStorage.getItem('sernic_identity_settings');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // Se a cor salva for o azul legado (#1B365D) ou estiver em branco, migra imediatamente para o Vermelho Oficial (#B71C1C)
+        if (!parsed.cor_principal || parsed.cor_principal.toUpperCase() === '#1B365D') {
+          parsed.cor_principal = '#B71C1C';
+        }
         // Se a opção de cores aleatórias estiver ativa, sorteia uma cor ao iniciar/recarregar a página
         if (parsed.cores_aleatorias) {
           const randomCor = CORES_PALETA[Math.floor(Math.random() * CORES_PALETA.length)];
           parsed.cor_principal = randomCor;
-          localStorage.setItem('sernic_identity_settings', JSON.stringify(parsed));
         }
         setSettings(parsed);
+        localStorage.setItem('sernic_identity_settings', JSON.stringify(parsed));
       } catch (e) {
         console.error("Erro ao carregar configurações salvas, usando padrão.", e);
         setSettings(DEFAULT_SETTINGS);
       }
+    } else {
+      setSettings(DEFAULT_SETTINGS);
+      localStorage.setItem('sernic_identity_settings', JSON.stringify(DEFAULT_SETTINGS));
     }
   }, []);
 
   // Aplicar cores e tema globalmente sempre que houver alteração
   useEffect(() => {
+    const activeColor = (!settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D')
+      ? '#B71C1C'
+      : settings.cor_principal;
+
     // Injeção de variáveis CSS customizadas
     if (settings.modo_tema === 'dark') {
-      const isDefaultDarkNavy = !settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D';
-      const primaryColor = isDefaultDarkNavy ? '#4F8DF7' : settings.cor_principal;
-      document.documentElement.style.setProperty('--color-primary', primaryColor);
+      document.documentElement.style.setProperty('--color-primary', activeColor);
       document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria || '#3A4A66');
       document.documentElement.style.setProperty('--color-accent', settings.cor_destaque || '#FFFFFF');
     } else {
-      document.documentElement.style.setProperty('--color-primary', settings.cor_principal);
-      document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria);
-      document.documentElement.style.setProperty('--color-accent', settings.cor_destaque);
+      document.documentElement.style.setProperty('--color-primary', activeColor);
+      document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria || '#2D3748');
+      document.documentElement.style.setProperty('--color-accent', settings.cor_destaque || '#FFFFFF');
     }
     
     // Injeção do modo de tema no html/root
-    document.documentElement.setAttribute('data-theme', settings.modo_tema);
+    document.documentElement.setAttribute('data-theme', settings.modo_tema || 'light');
   }, [settings]);
 
   // Função para actualizar e salvar configurações (simulação de UPDATE SQL)
