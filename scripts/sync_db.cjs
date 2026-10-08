@@ -142,19 +142,8 @@ function syncDatabase() {
     };
   });
 
-  // 4. Users (garantir senhas padrão para acesso offline/Vercel)
-  const defaultPasswords = {
-    '123922328': 'buenaverte7',
-    'buenaverte': 'buenaverte7',
-    'admin': 'admin123',
-    'administrador': '55555',
-    'user': 'user123'
-  };
-
+  // 4. Users (apenas com hashes criptográficos bcrypt da BD, sem senhas em texto simples)
   const users = db.prepare('SELECT * FROM users').all().map(u => {
-    const key = (u.username || '').toLowerCase();
-    const nuitKey = (u.nuit || '').toLowerCase();
-    const pwd = defaultPasswords[key] || defaultPasswords[nuitKey] || 'buenaverte7';
     return {
       id: u.id,
       name: u.name,
@@ -165,7 +154,7 @@ function syncDatabase() {
       directorate_id: u.directorate_id || null,
       status: u.status || 'Ativo',
       delegation_status: u.delegation_status || 'Aprovado',
-      password: pwd,
+      password: u.password,
       avatar: u.avatar || null,
       photo: u.avatar || null,
       created_at: u.created_at || new Date().toISOString()

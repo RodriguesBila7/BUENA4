@@ -6,6 +6,7 @@
 
 import initialData from '../data/initialDbData.json';
 import { saveCloudCollection, getCloudFullData } from './cloudSyncService';
+import bcrypt from 'bcryptjs';
 
 // Inicializar sincronização com a nuvem em segundo plano
 if (typeof window !== 'undefined') {
@@ -85,17 +86,20 @@ export function saveFallbackOrg(org) {
 export function getFallbackUsers() {
   let current = getStored(STORAGE_KEYS.USERS, null);
   const initial = initialData.users || [];
-  if (!current || !Array.isArray(current)) {
+  if (!current || !Array.isArray(current) || current.length === 0) {
     current = [...initial];
   } else {
-    // Garantir que utilizadores fundamentais (ex: 123922328, admin) estão sempre presentes no navegador
+    // Sincronizar utilizadores e garantir que hashes seguros bcrypt substituem senhas obsoletas
     initial.forEach(initU => {
-      if (!current.some(u => 
+      const idx = current.findIndex(u => 
         (u.username && u.username.toLowerCase() === initU.username.toLowerCase()) || 
         (u.nuit && u.nuit === initU.nuit) || 
         u.id === initU.id
-      )) {
+      );
+      if (idx === -1) {
         current.push(initU);
+      } else if (initU.password && (!current[idx].password || !current[idx].password.startsWith('$2'))) {
+        current[idx].password = initU.password;
       }
     });
   }
@@ -150,6 +154,10 @@ export function authenticateOffline(username, password) {
   const cleanU = (username || '').trim().toLowerCase();
   const cleanP = (password || '').trim();
 
+  if (!cleanU || !cleanP) {
+    return { success: false, error: 'Nome de utilizador e palavra-passe obrigatórios.' };
+  }
+
   const roles = getFallbackRoles();
   const superRole = roles.find(r => r.id === 'super_admin_1' || r.id === 'super_admin') || {
     id: 'super_admin_1',
@@ -159,121 +167,27 @@ export function authenticateOffline(username, password) {
 
   const getSavedPhoto = (key) => localStorage.getItem('sernic_user_photo_' + key) || null;
 
-  // 1. Utilizador Principal Buenaverte (123922328 / buenaverte7)
-  if ((cleanU === '123922328' || cleanU === 'buenaverte') && (cleanP === 'buenaverte7' || cleanP === 'admin123' || cleanP === '55555')) {
-    const photo = getSavedPhoto('123922328') || getSavedPhoto('buenaverte');
-    return {
-      success: true,
-      user: {
-        id: 'usr_buenaverte_main',
-        name: 'Buenaverte',
-        username: '123922328',
-        nuit: '123922328',
-        email: 'buenaverte@gmail.com',
-        role_id: superRole.id,
-        role: superRole.id,
-        status: 'Ativo',
-        delegation_status: 'Aprovado',
-        avatar: photo,
-        photo: photo,
-        roleDetails: {
-          permissions: superRole.permissions
-        }
-      }
-    };
-  }
-
-  // 2. Super Administrador (admin / admin123)
-  if (cleanU === 'admin' && cleanP === 'admin123') {
-    const photo = getSavedPhoto('admin');
-    return {
-      success: true,
-      user: {
-        id: 'usr_admin',
-        name: 'Administrador Principal',
-        username: 'admin',
-        nuit: 'admin',
-        role_id: superRole.id,
-        role: superRole.id,
-        status: 'Ativo',
-        delegation_status: 'Aprovado',
-        avatar: photo,
-        photo: photo,
-        roleDetails: {
-          permissions: superRole.permissions
-        }
-      }
-    };
-  }
-
-  // 2. Administrador Cidade de Maputo (Administrador / 55555)
-  if (cleanU === 'administrador' && cleanP === '55555') {
-    const adminRole = roles.find(r => r.id === 'usuario_admin') || superRole;
-    const photo = getSavedPhoto('administrador');
-    return {
-      success: true,
-      user: {
-        id: 'usr_admin_maputo_cidade',
-        name: 'Administrador RH (Cidade de Maputo)',
-        username: 'Administrador',
-        nuit: 'Administrador',
-        role_id: adminRole.id,
-        role: adminRole.id,
-        directorate_id: 'mr4q74hk-ejd735',
-        status: 'Ativo',
-        delegation_status: 'Aprovado',
-        avatar: photo,
-        photo: photo,
-        roleDetails: {
-          permissions: adminRole.permissions
-        }
-      }
-    };
-  }
-
-  // 3. Utilizador Comum (user / user123)
-  if (cleanU === 'user' && cleanP === 'user123') {
-    const userRole = roles.find(r => r.id === 'role_1786543599509' || r.id === 'user') || {
-      id: 'user',
-      name: 'Utilizador',
-      permissions: {
-        Dashboard: ['Visualizar'],
-        Funcionários: ['Visualizar'],
-        'Estrutura Organizacional': ['Visualizar']
-      }
-    };
-    const photo = getSavedPhoto('user');
-    return {
-      success: true,
-      user: {
-        id: 'usr_basic',
-        name: 'Utilizador Padrão',
-        username: 'user',
-        nuit: 'user',
-        role_id: userRole.id,
-        role: userRole.id,
-        status: 'Ativo',
-        delegation_status: 'Aprovado',
-        avatar: photo,
-        photo: photo,
-        roleDetails: {
-          permissions: userRole.permissions
-        }
-      }
-    };
-  }
-
-  // 4. Verificar utilizadores adicionados pelo utilizador
+  // Validar exclusivamente contra os utilizadores registados com hash bcrypt (TS08b: apenas username, nuit ou email)
   const users = getFallbackUsers();
-  const found = users.find(u => (u.username || '').toLowerCase() === cleanU || (u.nuit || '').toLowerCase() === cleanU);
-  if (found) {
-    if (cleanP === found.password) {
+  const found = users.find(u => 
+    (u.username && String(u.username).toLowerCase() === cleanU) || 
+    (u.nuit && String(u.nuit).toLowerCase() === cleanU) ||
+    (u.email && String(u.email).toLowerCase() === cleanU)
+  );
+
+  if (found && found.password && typeof found.password === 'string') {
+    const isBcrypt = found.password.startsWith('$2a$') || found.password.startsWith('$2b$');
+    const isValid = isBcrypt && bcrypt.compareSync(cleanP, found.password);
+
+    if (isValid) {
       const uRole = roles.find(r => r.id === (found.role_id || found.role)) || superRole;
       const photo = found.avatar || found.photo || getSavedPhoto(found.username) || (found.nuit ? getSavedPhoto(found.nuit) : null);
+      
+      const { password: _, ...safeUser } = found;
       return {
         success: true,
         user: {
-          ...found,
+          ...safeUser,
           avatar: photo,
           photo: photo,
           role_id: uRole.id,
@@ -286,7 +200,7 @@ export function authenticateOffline(username, password) {
     }
   }
 
-  return { success: false, error: 'Utilizador ou senha incorrectos.' };
+  return { success: false, error: 'Credenciais inválidas. Verifique o utilizador ou a palavra-passe.' };
 }
 
 export const DEFAULT_ACT_TYPES = [

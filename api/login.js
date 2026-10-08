@@ -7,6 +7,8 @@
 
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const GIST_ID = process.env.GIST_ID;
@@ -28,52 +30,24 @@ function isOriginAllowed(origin, host) {
   return false;
 }
 
-// Perfis e Utilizadores Padrão do Sistema
+// Perfil de fallback se não definido
 const DEFAULT_SUPER_ROLE = {
   id: 'super_admin_1',
   name: 'Super Administrador Principal',
   permissions: { all: true }
 };
 
-const DEFAULT_USERS = [
-  {
-    id: 'usr_buenaverte_main',
-    name: 'Buenaverte',
-    username: '123922328',
-    nuit: '123922328',
-    email: 'buenaverte@gmail.com',
-    role_id: 'super_admin_1',
-    status: 'Ativo',
-    passwords: ['buenaverte7', 'admin123', '55555']
-  },
-  {
-    id: 'usr_admin',
-    name: 'Administrador Principal',
-    username: 'admin',
-    nuit: 'admin',
-    role_id: 'super_admin_1',
-    status: 'Ativo',
-    passwords: ['admin123']
-  },
-  {
-    id: 'usr_admin_maputo_cidade',
-    name: 'Administrador RH (Cidade de Maputo)',
-    username: 'Administrador',
-    nuit: 'Administrador',
-    role_id: 'usuario_admin',
-    status: 'Ativo',
-    passwords: ['55555']
-  },
-  {
-    id: 'usr_basic',
-    name: 'Utilizador Padrão',
-    username: 'user',
-    nuit: 'user',
-    role_id: 'user',
-    status: 'Ativo',
-    passwords: ['user123']
-  }
-];
+function getLocalUsers() {
+  try {
+    const jsonPath = path.resolve(process.cwd(), 'src', 'data', 'initialDbData.json');
+    if (fs.existsSync(jsonPath)) {
+      const content = fs.readFileSync(jsonPath, 'utf8');
+      const data = JSON.parse(content);
+      return Array.isArray(data.users) ? data.users : [];
+    }
+  } catch (_e) {}
+  return [];
+}
 
 export default async function handler(req, res) {
   const origin = req.headers.origin;
@@ -107,18 +81,11 @@ export default async function handler(req, res) {
   const cleanU = String(username).trim().toLowerCase();
   const cleanP = String(password).trim();
 
-  // 1. Procurar nos utilizadores padrão
-  let foundUser = DEFAULT_USERS.find(u => 
-    u.username.toLowerCase() === cleanU || (u.nuit && u.nuit.toLowerCase() === cleanU)
-  );
+  // Carregar lista de utilizadores disponíveis
+  let usersList = [];
 
-  let isValidPassword = false;
-  if (foundUser && foundUser.passwords) {
-    isValidPassword = foundUser.passwords.includes(cleanP);
-  }
-
-  // 2. Se não encontrou ou a senha não coincidiu, procurar na base sincronizada do Gist (se configurado)
-  if (!isValidPassword && GIST_ID && GITHUB_TOKEN) {
+  // 1. Tentar obter da base de dados sincronizada no GitHub Gist
+  if (GIST_ID && GITHUB_TOKEN) {
     try {
       const gistRes = await fetch(`https://api.github.com/gists/${GIST_ID}?t=${Date.now()}`, {
         headers: {
@@ -130,36 +97,53 @@ export default async function handler(req, res) {
         const gistData = await gistRes.json();
         const content = gistData.files && gistData.files[GIST_FILENAME] ? gistData.files[GIST_FILENAME].content : '{}';
         const parsed = JSON.parse(content || '{}');
-        const cloudUsers = Array.isArray(parsed.users) ? parsed.users : [];
-        const cloudMatch = cloudUsers.find(u => 
-          (u.username && u.username.toLowerCase() === cleanU) || 
-          (u.nuit && u.nuit.toLowerCase() === cleanU)
-        );
-        if (cloudMatch) {
-          const pwd = cloudMatch.password || '';
-          if (pwd.startsWith('$2a$') || pwd.startsWith('$2b$')) {
-            isValidPassword = bcrypt.compareSync(cleanP, pwd);
-          } else {
-            isValidPassword = (pwd === cleanP);
-          }
-          if (isValidPassword) {
-            foundUser = cloudMatch;
-          }
+        if (Array.isArray(parsed.users) && parsed.users.length > 0) {
+          usersList = parsed.users;
         }
       }
-    } catch (e) {
-      console.warn('[api/login] Aviso ao consultar Gist:', e.message);
-    }
+    } catch (_e) {}
   }
 
-  if (!isValidPassword || !foundUser) {
+  // 2. Se a nuvem não tiver utilizadores ou não estiver configurada, carregar dados locais sincronizados
+  if (usersList.length === 0) {
+    usersList = getLocalUsers();
+  }
+
+  // 3. Procurar utilizador por username, nuit ou email (TS08b)
+  const foundUser = usersList.find(u => 
+    (u.username && String(u.username).toLowerCase() === cleanU) || 
+    (u.nuit && String(u.nuit).toLowerCase() === cleanU) ||
+    (u.email && String(u.email).toLowerCase() === cleanU)
+  );
+
+  if (!foundUser || !foundUser.password) {
     return res.status(401).json({
       success: false,
       error: 'Credenciais inválidas. Verifique o utilizador ou a palavra-passe.'
     });
   }
 
-  // 3. Montar dados seguros do utilizador e assinar token JWT
+  // 4. Validar EXCLUSIVAMENTE contra utilizadores com senha cifrada em bcrypt ($2a$ ou $2b$)
+  // Rejeita terminantemente senhas em texto simples
+  const pwd = String(foundUser.password).trim();
+  const isBcrypt = pwd.startsWith('$2a$') || pwd.startsWith('$2b$');
+
+  if (!isBcrypt) {
+    return res.status(401).json({
+      success: false,
+      error: 'Credenciais inválidas. Palavra-passe não possui formato criptográfico seguro.'
+    });
+  }
+
+  const isValidPassword = bcrypt.compareSync(cleanP, pwd);
+  if (!isValidPassword) {
+    return res.status(401).json({
+      success: false,
+      error: 'Credenciais inválidas. Verifique o utilizador ou a palavra-passe.'
+    });
+  }
+
+  // 5. Montar payload seguro e assinar JWT
   const userPayload = {
     id: foundUser.id,
     username: foundUser.username,

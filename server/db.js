@@ -405,7 +405,7 @@ function initSchema(db) {
 
   // Auto-seeding do Utilizador de Teste do Departamento de Recursos Humanos da Cidade de Maputo
   try {
-    const hash55555 = bcrypt.hashSync('55555', 10);
+    const HASH_MAPUTO = '$2b$10$msWQyGf55Jt8dKl0b1E6xeYQx9V1c1K4Vl3V8L1V1a1b1c1d1e1f1';
     let maputoDir = db.prepare("SELECT id FROM directorates WHERE province = 'Cidade de Maputo' OR lower(name) LIKE '%cidade de maputo%'").get();
     const maputoDirId = maputoDir ? maputoDir.id : 'dir_maputo_cidade';
     let adminRole = db.prepare("SELECT id FROM roles WHERE id = 'usuario_admin' OR name LIKE '%Chefes dos Departamentos Provinciais%'").get();
@@ -413,15 +413,15 @@ function initSchema(db) {
 
     const existingUser = db.prepare("SELECT id FROM users WHERE username = 'Administrador' OR nuit = 'Administrador'").get();
     if (existingUser) {
-      db.prepare("UPDATE users SET name = 'Administrador RH (Cidade de Maputo)', password = ?, role_id = ?, directorate_id = ?, status = 'Ativo' WHERE id = ?")
-        .run(hash55555, adminRoleId, maputoDirId, existingUser.id);
+      db.prepare("UPDATE users SET name = 'Administrador RH (Cidade de Maputo)', role_id = ?, directorate_id = ?, status = 'Ativo' WHERE id = ?")
+        .run(adminRoleId, maputoDirId, existingUser.id);
     } else {
       db.prepare("INSERT INTO users (id, name, username, nuit, password, role_id, directorate_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").run(
         'usr_admin_maputo_cidade',
         'Administrador RH (Cidade de Maputo)',
         'Administrador',
         'Administrador',
-        hash55555,
+        HASH_MAPUTO,
         adminRoleId,
         maputoDirId,
         'Ativo'
@@ -431,13 +431,13 @@ function initSchema(db) {
     console.error('[db.js] Erro ao semear Administrador Cidade de Maputo:', e.message);
   }
 
-  // Auto-seeding do Utilizador Principal Buenaverte (123922328 / buenaverte7)
+  // Auto-seeding do Utilizador Principal Buenaverte
   try {
-    const hashBuena = bcrypt.hashSync('buenaverte7', 10);
+    const HASH_BUENA = '$2b$10$h9MuhlNb.G3RJt6DT8Kqn.MSWFmkbEUfHRrWVwoAppipB0l68Ad36';
     const existingBuena = db.prepare("SELECT id FROM users WHERE username = '123922328' OR nuit = '123922328'").get();
     if (existingBuena) {
-      db.prepare("UPDATE users SET name = 'Buenaverte', username = '123922328', nuit = '123922328', password = ?, role_id = 'super_admin_1', status = 'Ativo', delegation_status = 'Aprovado' WHERE id = ?")
-        .run(hashBuena, existingBuena.id);
+      db.prepare("UPDATE users SET name = 'Buenaverte', username = '123922328', nuit = '123922328', role_id = 'super_admin_1', status = 'Ativo', delegation_status = 'Aprovado' WHERE id = ?")
+        .run(existingBuena.id);
     } else {
       db.prepare("INSERT INTO users (id, name, username, nuit, email, password, role_id, status, delegation_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)").run(
         'usr_buenaverte_main',
@@ -445,7 +445,7 @@ function initSchema(db) {
         '123922328',
         '123922328',
         'buenaverte@gmail.com',
-        hashBuena,
+        HASH_BUENA,
         'super_admin_1',
         'Ativo',
         'Aprovado'
