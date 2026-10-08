@@ -15,3 +15,6 @@
 
 1. **Execução Direta e Sem Confirmação (Planos Rápidos)**:
    A partir de agora, o agente deve aceitar e aplicar todas as alterações solicitadas pelo utilizador imediatamente, sem a necessidade de criar propostas de planos de implementação longos com pedido de aprovação explícito (`request_feedback: true` em artefactos de plano), a menos que seja uma alteração estrutural de altíssimo risco que possa causar perda total de dados não recuperáveis.
+
+2. **Git Híbrido Obrigatório e Automático**:
+   Sempre que concluir alterações ou solicitações do utilizador, o assistente deve executar automaticamente o processo de Git Híbrido (`git add -A; git commit -m "sync: <resumo> [YYYY-MM-DD HH:MM]"; git push origin main`), mantendo o repositório local e o GitHub/Vercel permanentemente sincronizados.
