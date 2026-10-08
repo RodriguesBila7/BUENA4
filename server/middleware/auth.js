@@ -7,6 +7,12 @@
 
 import jwt from 'jsonwebtoken';
 
+try {
+  if (typeof process.loadEnvFile === 'function') {
+    process.loadEnvFile();
+  }
+} catch (_) {}
+
 const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'test' ? 'test-secret-vitest-only' : undefined);
 
 if (!JWT_SECRET) {

@@ -152,6 +152,9 @@ export default function useAuthData() {
       if (e.message && e.message.includes('account_locked')) {
         return { success: false, error: 'Conta temporariamente bloqueada por excesso de tentativas falhadas. Aguarde 15 minutos.' };
       }
+      if (e.message && !e.message.includes('Failed to fetch') && !e.message.includes('NetworkError') && !e.message.includes('AbortError')) {
+        return { success: false, error: e.message };
+      }
       return { 
         success: false, 
         error: 'Serviço de autenticação inacessível. É necessária ligação ao servidor para iniciar sessão com segurança.' 
