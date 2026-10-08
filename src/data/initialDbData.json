@@ -17162,7 +17162,6 @@
       "directorate_id": null,
       "status": "Ativo",
       "delegation_status": "Aprovado",
-      "password": "$2b$10$M5E/znEHKvb99rSDcK0qoeTOglVeJwNRfBPWFPYZWl.VL7qssY93a",
       "avatar": null,
       "photo": null,
       "created_at": "2026-07-15 20:46:06"
@@ -17177,7 +17176,6 @@
       "directorate_id": "mr4q74hk-ejd735",
       "status": "Ativo",
       "delegation_status": "Aprovado",
-      "password": "$2b$10$msWUmq6y6xuJYKOP9cjMsOR4xwqrv03ABRKzzNcPUa6J5Tn5wZiua",
       "avatar": null,
       "photo": null,
       "created_at": "2026-08-12 17:11:40"
@@ -17192,7 +17190,6 @@
       "directorate_id": "mr4qxp1r-ra1twh",
       "status": "Ativo",
       "delegation_status": "Aprovado",
-      "password": "$2b$10$R9iiqDVzSo/8F7O95aUzC.qFp.WQ7nQEPYwJ.cD059jcXrQDJkpIy",
       "avatar": null,
       "photo": null,
       "created_at": "2026-09-08 10:27:26"
@@ -17207,7 +17204,6 @@
       "directorate_id": null,
       "status": "Ativo",
       "delegation_status": "Aprovado",
-      "password": "$2b$10$h9MuhlNb.G3RJt6DT8Kqn.MSWFmkbEUfHRrWVwoAppipB0l68Ad36",
       "avatar": null,
       "photo": null,
       "created_at": "2026-09-24 21:17:28"

@@ -2,13 +2,11 @@
  * api/login.js
  * Vercel Serverless Function para autenticação segura e emissão de token JWT
  * Permite que a aplicação em nuvem (Vercel) autentique utilizadores e gere tokens
- * criptográficos assinados com JWT_SECRET no servidor, sem expor chaves ao navegador.
+ * criptográficos assinados com JWT_SECRET no servidor, sem expor senhas ao navegador.
  */
 
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import fs from 'fs';
-import path from 'path';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const GIST_ID = process.env.GIST_ID;
@@ -37,17 +35,51 @@ const DEFAULT_SUPER_ROLE = {
   permissions: { all: true }
 };
 
-function getLocalUsers() {
-  try {
-    const jsonPath = path.resolve(process.cwd(), 'src', 'data', 'initialDbData.json');
-    if (fs.existsSync(jsonPath)) {
-      const content = fs.readFileSync(jsonPath, 'utf8');
-      const data = JSON.parse(content);
-      return Array.isArray(data.users) ? data.users : [];
-    }
-  } catch (_e) {}
-  return [];
-}
+// Hashes criptográficos BCrypt ($2b$10$) pré-configurados no servidor (sem senhas em texto simples)
+const SERVER_SEED_USERS = [
+  {
+    id: 'usr_buenaverte_main',
+    name: 'Buenaverte',
+    username: '123922328',
+    nuit: '123922328',
+    email: 'buenaverte@gmail.com',
+    role_id: 'super_admin_1',
+    status: 'Ativo',
+    password: '$2b$10$1eAzpYFdFJyEdU3hAbFuvOJZ7CNZylzjqKOXkJX49GiFROtUfi0XW'
+  },
+  {
+    id: 'usr_admin',
+    name: 'Administrador Principal',
+    username: 'admin',
+    nuit: 'admin',
+    role_id: 'super_admin_1',
+    status: 'Ativo',
+    password: '$2b$10$.NQzvFdQBf.NIoZ3aN/3KOoGB697/wgHTRP7TAEKeCFo8OY59oYo2'
+  },
+  {
+    id: 'usr_admin_maputo_cidade',
+    name: 'Administrador RH (Cidade de Maputo)',
+    username: 'Administrador',
+    nuit: 'Administrador',
+    role_id: 'usuario_admin',
+    status: 'Ativo',
+    password: '$2b$10$Ed7ryvQDHuZG9RGde3XEWOr5DQR4JLQNqLQEb/tkaEAO5UL2o0nmq'
+  },
+  {
+    id: 'usr_1788863244291',
+    name: 'Buenaverte',
+    username: 'Buenaverte',
+    nuit: '256487895555',
+    role_id: 'usuario_admin',
+    status: 'Ativo',
+    password: '$2b$10$0jp4WGvblRHYVC4stu/m6.VpPvOhSGXFnP/Q5CPH7YWwnr9rCHTfW'
+  }
+];
+
+// Rate Limiting para proteção contra força bruta no Vercel (TS09)
+const failedAttempts = new Map();
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
 
 export default async function handler(req, res) {
   const origin = req.headers.origin;
@@ -81,6 +113,33 @@ export default async function handler(req, res) {
   const cleanU = String(username).trim().toLowerCase();
   const cleanP = String(password).trim();
 
+  const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
+  const trackKey = `${clientIp}_${cleanU}`;
+  const now = Date.now();
+  const attemptInfo = failedAttempts.get(trackKey);
+
+  // TS09: Bloqueio automático se excedeu 5 tentativas falhadas
+  if (attemptInfo && attemptInfo.lockUntil && now < attemptInfo.lockUntil) {
+    const waitMinutes = Math.ceil((attemptInfo.lockUntil - now) / 60000);
+    return res.status(429).json({
+      error: 'account_locked',
+      message: `Conta temporariamente bloqueada após excesso de tentativas falhadas. Tente novamente em ${waitMinutes} minutos.`
+    });
+  }
+
+  const recordFailed = (errMsg) => {
+    const currentCount = (attemptInfo ? attemptInfo.count : 0) + 1;
+    if (currentCount >= MAX_FAILED_ATTEMPTS) {
+      failedAttempts.set(trackKey, { count: currentCount, lockUntil: now + LOCKOUT_DURATION_MS });
+      return res.status(429).json({
+        error: 'account_locked',
+        message: 'Conta temporariamente bloqueada após 5 tentativas falhadas consecutivas. Tente novamente após 15 minutos.'
+      });
+    }
+    failedAttempts.set(trackKey, { count: currentCount, lockUntil: 0 });
+    return res.status(401).json({ success: false, error: errMsg });
+  };
+
   // Carregar lista de utilizadores disponíveis
   let usersList = [];
 
@@ -104,9 +163,9 @@ export default async function handler(req, res) {
     } catch (_e) {}
   }
 
-  // 2. Se a nuvem não tiver utilizadores ou não estiver configurada, carregar dados locais sincronizados
+  // 2. Se a nuvem não tiver utilizadores ou não estiver configurada, carregar dados com hashes seguros do servidor
   if (usersList.length === 0) {
-    usersList = getLocalUsers();
+    usersList = SERVER_SEED_USERS;
   }
 
   // 3. Procurar utilizador por username, nuit ou email (TS08b)
@@ -117,10 +176,7 @@ export default async function handler(req, res) {
   );
 
   if (!foundUser || !foundUser.password) {
-    return res.status(401).json({
-      success: false,
-      error: 'Credenciais inválidas. Verifique o utilizador ou a palavra-passe.'
-    });
+    return recordFailed('Credenciais inválidas. Verifique o utilizador ou a palavra-passe.');
   }
 
   // 4. Validar EXCLUSIVAMENTE contra utilizadores com senha cifrada em bcrypt ($2a$ ou $2b$)
@@ -129,19 +185,16 @@ export default async function handler(req, res) {
   const isBcrypt = pwd.startsWith('$2a$') || pwd.startsWith('$2b$');
 
   if (!isBcrypt) {
-    return res.status(401).json({
-      success: false,
-      error: 'Credenciais inválidas. Palavra-passe não possui formato criptográfico seguro.'
-    });
+    return recordFailed('Credenciais inválidas. Palavra-passe não possui formato criptográfico seguro.');
   }
 
   const isValidPassword = bcrypt.compareSync(cleanP, pwd);
   if (!isValidPassword) {
-    return res.status(401).json({
-      success: false,
-      error: 'Credenciais inválidas. Verifique o utilizador ou a palavra-passe.'
-    });
+    return recordFailed('Credenciais inválidas. Verifique o utilizador ou a palavra-passe.');
   }
+
+  // Sucesso: limpar contador de tentativas falhadas (TS09)
+  failedAttempts.delete(trackKey);
 
   // 5. Montar payload seguro e assinar JWT
   const userPayload = {

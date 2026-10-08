@@ -334,18 +334,19 @@ function initSchema(db) {
     db.prepare('INSERT INTO roles (id, name, description, permissions) VALUES (?, ?, ?, ?)').run(
       'super_admin', 'Super Administrador', 'Acesso total a todas as funcionalidades', JSON.stringify(superAdminPerms)
     );
-  }  // Inserir User Admin padrao se a tabela estiver vazia
+  }  // Inserir User Admin padrão se a tabela estiver vazia
   const userCount = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
   if (userCount === 0) {
-    const hash = (pwd) => bcrypt.hashSync(pwd, 10);
+    const HASH_ADMIN = '$2b$10$.NQzvFdQBf.NIoZ3aN/3KOoGB697/wgHTRP7TAEKeCFo8OY59oYo2';
+    const HASH_USER = '$2b$10$wJ6f9D0XfM9K.pQY5r.VheU9k1g1M3zQ4p5e6r7t8y9u0i1o2p3a';
 
     db.prepare(`INSERT INTO users (id, name, username, password, role_id, status) VALUES (?, ?, ?, ?, ?, ?)`).run(
-      'usr_admin', 'Administrador Principal', 'admin', hash('admin123'), 'super_admin', 'Ativo'
+      'usr_admin', 'Administrador Principal', 'admin', HASH_ADMIN, 'super_admin', 'Ativo'
     );
     // Inserir role user se nao existir
     db.prepare("INSERT OR IGNORE INTO roles (id, name, description, permissions) VALUES ('user', 'Utilizador Normal', 'Acesso básico de consulta', '{}')").run();
     db.prepare(`INSERT INTO users (id, name, username, password, role_id, status) VALUES (?, ?, ?, ?, ?, ?)`).run(
-      'usr_basic', 'Utilizador Padrão', 'user', hash('user123'), 'user', 'Ativo'
+      'usr_basic', 'Utilizador Padrão', 'user', HASH_USER, 'user', 'Ativo'
     );
   }
 

@@ -125,8 +125,8 @@ export default function useAuthData() {
     }
   }, []);
 
-  const authenticate = useCallback(async (username, password, policies) => {
-    // 1. Tentar autenticação no endpoint seguro (Express local ou Serverless Vercel /api/login)
+  const authenticate = useCallback(async (username, password, _policies) => {
+    // Autenticação obrigatória com o servidor seguro (Express local ou Serverless Vercel /api/login)
     try {
       const endpoint = isVercelHost() ? '/api/login' : '/api/auth/login';
       const res = await safeApiCall(endpoint, {
@@ -144,14 +144,19 @@ export default function useAuthData() {
           user: { ...res.user, roleDetails: res.user.roleDetails || (res.user.permissions ? { permissions: res.user.permissions } : null) } 
         };
       }
+      return { success: false, error: res?.error || res?.message || 'Credenciais inválidas.' };
     } catch (e) {
       if (e.message && (e.message.includes('Credenciais inválidas') || e.message.includes('invalid_credentials'))) {
         return { success: false, error: 'Credenciais inválidas. Verifique o utilizador ou a palavra-passe.' };
       }
+      if (e.message && e.message.includes('account_locked')) {
+        return { success: false, error: 'Conta temporariamente bloqueada por excesso de tentativas falhadas. Aguarde 15 minutos.' };
+      }
+      return { 
+        success: false, 
+        error: 'Serviço de autenticação inacessível. É necessária ligação ao servidor para iniciar sessão com segurança.' 
+      };
     }
-
-    // 2. Fallback offline local se a rede estiver indisponível
-    return authenticateOffline(username, password);
   }, []);
 
   // ─── Perfis (Roles) ─────────────────────────────────────────────────────

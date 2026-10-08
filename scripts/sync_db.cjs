@@ -142,7 +142,7 @@ function syncDatabase() {
     };
   });
 
-  // 4. Users (apenas com hashes criptográficos bcrypt da BD, sem senhas em texto simples)
+  // 4. Users (campo password expressamente OMITIDO por segurança para não ser exposto no bundle público)
   const users = db.prepare('SELECT * FROM users').all().map(u => {
     return {
       id: u.id,
@@ -154,7 +154,6 @@ function syncDatabase() {
       directorate_id: u.directorate_id || null,
       status: u.status || 'Ativo',
       delegation_status: u.delegation_status || 'Aprovado',
-      password: u.password,
       avatar: u.avatar || null,
       photo: u.avatar || null,
       created_at: u.created_at || new Date().toISOString()

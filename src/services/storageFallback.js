@@ -149,58 +149,15 @@ export function saveFallbackRoles(roles) {
   saveCloudCollection('roles', roles);
 }
 
-// ─── AUTENTICAÇÃO OFFLINE ───────────────────────────────────────────────
-export function authenticateOffline(username, password) {
-  const cleanU = (username || '').trim().toLowerCase();
-  const cleanP = (password || '').trim();
-
-  if (!cleanU || !cleanP) {
-    return { success: false, error: 'Nome de utilizador e palavra-passe obrigatórios.' };
-  }
-
-  const roles = getFallbackRoles();
-  const superRole = roles.find(r => r.id === 'super_admin_1' || r.id === 'super_admin') || {
-    id: 'super_admin_1',
-    name: 'Super Administrador Principal',
-    permissions: { all: true }
+// ─── AUTENTICAÇÃO OFFLINE (DESATIVADA POR SEGURANÇA) ─────────────────────
+// Por motivos de conformidade de segurança e para impedir que qualquer hash de senha
+// seja exposto no JavaScript público do navegador, a autenticação offline foi desativada.
+// O login deve ser sempre validado pelo servidor seguro (Express local ou Vercel Serverless).
+export function authenticateOffline() {
+  return { 
+    success: false, 
+    error: 'O início de sessão offline foi desativado por motivos de segurança. É necessária ligação ao servidor para iniciar sessão.' 
   };
-
-  const getSavedPhoto = (key) => localStorage.getItem('sernic_user_photo_' + key) || null;
-
-  // Validar exclusivamente contra os utilizadores registados com hash bcrypt (TS08b: apenas username, nuit ou email)
-  const users = getFallbackUsers();
-  const found = users.find(u => 
-    (u.username && String(u.username).toLowerCase() === cleanU) || 
-    (u.nuit && String(u.nuit).toLowerCase() === cleanU) ||
-    (u.email && String(u.email).toLowerCase() === cleanU)
-  );
-
-  if (found && found.password && typeof found.password === 'string') {
-    const isBcrypt = found.password.startsWith('$2a$') || found.password.startsWith('$2b$');
-    const isValid = isBcrypt && bcrypt.compareSync(cleanP, found.password);
-
-    if (isValid) {
-      const uRole = roles.find(r => r.id === (found.role_id || found.role)) || superRole;
-      const photo = found.avatar || found.photo || getSavedPhoto(found.username) || (found.nuit ? getSavedPhoto(found.nuit) : null);
-      
-      const { password: _, ...safeUser } = found;
-      return {
-        success: true,
-        user: {
-          ...safeUser,
-          avatar: photo,
-          photo: photo,
-          role_id: uRole.id,
-          role: uRole.id,
-          roleDetails: {
-            permissions: uRole.permissions
-          }
-        }
-      };
-    }
-  }
-
-  return { success: false, error: 'Credenciais inválidas. Verifique o utilizador ou a palavra-passe.' };
 }
 
 export const DEFAULT_ACT_TYPES = [
