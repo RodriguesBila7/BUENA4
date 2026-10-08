@@ -14,7 +14,7 @@ export const isVercelHost = () => {
 
 export async function safeApiCall(url, options = {}) {
   // Endpoints serverless que existem nativamente na Vercel
-  const isVercelServerlessEndpoint = url.startsWith('/api/sync');
+  const isVercelServerlessEndpoint = url.startsWith('/api/sync') || url.startsWith('/api/login') || url.startsWith('/api/auth');
 
   // Se estiver na Vercel e for um endpoint do Express (SQLite), salta diretamente para o fallback
   if (isVercelHost() && !isVercelServerlessEndpoint) {

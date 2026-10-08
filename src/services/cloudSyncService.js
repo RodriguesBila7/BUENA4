@@ -27,16 +27,12 @@ let _lastFetchTime = 0;
 const CACHE_TTL_MS = 6000; // 6 segundos
 
 const getSyncHeaders = (extra = {}) => {
-  const secret = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SYNC_API_SECRET)
-    || (typeof window !== 'undefined' && window.__SYNC_API_SECRET__)
-    || '';
   const token = typeof window !== 'undefined'
     ? (sessionStorage.getItem('sernic_jwt_token') || localStorage.getItem('sernic_jwt_token'))
     : null;
 
   return {
     'Accept': 'application/json',
-    ...(secret ? { 'x-sync-secret': secret } : {}),
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...extra
   };

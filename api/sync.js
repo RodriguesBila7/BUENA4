@@ -4,11 +4,13 @@
  * (Perfis, Utilizadores, Colaboradores, Atos Administrativos, Transferências, Disciplinar, Avaliações, etc.)
  */
 
+import jwt from 'jsonwebtoken';
+
 const GIST_ID = process.env.GIST_ID;
 const GIST_FILENAME = 'sernic_sync.json';
 // Credencial obtida ESTRITAMENTE de variáveis de ambiente seguras (sem credenciais hardcoded)
 const GITHUB_TOKEN = process.env.GITHUB_SYNC_TOKEN || process.env.GITHUB_TOKEN;
-const SYNC_SECRET = process.env.SYNC_API_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'sernic-super-secret-key-2026';
 
 function isOriginAllowed(origin, host) {
   if (!origin) return true;
@@ -35,7 +37,7 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-sync-secret');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -54,14 +56,22 @@ export default async function handler(req, res) {
     });
   }
 
-  // 2. Proteção de autenticação por segredo da API
-  if (SYNC_SECRET) {
-    const authHeader = req.headers.authorization || '';
-    const secretHeader = req.headers['x-sync-secret'] || '';
-    const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : authHeader.trim();
-    if (bearer !== SYNC_SECRET && secretHeader !== SYNC_SECRET) {
-      return res.status(401).json({ error: 'Acesso não autorizado. Chave de autenticação inválida.' });
-    }
+  // 2. Autenticação Estrita via Token JWT do Utilizador
+  const authHeader = req.headers.authorization || '';
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'Acesso não autorizado. Token JWT de utilizador obrigatório no cabeçalho Authorization.'
+    });
+  }
+
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+  } catch (err) {
+    return res.status(401).json({
+      error: 'Sessão inválida ou expirada. Por favor, autentique-se novamente no sistema.'
+    });
   }
 
   try {

@@ -126,30 +126,32 @@ export default function useAuthData() {
   }, []);
 
   const authenticate = useCallback(async (username, password, policies) => {
-    if (isVercelHost()) {
-      return authenticateOffline(username, password);
-    }
+    // 1. Tentar autenticação no endpoint seguro (Express local ou Serverless Vercel /api/login)
     try {
-      const res = await api('POST', '/login', { username, password });
+      const endpoint = isVercelHost() ? '/api/login' : '/api/auth/login';
+      const res = await safeApiCall(endpoint, {
+        method: 'POST',
+        body: { username, password }
+      });
       if (res && res.token) {
         try {
           sessionStorage.setItem('sernic_jwt_token', res.token);
           localStorage.setItem('sernic_jwt_token', res.token);
         } catch (e) {}
+        return { 
+          success: true, 
+          token: res.token, 
+          user: { ...res.user, roleDetails: res.user.roleDetails || (res.user.permissions ? { permissions: res.user.permissions } : null) } 
+        };
       }
-      return { 
-        success: true, 
-        token: res.token, 
-        user: { ...res.user, roleDetails: res.user.permissions ? { permissions: res.user.permissions } : null } 
-      };
     } catch (e) {
-      if (e.message === 'invalid_credentials') {
-        const offlineCheck = authenticateOffline(username, password);
-        if (offlineCheck && offlineCheck.success) return offlineCheck;
+      if (e.message && (e.message.includes('Credenciais inválidas') || e.message.includes('invalid_credentials'))) {
         return { success: false, error: 'Credenciais inválidas. Verifique o utilizador ou a palavra-passe.' };
       }
-      return authenticateOffline(username, password);
     }
+
+    // 2. Fallback offline local se a rede estiver indisponível
+    return authenticateOffline(username, password);
   }, []);
 
   // ─── Perfis (Roles) ─────────────────────────────────────────────────────
