@@ -7,7 +7,10 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('sernic_logged_user') || sessionStorage.getItem('sernic_logged_user');
-      if (savedUser) {
+      const savedToken = localStorage.getItem('sernic_jwt_token') || sessionStorage.getItem('sernic_jwt_token');
+
+      // Exigir token JWT criptografado ativo para restaurar a sessão (sessões antigas sem token vão para o login)
+      if (savedUser && savedToken) {
         let parsed = JSON.parse(savedUser);
         if (parsed && typeof parsed === 'object') {
           // Atualiza a atividade imediatamente no arranque/refresh para não expirar
