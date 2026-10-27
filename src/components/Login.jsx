@@ -256,12 +256,12 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   };
 
   const pageBg = bwMode === 'noite'
-    ? 'linear-gradient(150deg, #1C2433 0%, #131924 100%)'
+    ? 'radial-gradient(ellipse 85% 65% at 50% 25%, #182333 0%, #0F1622 55%, #080D14 100%)'
     : bwMode === 'claro'
     ? '#F8FAFC'
     : (settings.cor_principal && settings.cor_principal !== '#1B365D'
-        ? `linear-gradient(150deg, ${settings.cor_principal} 0%, #52090B 100%)`
-        : 'linear-gradient(150deg, #7C1416 0%, #641012 50%, #4D0A0C 100%)');
+        ? `radial-gradient(ellipse 90% 70% at 50% 25%, ${settings.cor_principal} 0%, #4A080B 55%, #180204 100%)`
+        : 'radial-gradient(ellipse 90% 70% at 50% 25%, #7D1316 0%, #45080B 55%, #1A0204 100%)');
 
   return (
     <div 
@@ -274,8 +274,12 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       }}
     >
 
-      {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO (SERNIC) ══════════════ */}
+      {/* ══════════════ GRELHA CIBERNÉTICA / TECNOLÓGICA DIGITAL ══════════════ */}
+      <div className="tech-cyber-grid" aria-hidden="true" />
+
+      {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO COM SELO HOLOGRÁFICO ══════════════ */}
       <div className="landing-watermark-bg" aria-hidden="true">
+        <div className="tech-hologram-seal" />
         <img
           src="/logo-sernic-transparente.png"
           alt=""

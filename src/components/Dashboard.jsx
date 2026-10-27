@@ -1137,8 +1137,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   return (
     <div className="app-container" style={styles.appContainer}>
 
+      {/* ══════════════ GRELHA DIGITAL CIBERNÉTICA (SISTEMA) ══════════════ */}
+      <div className="tech-cyber-grid dashboard-tech-grid" aria-hidden="true" />
+
       {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO DO SISTEMA (SERNIC) ══════════════ */}
       <div className="landing-watermark-bg dashboard-watermark" aria-hidden="true">
+        <div className="tech-hologram-seal" />
         <img
           src="/logo-sernic-transparente.png"
           alt=""
