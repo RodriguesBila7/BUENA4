@@ -256,10 +256,12 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   };
 
   const pageBg = bwMode === 'noite'
-    ? 'radial-gradient(ellipse at 50% 35%, #222E42 0%, #151D2A 60%, #0F1520 100%)'
+    ? 'linear-gradient(150deg, #1C2433 0%, #131924 100%)'
     : bwMode === 'claro'
     ? '#F8FAFC'
-    : `radial-gradient(ellipse at 50% 35%, #9E1B1B 0%, ${bgColor} 50%, #5C0B0B 100%)`;
+    : (settings.cor_principal && settings.cor_principal !== '#1B365D'
+        ? `linear-gradient(150deg, ${settings.cor_principal} 0%, #52090B 100%)`
+        : 'linear-gradient(150deg, #7C1416 0%, #641012 50%, #4D0A0C 100%)');
 
   return (
     <div 
