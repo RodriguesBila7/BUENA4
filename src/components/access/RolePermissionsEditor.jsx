@@ -62,16 +62,6 @@ const OFFICIAL_ROLES = [
     description: 'Chefes dos Departamentos Provinciais de Recursos Humanos e Apoio Administrativo'
   },
   {
-    level: 'Específico',
-    name: 'Técnico de Pensões e Reserva',
-    description: 'RH Central - Específico para Reserva e Reforma'
-  },
-  {
-    level: 'Específico',
-    name: 'Técnico de Saúde e Óbitos',
-    description: 'RH Central - Específico para Saúde e Óbitos'
-  },
-  {
     level: '5º Nível',
     name: 'Usuário',
     description: 'Adjuntos dos Administradores (Podem substituir Usuários Administrativos)'

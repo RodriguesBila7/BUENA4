@@ -251,6 +251,364 @@ export default function HomeDashboard({ t, onTabChange }) {
 
   return (
     <div style={styles.container}>
+      {/* ══════════════ HERO BANNER INSTITUCIONAL SERNIC (IDÊNTICO À IMAGEM 2) ══════════════ */}
+      <div style={{
+        position: 'relative',
+        background: 'linear-gradient(135deg, #1b0204 0%, #4a060b 28%, #8e0d15 75%, #6a090e 100%)',
+        borderRadius: '16px',
+        padding: '30px 34px',
+        color: '#FFFFFF',
+        marginBottom: '26px',
+        overflow: 'hidden',
+        boxShadow: '0 12px 32px rgba(142, 13, 21, 0.22), 0 4px 12px rgba(0,0,0,0.08)',
+        border: '1px solid rgba(255, 255, 255, 0.12)'
+      }}>
+        {/* Marca d'água SERNIC no canto direito do Hero Banner */}
+        <img 
+          src="/logo-sernic-transparente.png" 
+          alt="" 
+          aria-hidden="true" 
+          style={{
+            position: 'absolute',
+            right: '-25px',
+            top: '-35px',
+            width: '320px',
+            height: '320px',
+            objectFit: 'contain',
+            opacity: 0.22,
+            pointerEvents: 'none',
+            userSelect: 'none',
+            filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.35))'
+          }}
+        />
+
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '780px' }}>
+          <h1 style={{
+            fontSize: '26px',
+            fontWeight: '900',
+            letterSpacing: '0.6px',
+            margin: '0 0 10px',
+            textTransform: 'uppercase',
+            textShadow: '0 2px 8px rgba(0,0,0,0.45)'
+          }}>
+            PORTAL DE GESTÃO DE RECURSOS HUMANOS
+          </h1>
+          <p style={{
+            fontSize: '13.5px',
+            lineHeight: '1.6',
+            color: 'rgba(255, 255, 255, 0.92)',
+            margin: '0 0 22px',
+            fontWeight: '400'
+          }}>
+            Bem-vindo(a) à plataforma oficial de gestão, acompanhamento do quadro de efectivos e actos administrativos do Serviço Nacional de Investigação Criminal (SERNIC) da República de Moçambique. Escolha um dos módulos abaixo para gerir efectivos ou consultar relatórios.
+          </p>
+
+          {/* Badges com dados em tempo real estilo Imagem 2 */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '18px', fontSize: '13px', fontWeight: '600' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: '#FCD34D' }}>👥</span>
+              <span style={{ color: 'rgba(255,255,255,0.8)' }}>Efectivos Totais:</span>
+              <strong style={{ color: '#FCD34D' }}>{sysStats.employees.total} Registados</strong>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: '#FCD34D' }}>🏛️</span>
+              <span style={{ color: 'rgba(255,255,255,0.8)' }}>Direcções & Órgãos:</span>
+              <strong style={{ color: '#FCD34D' }}>{scopedData.directorates?.length || 0} Unidades</strong>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: '#FCD34D' }}>📋</span>
+              <span style={{ color: 'rgba(255,255,255,0.8)' }}>Actos Administrativos:</span>
+              <strong style={{ color: '#FCD34D' }}>{scopedActs?.length || 0} Processados</strong>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: '#FCD34D' }}>⚖️</span>
+              <span style={{ color: 'rgba(255,255,255,0.8)' }}>Ano Judicial:</span>
+              <strong style={{ color: '#FCD34D' }}>2026</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ══════════════ 4 CARDS DE MÓDULOS INSTITUCIONAIS (IDÊNTICO À IMAGEM 2) ══════════════ */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gap: '20px',
+        marginBottom: '28px'
+      }}>
+        {/* Card 1: Efectivos & Quadros */}
+        <div 
+          onClick={() => onTabChange && onTabChange('employees')}
+          style={{
+            backgroundColor: 'var(--color-bg-card)',
+            borderRadius: '14px',
+            padding: '24px',
+            border: '1px solid var(--color-border)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+            cursor: 'pointer',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.08)';
+            e.currentTarget.style.borderColor = 'var(--color-primary, #B71C1C)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.03)';
+            e.currentTarget.style.borderColor = 'var(--color-border)';
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(183, 28, 28, 0.08)',
+                color: 'var(--color-primary, #B71C1C)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px'
+              }}>
+                👥
+              </div>
+              <span style={{
+                fontSize: '10.5px',
+                fontWeight: '700',
+                padding: '3px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                color: '#2563EB',
+                letterSpacing: '0.4px',
+                textTransform: 'uppercase'
+              }}>
+                QUADRO GERAL
+              </span>
+            </div>
+            <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--color-text-base)', margin: '0 0 8px' }}>
+              1. Efectivos & Quadros
+            </h3>
+            <p style={{ fontSize: '12.5px', color: 'var(--color-text-muted)', lineHeight: '1.55', margin: 0 }}>
+              Cadastro individual de funcionários, dados biográficos, carreira, colocação orgânica e emissão de fichas em PDF.
+            </p>
+          </div>
+          <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-primary, #B71C1C)', fontSize: '13px', fontWeight: '700' }}>
+            <span>Aceder a Efectivos</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </div>
+
+        {/* Card 2: Efectividade & Assiduidade */}
+        <div 
+          onClick={() => onTabChange && onTabChange('effectiveness')}
+          style={{
+            backgroundColor: 'var(--color-bg-card)',
+            borderRadius: '14px',
+            padding: '24px',
+            border: '1px solid var(--color-border)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+            cursor: 'pointer',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.08)';
+            e.currentTarget.style.borderColor = '#10B981';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.03)';
+            e.currentTarget.style.borderColor = 'var(--color-border)';
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                color: '#10B981',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px'
+              }}>
+                📅
+              </div>
+              <span style={{
+                fontSize: '10.5px',
+                fontWeight: '700',
+                padding: '3px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                color: '#059669',
+                letterSpacing: '0.4px',
+                textTransform: 'uppercase'
+              }}>
+                REGISTO MENSAL
+              </span>
+            </div>
+            <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--color-text-base)', margin: '0 0 8px' }}>
+              2. Efectividade & Assiduidade
+            </h3>
+            <p style={{ fontSize: '12.5px', color: 'var(--color-text-muted)', lineHeight: '1.55', margin: 0 }}>
+              Mapas de presenças mensais, faltas justificadas e injustificadas, controlo de pontualidade e relatórios oficiais.
+            </p>
+          </div>
+          <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px', color: '#059669', fontSize: '13px', fontWeight: '700' }}>
+            <span>Preencher Efectividade</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </div>
+
+        {/* Card 3: Actos Administrativos & Carreiras */}
+        <div 
+          onClick={() => onTabChange && onTabChange('admin_acts')}
+          style={{
+            backgroundColor: 'var(--color-bg-card)',
+            borderRadius: '14px',
+            padding: '24px',
+            border: '1px solid var(--color-border)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+            cursor: 'pointer',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.08)';
+            e.currentTarget.style.borderColor = '#F59E0B';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.03)';
+            e.currentTarget.style.borderColor = 'var(--color-border)';
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                color: '#F59E0B',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px'
+              }}>
+                📋
+              </div>
+              <span style={{
+                fontSize: '10.5px',
+                fontWeight: '700',
+                padding: '3px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                color: '#D97706',
+                letterSpacing: '0.4px',
+                textTransform: 'uppercase'
+              }}>
+                HISTÓRICO FUNCIONAL
+              </span>
+            </div>
+            <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--color-text-base)', margin: '0 0 8px' }}>
+              3. Actos Administrativos
+            </h3>
+            <p style={{ fontSize: '12.5px', color: 'var(--color-text-muted)', lineHeight: '1.55', margin: 0 }}>
+              Registo de promoções, progressões, provimento, transferências, processos disciplinares, reserva e reforma.
+            </p>
+          </div>
+          <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px', color: '#D97706', fontSize: '13px', fontWeight: '700' }}>
+            <span>Consultar Actos</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </div>
+
+        {/* Card 4: Estrutura Orgânica */}
+        <div 
+          onClick={() => onTabChange && onTabChange('org_structure')}
+          style={{
+            backgroundColor: 'var(--color-bg-card)',
+            borderRadius: '14px',
+            padding: '24px',
+            border: '1px solid var(--color-border)',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+            cursor: 'pointer',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.08)';
+            e.currentTarget.style.borderColor = '#8B5CF6';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.03)';
+            e.currentTarget.style.borderColor = 'var(--color-border)';
+          }}
+        >
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                color: '#8B5CF6',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px'
+              }}>
+                🏛️
+              </div>
+              <span style={{
+                fontSize: '10.5px',
+                fontWeight: '700',
+                padding: '3px 8px',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                color: '#7C3AED',
+                letterSpacing: '0.4px',
+                textTransform: 'uppercase'
+              }}>
+                ORGANOGRAMA
+              </span>
+            </div>
+            <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'var(--color-text-base)', margin: '0 0 8px' }}>
+              4. Estrutura Orgânica
+            </h3>
+            <p style={{ fontSize: '12.5px', color: 'var(--color-text-muted)', lineHeight: '1.55', margin: 0 }}>
+              Gestão de Direcções Gerais, Direcções Provinciais, Departamentos, Repartições e Direcções Distritais.
+            </p>
+          </div>
+          <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '6px', color: '#7C3AED', fontSize: '13px', fontWeight: '700' }}>
+            <span>Ver Estrutura Orgânica</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </div>
+      </div>
+
       <div style={styles.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>

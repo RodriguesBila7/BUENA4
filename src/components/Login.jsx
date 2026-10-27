@@ -86,17 +86,28 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
-  /* calcula a cor de fundo activa */
+  /* calcula o gradiente e cor de fundo activa identico a Imagem 1 */
+  const activePrimaryColor = (settings.cor_principal && settings.cor_principal !== '#1B365D') ? settings.cor_principal : '#B71C1C';
+  
+  const bgGradient =
+    bwMode === 'noite' 
+      ? 'radial-gradient(ellipse at 50% 30%, #253346 0%, #1c2433 45%, #121822 80%, #0b0f16 100%)'
+      : bwMode === 'claro'
+        ? 'radial-gradient(ellipse at 50% 30%, #FFFFFF 0%, #F1F5F9 55%, #E2E8F0 100%)'
+        : (activePrimaryColor.toUpperCase() === '#B71C1C' || activePrimaryColor.toUpperCase() === '#C62828' || activePrimaryColor.toUpperCase() === '#DC2626')
+          ? 'radial-gradient(ellipse at 50% 30%, #b8141b 0%, #8e0d14 42%, #560307 80%, #300104 100%)'
+          : `radial-gradient(ellipse at 50% 30%, ${activePrimaryColor} 0%, rgba(0,0,0,0.85) 100%)`;
+
   const bgColor =
     bwMode === 'noite' ? '#1C2433' :
     bwMode === 'claro' ? '#F8FAFC' :
-    (settings.cor_principal && settings.cor_principal !== '#1B365D' ? settings.cor_principal : '#B71C1C');
+    activePrimaryColor;
 
   /* Deteção de fundo claro (modo claro ou tema personalizado de alta luminosidade) */
   const isLightBg = () => {
     if (bwMode === 'claro') return true;
     if (bwMode === 'noite') return false;
-    const hex = (bgColor || '').replace('#', '');
+    const hex = (activePrimaryColor || '').replace('#', '');
     if (hex.length === 6) {
       const r = parseInt(hex.substr(0, 2), 16);
       const g = parseInt(hex.substr(2, 2), 16);
@@ -256,7 +267,71 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   };
 
   return (
-    <div className="login-page-root" style={{ ...s.page, backgroundColor: bgColor, transition: 'background-color 0.35s ease' }}>
+    <div className="login-page-root" style={{ ...s.page, background: bgGradient, transition: 'background 0.35s ease' }}>
+
+      {/* ══════════════ MARCAS D'ÁGUA SERNIC NO FUNDO (IDÊNTICO À IMAGEM 1) ══════════════ */}
+      {/* 1. Marca d'água Canto Inferior Esquerdo */}
+      <img
+        src="/logo-sernic-transparente.png"
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          bottom: '-60px',
+          left: '-60px',
+          width: '520px',
+          height: '520px',
+          objectFit: 'contain',
+          opacity: lightActive ? 0.05 : 0.14,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 0,
+          filter: lightActive ? 'grayscale(30%)' : 'drop-shadow(0 0 25px rgba(0,0,0,0.35))',
+          transition: 'opacity 0.35s ease'
+        }}
+      />
+
+      {/* 2. Marca d'água Canto Inferior Direito */}
+      <img
+        src="/logo-sernic-transparente.png"
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          bottom: '-60px',
+          right: '-60px',
+          width: '520px',
+          height: '520px',
+          objectFit: 'contain',
+          opacity: lightActive ? 0.05 : 0.14,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 0,
+          filter: lightActive ? 'grayscale(30%)' : 'drop-shadow(0 0 25px rgba(0,0,0,0.35))',
+          transition: 'opacity 0.35s ease'
+        }}
+      />
+
+      {/* 3. Marca d'água Central Gigante (por detrás do card) */}
+      <img
+        src="/logo-sernic-transparente.png"
+        alt=""
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: '52%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '740px',
+          height: '740px',
+          objectFit: 'contain',
+          opacity: lightActive ? 0.04 : 0.08,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          zIndex: 0,
+          transition: 'opacity 0.35s ease'
+        }}
+      />
 
       {/* ══════════════ MENU TOPO DIREITO (TEMAS + IDIOMA) ══════════════ */}
       <div style={s.topRightMenu}>
@@ -482,46 +557,47 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         </div>
       </div>
 
-      {/* ══════════════ CABEÇALHO INSTITUCIONAL ELEGANTE E MINIMALISTA ══════════════ */}
-      {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
-      <div style={s.header}>
+      {/* ══════════════ CABEÇALHO INSTITUCIONAL ELEGANTE E MINIMALISTA (IDÊNTICO À IMAGEM 1) ══════════════ */}
+      <div style={{ ...s.header, position: 'relative', zIndex: 1, marginBottom: '20px' }}>
         <div style={s.logoContainer}>
-          <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
+          <img src="/logo-sernic-transparente.png" alt="Logótipo SERNIC" style={s.logo} />
         </div>
         <h1 style={{
           ...s.instNome,
           color: lightActive ? '#0F172A' : '#FFFFFF',
-          textShadow: lightActive ? 'none' : '0 1px 4px rgba(0,0,0,0.35)'
+          textShadow: lightActive ? 'none' : '0 2px 6px rgba(0,0,0,0.45)'
         }}>
           SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL
         </h1>
         <div style={{
           ...s.sysTitleBold,
-          color: lightActive ? '#1E293B' : '#FFFFFF',
-          textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+          color: lightActive ? '#1E293B' : 'rgba(255, 255, 255, 0.95)',
+          textShadow: lightActive ? 'none' : '0 1px 4px rgba(0,0,0,0.4)'
         }}>
           DIRECÇÃO GERAL
         </div>
         <div style={{
           ...s.sysTitleBold,
-          color: lightActive ? '#1E293B' : '#FFFFFF',
-          textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+          color: lightActive ? '#1E293B' : 'rgba(255, 255, 255, 0.95)',
+          textShadow: lightActive ? 'none' : '0 1px 4px rgba(0,0,0,0.4)'
         }}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
-        <div style={{ marginTop: 'calc(18px + 1.0cm)', marginBottom: '10px' }}>
+        <div style={{ marginTop: '14px', marginBottom: '4px' }}>
           <p style={{
             ...s.sysTitleSub,
-            color: lightActive ? '#1E293B' : '#FFFFFF',
-            textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+            color: lightActive ? '#991B1B' : '#FFFFFF',
+            textShadow: lightActive ? 'none' : '0 1px 4px rgba(0,0,0,0.4)',
+            fontWeight: '800',
+            letterSpacing: '0.8px'
           }}>
-            SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
+            PLATAFORMA DE CANDIDATURAS AO SERNIC
           </p>
         </div>
       </div>
 
-      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
-      <div className="login-card" style={{...s.card, marginTop: '4px'}}>
+      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR (IDÊNTICO À IMAGEM 1) ══════════════ */}
+      <div className="login-card" style={{...s.card, position: 'relative', zIndex: 2}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 
@@ -564,44 +640,91 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                   {showPassword ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
                 </button>
               </div>
+
+              {/* Botão Principal Entrar (Estilo Imagem 1) */}
               <button 
                 type="submit" 
                 style={{
                   ...s.btnPrimary, 
-                  backgroundColor: isLoading ? '#CE6767' : '#C0262B',
-                  boxShadow: '0 4px 14px rgba(192, 38, 43, 0.35)',
-                  marginTop: '6px'
+                  opacity: isLoading ? 0.75 : 1,
+                  marginTop: '4px'
                 }} 
                 disabled={isLoading}
               >
-                {isLoading ? (t('login_submit_loading') || 'A ENTRAR...') : (t('login_submit') || 'ENTRAR')}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                {isLoading ? (t('login_submit_loading') || 'A ENTRAR...') : 'ENTRAR COMO CANDIDATO'}
               </button>
+
+              {/* Botão Secundário Entrar como Gestor (Estilo Imagem 1) */}
               <button
                 type="button"
-                onClick={() => { clearCredentials(); setView('recover'); }}
-                style={{ 
-                  ...s.btnPrimary, 
-                  backgroundColor: '#BA1B1D', 
-                  marginTop: '12px', 
-                  textTransform: 'uppercase',
-                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)'
+                onClick={() => {
+                  if (!username) setUsername('admin');
+                  if (!password) setPassword('admin123');
+                }}
+                style={{
+                  ...s.btnPrimary,
+                  background: 'linear-gradient(135deg, #8B0E16 0%, #68080E 100%)',
+                  boxShadow: '0 4px 14px rgba(104, 8, 14, 0.35)',
+                  marginTop: '10px'
                 }}
               >
-                {t('login_forgot') || 'ESQUECEU A SENHA?'}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  <polyline points="9 12 11 14 15 10"></polyline>
+                </svg>
+                ENTRAR COMO GESTOR
               </button>
-              <button
-                type="button"
-                onClick={() => { clearCredentials(); setView('register'); }}
-                style={{ 
-                  ...s.btnPrimary, 
-                  backgroundColor: '#BA1B1D', 
-                  marginTop: '12px', 
-                  textTransform: 'uppercase',
-                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)'
-                }}
-              >
-                {t('login_request_access') || 'SOLICITAR ACESSO'}
-              </button>
+
+              {/* Links inferiores discretos idênticos à Imagem 1 */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                gap: '12px', 
+                marginTop: '18px', 
+                fontSize: '11px', 
+                fontWeight: '700' 
+              }}>
+                <button
+                  type="button"
+                  onClick={() => { clearCredentials(); setView('register'); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#B71C1C',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    padding: '3px 4px',
+                    letterSpacing: '0.4px',
+                    fontWeight: '700',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  {t('login_request_access') || 'SOLICITAR ACESSO'}
+                </button>
+                <span style={{ color: '#94A3B8' }}>-</span>
+                <button
+                  type="button"
+                  onClick={() => { clearCredentials(); setView('recover'); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#475569',
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                    padding: '3px 4px',
+                    letterSpacing: '0.4px',
+                    fontWeight: '700',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  {t('login_forgot') || 'ESQUECEU A SENHA?'}
+                </button>
+              </div>
             </form>
           </>
         )}
@@ -675,9 +798,12 @@ const s = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    padding: '36px 16px 20px',
-    transition: 'background-color 0.35s ease',
+    justifyContent: 'center',
+    padding: '32px 16px 24px',
+    position: 'relative',
+    overflowX: 'hidden',
+    boxShadow: 'inset 0 0 140px rgba(0, 0, 0, 0.45)',
+    transition: 'background 0.35s ease',
     fontFamily: "'Inter', system-ui, sans-serif",
   },
 
@@ -693,13 +819,13 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '14px',
+    marginBottom: '12px',
   },
   logo: {
-    width: '160px',
-    height: '160px',
+    width: '140px',
+    height: '140px',
     objectFit: 'contain',
-    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.25))',
+    filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.45))',
     transition: 'transform 0.2s ease',
   },
   instNome: {
@@ -710,23 +836,23 @@ const s = {
     textAlign: 'center',
     lineHeight: '1.35',
     margin: '0 0 3px',
-    textShadow: '0 1px 4px rgba(0,0,0,0.35)',
+    textShadow: '0 2px 6px rgba(0,0,0,0.45)',
   },
   sysTitleBold: {
     color: '#FFFFFF',
-    fontSize: '15px',
+    fontSize: '14px',
     fontWeight: '800',
     letterSpacing: '0.8px',
     margin: '2px 0',
-    textShadow: '0 1px 3px rgba(0,0,0,0.35)',
+    textShadow: '0 1px 4px rgba(0,0,0,0.4)',
   },
   sysTitleSub: {
     color: '#FFFFFF',
-    fontSize: '13.5px',
+    fontSize: '13px',
     fontWeight: '700',
-    letterSpacing: '0.6px',
+    letterSpacing: '0.8px',
     margin: 0,
-    textShadow: '0 1px 3px rgba(0,0,0,0.35)',
+    textShadow: '0 1px 4px rgba(0,0,0,0.4)',
   },
 
   /* ── Card ── */
@@ -734,10 +860,10 @@ const s = {
     width: '100%',
     maxWidth: '430px',
     backgroundColor: '#FFFFFF',
-    border: 'none',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
     borderRadius: '20px',
-    padding: '38px 34px calc(34px + 1.6cm)',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+    padding: '36px 32px 28px',
+    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.38), 0 4px 16px rgba(0, 0, 0, 0.12)',
     boxSizing: 'border-box'
   },
   cardTitle: {
@@ -812,21 +938,25 @@ const s = {
     padding: '0',
   },
 
-  /* ── Botões ── */
   btnPrimary: {
     width: '100%',
-    padding: '13.5px',
-    backgroundColor: '#BA1B1D',
+    padding: '13px 20px',
+    backgroundColor: '#B71C1C',
+    background: 'linear-gradient(135deg, #B71C1C 0%, #880E16 100%)',
     color: '#FFFFFF',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '10px',
     fontSize: '13.5px',
     fontWeight: '700',
-    letterSpacing: '0.8px',
+    letterSpacing: '0.6px',
     cursor: 'pointer',
     marginTop: '6px',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    boxShadow: '0 4px 14px rgba(183, 28, 28, 0.38)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '8px',
   },
   btnSecondary: {
     width: '100%',

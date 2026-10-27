@@ -18150,24 +18150,6 @@
         "Auditoria": [],
         "Acessos e Perfis": []
       }
-    },
-    {
-      "id": "tecnico_reserva",
-      "name": "Técnico de Pensões e Reserva",
-      "description": "RH Central - Específico para Reserva e Reforma",
-      "permissions": {
-        "reserva_reforma": true,
-        "view_employees": true
-      }
-    },
-    {
-      "id": "tecnico_saude",
-      "name": "Técnico de Saúde e Óbitos",
-      "description": "RH Central - Específico para Saúde e Óbitos",
-      "permissions": {
-        "saude_obitos": true,
-        "view_employees": true
-      }
     }
   ],
   "actTypes": [
