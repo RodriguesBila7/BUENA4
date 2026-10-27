@@ -109,7 +109,7 @@ export function requireRole(allowedRoles = []) {
       const isAllowed = normalizedAllowed.some(allowedPattern => {
         if (allowedPattern === normalizedRole) return true;
         if (allowedPattern === 'admin_central' && ['super_admin_1', 'admin_1', 'admin_2'].includes(normalizedRole)) return true;
-        if (allowedPattern === 'central' && ['super_admin_1', 'admin_1', 'admin_2'].includes(normalizedRole)) return true;
+        if (allowedPattern === 'central' && ['super_admin_1', 'admin_1', 'admin_2', 'tecnico_reserva', 'tecnico_saude'].includes(normalizedRole)) return true;
         return false;
       });
 

@@ -5,13 +5,13 @@
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Temas e Cores Dinâmicas (Serão sobrescritas via inline JS no Super Admin) */
-  --color-primary: #B71C1C;    /* Vermelho Institucional oficial SERNIC */
+  --color-primary: #DC2626;    /* Vermelho Institucional padrão */
   --color-secondary: #2D3748;  /* Cinza Escuro padrão */
   --color-accent: #FFFFFF;     /* Branco de Destaque padrão */
 
-  /* Cores de Fundo e Superfícies (Modo Claro Oficial) */
-  --color-bg-base: #F8FAFC;
-  --color-bg-card: #FFFFFF;
+  /* Cores de Fundo e Texto do Modo Claro (invertidas: base ↔ card) */
+  --color-bg-base: #FFFFFF;
+  --color-bg-card: #F8FAFC;
   --color-bg-subtle: #F1F5F9;
   --color-bg-sidebar: #1E293B; /* Sidebar sempre escura para contraste institucional */
   --color-sidebar-text: #F8FAFC;

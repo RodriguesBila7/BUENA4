@@ -58,6 +58,18 @@ const roles = [
     permissions: JSON.stringify(provincialPermissions)
   },
   {
+    id: 'tecnico_reserva',
+    name: 'Técnico de Pensões e Reserva',
+    description: 'RH Central - Específico para Reserva e Reforma',
+    permissions: JSON.stringify({ reserva_reforma: true, view_employees: true })
+  },
+  {
+    id: 'tecnico_saude',
+    name: 'Técnico de Saúde e Óbitos',
+    description: 'RH Central - Específico para Saúde e Óbitos',
+    permissions: JSON.stringify({ saude_obitos: true, view_employees: true })
+  },
+  {
     id: 'usuario_normal',
     name: 'Usuário',
     description: 'Adjuntos dos Administradores (Podem substituir Usuários Administrativos)',
@@ -69,7 +81,6 @@ db.transaction(() => {
   db.prepare("UPDATE users SET role_id = 'super_admin_1' WHERE role_id = 'super_admin' OR username = 'admin'").run();
   db.prepare("UPDATE users SET role_id = 'usuario_normal' WHERE role_id = 'user'").run();
   db.prepare("DELETE FROM roles WHERE id = 'super_admin' OR id = 'user'").run();
-  db.prepare("DELETE FROM roles WHERE (id = 'tecnico_reserva' OR id = 'tecnico_saude') AND id NOT IN (SELECT role_id FROM users WHERE role_id IS NOT NULL)").run();
 
   const updateStmt = db.prepare('UPDATE roles SET description = ?, permissions = ? WHERE id = ?');
   const insertStmt = db.prepare('INSERT INTO roles (id, name, description, permissions) VALUES (?, ?, ?, ?)');

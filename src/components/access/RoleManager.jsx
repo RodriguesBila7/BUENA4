@@ -12,7 +12,9 @@ const HIERARCHY_ORDER = {
   'Super Administrador': 2,
   'Administrador Principal': 3,
   'Administrador': 4,
-  'Usuário': 5
+  'Técnico de Pensões e Reserva': 5,
+  'Técnico de Saúde e Óbitos': 6,
+  'Usuário': 7
 };
 
 const getLevelInfo = (roleName) => {
@@ -25,6 +27,10 @@ const getLevelInfo = (roleName) => {
       return { level: '3º Nível (Central RH)', icon: '🛡️', color: '#065f46', bg: '#ecfdf5', border: '#6ee7b7' };
     case 'Administrador':
       return { level: '4º Nível (Provincial)', icon: '🏛️', color: '#6b21a8', bg: '#faf5ff', border: '#d8b4fe' };
+    case 'Técnico de Pensões e Reserva':
+      return { level: 'Específico (Reserva)', icon: '📜', color: '#9a3412', bg: '#fff7ed', border: '#ffedd5' };
+    case 'Técnico de Saúde e Óbitos':
+      return { level: 'Específico (Saúde)', icon: '⚕️', color: '#075985', bg: '#f0f9ff', border: '#bae6fd' };
     case 'Usuário':
       return { level: '5º Nível (Adjunto)', icon: '👥', color: '#334155', bg: '#f8fafc', border: '#cbd5e1' };
     default:

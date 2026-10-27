@@ -1617,93 +1617,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
       {/* CONTEÚDO PRINCIPAL DA APLICAÇÃO */}
       <main className="app-main-content" style={styles.mainContent}>
-        {/* ══════════════ BARRA SUPERIOR INSTITUCIONAL DA REPÚBLICA (IDÊNTICO À IMAGEM 2) ══════════════ */}
-        <div className="no-print" style={{
-          backgroundColor: '#120204',
-          color: '#e2e8f0',
-          padding: '6px 24px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '11px',
-          fontWeight: '700',
-          letterSpacing: '0.6px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          flexShrink: 0,
-          zIndex: 45
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px' }}>🇲🇿</span>
-            <span style={{ color: '#f1f5f9' }}>REPÚBLICA DE MOÇAMBIQUE</span>
-            <span style={{ opacity: 0.4 }}>•</span>
-            <span style={{ color: '#fbbf24' }}>SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{
-              background: 'rgba(245, 158, 11, 0.15)',
-              color: '#fcd34d',
-              padding: '2px 8px',
-              borderRadius: '12px',
-              fontSize: '10px',
-              border: '1px solid rgba(245, 158, 11, 0.35)',
-              fontWeight: '800'
-            }}>
-              SERNIC • DRH 2026
-            </span>
-            <span style={{ color: '#94a3b8', fontSize: '10.5px', fontWeight: '500' }}>
-              Portal Oficial de Gestão e Efectividade
-            </span>
-          </div>
-        </div>
-
-        {/* ══════════════ MARCAS D'ÁGUA FIXAS DO SERNIC NO FUNDO (IDÊNTICO À IMAGEM 2) ══════════════ */}
-        <div 
-          className="system-watermark-overlay"
-          aria-hidden="true"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: isSidebarOpen ? '260px' : '0',
-            right: 0,
-            bottom: 0,
-            pointerEvents: 'none',
-            zIndex: 0,
-            overflow: 'hidden',
-            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        >
-          {/* Marca d'água Canto Inferior Esquerdo */}
-          <img 
-            src="/logo-sernic-transparente.png" 
-            alt="" 
-            style={{
-              position: 'absolute',
-              bottom: '-70px',
-              left: '-70px',
-              width: '500px',
-              height: '500px',
-              objectFit: 'contain',
-              opacity: settings.modo_tema === 'dark' ? 0.055 : 0.045,
-              userSelect: 'none'
-            }}
-          />
-          {/* Marca d'água Canto Inferior Direito */}
-          <img 
-            src="/logo-sernic-transparente.png" 
-            alt="" 
-            style={{
-              position: 'absolute',
-              bottom: '-70px',
-              right: '-70px',
-              width: '500px',
-              height: '500px',
-              objectFit: 'contain',
-              opacity: settings.modo_tema === 'dark' ? 0.055 : 0.045,
-              userSelect: 'none'
-            }}
-          />
-        </div>
-
         {/* NAVBAR SUPERIOR (Oculta na impressão) */}
         <header className="no-print app-header" style={styles.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -5306,8 +5219,6 @@ const styles = {
   contentArea: {
     padding: '24px 28px',
     flex: 1,
-    position: 'relative',
-    zIndex: 1,
   },
   tabContainer: {
     maxWidth: '1500px',
