@@ -1137,6 +1137,21 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   return (
     <div className="app-container" style={styles.appContainer}>
 
+      {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO DO SISTEMA (SERNIC) ══════════════ */}
+      <div className="landing-watermark-bg dashboard-watermark" aria-hidden="true">
+        <img
+          src="/logo-sernic-transparente.png"
+          alt=""
+          className="landing-watermark-img"
+        />
+      </div>
+      <div className="landing-watermark-lateral left dashboard-watermark" aria-hidden="true">
+        <img src="/logo-sernic-transparente.png" alt="" />
+      </div>
+      <div className="landing-watermark-lateral right dashboard-watermark" aria-hidden="true">
+        <img src="/logo-sernic-transparente.png" alt="" />
+      </div>
+
       {/* OVERLAY MOBILE — fundo escuro ao abrir sidebar */}
       <div
         className={`sidebar-mobile-overlay${isMobileSidebarOpen ? ' visible' : ''}`}
@@ -4973,6 +4988,7 @@ const styles = {
     overflow: 'hidden',
     backgroundColor: 'var(--color-bg-base)',
     color: 'var(--color-text-base)',
+    position: 'relative',
     transition: 'background-color var(--transition-normal), color var(--transition-normal)',
   },
   sidebar: {
@@ -5116,6 +5132,9 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     overflowY: 'auto',
+    position: 'relative',
+    zIndex: 1,
+    backgroundColor: 'transparent',
   },
   header: {
     minHeight: '74px',

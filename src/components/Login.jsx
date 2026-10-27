@@ -258,6 +258,21 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   return (
     <div className="login-page-root" style={{ ...s.page, backgroundColor: bgColor, transition: 'background-color 0.35s ease' }}>
 
+      {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO (SERNIC) ══════════════ */}
+      <div className="landing-watermark-bg" aria-hidden="true">
+        <img
+          src="/logo-sernic-transparente.png"
+          alt=""
+          className="landing-watermark-img"
+        />
+      </div>
+      <div className="landing-watermark-lateral left" aria-hidden="true">
+        <img src="/logo-sernic-transparente.png" alt="" />
+      </div>
+      <div className="landing-watermark-lateral right" aria-hidden="true">
+        <img src="/logo-sernic-transparente.png" alt="" />
+      </div>
+
       {/* ══════════════ MENU TOPO DIREITO (TEMAS + IDIOMA) ══════════════ */}
       <div style={s.topRightMenu}>
 
@@ -520,8 +535,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         </div>
       </div>
 
-      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
-      <div className="login-card" style={{...s.card, marginTop: '4px'}}>
+      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR (MODO VIDRO) ══════════════ */}
+      <div className="login-card login-card-glass" style={{...s.card, marginTop: '4px'}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 
@@ -679,6 +694,8 @@ const s = {
     padding: '36px 16px 20px',
     transition: 'background-color 0.35s ease',
     fontFamily: "'Inter', system-ui, sans-serif",
+    position: 'relative',
+    overflow: 'hidden',
   },
 
   /* ── Cabeçalho ── */
@@ -688,6 +705,8 @@ const s = {
     alignItems: 'center',
     marginBottom: '0',
     textAlign: 'center',
+    position: 'relative',
+    zIndex: 2,
   },
   logoContainer: {
     display: 'flex',
@@ -729,16 +748,20 @@ const s = {
     textShadow: '0 1px 3px rgba(0,0,0,0.35)',
   },
 
-  /* ── Card ── */
+  /* ── Card (Modo Vidro) ── */
   card: {
     width: '100%',
     maxWidth: '430px',
-    backgroundColor: '#FFFFFF',
-    border: 'none',
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.45)',
     borderRadius: '20px',
     padding: '38px 34px calc(34px + 1.6cm)',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
-    boxSizing: 'border-box'
+    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.12)',
+    boxSizing: 'border-box',
+    position: 'relative',
+    zIndex: 2,
   },
   cardTitle: {
     fontSize: '26px',
