@@ -5,26 +5,67 @@ import useSecuritySettings from '../hooks/useSecuritySettings';
 import useAuditLog from '../hooks/useAuditLog';
 import { getBackgroundModel } from '../utils/backgroundModels';
 
-/* ── Temas pré-definidos ── */
-const TEMAS = [
-  { nome: 'Azul Institucional', cor: '#1B365D' },
-  { nome: 'Azul Escuro',        cor: '#0D1B4B' },
-  { nome: 'Azul Real',          cor: '#1565C0' },
-  { nome: 'Azul Aço',          cor: '#0277BD' },
-  { nome: 'Verde Institucional', cor: '#1B5E20' },
-  { nome: 'Verde Esmeralda',    cor: '#00695C' },
-  { nome: 'Verde Oliva',        cor: '#33691E' },
+/* ── Paleta Expandida de Temas e Cores (46 Cores Nobres e Profissionais) ── */
+export const TEMAS = [
+  // Vermelhos & Carmins
   { nome: 'Vermelho Moçambique', cor: '#B71C1C' },
-  { nome: 'Carmésim',          cor: '#C62828' },
-  { nome: 'Bordô',             cor: '#880E4F' },
-  { nome: 'Roxo Imperial',      cor: '#4A148C' },
-  { nome: 'Roxo Médio',        cor: '#6A1B9A' },
-  { nome: 'Carvão',            cor: '#212121' },
-  { nome: 'Cinza Escuro',       cor: '#37474F' },
-  { nome: 'Laranja Escuro',     cor: '#BF360C' },
-  { nome: 'Castaño Dourado',   cor: '#F57F17' },
-  { nome: 'Teal Profundo',      cor: '#004D40' },
-  { nome: 'Azul Meia-Noite',    cor: '#01579B' },
+  { nome: 'Carmésim Oficial',    cor: '#DC2626' },
+  { nome: 'Rubi Escarlate',      cor: '#C62828' },
+  { nome: 'Bordô Profundo',      cor: '#880E4F' },
+  { nome: 'Granada Nobre',       cor: '#991B1B' },
+  { nome: 'Vinho Executivo',     cor: '#7F1D1D' },
+  { nome: 'Cereja Escuro',       cor: '#9D174D' },
+
+  // Azuis Institucionais & Forenses
+  { nome: 'Azul Institucional',  cor: '#1B365D' },
+  { nome: 'Azul Meia-Noite',     cor: '#0D1B4B' },
+  { nome: 'Azul Real',           cor: '#1565C0' },
+  { nome: 'Azul Aço',           cor: '#0277BD' },
+  { nome: 'Azul Safira',         cor: '#1E40AF' },
+  { nome: 'Azul Cobalto',        cor: '#1D4ED8' },
+  { nome: 'Azul Oceano',         cor: '#0369A1' },
+
+  // Cianos & Teals Tecnológicos
+  { nome: 'Ciano Profundo',      cor: '#0891B2' },
+  { nome: 'Teal Forense',        cor: '#0F766E' },
+  { nome: 'Teal Profundo',       cor: '#004D40' },
+  { nome: 'Turquesa Escuro',     cor: '#0E7490' },
+  { nome: 'Azul Índigo',         cor: '#3730A3' },
+  { nome: 'Índigo Cibernético',  cor: '#4338CA' },
+  { nome: 'Marinho Escuro',      cor: '#0F172A' },
+
+  // Verdes & Táticos
+  { nome: 'Verde Institucional', cor: '#1B5E20' },
+  { nome: 'Verde Esmeralda',     cor: '#00695C' },
+  { nome: 'Verde Floresta',      cor: '#15803D' },
+  { nome: 'Verde Jade',          cor: '#059669' },
+  { nome: 'Verde Oliva',         cor: '#33691E' },
+  { nome: 'Malaquita Forense',   cor: '#047857' },
+  { nome: 'Musgo Tático',        cor: '#3F6212' },
+
+  // Roxos & Violetas
+  { nome: 'Roxo Imperial',       cor: '#4A148C' },
+  { nome: 'Roxo Médio',         cor: '#6A1B9A' },
+  { nome: 'Violeta Real',        cor: '#5B21B6' },
+  { nome: 'Ametista Escura',     cor: '#701A75' },
+  { nome: 'Púrpura Tática',      cor: '#6B21A8' },
+  { nome: 'Ameixa Noturna',      cor: '#581C87' },
+  { nome: 'Rosa Escuro Tático',  cor: '#BE185D' },
+
+  // Âmbar, Dourados & Terracota
+  { nome: 'Âmbar Soberano',      cor: '#D97706' },
+  { nome: 'Castanho Dourado',    cor: '#F57F17' },
+  { nome: 'Terracota Nobre',     cor: '#BF360C' },
+  { nome: 'Bronze Tático',       cor: '#B45309' },
+  { nome: 'Laranja Queimado',    cor: '#C2410C' },
+  { nome: 'Cobre Escuro',        cor: '#78350F' },
+
+  // Grafites & Carvão
+  { nome: 'Carvão Supremo',      cor: '#212121' },
+  { nome: 'Cinza Grafite',       cor: '#37474F' },
+  { nome: 'Titânio Escuro',      cor: '#1E293B' },
+  { nome: 'Ardósia Tática',      cor: '#334155' },
+  { nome: 'Chumbo Operacional',   cor: '#1F2937' },
 ];
 
 export default function Login({ settings, onLogin, updateSettings, t, language, setLanguage }) {
@@ -245,13 +286,15 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const toggleCoresAleatorias = () => {
     const nextVal = !settings.cores_aleatorias;
     setBwMode('theme');
-    const randomTema = nextVal ? TEMAS[Math.floor(Math.random() * TEMAS.length)].cor : settings.cor_principal;
+    const current = (settings.cor_principal || '').toUpperCase();
+    const available = TEMAS.filter(t => t.cor.toUpperCase() !== current);
+    const randomTema = nextVal ? (available[Math.floor(Math.random() * available.length)]?.cor || TEMAS[0].cor) : settings.cor_principal;
     if (updateSettings) {
       updateSettings({
         ...settings,
         cores_aleatorias: nextVal,
         cor_principal: randomTema,
-        usuario_responsavel: 'Modo Cores Aleatórias (Login)'
+        usuario_responsavel: 'Modo Cores Aleatórias 3s (Login)'
       });
     }
   };
@@ -262,7 +305,9 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     ? (selectedBgModel.isDark ? selectedBgModel.bgGradient : 'radial-gradient(ellipse 85% 65% at 50% 25%, #182333 0%, #0F1622 55%, #080D14 100%)')
     : bwMode === 'claro'
     ? '#F8FAFC'
-    : selectedBgModel.bgGradient;
+    : (settings.cores_aleatorias
+        ? `radial-gradient(ellipse 95% 75% at 50% 25%, ${settings.cor_principal} 0%, rgba(15, 23, 42, 0.95) 60%, #020617 100%)`
+        : selectedBgModel.bgGradient);
 
   return (
     <div 
@@ -271,7 +316,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         ...s.page, 
         backgroundColor: bgColor, 
         background: pageBg,
-        transition: 'background 0.35s ease' 
+        transition: 'background 1.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 1.2s ease' 
       }}
     >
 
@@ -473,14 +518,21 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '15px' }}>🎲</span>
-                  <span style={{
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    color: bwMode === 'claro' ? '#2c3e50' : 'var(--color-text-base, #F8FAFC)',
-                    letterSpacing: '0.2px'
-                  }}>
-                    {t('themes_random_mode') || 'Cores Aleatórias'}
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: bwMode === 'claro' ? '#2c3e50' : 'var(--color-text-base, #F8FAFC)',
+                      letterSpacing: '0.2px'
+                    }}>
+                      Cores Aleatórias (a cada 3s)
+                    </span>
+                    {settings.cores_aleatorias && (
+                      <span style={{ fontSize: '9px', color: '#10B981', fontWeight: '800', letterSpacing: '0.4px' }}>
+                        ● A MUDAR CADA 3 SEGUNDOS
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Switch estilo toggle moderno */}
@@ -909,16 +961,16 @@ const s = {
     right: '0',
     backgroundColor: 'var(--color-bg-card, #243044)',
     border: '1px solid var(--color-border, #3A4A66)',
-    borderRadius: '12px',
+    borderRadius: '14px',
     padding: '18px 16px 14px',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
-    width: '252px',
+    boxShadow: '0 16px 48px rgba(0,0,0,0.45)',
+    width: '304px',
     zIndex: 10,
     color: 'var(--color-text-base, #F8FAFC)'
   },
   dropdownTitle: {
-    fontSize: '10px',
-    fontWeight: '700',
+    fontSize: '10.5px',
+    fontWeight: '800',
     color: 'var(--color-text-muted, #A8B7CD)',
     letterSpacing: '0.8px',
     textTransform: 'uppercase',
@@ -930,19 +982,22 @@ const s = {
     margin: '12px 0',
   },
   temaSwatches: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(7, 1fr)',
+    gap: '8px',
+    maxHeight: '210px',
+    overflowY: 'auto',
+    padding: '4px 2px',
   },
   temaSwatch: {
-    width: '22px',
-    height: '22px',
+    width: '26px',
+    height: '26px',
     borderRadius: '50%',
-    border: '1px solid rgba(0,0,0,0.12)',
+    border: '1px solid rgba(255,255,255,0.18)',
     cursor: 'pointer',
     transition: 'transform 0.15s ease, outline 0.15s ease',
     padding: 0,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+    boxShadow: '0 2px 6px rgba(0,0,0,0.22)',
   },
   temaTooltip: {
     fontSize: '11px',

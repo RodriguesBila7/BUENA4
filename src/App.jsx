@@ -19,10 +19,14 @@ const DEFAULT_SETTINGS = {
   usuario_responsavel: 'Sistema (Padrão)'
 };
 
-const CORES_PALETA = [
-  '#B71C1C', '#C62828', '#880E4F', '#DC2626', '#BF360C', '#1B365D',
-  '#0D1B4B', '#1565C0', '#0277BD', '#1B5E20', '#00695C', '#33691E',
-  '#212121', '#37474F', '#F57F17', '#004D40', '#01579B', '#4A148C'
+export const CORES_PALETA = [
+  '#B71C1C', '#DC2626', '#C62828', '#880E4F', '#991B1B', '#7F1D1D', '#9D174D',
+  '#1B365D', '#0D1B4B', '#1565C0', '#0277BD', '#1E40AF', '#1D4ED8', '#0369A1',
+  '#0891B2', '#0F766E', '#004D40', '#0E7490', '#3730A3', '#4338CA', '#0F172A',
+  '#1B5E20', '#00695C', '#15803D', '#059669', '#33691E', '#047857', '#3F6212',
+  '#4A148C', '#6A1B9A', '#5B21B6', '#701A75', '#6B21A8', '#581C87', '#BE185D',
+  '#D97706', '#F57F17', '#BF360C', '#B45309', '#C2410C', '#78350F',
+  '#212121', '#37474F', '#1E293B', '#334155', '#1F2937'
 ];
 
 import { useAuth } from './contexts/AuthContext';
@@ -63,6 +67,31 @@ export default function App() {
       localStorage.setItem('sernic_identity_settings', JSON.stringify(DEFAULT_SETTINGS));
     }
   }, []);
+
+  // Ciclo automático a cada 3 segundos quando o modo de Cores Aleatórias estiver ativo
+  useEffect(() => {
+    if (!settings.cores_aleatorias) return;
+
+    const timer = setInterval(() => {
+      setSettings(prev => {
+        if (!prev.cores_aleatorias) return prev;
+        const current = (prev.cor_principal || '').toUpperCase();
+        const available = CORES_PALETA.filter(c => c.toUpperCase() !== current);
+        const randomCor = available[Math.floor(Math.random() * available.length)] || CORES_PALETA[0];
+        const updated = {
+          ...prev,
+          cor_principal: randomCor,
+          data_atualizacao: new Date().toISOString()
+        };
+        try {
+          localStorage.setItem('sernic_identity_settings', JSON.stringify(updated));
+        } catch (e) {}
+        return updated;
+      });
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [settings.cores_aleatorias]);
 
   // Aplicar cores, modelo de fundo e tema globalmente sempre que houver alteração
   useEffect(() => {
