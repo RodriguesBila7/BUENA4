@@ -1160,7 +1160,7 @@ button.evaluation-tab.active:focus,
 }
 
 /* ========================================================
-   MARCA DE ÁGUA OFICIAL NO FUNDO DO SISTEMA (SERNIC)
+   MARCA DE ÁGUA OFICIAL NO FUNDO DO SISTEMA (SERNIC) - ALTA DEFINIÇÃO E NITIDEZ
    ======================================================== */
 .landing-watermark-bg {
   position: fixed;
@@ -1182,20 +1182,25 @@ button.evaluation-tab.active:focus,
   max-width: 92vw;
   max-height: 88vh;
   object-fit: contain;
-  opacity: 0.12;
+  opacity: 0.16;
   user-select: none;
-  filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.45));
-  transition: opacity 0.4s ease, filter 0.4s ease;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  filter: contrast(1.15) saturate(1.18) brightness(1.02);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transition: opacity 0.3s ease, filter 0.3s ease;
 }
 
 [data-theme="dark"] .landing-watermark-img {
-  opacity: 0.085;
-  filter: drop-shadow(0 0 60px rgba(0, 0, 0, 0.9));
+  opacity: 0.12;
+  filter: contrast(1.2) saturate(1.2) brightness(1.05);
 }
 
 [data-theme="light"] .landing-watermark-img {
-  opacity: 0.07;
-  filter: drop-shadow(0 0 40px rgba(183, 28, 28, 0.15));
+  opacity: 0.09;
+  filter: contrast(1.1) saturate(1.1);
 }
 
 /* MARCAS DE ÁGUA OFICIAIS LATERAIS (ESQUERDA E DIREITA) */
@@ -1203,8 +1208,8 @@ button.evaluation-tab.active:focus,
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  width: 480px;
-  height: 480px;
+  width: 500px;
+  height: 500px;
   pointer-events: none;
   z-index: 0;
   display: flex;
@@ -1212,62 +1217,70 @@ button.evaluation-tab.active:focus,
   justify-content: center;
   overflow: hidden;
   user-select: none;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.3s ease;
 }
 
 .landing-watermark-lateral.left {
-  left: -80px;
+  left: -90px;
 }
 
 .landing-watermark-lateral.right {
-  right: -80px;
+  right: -90px;
 }
 
 .landing-watermark-lateral img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  opacity: 0.11;
-  filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.4));
+  opacity: 0.14;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  filter: contrast(1.15) saturate(1.18) brightness(1.02);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 [data-theme="dark"] .landing-watermark-lateral img {
-  opacity: 0.075;
-  filter: drop-shadow(0 0 50px rgba(0, 0, 0, 0.85));
+  opacity: 0.10;
+  filter: contrast(1.2) saturate(1.2) brightness(1.05);
 }
 
 [data-theme="light"] .landing-watermark-lateral img {
-  opacity: 0.06;
-  filter: drop-shadow(0 0 35px rgba(183, 28, 28, 0.12));
+  opacity: 0.08;
+  filter: contrast(1.1) saturate(1.1);
 }
 
 /* Marca de água no interior do sistema (Dashboard) */
 .dashboard-watermark .landing-watermark-img,
 .dashboard-watermark.landing-watermark-lateral img {
-  opacity: 0.055 !important;
+  opacity: 0.075 !important;
+  filter: contrast(1.12) saturate(1.15);
 }
 
 [data-theme="dark"] .dashboard-watermark .landing-watermark-img,
 [data-theme="dark"] .dashboard-watermark.landing-watermark-lateral img {
-  opacity: 0.045 !important;
+  opacity: 0.06 !important;
+  filter: contrast(1.15) saturate(1.2);
 }
 
-/* Glassmorphism / Modo Vidro para o Card de Login */
+/* Glassmorphism / Modo Vidro para o Card de Login - Ultra Nítido e Translúcido */
 .login-card-glass {
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.45) !important;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
   position: relative !important;
   z-index: 2 !important;
 }
 
 [data-theme="dark"] .login-card-glass {
-  background: rgba(30, 41, 59, 0.82) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5) !important;
+  background: rgba(24, 32, 47, 0.82) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
 }
+
 

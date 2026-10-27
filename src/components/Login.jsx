@@ -255,22 +255,38 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     }
   };
 
+  const pageBg = bwMode === 'noite'
+    ? 'radial-gradient(ellipse at 50% 35%, #222E42 0%, #151D2A 60%, #0F1520 100%)'
+    : bwMode === 'claro'
+    ? '#F8FAFC'
+    : `radial-gradient(ellipse at 50% 35%, #9E1B1B 0%, ${bgColor} 50%, #5C0B0B 100%)`;
+
   return (
-    <div className="login-page-root" style={{ ...s.page, backgroundColor: bgColor, transition: 'background-color 0.35s ease' }}>
+    <div 
+      className="login-page-root" 
+      style={{ 
+        ...s.page, 
+        backgroundColor: bgColor, 
+        background: pageBg,
+        transition: 'background 0.35s ease' 
+      }}
+    >
 
       {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO (SERNIC) ══════════════ */}
       <div className="landing-watermark-bg" aria-hidden="true">
         <img
           src="/logo-sernic-transparente.png"
           alt=""
+          loading="eager"
+          decoding="sync"
           className="landing-watermark-img"
         />
       </div>
       <div className="landing-watermark-lateral left" aria-hidden="true">
-        <img src="/logo-sernic-transparente.png" alt="" />
+        <img src="/logo-sernic-transparente.png" alt="" loading="eager" decoding="sync" />
       </div>
       <div className="landing-watermark-lateral right" aria-hidden="true">
-        <img src="/logo-sernic-transparente.png" alt="" />
+        <img src="/logo-sernic-transparente.png" alt="" loading="eager" decoding="sync" />
       </div>
 
       {/* ══════════════ MENU TOPO DIREITO (TEMAS + IDIOMA) ══════════════ */}

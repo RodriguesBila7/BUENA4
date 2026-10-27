@@ -1142,14 +1142,16 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         <img
           src="/logo-sernic-transparente.png"
           alt=""
+          loading="eager"
+          decoding="sync"
           className="landing-watermark-img"
         />
       </div>
       <div className="landing-watermark-lateral left dashboard-watermark" aria-hidden="true">
-        <img src="/logo-sernic-transparente.png" alt="" />
+        <img src="/logo-sernic-transparente.png" alt="" loading="eager" decoding="sync" />
       </div>
       <div className="landing-watermark-lateral right dashboard-watermark" aria-hidden="true">
-        <img src="/logo-sernic-transparente.png" alt="" />
+        <img src="/logo-sernic-transparente.png" alt="" loading="eager" decoding="sync" />
       </div>
 
       {/* OVERLAY MOBILE — fundo escuro ao abrir sidebar */}
