@@ -3,6 +3,7 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import useTranslation from './hooks/useTranslation';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
+import { getBackgroundModel } from './utils/backgroundModels';
 
 const DEFAULT_SETTINGS = {
   nome_instituicao: 'Serviço Nacional de Investigação Criminal',
@@ -13,6 +14,7 @@ const DEFAULT_SETTINGS = {
   cor_destaque: '#FFFFFF',
   modo_tema: 'light',
   cores_aleatorias: false,
+  modelo_fundo: 'soberania_sernic', // Fundo futurista, elegante e simples padrão
   data_atualizacao: new Date().toISOString(),
   usuario_responsavel: 'Sistema (Padrão)'
 };
@@ -42,6 +44,9 @@ export default function App() {
         if (!parsed.cor_principal || parsed.cor_principal.toUpperCase() === '#1B365D') {
           parsed.cor_principal = '#B71C1C';
         }
+        if (!parsed.modelo_fundo) {
+          parsed.modelo_fundo = 'soberania_sernic';
+        }
         // Se a opção de cores aleatórias estiver ativa, sorteia uma cor ao iniciar/recarregar a página
         if (parsed.cores_aleatorias) {
           const randomCor = CORES_PALETA[Math.floor(Math.random() * CORES_PALETA.length)];
@@ -59,13 +64,15 @@ export default function App() {
     }
   }, []);
 
-  // Aplicar cores e tema globalmente sempre que houver alteração
+  // Aplicar cores, modelo de fundo e tema globalmente sempre que houver alteração
   useEffect(() => {
     const activeColor = (!settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D')
       ? '#B71C1C'
       : settings.cor_principal;
 
-    // Injeção de variáveis CSS customizadas
+    const activeBgModel = getBackgroundModel(settings.modelo_fundo || 'soberania_sernic');
+
+    // Injeção de variáveis CSS customizadas de cores e fundo
     if (settings.modo_tema === 'dark') {
       document.documentElement.style.setProperty('--color-primary', activeColor);
       document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria || '#3A4A66');
@@ -76,6 +83,11 @@ export default function App() {
       document.documentElement.style.setProperty('--color-accent', settings.cor_destaque || '#FFFFFF');
     }
     
+    // Injeção de variáveis do modelo de fundo futurista simples
+    document.documentElement.style.setProperty('--system-bg-gradient', activeBgModel.bgGradient);
+    document.documentElement.style.setProperty('--system-glow-color', activeBgModel.glowColor);
+    document.documentElement.style.setProperty('--system-watermark-opacity', String(activeBgModel.watermarkOpacity));
+
     // Injeção do modo de tema no html/root
     document.documentElement.setAttribute('data-theme', settings.modo_tema || 'light');
   }, [settings]);

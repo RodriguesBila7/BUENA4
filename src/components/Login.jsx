@@ -3,6 +3,7 @@ import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
 import useAuthData from '../hooks/useAuthData';
 import useSecuritySettings from '../hooks/useSecuritySettings';
 import useAuditLog from '../hooks/useAuditLog';
+import { getBackgroundModel } from '../utils/backgroundModels';
 
 /* ── Temas pré-definidos ── */
 const TEMAS = [
@@ -255,13 +256,13 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     }
   };
 
+  const selectedBgModel = getBackgroundModel(settings?.modelo_fundo);
+
   const pageBg = bwMode === 'noite'
-    ? 'radial-gradient(ellipse 85% 65% at 50% 25%, #182333 0%, #0F1622 55%, #080D14 100%)'
+    ? (selectedBgModel.isDark ? selectedBgModel.bgGradient : 'radial-gradient(ellipse 85% 65% at 50% 25%, #182333 0%, #0F1622 55%, #080D14 100%)')
     : bwMode === 'claro'
     ? '#F8FAFC'
-    : (settings.cor_principal && settings.cor_principal !== '#1B365D'
-        ? `radial-gradient(ellipse 90% 70% at 50% 25%, ${settings.cor_principal} 0%, #4A080B 55%, #180204 100%)`
-        : 'radial-gradient(ellipse 90% 70% at 50% 25%, #7D1316 0%, #45080B 55%, #1A0204 100%)');
+    : selectedBgModel.bgGradient;
 
   return (
     <div 
@@ -274,25 +275,16 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       }}
     >
 
-      {/* ══════════════ GRELHA CIBERNÉTICA / TECNOLÓGICA DIGITAL ══════════════ */}
-      <div className="tech-cyber-grid" aria-hidden="true" />
-
-      {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO COM SELO HOLOGRÁFICO ══════════════ */}
+      {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO (SERNIC) ══════════════ */}
       <div className="landing-watermark-bg" aria-hidden="true">
-        <div className="tech-hologram-seal" />
         <img
           src="/logo-sernic-transparente.png"
           alt=""
           loading="eager"
           decoding="sync"
           className="landing-watermark-img"
+          style={{ opacity: selectedBgModel.watermarkOpacity }}
         />
-      </div>
-      <div className="landing-watermark-lateral left" aria-hidden="true">
-        <img src="/logo-sernic-transparente.png" alt="" loading="eager" decoding="sync" />
-      </div>
-      <div className="landing-watermark-lateral right" aria-hidden="true">
-        <img src="/logo-sernic-transparente.png" alt="" loading="eager" decoding="sync" />
       </div>
 
       {/* ══════════════ MENU TOPO DIREITO (TEMAS + IDIOMA) ══════════════ */}

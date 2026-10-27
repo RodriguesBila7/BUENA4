@@ -1160,39 +1160,10 @@ button.evaluation-tab.active:focus,
 }
 
 /* ========================================================
-   FUNDO TECNOLÓGICO, FUTURISTA E PROFISSIONAL (SERNIC CYBER-SECURITY)
+   FUNDO SIMPLES, NÍTIDO E PROFISSIONAL (SERNIC)
    ======================================================== */
 .tech-cyber-grid {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 0;
-  background-image: 
-    radial-gradient(rgba(255, 255, 255, 0.08) 1.2px, transparent 1.2px),
-    linear-gradient(to right, rgba(255, 255, 255, 0.016) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
-  background-size: 32px 32px, 128px 128px, 128px 128px;
-  background-position: center center;
-}
-
-[data-theme="dark"] .tech-cyber-grid {
-  background-image: 
-    radial-gradient(rgba(255, 255, 255, 0.05) 1.2px, transparent 1.2px),
-    linear-gradient(to right, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
-}
-
-[data-theme="light"] .tech-cyber-grid {
-  background-image: 
-    radial-gradient(rgba(183, 28, 28, 0.06) 1.2px, transparent 1.2px),
-    linear-gradient(to right, rgba(183, 28, 28, 0.014) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(183, 28, 28, 0.014) 1px, transparent 1px);
-}
-
-.dashboard-tech-grid {
-  opacity: 0.35;
+  display: none !important;
 }
 
 /* ========================================================
@@ -1213,125 +1184,245 @@ button.evaluation-tab.active:focus,
   overflow: hidden;
 }
 
-/* Anel de Selo Holográfico de Segurança Digital */
-.tech-hologram-seal {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 780px;
-  height: 780px;
-  border-radius: 50%;
-  border: 1px dashed rgba(255, 255, 255, 0.12);
-  box-shadow: 0 0 90px rgba(220, 38, 38, 0.2), inset 0 0 70px rgba(220, 38, 38, 0.12);
-  pointer-events: none;
-  animation: hudPulse 8s ease-in-out infinite alternate;
-}
-
-.tech-hologram-seal::before {
-  content: '';
-  position: absolute;
-  inset: -30px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.tech-hologram-seal::after {
-  content: '';
-  position: absolute;
-  inset: 45px;
-  border-radius: 50%;
-  border: 1px dashed rgba(245, 158, 11, 0.08);
-}
-
-@keyframes hudPulse {
-  0% { transform: translate(-50%, -50%) scale(0.985); opacity: 0.75; }
-  100% { transform: translate(-50%, -50%) scale(1.015); opacity: 1; }
-}
-
 .landing-watermark-img {
-  width: 900px;
-  max-width: 90vw;
-  max-height: 84vh;
+  width: 820px;
+  max-width: 88vw;
+  max-height: 82vh;
   object-fit: contain;
-  opacity: 0.10;
+  opacity: var(--system-watermark-opacity, 0.075);
   user-select: none;
   image-rendering: -webkit-optimize-contrast;
-  filter: drop-shadow(0 0 45px rgba(220, 38, 38, 0.32));
   transition: opacity 0.35s ease;
   position: relative;
-  z-index: 1;
+  z-index: 0;
 }
 
 [data-theme="dark"] .landing-watermark-img {
-  opacity: 0.08;
-  filter: drop-shadow(0 0 50px rgba(220, 38, 38, 0.45));
+  opacity: calc(var(--system-watermark-opacity, 0.075) * 0.9);
 }
 
 [data-theme="light"] .landing-watermark-img {
-  opacity: 0.06;
-  filter: drop-shadow(0 0 35px rgba(183, 28, 28, 0.15));
+  opacity: calc(var(--system-watermark-opacity, 0.075) * 0.7);
 }
 
-/* MARCAS DE ÁGUA OFICIAIS LATERAIS (ESQUERDA E DIREITA) */
+/* Esconder marcas laterais duplicadas para eliminar poluição visual */
 .landing-watermark-lateral {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 480px;
-  height: 480px;
-  pointer-events: none;
-  z-index: 0;
+  display: none !important;
+}
+
+/* Marca de água no interior do sistema (Dashboard) - Ultra sutil, elegante e limpa */
+.dashboard-watermark .landing-watermark-img {
+  opacity: 0.028 !important;
+}
+
+[data-theme="dark"] .dashboard-watermark .landing-watermark-img {
+  opacity: 0.024 !important;
+}
+
+/* ========================================================
+   CATÁLOGO DE MODELOS DE FUNDO FUTURISTAS (DEFINIÇÕES)
+   ======================================================== */
+.bg-models-section {
+  grid-column: 1 / -1;
+  background-color: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bg-models-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 16px;
+}
+
+.bg-models-title-area h4 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-text-base);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bg-models-title-area p {
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.bg-category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bg-category-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bg-category-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text-base);
+}
+
+.bg-category-btn.active {
+  background-color: var(--color-primary);
+  color: var(--color-accent);
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(183, 28, 28, 0.25);
+}
+
+.bg-models-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.bg-model-card {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: var(--color-bg-base);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  cursor: pointer;
+}
+
+.bg-model-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.bg-model-card.selected {
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.2), 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.bg-model-preview {
+  height: 110px;
+  width: 100%;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  user-select: none;
-  transition: opacity 0.35s ease;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.landing-watermark-lateral.left {
-  left: -80px;
-}
-
-.landing-watermark-lateral.right {
-  right: -80px;
-}
-
-.landing-watermark-lateral img {
-  width: 100%;
-  height: 100%;
+.bg-model-preview-watermark {
+  width: 65px;
+  height: 65px;
   object-fit: contain;
-  opacity: 0.075;
-  filter: drop-shadow(0 0 35px rgba(220, 38, 38, 0.22));
+  pointer-events: none;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
 }
 
-[data-theme="dark"] .landing-watermark-lateral img {
-  opacity: 0.06;
-  filter: drop-shadow(0 0 40px rgba(220, 38, 38, 0.35));
+.bg-model-badge-active {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #10B981;
+  color: #FFFFFF;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-[data-theme="light"] .landing-watermark-lateral img {
-  opacity: 0.045;
-  filter: drop-shadow(0 0 25px rgba(183, 28, 28, 0.1));
+.bg-model-info {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
 }
 
-/* Marca de água no interior do sistema (Dashboard) - Tecnológico, sutil e sem poluição */
-.dashboard-watermark .landing-watermark-img {
-  opacity: 0.03 !important;
-  filter: drop-shadow(0 0 30px rgba(220, 38, 38, 0.15)) !important;
+.bg-model-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
-.dashboard-watermark .tech-hologram-seal {
-  opacity: 0.35 !important;
+.bg-model-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-base);
+  margin: 0;
 }
 
-.dashboard-watermark.landing-watermark-lateral {
-  display: none !important;
+.bg-model-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }
 
-[data-theme="dark"] .dashboard-watermark .landing-watermark-img {
-  opacity: 0.025 !important;
+.bg-model-desc {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  margin: 0;
+  flex: 1;
+}
+
+.bg-model-btn {
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-card);
+  color: var(--color-text-base);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.bg-model-btn:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+  color: var(--color-accent);
+}
+
+.bg-model-btn.selected {
+  background-color: var(--color-primary);
+  color: var(--color-accent);
+  border-color: var(--color-primary);
+  font-weight: 700;
 }
 
 /* Glassmorphism Cyber-Glass / Interface Tecnológica */

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
+import { BACKGROUND_MODELS, getBackgroundModel } from '../utils/backgroundModels';
 import OrgStructureManager from './OrgStructureManager';
 import HomeDashboard from './HomeDashboard';
 import EmployeeManager from './employees/EmployeeManager';
@@ -699,8 +700,10 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     cor_principal: settings.cor_principal,
     cor_secundaria: settings.cor_secundaria,
     cor_destaque: settings.cor_destaque,
-    modo_tema: settings.modo_tema
+    modo_tema: settings.modo_tema,
+    modelo_fundo: settings.modelo_fundo || 'soberania_sernic'
   });
+  const [selectedBgCategory, setSelectedBgCategory] = useState('ALL');
   const [tempLogo, setTempLogo] = useState(settings.logotipo || '');
   const [showSaveMessage, setShowSaveMessage] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
@@ -1029,7 +1032,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       cor_principal: settings.cor_principal,
       cor_secundaria: settings.cor_secundaria,
       cor_destaque: settings.cor_destaque,
-      modo_tema: settings.modo_tema
+      modo_tema: settings.modo_tema,
+      modelo_fundo: settings.modelo_fundo || 'soberania_sernic'
     });
     setTempLogo(settings.logotipo || '');
   }, [settings]);
@@ -1037,6 +1041,20 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectBackgroundModel = (modelId) => {
+    if (!isSuperAdmin) return;
+    setFormData(prev => ({ ...prev, modelo_fundo: modelId }));
+    updateSettings({
+      ...settings,
+      ...formData,
+      modelo_fundo: modelId,
+      logotipo: tempLogo,
+      usuario_responsavel: user?.username || 'admin'
+    });
+    setShowSaveMessage(true);
+    setTimeout(() => setShowSaveMessage(false), 3500);
   };
 
   const handleLogoUpload = (e) => {
@@ -1137,12 +1155,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   return (
     <div className="app-container" style={styles.appContainer}>
 
-      {/* ══════════════ GRELHA DIGITAL CIBERNÉTICA (SISTEMA) ══════════════ */}
-      <div className="tech-cyber-grid dashboard-tech-grid" aria-hidden="true" />
-
       {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO DO SISTEMA (SERNIC) ══════════════ */}
       <div className="landing-watermark-bg dashboard-watermark" aria-hidden="true">
-        <div className="tech-hologram-seal" />
         <img
           src="/logo-sernic-transparente.png"
           alt=""
@@ -1150,12 +1164,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           decoding="sync"
           className="landing-watermark-img"
         />
-      </div>
-      <div className="landing-watermark-lateral left dashboard-watermark" aria-hidden="true">
-        <img src="/logo-sernic-transparente.png" alt="" loading="eager" decoding="sync" />
-      </div>
-      <div className="landing-watermark-lateral right dashboard-watermark" aria-hidden="true">
-        <img src="/logo-sernic-transparente.png" alt="" loading="eager" decoding="sync" />
       </div>
 
       {/* OVERLAY MOBILE — fundo escuro ao abrir sidebar */}
@@ -2532,6 +2540,16 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           <td><code>"{settings.modo_tema}"</code></td>
                         </tr>
                         <tr>
+                          <td><strong>modelo_fundo</strong></td>
+                          <td><code>VARCHAR</code></td>
+                          <td>
+                            <div style={styles.dbColorRow}>
+                              <div style={styles.dbColorDot(getBackgroundModel(settings.modelo_fundo).previewColor)}></div>
+                              <code>"{settings.modelo_fundo || 'soberania_sernic'}"</code> ({getBackgroundModel(settings.modelo_fundo).nome})
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
                           <td><strong>data_atualizacao</strong></td>
                           <td><code>TIMESTAMP</code></td>
                           <td><span style={{ fontSize: '12px' }}>{new Date(settings.data_atualizacao).toLocaleString()}</span></td>
@@ -2543,6 +2561,118 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                         </tr>
                       </tbody>
                     </table>
+                  </div>
+                </div>
+
+                {/* ══════════════ CATÁLOGO DE 20 MODELOS DE FUNDOS FUTURISTAS E ELEGANTES ══════════════ */}
+                <div className="bg-models-section">
+                  <div className="bg-models-header">
+                    <div className="bg-models-title-area">
+                      <h4>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: 'var(--color-primary)' }}>
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                          <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        Modelos de Fundo Futurista e Profissional (20 Modelos Exclusivos)
+                      </h4>
+                      <p>
+                        Selecione o modelo de fundo para a tela de autenticação e todo o ambiente institucional. Designs simples, de alta fidelidade e sem poluição visual.
+                      </p>
+                    </div>
+
+                    {/* Filtros de Categoria */}
+                    <div className="bg-category-filters">
+                      <button
+                        type="button"
+                        className={`bg-category-btn ${selectedBgCategory === 'ALL' ? 'active' : ''}`}
+                        onClick={() => setSelectedBgCategory('ALL')}
+                      >
+                        Todos ({BACKGROUND_MODELS.length})
+                      </button>
+                      {[
+                        'Vermelho Institucional',
+                        'Obsidiana e Grafite',
+                        'Azul Espacial & Tático',
+                        'Tático & Inteligência',
+                        'Dourado & Bronze',
+                        'Modo Claro Futurista'
+                      ].map(cat => {
+                        const count = BACKGROUND_MODELS.filter(m => m.categoria === cat).length;
+                        return (
+                          <button
+                            key={cat}
+                            type="button"
+                            className={`bg-category-btn ${selectedBgCategory === cat ? 'active' : ''}`}
+                            onClick={() => setSelectedBgCategory(cat)}
+                          >
+                            {cat} ({count})
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Grelha de Modelos */}
+                  <div className="bg-models-grid">
+                    {BACKGROUND_MODELS
+                      .filter(m => selectedBgCategory === 'ALL' || m.categoria === selectedBgCategory)
+                      .map((model) => {
+                        const isCurrentActive = (formData.modelo_fundo || settings.modelo_fundo) === model.id;
+                        return (
+                          <div
+                            key={model.id}
+                            className={`bg-model-card ${isCurrentActive ? 'selected' : ''}`}
+                            onClick={() => isSuperAdmin && handleSelectBackgroundModel(model.id)}
+                            style={{ cursor: isSuperAdmin ? 'pointer' : 'default' }}
+                          >
+                            <div
+                              className="bg-model-preview"
+                              style={{ background: model.bgGradient }}
+                            >
+                              <img
+                                src="/logo-sernic-transparente.png"
+                                alt=""
+                                className="bg-model-preview-watermark"
+                                style={{ opacity: Math.max(0.12, model.watermarkOpacity * 2) }}
+                              />
+                              {isCurrentActive && (
+                                <div className="bg-model-badge-active">
+                                  <span>✓</span> ATIVO
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="bg-model-info">
+                              <div className="bg-model-name-row">
+                                <h5 className="bg-model-name">{model.nome}</h5>
+                                <span className="bg-model-tag">{model.categoria}</span>
+                              </div>
+                              <p className="bg-model-desc">{model.descricao}</p>
+                              
+                              <button
+                                type="button"
+                                className={`bg-model-btn ${isCurrentActive ? 'selected' : ''}`}
+                                disabled={!isSuperAdmin}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (isSuperAdmin) handleSelectBackgroundModel(model.id);
+                                }}
+                              >
+                                {isCurrentActive ? (
+                                  <>
+                                    <span>✓</span> Modelo Ativo
+                                  </>
+                                ) : isSuperAdmin ? (
+                                  'Aplicar Este Modelo'
+                                ) : (
+                                  'Apenas Administrador'
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               </div>
