@@ -1,0 +1,4 @@
+Super Administrador (Buenaverte)	123922328 (ou buenaverte)	buenaverte7	Bv#922328!2026	Acesso Total (Super Admin)
+Administrador RH (Cidade de Maputo)	Administrador	55555	Maputo#DRH!Sernic	Administrador Provincial
+Administrador Secundário (Buenaverte)	Buenaverte (ou 256487895555)	admin123	Buena#Sernic!2026	Administrador RH
+Utilizador de Demonstração / Consulta	user	user123	user123	Consulta / Operador

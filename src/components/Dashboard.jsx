@@ -2648,6 +2648,21 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 <h5 className="bg-model-name">{model.nome}</h5>
                                 <span className="bg-model-tag">{model.categoria}</span>
                               </div>
+                              {model.tipoDesign && (
+                                <div style={{ 
+                                  display: 'inline-flex', 
+                                  alignItems: 'center', 
+                                  gap: '5px', 
+                                  fontSize: '11px', 
+                                  fontWeight: '700', 
+                                  color: 'var(--color-primary, #EF4444)',
+                                  letterSpacing: '0.4px',
+                                  textTransform: 'uppercase',
+                                  marginTop: '2px'
+                                }}>
+                                  <span style={{ fontSize: '12px' }}>✦</span> Estilo: {model.tipoDesign}
+                                </div>
+                              )}
                               <p className="bg-model-desc">{model.descricao}</p>
                               
                               <button
