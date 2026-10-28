@@ -1148,13 +1148,29 @@ button.evaluation-tab.active:focus,
   }
 }
 
+/* ── Camada de Fundo do Sistema (Watermark SERNIC) ── */
+.system-watermark-layer {
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  transition: opacity 0.4s ease, filter 0.4s ease, left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.system-watermark-layer img {
+  pointer-events: none !important;
+  user-select: none !important;
+  will-change: transform, opacity;
+}
+
 /* ── Impressão: nunca afetada pelo responsivo ── */
 @media print {
   .sidebar-desktop,
   .app-header,
   .btn-hamburger,
   .sidebar-mobile-overlay,
+  .system-watermark-layer,
   .no-print {
     display: none !important;
   }
 }
+

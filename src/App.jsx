@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS = {
   cor_secundaria: '#2D3748',
   cor_destaque: '#FFFFFF',
   modo_tema: 'light',
+  posicionamento_fundo: 'centro_imponente', // 20 posições disponíveis para o brasão
   cores_aleatorias: false,
   data_atualizacao: new Date().toISOString(),
   usuario_responsavel: 'Sistema (Padrão)'
@@ -46,6 +47,9 @@ export default function App() {
         if (parsed.cores_aleatorias) {
           const randomCor = CORES_PALETA[Math.floor(Math.random() * CORES_PALETA.length)];
           parsed.cor_principal = randomCor;
+        }
+        if (!parsed.posicionamento_fundo) {
+          parsed.posicionamento_fundo = 'centro_imponente';
         }
         setSettings(parsed);
         localStorage.setItem('sernic_identity_settings', JSON.stringify(parsed));

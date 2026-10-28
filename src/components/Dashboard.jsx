@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
+import { BACKGROUND_POSITIONS, getBackgroundPosition } from '../utils/backgroundPositions';
 import OrgStructureManager from './OrgStructureManager';
 import HomeDashboard from './HomeDashboard';
 import EmployeeManager from './employees/EmployeeManager';
@@ -709,6 +710,25 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const profileMenuRef = React.useRef(null);
   const fileInputRef = React.useRef(null);
 
+  // Sub-abas e controlo de temas do fundo transparente
+  const [identitySubTab, setIdentitySubTab] = useState('general'); // 'general' | 'background_themes'
+  const [bgCategoryFilter, setBgCategoryFilter] = useState('ALL');
+  const [bgSaveFeedback, setBgSaveFeedback] = useState('');
+
+  const currentBgPositionId = settings?.posicionamento_fundo || 'centro_imponente';
+  const activeBgPosition = getBackgroundPosition(currentBgPositionId);
+
+  const handleSelectBgPosition = (positionId) => {
+    updateSettings({
+      ...settings,
+      posicionamento_fundo: positionId,
+      usuario_responsavel: user?.username || 'Utilizador'
+    });
+    const posObj = getBackgroundPosition(positionId);
+    setBgSaveFeedback(`Tema "${posObj.nome}" aplicado com sucesso ao fundo!`);
+    setTimeout(() => setBgSaveFeedback(''), 4000);
+  };
+
   // Função auxiliar para procurar foto salva em múltiplas chaves (username, name, nuit, id)
   const getUserPhotoCandidates = React.useCallback((u) => {
     if (!u) return ['admin'];
@@ -1059,6 +1079,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     if (!isSuperAdmin) return;
 
     updateSettings({
+      ...settings,
       ...formData,
       logotipo: tempLogo,
       usuario_responsavel: user.username
@@ -1136,6 +1157,51 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
   return (
     <div className="app-container" style={styles.appContainer}>
+
+      {/* CAMADA DE FUNDO TRANSPARENTE COM O BRASÃO SERNIC (20 TEMAS DE POSICIONAMENTO) */}
+      <div
+        className="system-watermark-layer"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: isSidebarOpen ? '260px' : '0',
+          right: 0,
+          bottom: 0,
+          pointerEvents: 'none',
+          zIndex: 0,
+          overflow: 'hidden',
+          transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+        aria-hidden="true"
+      >
+        {activeBgPosition.emblems.map((emblem, idx) => (
+          <img
+            key={`${activeBgPosition.id}-${idx}`}
+            src="/logo-sernic-transparente.png"
+            onError={(e) => {
+              if (settings?.logotipo) e.currentTarget.src = settings.logotipo;
+              else e.currentTarget.src = SERNIC_LOGO_B64;
+            }}
+            alt=""
+            style={{
+              position: 'absolute',
+              ...emblem,
+              width: emblem.size,
+              height: emblem.size,
+              maxWidth: emblem.maxWidth || '85vw',
+              maxHeight: emblem.maxHeight || '85vh',
+              objectFit: 'contain',
+              opacity: (settings?.modo_tema === 'dark' ? 0.08 : 0.055) * (emblem.opacityMult || 1),
+              filter: settings?.modo_tema === 'dark' 
+                ? 'drop-shadow(0 0 35px rgba(255,255,255,0.08))' 
+                : 'drop-shadow(0 0 25px rgba(0,0,0,0.04))',
+              transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+              userSelect: 'none',
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+      </div>
 
       {/* OVERLAY MOBILE — fundo escuro ao abrir sidebar */}
       <div
@@ -2240,291 +2306,708 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           {activeTab === 'identity' && (
             <div className="animate-fade-in" style={styles.tabContainer}>
               <div style={styles.sectionHeader}>
-                <h3 style={styles.sectionMainTitle}>{t('panel_title')}</h3>
-                <p style={styles.sectionMainDesc}>{t('panel_desc')}</p>
+                <h3 style={styles.sectionMainTitle}>
+                  {identitySubTab === 'background_themes' 
+                    ? (t('bg_themes_title') || 'Temas e Posicionamento do Brasão no Fundo')
+                    : (t('panel_title') || 'Painel de Gestão de Identidade Visual')}
+                </h3>
+                <p style={styles.sectionMainDesc}>
+                  {identitySubTab === 'background_themes'
+                    ? (t('bg_themes_desc') || 'Escolha entre 20 composições de posicionamento único, duplicado, triplicado ou múltiplos brasões institucionais como fundo transparente no sistema.')
+                    : (t('panel_desc') || 'Ajuste as definições globais de logotipo, cores do sistema, temas institucionais e nomes exibidos.')}
+                </p>
               </div>
 
-              {/* Banner de Aviso para Utilizador Comum */}
-              {!isSuperAdmin && (
-                <div style={styles.warningBanner}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '10px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                  <span>{t('msg_admin_only_identity')}</span>
-                </div>
-              )}
+              {/* SUB-ABAS DE NAVEGAÇÃO DA IDENTIDADE VISUAL */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '24px',
+                borderBottom: '1px solid var(--color-border)',
+                paddingBottom: '12px',
+                flexWrap: 'wrap'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setIdentitySubTab('general')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: '10px',
+                    fontWeight: identitySubTab === 'general' ? '700' : '500',
+                    fontSize: '14px',
+                    backgroundColor: identitySubTab === 'general' ? 'var(--color-primary)' : 'transparent',
+                    color: identitySubTab === 'general' ? '#ffffff' : 'var(--color-text-base)',
+                    border: identitySubTab === 'general' ? 'none' : '1px solid var(--color-border)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: identitySubTab === 'general' ? '0 4px 12px rgba(27, 54, 93, 0.25)' : 'none'
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  {t('tab_general_settings') || 'Configurações Gerais'}
+                </button>
 
-              {showSaveMessage && (
-                <div style={styles.successBanner}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '10px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  <span>{t('msg_identity_saved')}</span>
-                </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => setIdentitySubTab('background_themes')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: '10px',
+                    fontWeight: identitySubTab === 'background_themes' ? '700' : '500',
+                    fontSize: '14px',
+                    backgroundColor: identitySubTab === 'background_themes' ? 'var(--color-primary)' : 'transparent',
+                    color: identitySubTab === 'background_themes' ? '#ffffff' : 'var(--color-text-base)',
+                    border: identitySubTab === 'background_themes' ? 'none' : '1px solid var(--color-border)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: identitySubTab === 'background_themes' ? '0 4px 12px rgba(27, 54, 93, 0.25)' : 'none'
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polygon points="12 8 8 12 12 16 16 12 12 8"></polygon></svg>
+                  <span>{t('tab_background_themes') || 'Temas do Fundo'}</span>
+                  <span style={{
+                    backgroundColor: identitySubTab === 'background_themes' ? 'rgba(255, 255, 255, 0.25)' : 'var(--color-primary)',
+                    color: '#ffffff',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    marginLeft: '4px'
+                  }}>
+                    {t('bg_themes_badge') || '20 Opções'}
+                  </span>
+                </button>
+              </div>
 
-              <div style={styles.settingsGrid}>
-                {/* FORMULÁRIO DE CONFIGURAÇÕES */}
-                <form onSubmit={handleSubmit} style={styles.formCard}>
-                  <h4 style={styles.formCardTitle}>{t('form_display_settings')}</h4>
-                  
-                  <div style={styles.formRow}>
-                    <div style={styles.formGroup}>
-                      <label style={styles.formLabel}>{t('form_institution_name')}</label>
-                      <input 
-                        type="text" 
-                        name="nome_instituicao"
-                        value={formData.nome_instituicao}
-                        onChange={handleInputChange}
-                        disabled={!isSuperAdmin}
-                        style={styles.formInput}
-                        required
-                      />
-                    </div>
-
-                    <div style={styles.formGroup}>
-                      <label style={styles.formLabel}>{t('form_acronym')}</label>
-                      <input 
-                        type="text" 
-                        name="sigla"
-                        value={formData.sigla}
-                        onChange={handleInputChange}
-                        disabled={!isSuperAdmin}
-                        style={styles.formInput}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div style={styles.formGroup}>
-                    <label style={styles.formLabel}>{t('form_logo')}</label>
-                    <div style={styles.logoUploadArea}>
-                      <div style={styles.logoPreviewSquare}>
-                        {tempLogo ? (
-                          <img src={tempLogo} alt="Preview Logo" style={styles.logoPreviewImg} />
-                        ) : (
-                          <img src={SERNIC_LOGO_B64} alt="Preview Padrão" style={{ ...styles.logoPreviewImg, width: '64px', height: '64px' }} />
-                        )}
-                      </div>
-                      <div style={styles.logoUploadControls}>
-                        {isSuperAdmin ? (
-                          <>
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              id="logo-file"
-                              onChange={handleLogoUpload}
-                              style={{ display: 'none' }}
-                            />
-                            <label htmlFor="logo-file" className="btn-animate" style={styles.uploadBtn}>
-                              {t('form_upload_logo')}
-                            </label>
-                            {tempLogo && (
-                              <button type="button" onClick={handleRemoveLogo} style={styles.removeLogoBtn}>
-                                {t('form_remove_logo')}
-                              </button>
-                            )}
-                          </>
-                        ) : (
-                          <span style={styles.uploadDisabledText}>{t('form_upload_disabled')}</span>
-                        )}
-                        <p style={styles.logoUploadTip}>{t('form_logo_tip')}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <h4 style={{ ...styles.formCardTitle, marginTop: '30px', marginBottom: '15px' }}>{t('form_colors_title')}</h4>
-                  <div style={styles.colorsRow}>
-                    <div style={styles.colorPickerGroup}>
-                      <label style={styles.formLabel}>{t('form_color_primary')}</label>
-                      <div style={styles.colorPickerWrapper}>
-                        <input 
-                          type="color" 
-                          name="cor_principal"
-                          value={formData.cor_principal}
-                          onChange={handleInputChange}
-                          disabled={!isSuperAdmin}
-                          style={styles.colorInput}
-                        />
-                        <input 
-                          type="text" 
-                          name="cor_principal"
-                          value={formData.cor_principal}
-                          onChange={handleInputChange}
-                          disabled={!isSuperAdmin}
-                          style={styles.colorHexText}
-                          placeholder="#000000"
-                        />
-                      </div>
-                    </div>
-
-                    <div style={styles.colorPickerGroup}>
-                      <label style={styles.formLabel}>{t('form_color_secondary')}</label>
-                      <div style={styles.colorPickerWrapper}>
-                        <input 
-                          type="color" 
-                          name="cor_secundaria"
-                          value={formData.cor_secundaria}
-                          onChange={handleInputChange}
-                          disabled={!isSuperAdmin}
-                          style={styles.colorInput}
-                        />
-                        <input 
-                          type="text" 
-                          name="cor_secundaria"
-                          value={formData.cor_secundaria}
-                          onChange={handleInputChange}
-                          disabled={!isSuperAdmin}
-                          style={styles.colorHexText}
-                          placeholder="#000000"
-                        />
-                      </div>
-                    </div>
-
-                    <div style={styles.colorPickerGroup}>
-                      <label style={styles.formLabel}>{t('form_color_accent')}</label>
-                      <div style={styles.colorPickerWrapper}>
-                        <input 
-                          type="color" 
-                          name="cor_destaque"
-                          value={formData.cor_destaque}
-                          onChange={handleInputChange}
-                          disabled={!isSuperAdmin}
-                          style={styles.colorInput}
-                        />
-                        <input 
-                          type="text" 
-                          name="cor_destaque"
-                          value={formData.cor_destaque}
-                          onChange={handleInputChange}
-                          disabled={!isSuperAdmin}
-                          style={styles.colorHexText}
-                          placeholder="#000000"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ ...styles.formRow, marginTop: '20px' }}>
-                    <div style={styles.formGroup}>
-                      <label style={styles.formLabel}>{t('form_theme_mode')}</label>
-                      <select 
-                        name="modo_tema"
-                        value={formData.modo_tema}
-                        onChange={handleInputChange}
-                        disabled={!isSuperAdmin}
-                        style={styles.formSelect}
-                      >
-                        <option value="light">{t('form_theme_light')}</option>
-                        <option value="dark">{t('form_theme_dark')}</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {isSuperAdmin && (
-                    <div style={styles.formActions}>
-                      <button type="submit" className="btn-animate" style={{ ...styles.saveBtn, backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
-                        {t('form_save')}
-                      </button>
-                      <button type="button" onClick={handleReset} style={styles.resetBtn}>
-                        {t('form_reset')}
-                      </button>
+              {/* ABA 1: CONFIGURAÇÕES GERAIS */}
+              {identitySubTab === 'general' && (
+                <>
+                  {/* Banner de Aviso para Utilizador Comum */}
+                  {!isSuperAdmin && (
+                    <div style={styles.warningBanner}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '10px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                      <span>{t('msg_admin_only_identity')}</span>
                     </div>
                   )}
-                </form>
 
-                {/* VISUALIZADOR DA TABELA FÍSICA NO BANCO DE DADOS */}
-                <div style={styles.dbTableCard}>
-                  <div style={styles.dbCardHeader}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path></svg>
-                    <h4 style={styles.dbCardTitle}>{t('db_table_title')} <code>configuracoes_identidade</code></h4>
-                  </div>
-                  <p style={styles.dbCardDesc}>{t('db_table_desc')}</p>
-                  
-                  <div style={styles.tableResponsive}>
-                    <table className="premium-table">
-                      <thead>
-                        <tr>
-                          <th>{t('db_col_column')}</th>
-                          <th>{t('db_col_type')}</th>
-                          <th>{t('db_col_value')}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><strong>id</strong></td>
-                          <td><code>INT</code></td>
-                          <td><code>1</code></td>
-                        </tr>
-                        <tr>
-                          <td><strong>nome_instituicao</strong></td>
-                          <td><code>VARCHAR</code></td>
-                          <td>"{settings.nome_instituicao}"</td>
-                        </tr>
-                        <tr>
-                          <td><strong>sigla</strong></td>
-                          <td><code>VARCHAR</code></td>
-                          <td>"{settings.sigla}"</td>
-                        </tr>
-                        <tr>
-                          <td><strong>logotipo</strong></td>
-                          <td><code>LONGTEXT</code></td>
-                          <td>
-                            {settings.logotipo ? (
-                              <span style={styles.logoDataBadge} title={settings.logotipo}>
-                                DataURL (imagem/{settings.logotipo.split(';')[0].split('/')[1]})
-                              </span>
+                  {showSaveMessage && (
+                    <div style={styles.successBanner}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '10px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span>{t('msg_identity_saved')}</span>
+                    </div>
+                  )}
+
+                  <div style={styles.settingsGrid}>
+                    {/* FORMULÁRIO DE CONFIGURAÇÕES */}
+                    <form onSubmit={handleSubmit} style={styles.formCard}>
+                      <h4 style={styles.formCardTitle}>{t('form_display_settings')}</h4>
+                      
+                      <div style={styles.formRow}>
+                        <div style={styles.formGroup}>
+                          <label style={styles.formLabel}>{t('form_institution_name')}</label>
+                          <input 
+                            type="text" 
+                            name="nome_instituicao"
+                            value={formData.nome_instituicao}
+                            onChange={handleInputChange}
+                            disabled={!isSuperAdmin}
+                            style={styles.formInput}
+                            required
+                          />
+                        </div>
+
+                        <div style={styles.formGroup}>
+                          <label style={styles.formLabel}>{t('form_acronym')}</label>
+                          <input 
+                            type="text" 
+                            name="sigla"
+                            value={formData.sigla}
+                            onChange={handleInputChange}
+                            disabled={!isSuperAdmin}
+                            style={styles.formInput}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div style={styles.formGroup}>
+                        <label style={styles.formLabel}>{t('form_logo')}</label>
+                        <div style={styles.logoUploadArea}>
+                          <div style={styles.logoPreviewSquare}>
+                            {tempLogo ? (
+                              <img src={tempLogo} alt="Preview Logo" style={styles.logoPreviewImg} />
                             ) : (
-                              <span style={styles.nullBadge}>{t('db_null_logo')}</span>
+                              <img src={SERNIC_LOGO_B64} alt="Preview Padrão" style={{ ...styles.logoPreviewImg, width: '64px', height: '64px' }} />
                             )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><strong>cor_principal</strong></td>
-                          <td><code>VARCHAR</code></td>
-                          <td>
-                            <div style={styles.dbColorRow}>
-                              <div style={styles.dbColorDot(settings.cor_principal)}></div>
-                              <code>{settings.cor_principal}</code>
+                          </div>
+                          <div style={styles.logoUploadControls}>
+                            {isSuperAdmin ? (
+                              <>
+                                <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  id="logo-file"
+                                  onChange={handleLogoUpload}
+                                  style={{ display: 'none' }}
+                                />
+                                <label htmlFor="logo-file" className="btn-animate" style={styles.uploadBtn}>
+                                  {t('form_upload_logo')}
+                                </label>
+                                {tempLogo && (
+                                  <button type="button" onClick={handleRemoveLogo} style={styles.removeLogoBtn}>
+                                    {t('form_remove_logo')}
+                                  </button>
+                                )}
+                              </>
+                            ) : (
+                              <span style={styles.uploadDisabledText}>{t('form_upload_disabled')}</span>
+                            )}
+                            <p style={styles.logoUploadTip}>{t('form_logo_tip')}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <h4 style={{ ...styles.formCardTitle, marginTop: '30px', marginBottom: '15px' }}>{t('form_colors_title')}</h4>
+                      <div style={styles.colorsRow}>
+                        <div style={styles.colorPickerGroup}>
+                          <label style={styles.formLabel}>{t('form_color_primary')}</label>
+                          <div style={styles.colorPickerWrapper}>
+                            <input 
+                              type="color" 
+                              name="cor_principal"
+                              value={formData.cor_principal}
+                              onChange={handleInputChange}
+                              disabled={!isSuperAdmin}
+                              style={styles.colorInput}
+                            />
+                            <input 
+                              type="text" 
+                              name="cor_principal"
+                              value={formData.cor_principal}
+                              onChange={handleInputChange}
+                              disabled={!isSuperAdmin}
+                              style={styles.colorHexText}
+                              placeholder="#000000"
+                            />
+                          </div>
+                        </div>
+
+                        <div style={styles.colorPickerGroup}>
+                          <label style={styles.formLabel}>{t('form_color_secondary')}</label>
+                          <div style={styles.colorPickerWrapper}>
+                            <input 
+                              type="color" 
+                              name="cor_secundaria"
+                              value={formData.cor_secundaria}
+                              onChange={handleInputChange}
+                              disabled={!isSuperAdmin}
+                              style={styles.colorInput}
+                            />
+                            <input 
+                              type="text" 
+                              name="cor_secundaria"
+                              value={formData.cor_secundaria}
+                              onChange={handleInputChange}
+                              disabled={!isSuperAdmin}
+                              style={styles.colorHexText}
+                              placeholder="#000000"
+                            />
+                          </div>
+                        </div>
+
+                        <div style={styles.colorPickerGroup}>
+                          <label style={styles.formLabel}>{t('form_color_accent')}</label>
+                          <div style={styles.colorPickerWrapper}>
+                            <input 
+                              type="color" 
+                              name="cor_destaque"
+                              value={formData.cor_destaque}
+                              onChange={handleInputChange}
+                              disabled={!isSuperAdmin}
+                              style={styles.colorInput}
+                            />
+                            <input 
+                              type="text" 
+                              name="cor_destaque"
+                              value={formData.cor_destaque}
+                              onChange={handleInputChange}
+                              disabled={!isSuperAdmin}
+                              style={styles.colorHexText}
+                              placeholder="#000000"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ ...styles.formRow, marginTop: '20px' }}>
+                        <div style={styles.formGroup}>
+                          <label style={styles.formLabel}>{t('form_theme_mode')}</label>
+                          <select 
+                            name="modo_tema"
+                            value={formData.modo_tema}
+                            onChange={handleInputChange}
+                            disabled={!isSuperAdmin}
+                            style={styles.formSelect}
+                          >
+                            <option value="light">{t('form_theme_light')}</option>
+                            <option value="dark">{t('form_theme_dark')}</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {isSuperAdmin && (
+                        <div style={styles.formActions}>
+                          <button type="submit" className="btn-animate" style={{ ...styles.saveBtn, backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)' }}>
+                            {t('form_save')}
+                          </button>
+                          <button type="button" onClick={handleReset} style={styles.resetBtn}>
+                            {t('form_reset')}
+                          </button>
+                        </div>
+                      )}
+                    </form>
+
+                    {/* VISUALIZADOR DA TABELA FÍSICA NO BANCO DE DADOS */}
+                    <div style={styles.dbTableCard}>
+                      <div style={styles.dbCardHeader}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path></svg>
+                        <h4 style={styles.dbCardTitle}>{t('db_table_title')} <code>configuracoes_identidade</code></h4>
+                      </div>
+                      <p style={styles.dbCardDesc}>{t('db_table_desc')}</p>
+                      
+                      <div style={styles.tableResponsive}>
+                        <table className="premium-table">
+                          <thead>
+                            <tr>
+                              <th>{t('db_col_column')}</th>
+                              <th>{t('db_col_type')}</th>
+                              <th>{t('db_col_value')}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td><strong>id</strong></td>
+                              <td><code>INT</code></td>
+                              <td><code>1</code></td>
+                            </tr>
+                            <tr>
+                              <td><strong>nome_instituicao</strong></td>
+                              <td><code>VARCHAR</code></td>
+                              <td>"{settings.nome_instituicao}"</td>
+                            </tr>
+                            <tr>
+                              <td><strong>sigla</strong></td>
+                              <td><code>VARCHAR</code></td>
+                              <td>"{settings.sigla}"</td>
+                            </tr>
+                            <tr>
+                              <td><strong>logotipo</strong></td>
+                              <td><code>LONGTEXT</code></td>
+                              <td>
+                                {settings.logotipo ? (
+                                  <span style={styles.logoDataBadge} title={settings.logotipo}>
+                                    DataURL (imagem/{settings.logotipo.split(';')[0].split('/')[1]})
+                                  </span>
+                                ) : (
+                                  <span style={styles.nullBadge}>{t('db_null_logo')}</span>
+                                )}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td><strong>posicionamento_fundo</strong></td>
+                              <td><code>VARCHAR</code></td>
+                              <td><code>"{settings.posicionamento_fundo || 'centro_imponente'}"</code> ({activeBgPosition.nome})</td>
+                            </tr>
+                            <tr>
+                              <td><strong>cor_principal</strong></td>
+                              <td><code>VARCHAR</code></td>
+                              <td>
+                                <div style={styles.dbColorRow}>
+                                  <div style={styles.dbColorDot(settings.cor_principal)}></div>
+                                  <code>{settings.cor_principal}</code>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td><strong>cor_secundaria</strong></td>
+                              <td><code>VARCHAR</code></td>
+                              <td>
+                                <div style={styles.dbColorRow}>
+                                  <div style={styles.dbColorDot(settings.cor_secundaria)}></div>
+                                  <code>{settings.cor_secundaria}</code>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td><strong>cor_destaque</strong></td>
+                              <td><code>VARCHAR</code></td>
+                              <td>
+                                <div style={styles.dbColorRow}>
+                                  <div style={styles.dbColorDot(settings.cor_destaque)}></div>
+                                  <code>{settings.cor_destaque}</code>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td><strong>modo_tema</strong></td>
+                              <td><code>VARCHAR</code></td>
+                              <td><code>"{settings.modo_tema}"</code></td>
+                            </tr>
+                            <tr>
+                              <td><strong>data_atualizacao</strong></td>
+                              <td><code>TIMESTAMP</code></td>
+                              <td><span style={{ fontSize: '12px' }}>{new Date(settings.data_atualizacao).toLocaleString()}</span></td>
+                            </tr>
+                            <tr>
+                              <td><strong>usuario_responsavel</strong></td>
+                              <td><code>VARCHAR</code></td>
+                              <td><code>"{settings.usuario_responsavel}"</code></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* ABA 2: TEMAS DO FUNDO (20 OPÇÕES DE POSICIONAMENTO) */}
+              {identitySubTab === 'background_themes' && (
+                <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {bgSaveFeedback && (
+                    <div style={{
+                      ...styles.successBanner,
+                      marginBottom: 0,
+                      animation: 'fadeIn 0.3s ease-out'
+                    }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '10px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      <span>{bgSaveFeedback}</span>
+                    </div>
+                  )}
+
+                  {/* BANNER INFORMATIVO E STATUS DO TEMA ATUAL */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '16px',
+                    padding: '20px 24px',
+                    backgroundColor: 'var(--color-bg-card)',
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-border)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{
+                        width: '54px',
+                        height: '54px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(27, 54, 93, 0.08)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '28px',
+                        border: '1px solid var(--color-border)'
+                      }}>
+                        {activeBgPosition.icon}
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.6px', color: 'var(--color-primary)' }}>
+                            {t('bg_theme_active') || 'Tema Activo no Fundo'}
+                          </span>
+                          <span style={{
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            padding: '2px 8px',
+                            borderRadius: '10px',
+                            backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                            color: '#16a34a'
+                          }}>
+                            ✓ Em Uso
+                          </span>
+                        </div>
+                        <h4 style={{ margin: '3px 0 0 0', fontSize: '18px', fontWeight: '800', color: 'var(--color-text-base)' }}>
+                          {activeBgPosition.nome}
+                        </h4>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--color-text-muted)' }}>
+                          {activeBgPosition.descricao}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '8px 16px',
+                      backgroundColor: 'var(--color-bg-base)',
+                      borderRadius: '8px',
+                      border: '1px solid var(--color-border)'
+                    }}>
+                      <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Configuração:</span>
+                      <strong style={{ fontSize: '13px', color: 'var(--color-primary)' }}>
+                        {activeBgPosition.emblems.length} {activeBgPosition.emblems.length === 1 ? 'Brasão' : 'Brasões'} ({activeBgPosition.categoria})
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* BARRA DE FILTRO POR CATEGORIA */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    flexWrap: 'wrap',
+                    padding: '12px 16px',
+                    backgroundColor: 'var(--color-bg-card)',
+                    borderRadius: '10px',
+                    border: '1px solid var(--color-border)'
+                  }}>
+                    <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-muted)', marginRight: '6px' }}>
+                      Filtrar por Categoria:
+                    </span>
+                    {[
+                      { key: 'ALL', label: `${t('cat_all') || 'Todos'} (20)` },
+                      { key: 'Único', label: `${t('cat_single') || 'Único'} (10)` },
+                      { key: 'Duplicado', label: `${t('cat_duplicate') || 'Duplicado'} (6)` },
+                      { key: 'Triplicado', label: `${t('cat_triplicate') || 'Triplicado'} (2)` },
+                      { key: 'Múltiplo', label: `${t('cat_multiple') || 'Múltiplo'} (2)` },
+                    ].map(cat => (
+                      <button
+                        key={cat.key}
+                        type="button"
+                        onClick={() => setBgCategoryFilter(cat.key)}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '20px',
+                          fontSize: '12px',
+                          fontWeight: bgCategoryFilter === cat.key ? '700' : '500',
+                          backgroundColor: bgCategoryFilter === cat.key ? 'var(--color-primary)' : 'var(--color-bg-base)',
+                          color: bgCategoryFilter === cat.key ? '#ffffff' : 'var(--color-text-base)',
+                          border: bgCategoryFilter === cat.key ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* GRID DAS 20 OPÇÕES DE POSICIONAMENTO */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gap: '20px'
+                  }}>
+                    {BACKGROUND_POSITIONS
+                      .filter(pos => bgCategoryFilter === 'ALL' || pos.categoria === bgCategoryFilter)
+                      .map((pos) => {
+                        const isCurrentActive = currentBgPositionId === pos.id;
+                        return (
+                          <div
+                            key={pos.id}
+                            style={{
+                              backgroundColor: 'var(--color-bg-card)',
+                              borderRadius: '14px',
+                              border: isCurrentActive 
+                                ? '2px solid var(--color-primary)' 
+                                : '1px solid var(--color-border)',
+                              boxShadow: isCurrentActive 
+                                ? '0 8px 24px rgba(27, 54, 93, 0.18)' 
+                                : 'var(--shadow-sm)',
+                              padding: '18px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'space-between',
+                              gap: '14px',
+                              transition: 'all 0.22s ease',
+                              position: 'relative'
+                            }}
+                          >
+                            {/* CABEÇALHO DO CARD */}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ fontSize: '24px' }}>{pos.icon}</span>
+                                <div>
+                                  <h5 style={{ margin: 0, fontSize: '15px', fontWeight: '700', color: 'var(--color-text-base)' }}>
+                                    {pos.nome}
+                                  </h5>
+                                  <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                                    {pos.tipoDesign}
+                                  </span>
+                                </div>
+                              </div>
+                              <span style={{
+                                fontSize: '10px',
+                                fontWeight: '700',
+                                textTransform: 'uppercase',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                backgroundColor: pos.categoria === 'Único' ? 'rgba(59, 130, 246, 0.12)'
+                                  : pos.categoria === 'Duplicado' ? 'rgba(168, 85, 247, 0.12)'
+                                  : pos.categoria === 'Triplicado' ? 'rgba(234, 179, 8, 0.15)'
+                                  : 'rgba(239, 68, 68, 0.12)',
+                                color: pos.categoria === 'Único' ? '#2563eb'
+                                  : pos.categoria === 'Duplicado' ? '#9333ea'
+                                  : pos.categoria === 'Triplicado' ? '#b45309'
+                                  : '#dc2626'
+                              }}>
+                                {pos.categoria}
+                              </span>
                             </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><strong>cor_secundaria</strong></td>
-                          <td><code>VARCHAR</code></td>
-                          <td>
-                            <div style={styles.dbColorRow}>
-                              <div style={styles.dbColorDot(settings.cor_secundaria)}></div>
-                              <code>{settings.cor_secundaria}</code>
+
+                            {/* MINI TELA DE PRÉ-VISUALIZAÇÃO */}
+                            <div
+                              style={{
+                                width: '100%',
+                                height: '110px',
+                                backgroundColor: settings?.modo_tema === 'dark' ? '#0b1120' : '#f1f5f9',
+                                border: '1px solid var(--color-border)',
+                                borderRadius: '8px',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                boxShadow: 'inset 0 1px 4px rgba(0, 0, 0, 0.06)'
+                              }}
+                            >
+                              {/* Barra superior da mini-tela */}
+                              <div style={{
+                                height: '12px',
+                                backgroundColor: settings?.modo_tema === 'dark' ? '#1e293b' : '#e2e8f0',
+                                borderBottom: '1px solid var(--color-border)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: '0 6px',
+                                gap: '3px'
+                              }}>
+                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#ef4444' }}></div>
+                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#eab308' }}></div>
+                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#22c55e' }}></div>
+                              </div>
+
+                              {/* Emblemas na mini tela */}
+                              {pos.previewEmblems.map((pEmb, pIdx) => (
+                                <img
+                                  key={pIdx}
+                                  src="/logo-sernic-transparente.png"
+                                  onError={(e) => {
+                                    if (settings?.logotipo) e.currentTarget.src = settings.logotipo;
+                                    else e.currentTarget.src = SERNIC_LOGO_B64;
+                                  }}
+                                  alt=""
+                                  style={{
+                                    position: 'absolute',
+                                    ...pEmb,
+                                    width: pEmb.size,
+                                    height: pEmb.size,
+                                    objectFit: 'contain',
+                                    opacity: isCurrentActive ? 0.9 : 0.55,
+                                    filter: isCurrentActive ? 'drop-shadow(0 0 4px var(--color-primary))' : 'none',
+                                    transition: 'all 0.2s ease',
+                                    pointerEvents: 'none'
+                                  }}
+                                />
+                              ))}
                             </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><strong>cor_destaque</strong></td>
-                          <td><code>VARCHAR</code></td>
-                          <td>
-                            <div style={styles.dbColorRow}>
-                              <div style={styles.dbColorDot(settings.cor_destaque)}></div>
-                              <code>{settings.cor_destaque}</code>
+
+                            {/* DESCRIÇÃO E DETALHES */}
+                            <div>
+                              <p style={{
+                                margin: 0,
+                                fontSize: '12px',
+                                color: 'var(--color-text-muted)',
+                                lineHeight: '1.4',
+                                minHeight: '34px'
+                              }}>
+                                {pos.descricao}
+                              </p>
+                              <div style={{
+                                marginTop: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                fontSize: '11px',
+                                color: 'var(--color-text-muted)'
+                              }}>
+                                <span>Instâncias no fundo:</span>
+                                <strong style={{ color: 'var(--color-text-base)' }}>
+                                  {pos.emblems.length} {pos.emblems.length === 1 ? 'Brasão' : 'Brasões'}
+                                </strong>
+                              </div>
                             </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td><strong>modo_tema</strong></td>
-                          <td><code>VARCHAR</code></td>
-                          <td><code>"{settings.modo_tema}"</code></td>
-                        </tr>
-                        <tr>
-                          <td><strong>data_atualizacao</strong></td>
-                          <td><code>TIMESTAMP</code></td>
-                          <td><span style={{ fontSize: '12px' }}>{new Date(settings.data_atualizacao).toLocaleString()}</span></td>
-                        </tr>
-                        <tr>
-                          <td><strong>usuario_responsavel</strong></td>
-                          <td><code>VARCHAR</code></td>
-                          <td><code>"{settings.usuario_responsavel}"</code></td>
-                        </tr>
-                      </tbody>
-                    </table>
+
+                            {/* BOTÃO DE AÇÃO */}
+                            {isCurrentActive ? (
+                              <button
+                                type="button"
+                                disabled
+                                style={{
+                                  width: '100%',
+                                  padding: '9px 12px',
+                                  borderRadius: '8px',
+                                  backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                                  color: '#16a34a',
+                                  border: '1px solid #16a34a',
+                                  fontWeight: '700',
+                                  fontSize: '12.5px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px',
+                                  cursor: 'default'
+                                }}
+                              >
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                {t('bg_theme_active') || 'Tema Activo no Fundo'}
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleSelectBgPosition(pos.id)}
+                                className="btn-animate"
+                                style={{
+                                  width: '100%',
+                                  padding: '9px 12px',
+                                  borderRadius: '8px',
+                                  backgroundColor: 'var(--color-bg-base)',
+                                  color: 'var(--color-primary)',
+                                  border: '1px solid var(--color-primary)',
+                                  fontWeight: '600',
+                                  fontSize: '12.5px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.18s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+                                  e.currentTarget.style.color = '#ffffff';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = 'var(--color-bg-base)';
+                                  e.currentTarget.style.color = 'var(--color-primary)';
+                                }}
+                              >
+                                <span>{t('bg_apply_theme') || 'Aplicar ao Fundo'}</span>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -5219,6 +5702,8 @@ const styles = {
   contentArea: {
     padding: '24px 28px',
     flex: 1,
+    position: 'relative',
+    zIndex: 1,
   },
   tabContainer: {
     maxWidth: '1500px',
