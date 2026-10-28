@@ -12,16 +12,22 @@ const DEFAULT_SETTINGS = {
   cor_secundaria: '#2D3748',
   cor_destaque: '#FFFFFF',
   modo_tema: 'light',
-  posicionamento_fundo: 'centro_imponente', // 20 posições disponíveis para o brasão
+  posicionamento_fundo: 'centro_imponente', // 28 posições disponíveis para o brasão
+  escala_brasao: '1.0', // '1.0' (Padrão), '1.35' (Grande), '1.7' (Monumental), '2.1' (Gigante Maxi)
+  aplicar_login_fundo: true, // Exibir o brasão transparente também na página de login
+  posicionamento_fundo_login: 'mesmo_sistema', // 'mesmo_sistema' ou ID específico
   cores_aleatorias: false,
   data_atualizacao: new Date().toISOString(),
   usuario_responsavel: 'Sistema (Padrão)'
 };
 
 const CORES_PALETA = [
-  '#B71C1C', '#C62828', '#880E4F', '#DC2626', '#BF360C', '#1B365D',
-  '#0D1B4B', '#1565C0', '#0277BD', '#1B5E20', '#00695C', '#33691E',
-  '#212121', '#37474F', '#F57F17', '#004D40', '#01579B', '#4A148C'
+  '#B71C1C', '#C62828', '#D32F2F', '#880E4F', '#DC2626', '#4A0E17', '#9C0006', '#E53935',
+  '#1B365D', '#0A192F', '#0D1B4B', '#0D47A1', '#1565C0', '#1976D2', '#0277BD', '#1A237E', '#006064', '#00838F',
+  '#1B5E20', '#00695C', '#2E7D32', '#33691E', '#004D40', '#00796B', '#133E1A',
+  '#4A148C', '#6A1B9A', '#4527A0', '#512DA8', '#581845',
+  '#C59B27', '#D97706', '#B45309', '#BF360C', '#F57F17', '#D84315',
+  '#1E293B', '#212121', '#37474F', '#111827', '#334155', '#18181B'
 ];
 
 import { useAuth } from './contexts/AuthContext';
@@ -50,6 +56,15 @@ export default function App() {
         }
         if (!parsed.posicionamento_fundo) {
           parsed.posicionamento_fundo = 'centro_imponente';
+        }
+        if (!parsed.escala_brasao) {
+          parsed.escala_brasao = '1.0';
+        }
+        if (parsed.aplicar_login_fundo === undefined) {
+          parsed.aplicar_login_fundo = true;
+        }
+        if (!parsed.posicionamento_fundo_login) {
+          parsed.posicionamento_fundo_login = 'mesmo_sistema';
         }
         setSettings(parsed);
         localStorage.setItem('sernic_identity_settings', JSON.stringify(parsed));

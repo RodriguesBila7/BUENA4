@@ -1,7 +1,23 @@
 /**
- * 20 Modelos de Posicionamento do Brasão/Ícone SERNIC como Fundo Transparente
- * Oferece configurações Únicas, Duplicadas, Triplicadas e Múltiplas.
+ * Catálogo Completo de Modelos de Posicionamento do Brasão/Ícone SERNIC como Fundo Transparente
+ * Oferece configurações Únicas, Duplicadas, Triplicadas, Múltiplas e Monumentais / Gigantes.
  */
+
+export const ESCALAS_BRASAO = [
+  { id: '1.0', label: 'Padrão (100%)', mult: 1.0, icon: '📐' },
+  { id: '1.35', label: 'Grande (135%)', mult: 1.35, icon: '🔍' },
+  { id: '1.7', label: 'Monumental (170%)', mult: 1.7, icon: '🏛️' },
+  { id: '2.1', label: 'Gigante Maxi (210%)', mult: 2.1, icon: '👑' },
+];
+
+export const getEscalaMultiplier = (val) => {
+  if (!val) return 1.0;
+  if (typeof val === 'number') return val;
+  const found = ESCALAS_BRASAO.find(e => e.id === String(val) || e.label.toLowerCase().includes(String(val).toLowerCase()));
+  if (found) return found.mult;
+  const num = parseFloat(val);
+  return isNaN(num) || num <= 0 ? 1.0 : num;
+};
 
 export const BACKGROUND_POSITIONS = [
   // ── 1 a 10: CONFIGURAÇÕES ÚNICAS (1 BRASÃO) ──
@@ -323,6 +339,134 @@ export const BACKGROUND_POSITIONS = [
       { top: '8px', right: '14px', size: '14px' },
       { bottom: '8px', left: '16px', size: '14px' },
       { bottom: '8px', right: '14px', size: '14px' }
+    ]
+  },
+
+  // ── 21 a 28: CONFIGURAÇÕES MONUMENTAIS / GIGANTES (BRASÕES EXTRA GRANDES) ──
+  {
+    id: 'centro_monumental_maxi',
+    nome: 'Centro Monumental Gigante',
+    categoria: 'Monumental',
+    tipoDesign: 'Chancela Suprema',
+    descricao: 'Brasão central em escala monumental (940px), preenchendo o fundo de ponta a ponta com majestade.',
+    icon: '🏛️',
+    emblems: [
+      { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', size: '940px', maxWidth: '92vw', maxHeight: '92vh', opacityMult: 0.95 }
+    ],
+    previewEmblems: [
+      { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', size: '56px' }
+    ]
+  },
+  {
+    id: 'marca_dagua_panoramica_total',
+    nome: 'Marca d’Água Panorâmica Total',
+    categoria: 'Monumental',
+    tipoDesign: 'Fundo Integral',
+    descricao: 'Emblema gigante em escala total (1120px) abrangendo a tela inteira como papel de parede de segurança.',
+    icon: '🛡️',
+    emblems: [
+      { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', size: '1120px', maxWidth: '98vw', maxHeight: '98vh', opacityMult: 0.88 }
+    ],
+    previewEmblems: [
+      { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', size: '64px' }
+    ]
+  },
+  {
+    id: 'duplo_gigante_flutuante',
+    nome: 'Duplo Gigante Flutuante',
+    categoria: 'Monumental',
+    tipoDesign: 'Colossos Laterais',
+    descricao: 'Dois brasões gigantescos (620px cada) nas margens esquerda e direita abraçando o espaço de trabalho.',
+    icon: '⚖️',
+    emblems: [
+      { top: '50%', left: '20px', transform: 'translateY(-50%)', size: '620px', opacityMult: 0.85 },
+      { top: '50%', right: '20px', transform: 'translateY(-50%)', size: '620px', opacityMult: 0.85 }
+    ],
+    previewEmblems: [
+      { top: '50%', left: '8px', transform: 'translateY(-50%)', size: '32px' },
+      { top: '50%', right: '8px', transform: 'translateY(-50%)', size: '32px' }
+    ]
+  },
+  {
+    id: 'triplo_monumental_trigono',
+    nome: 'Triplo Monumental Trígono',
+    categoria: 'Monumental',
+    tipoDesign: 'Tríade Magna',
+    descricao: 'Três brasões de grande escala (520px e 450px) em disposição triangular de comando e autoridade.',
+    icon: '🔺',
+    emblems: [
+      { top: '75px', left: '50%', transform: 'translateX(-50%)', size: '520px', opacityMult: 0.85 },
+      { bottom: '25px', left: '25px', size: '450px', opacityMult: 0.8 },
+      { bottom: '25px', right: '25px', size: '450px', opacityMult: 0.8 }
+    ],
+    previewEmblems: [
+      { top: '6px', left: '50%', transform: 'translateX(-50%)', size: '28px' },
+      { bottom: '6px', left: '10px', size: '24px' },
+      { bottom: '6px', right: '10px', size: '24px' }
+    ]
+  },
+  {
+    id: 'quintuplo_monumental_supremo',
+    nome: 'Quíntuplo Monumental Supremo',
+    categoria: 'Monumental',
+    tipoDesign: 'Pentagrama de Força',
+    descricao: 'Super composição de alto prestígio: brasão central de 600px cercado por quatro brasões de 340px.',
+    icon: '⭐',
+    emblems: [
+      { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', size: '600px', opacityMult: 0.95 },
+      { top: '75px', left: '25px', size: '340px', opacityMult: 0.75 },
+      { top: '75px', right: '25px', size: '340px', opacityMult: 0.75 },
+      { bottom: '25px', left: '25px', size: '340px', opacityMult: 0.75 },
+      { bottom: '25px', right: '25px', size: '340px', opacityMult: 0.75 }
+    ],
+    previewEmblems: [
+      { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', size: '34px' },
+      { top: '6px', left: '10px', size: '16px' },
+      { top: '6px', right: '10px', size: '16px' },
+      { bottom: '6px', left: '10px', size: '16px' },
+      { bottom: '6px', right: '10px', size: '16px' }
+    ]
+  },
+  {
+    id: 'lateral_gigante_direita',
+    nome: 'Lateral Direita Monumental',
+    categoria: 'Monumental',
+    tipoDesign: 'Flanco Gigante',
+    descricao: 'Um brasão colossal de 820px ancorado na lateral direita, contornando elegantemente as tabelas.',
+    icon: '▶️',
+    emblems: [
+      { top: '50%', right: '20px', transform: 'translateY(-50%)', size: '820px', opacityMult: 0.9 }
+    ],
+    previewEmblems: [
+      { top: '50%', right: '6px', transform: 'translateY(-50%)', size: '48px' }
+    ]
+  },
+  {
+    id: 'lateral_gigante_esquerda',
+    nome: 'Lateral Esquerda Monumental',
+    categoria: 'Monumental',
+    tipoDesign: 'Flanco Gigante',
+    descricao: 'Um brasão colossal de 820px ancorado na margem esquerda do espaço de trabalho.',
+    icon: '◀️',
+    emblems: [
+      { top: '50%', left: '20px', transform: 'translateY(-50%)', size: '820px', opacityMult: 0.9 }
+    ],
+    previewEmblems: [
+      { top: '50%', left: '6px', transform: 'translateY(-50%)', size: '48px' }
+    ]
+  },
+  {
+    id: 'login_heroico_central',
+    nome: 'Login Heróico Central',
+    categoria: 'Monumental',
+    tipoDesign: 'Aura Central de Acesso',
+    descricao: 'Especialmente concebido para a tela de Login: brasão solene de 880px centrado no card de credenciais.',
+    icon: '🔐',
+    emblems: [
+      { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', size: '880px', maxWidth: '90vw', maxHeight: '90vh', opacityMult: 1.05 }
+    ],
+    previewEmblems: [
+      { top: '50%', left: '50%', transform: 'translate(-50%, -50%)', size: '52px' }
     ]
   }
 ];

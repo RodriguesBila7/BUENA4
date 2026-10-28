@@ -1,29 +1,63 @@
 import React, { useState } from 'react';
 import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
+import { BACKGROUND_POSITIONS, getBackgroundPosition, ESCALAS_BRASAO, getEscalaMultiplier } from '../utils/backgroundPositions';
 import useAuthData from '../hooks/useAuthData';
 import useSecuritySettings from '../hooks/useSecuritySettings';
 import useAuditLog from '../hooks/useAuditLog';
 
-/* ── Temas pré-definidos ── */
+/* ── Temas pré-definidos Expandidos (40 Cores Oficiais, Vívidas e Nobres) ── */
 const TEMAS = [
-  { nome: 'Azul Institucional', cor: '#1B365D' },
-  { nome: 'Azul Escuro',        cor: '#0D1B4B' },
-  { nome: 'Azul Real',          cor: '#1565C0' },
-  { nome: 'Azul Aço',          cor: '#0277BD' },
+  // ── Tons Vermelhos e Oficiais SERNIC ──
+  { nome: 'Vermelho Moçambique (Oficial)', cor: '#B71C1C' },
+  { nome: 'Carmésim Tático', cor: '#C62828' },
+  { nome: 'Rubi de Honra', cor: '#D32F2F' },
+  { nome: 'Bordô Presidencial', cor: '#880E4F' },
+  { nome: 'Grená Institucional', cor: '#4A0E17' },
+  { nome: 'Cereja Escuro', cor: '#9C0006' },
+  { nome: 'Escarlate Profundo', cor: '#E53935' },
+  
+  // ── Tons Azuis e Policiais ──
+  { nome: 'Azul Institucional SERNIC', cor: '#1B365D' },
+  { nome: 'Azul Meia-Noite', cor: '#0A192F' },
+  { nome: 'Azul Escuro Profundo', cor: '#0D1B4B' },
+  { nome: 'Safira Pericial', cor: '#0D47A1' },
+  { nome: 'Cobalto Investigativo', cor: '#1565C0' },
+  { nome: 'Azul Real Intenso', cor: '#1976D2' },
+  { nome: 'Azul Aço Tático', cor: '#0277BD' },
+  { nome: 'Índigo Marinha', cor: '#1A237E' },
+  { nome: 'Azul Petróleo', cor: '#006064' },
+  { nome: 'Ciano Escuro', cor: '#00838F' },
+
+  // ── Tons Verdes e Forenses ──
   { nome: 'Verde Institucional', cor: '#1B5E20' },
-  { nome: 'Verde Esmeralda',    cor: '#00695C' },
-  { nome: 'Verde Oliva',        cor: '#33691E' },
-  { nome: 'Vermelho Moçambique', cor: '#B71C1C' },
-  { nome: 'Carmésim',          cor: '#C62828' },
-  { nome: 'Bordô',             cor: '#880E4F' },
-  { nome: 'Roxo Imperial',      cor: '#4A148C' },
-  { nome: 'Roxo Médio',        cor: '#6A1B9A' },
-  { nome: 'Carvão',            cor: '#212121' },
-  { nome: 'Cinza Escuro',       cor: '#37474F' },
-  { nome: 'Laranja Escuro',     cor: '#BF360C' },
-  { nome: 'Castaño Dourado',   cor: '#F57F17' },
-  { nome: 'Teal Profundo',      cor: '#004D40' },
-  { nome: 'Azul Meia-Noite',    cor: '#01579B' },
+  { nome: 'Verde Esmeralda Forense', cor: '#00695C' },
+  { nome: 'Verde Tático Militar', cor: '#2E7D32' },
+  { nome: 'Verde Oliva Escuro', cor: '#33691E' },
+  { nome: 'Teal Noturno', cor: '#004D40' },
+  { nome: 'Jade Profundo', cor: '#00796B' },
+  { nome: 'Floresta Negra', cor: '#133E1A' },
+
+  // ── Tons Roxos e Nobres ──
+  { nome: 'Roxo Imperial', cor: '#4A148C' },
+  { nome: 'Púrpura Magna', cor: '#6A1B9A' },
+  { nome: 'Violeta Forense', cor: '#4527A0' },
+  { nome: 'Ametista Noturna', cor: '#512DA8' },
+  { nome: 'Bordô Ameixa', cor: '#581845' },
+
+  // ── Tons Dourados e Âmbar ──
+  { nome: 'Ouro Presidencial', cor: '#C59B27' },
+  { nome: 'Âmbar Operacional', cor: '#D97706' },
+  { nome: 'Bronze Tático', cor: '#B45309' },
+  { nome: 'Laranja Queimado', cor: '#BF360C' },
+  { nome: 'Castaño Dourado', cor: '#F57F17' },
+  { nome: 'Terracota Forte', cor: '#D84315' },
+
+  // ── Tons Grafite, Carvão e Escuros ──
+  { nome: 'Carvão Mineral', cor: '#1E293B' },
+  { nome: 'Grafite Tático', cor: '#212121' },
+  { nome: 'Cinza Escuro Chumbo', cor: '#37474F' },
+  { nome: 'Ônix Puro', cor: '#111827' },
+  { nome: 'Ardósia Policial', cor: '#334155' },
 ];
 
 export default function Login({ settings, onLogin, updateSettings, t, language, setLanguage }) {
@@ -43,12 +77,50 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const [hoveredTema, setHoveredTema] = useState(null);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showBgMenu, setShowBgMenu] = useState(false);
   // Sincronizar com settings globais
   const [bwMode, setBwMode] = useState(() => {
     return settings.modo_tema === 'dark' ? 'noite' : 'theme';
   });
   const themeMenuRef = React.useRef(null);
   const langMenuRef = React.useRef(null);
+  const bgMenuRef = React.useRef(null);
+
+  // Configuração do Brasão / Fundo no Login
+  const isWatermarkEnabled = settings.aplicar_login_fundo !== false;
+  const loginBgPositionId = settings.posicionamento_fundo_login && settings.posicionamento_fundo_login !== 'mesmo_sistema'
+    ? settings.posicionamento_fundo_login
+    : (settings.posicionamento_fundo || 'centro_imponente');
+  const activeLoginBg = getBackgroundPosition(loginBgPositionId);
+  const loginScaleMult = getEscalaMultiplier(settings.escala_brasao);
+
+  const settingsRef = React.useRef(settings);
+  settingsRef.current = settings;
+  const updateSettingsRef = React.useRef(updateSettings);
+  updateSettingsRef.current = updateSettings;
+
+  // ── Ciclo Automático de Cores Aleatórias a cada 5 segundos ──
+  React.useEffect(() => {
+    if (!settings.cores_aleatorias || bwMode === 'noite' || bwMode === 'claro') {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      const current = settingsRef.current;
+      const currentCor = (current.cor_principal || '').toLowerCase();
+      const otherThemes = TEMAS.filter(t => t.cor.toLowerCase() !== currentCor);
+      const nextTheme = otherThemes[Math.floor(Math.random() * otherThemes.length)] || TEMAS[0];
+      if (nextTheme && updateSettingsRef.current) {
+        updateSettingsRef.current({
+          ...current,
+          cor_principal: nextTheme.cor,
+          usuario_responsavel: 'Cores Aleatórias (Ciclo 5s)'
+        });
+      }
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [settings.cores_aleatorias, bwMode]);
 
   React.useEffect(() => {
     if (settings.modo_tema === 'dark' && bwMode !== 'noite') {
@@ -65,6 +137,9 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       }
       if (langMenuRef.current && !langMenuRef.current.contains(event.target)) {
         setShowLangMenu(false);
+      }
+      if (bgMenuRef.current && !bgMenuRef.current.contains(event.target)) {
+        setShowBgMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -256,9 +331,55 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   };
 
   return (
-    <div className="login-page-root" style={{ ...s.page, backgroundColor: bgColor, transition: 'background-color 0.35s ease' }}>
+    <div className="login-page-root" style={{ ...s.page, backgroundColor: bgColor, transition: 'background-color 1.2s cubic-bezier(0.4, 0, 0.2, 1)' }}>
 
-      {/* ══════════════ MENU TOPO DIREITO (TEMAS + IDIOMA) ══════════════ */}
+      {/* ══════════════ CAMADA DE FUNDO TRANSPARENTE COM O BRASÃO SERNIC NO LOGIN ══════════════ */}
+      {isWatermarkEnabled && (
+        <div
+          className="login-watermark-layer"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: 'none',
+            zIndex: 0,
+            overflow: 'hidden',
+          }}
+          aria-hidden="true"
+        >
+          {activeLoginBg.emblems.map((emblem, idx) => (
+            <img
+              key={`${activeLoginBg.id}-${idx}`}
+              src="/logo-sernic-transparente.png"
+              onError={(e) => {
+                if (settings?.logotipo) e.currentTarget.src = settings.logotipo;
+                else e.currentTarget.src = SERNIC_LOGO_B64;
+              }}
+              alt=""
+              style={{
+                position: 'absolute',
+                ...emblem,
+                width: `calc(${emblem.size} * ${loginScaleMult})`,
+                height: `calc(${emblem.size} * ${loginScaleMult})`,
+                maxWidth: emblem.maxWidth || '96vw',
+                maxHeight: emblem.maxHeight || '96vh',
+                objectFit: 'contain',
+                opacity: (isDark ? 0.09 : 0.065) * (emblem.opacityMult || 1),
+                filter: isDark 
+                  ? 'drop-shadow(0 0 35px rgba(255,255,255,0.08))' 
+                  : 'drop-shadow(0 0 25px rgba(0,0,0,0.04))',
+                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                userSelect: 'none',
+                pointerEvents: 'none',
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ══════════════ MENU TOPO DIREITO (TEMAS + FUNDO + IDIOMA) ══════════════ */}
       <div style={s.topRightMenu}>
 
         {/* Seletor de Idioma */}
@@ -358,7 +479,158 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
           )}
         </button>
 
-        {/* Botão de Temas */}
+        {/* Botão de Fundo e Brasão Institucional no Login */}
+        <div style={{ position: 'relative' }} ref={bgMenuRef}>
+          <button 
+            onClick={() => setShowBgMenu(!showBgMenu)}
+            title="Temas do Fundo e Brasão no Login"
+            style={{
+              ...s.iconBtn,
+              backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.2)',
+              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+              border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </button>
+
+          {/* Dropdown de Fundo e Brasão */}
+          {showBgMenu && (
+            <div style={{
+              ...s.themeDropdown,
+              width: '286px',
+              padding: '16px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ fontSize: '13px', fontWeight: '700' }}>🛡️ Brasão no Fundo</span>
+                <span style={{ fontSize: '11px', color: 'var(--color-primary, #EF4444)', fontWeight: '700' }}>
+                  {activeLoginBg.nome}
+                </span>
+              </div>
+
+              {/* Toggle de Exibição */}
+              <div
+                onClick={() => {
+                  const nextVal = settings.aplicar_login_fundo === false ? true : false;
+                  updateSettings({ ...settings, aplicar_login_fundo: nextVal });
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '8px 10px',
+                  backgroundColor: 'rgba(255,255,255,0.06)',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  marginBottom: '12px',
+                  userSelect: 'none'
+                }}
+              >
+                <span style={{ fontSize: '12px', fontWeight: '600' }}>Exibir Marca d'Água</span>
+                <div style={{
+                  width: '32px',
+                  height: '18px',
+                  backgroundColor: isWatermarkEnabled ? 'var(--color-primary, #EF4444)' : '#64748b',
+                  borderRadius: '10px',
+                  position: 'relative',
+                  transition: 'all 0.2s ease',
+                  flexShrink: 0
+                }}>
+                  <div style={{
+                    width: '14px',
+                    height: '14px',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    top: '2px',
+                    left: isWatermarkEnabled ? '16px' : '2px',
+                    transition: 'left 0.2s ease',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.35)'
+                  }} />
+                </div>
+              </div>
+
+              {/* Seletor de Tamanho / Escala */}
+              <div style={{ marginBottom: '12px' }}>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', display: 'block', marginBottom: '6px' }}>
+                  Tamanho / Escala do Brasão:
+                </span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                  {ESCALAS_BRASAO.map(esc => {
+                    const isCur = String(settings.escala_brasao || '1.0') === esc.id;
+                    return (
+                      <button
+                        key={esc.id}
+                        type="button"
+                        onClick={() => updateSettings({ ...settings, escala_brasao: esc.id })}
+                        style={{
+                          padding: '6px 8px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: isCur ? '700' : '500',
+                          backgroundColor: isCur ? 'var(--color-primary, #1B365D)' : 'rgba(255,255,255,0.08)',
+                          color: isCur ? '#ffffff' : 'inherit',
+                          border: isCur ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          justifyContent: 'center',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <span>{esc.icon}</span>
+                        <span>{esc.label.split(' ')[0]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Seletor de Tema / Posicionamento */}
+              <div>
+                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', display: 'block', marginBottom: '6px' }}>
+                  Tema de Posicionamento no Login:
+                </span>
+                <select
+                  value={settings.posicionamento_fundo_login || 'mesmo_sistema'}
+                  onChange={(e) => updateSettings({ ...settings, posicionamento_fundo_login: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    backgroundColor: 'var(--color-bg-base, #1E293B)',
+                    color: 'var(--color-text-base, #FFFFFF)',
+                    border: '1px solid var(--color-border, rgba(255,255,255,0.2))',
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="mesmo_sistema">★ Mesmo do Sistema ({getBackgroundPosition(settings.posicionamento_fundo).nome})</option>
+                  <optgroup label="Monumentais & Gigantes (Extra Grande)">
+                    {BACKGROUND_POSITIONS.filter(p => p.categoria === 'Monumental').map(p => (
+                      <option key={p.id} value={p.id}>{p.icon} {p.nome}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Únicos">
+                    {BACKGROUND_POSITIONS.filter(p => p.categoria === 'Único').map(p => (
+                      <option key={p.id} value={p.id}>{p.icon} {p.nome}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Duplicados, Triplicados & Múltiplos">
+                    {BACKGROUND_POSITIONS.filter(p => p.categoria !== 'Monumental' && p.categoria !== 'Único').map(p => (
+                      <option key={p.id} value={p.id}>{p.icon} {p.nome} ({p.categoria})</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Botão de Temas de Cores */}
         <div style={{ position: 'relative' }} ref={themeMenuRef}>
           <button 
             onClick={() => setShowThemeMenu(!showThemeMenu)}
@@ -381,11 +653,25 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
 
           {/* Dropdown de Temas */}
           {showThemeMenu && (
-            <div style={s.themeDropdown}>
-              <p style={s.dropdownTitle}>{t('themes_predefined')}</p>
-              <div style={s.temaSwatches}>
+            <div style={{ ...s.themeDropdown, width: '286px', maxHeight: '460px', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <p style={{ ...s.dropdownTitle, margin: 0 }}>{t('themes_predefined')} ({TEMAS.length})</p>
+                {hoveredTema && (
+                  <span style={{ fontSize: '10.5px', color: 'var(--color-primary, #EF4444)', fontWeight: '700' }}>
+                    {TEMAS.find(t => t.cor === hoveredTema)?.nome.split(' ')[0]}
+                  </span>
+                )}
+              </div>
+
+              {/* Grid com 40 swatches de cores */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(6, 1fr)',
+                gap: '8px',
+                padding: '4px 2px'
+              }}>
                 {TEMAS.map((tema) => {
-                  const isActive = settings.cor_principal === tema.cor;
+                  const isActive = (settings.cor_principal || '').toLowerCase() === tema.cor.toLowerCase();
                   const isHover  = hoveredTema === tema.cor;
                   return (
                     <button
@@ -398,19 +684,22 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                       style={{
                         ...s.temaSwatch,
                         backgroundColor: tema.cor,
-                        transform: isActive || isHover ? 'scale(1.3)' : 'scale(1)',
-                        outline: isActive ? '2px solid #333' : isHover ? '2px solid rgba(0,0,0,0.4)' : 'none',
+                        transform: isActive || isHover ? 'scale(1.25)' : 'scale(1)',
+                        outline: isActive ? '2px solid #FFFFFF' : isHover ? '2px solid rgba(255,255,255,0.7)' : 'none',
                         outlineOffset: '2px',
+                        boxShadow: isActive ? '0 0 8px rgba(0,0,0,0.45)' : 'none'
                       }}
                     />
                   );
                 })}
               </div>
+
               {hoveredTema && (
                 <p style={s.temaTooltip}>
                   {TEMAS.find(t => t.cor === hoveredTema)?.nome}
                 </p>
               )}
+
               {/* Separador + Color Picker personalizado */}
               <div style={s.dropdownDivider} />
               <p style={s.dropdownTitle}>{t('themes_custom')}</p>
@@ -428,7 +717,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 </label>
               </div>
 
-              {/* Separador + Opção de Cores Aleatórias ao Entrar / Refresh */}
+              {/* Separador + Opção de Cores Aleatórias com Mudança a Cada 5 Segundos */}
               <div style={s.dropdownDivider} />
               <div
                 onClick={toggleCoresAleatorias}
@@ -444,14 +733,20 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '15px' }}>🎲</span>
-                  <span style={{
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    color: bwMode === 'claro' ? '#2c3e50' : 'var(--color-text-base, #F8FAFC)',
-                    letterSpacing: '0.2px'
-                  }}>
-                    {t('themes_random_mode') || 'Cores Aleatórias'}
-                  </span>
+                  <div>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: bwMode === 'claro' ? '#2c3e50' : 'var(--color-text-base, #F8FAFC)',
+                      letterSpacing: '0.2px',
+                      display: 'block'
+                    }}>
+                      {t('themes_random_mode') || 'Cores Aleatórias'}
+                    </span>
+                    <span style={{ fontSize: '9.5px', color: 'var(--color-text-muted, #94a3b8)' }}>
+                      Muda em cada 5 segundos
+                    </span>
+                  </div>
                 </div>
 
                 {/* Switch estilo toggle moderno */}
@@ -477,6 +772,24 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                   }} />
                 </div>
               </div>
+
+              {settings.cores_aleatorias && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  marginTop: '8px',
+                  padding: '5px 8px',
+                  backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                  borderRadius: '6px',
+                  fontSize: '10.5px',
+                  color: '#16a34a',
+                  fontWeight: '700'
+                }}>
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#16a34a', display: 'inline-block' }}></span>
+                  <span>Alternando cores em cada 5 segundos</span>
+                </div>
+              )}
             </div>
           )}
         </div>

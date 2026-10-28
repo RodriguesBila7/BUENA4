@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
-import { BACKGROUND_POSITIONS, getBackgroundPosition } from '../utils/backgroundPositions';
+import { BACKGROUND_POSITIONS, getBackgroundPosition, ESCALAS_BRASAO, getEscalaMultiplier } from '../utils/backgroundPositions';
 import OrgStructureManager from './OrgStructureManager';
 import HomeDashboard from './HomeDashboard';
 import EmployeeManager from './employees/EmployeeManager';
@@ -717,6 +717,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
   const currentBgPositionId = settings?.posicionamento_fundo || 'centro_imponente';
   const activeBgPosition = getBackgroundPosition(currentBgPositionId);
+  const scaleMult = getEscalaMultiplier(settings?.escala_brasao);
 
   const handleSelectBgPosition = (positionId) => {
     updateSettings({
@@ -726,6 +727,39 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     });
     const posObj = getBackgroundPosition(positionId);
     setBgSaveFeedback(`Tema "${posObj.nome}" aplicado com sucesso ao fundo!`);
+    setTimeout(() => setBgSaveFeedback(''), 4000);
+  };
+
+  const handleSelectScale = (scaleId) => {
+    updateSettings({
+      ...settings,
+      escala_brasao: scaleId,
+      usuario_responsavel: user?.username || 'Utilizador'
+    });
+    const escObj = ESCALAS_BRASAO.find(e => e.id === scaleId);
+    setBgSaveFeedback(`Escala do brasão ajustada para ${escObj?.label || scaleId}!`);
+    setTimeout(() => setBgSaveFeedback(''), 4000);
+  };
+
+  const handleToggleLoginFundo = () => {
+    const nextVal = settings.aplicar_login_fundo === false ? true : false;
+    updateSettings({
+      ...settings,
+      aplicar_login_fundo: nextVal,
+      usuario_responsavel: user?.username || 'Utilizador'
+    });
+    setBgSaveFeedback(nextVal ? 'Brasão transparente ativado no fundo do login!' : 'Brasão desativado no login.');
+    setTimeout(() => setBgSaveFeedback(''), 4000);
+  };
+
+  const handleSelectLoginPosition = (posId) => {
+    updateSettings({
+      ...settings,
+      posicionamento_fundo_login: posId,
+      usuario_responsavel: user?.username || 'Utilizador'
+    });
+    const posObj = posId === 'mesmo_sistema' ? { nome: 'Mesmo do Sistema' } : getBackgroundPosition(posId);
+    setBgSaveFeedback(`Tema do login definido como "${posObj.nome}"!`);
     setTimeout(() => setBgSaveFeedback(''), 4000);
   };
 
@@ -1186,10 +1220,10 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             style={{
               position: 'absolute',
               ...emblem,
-              width: emblem.size,
-              height: emblem.size,
-              maxWidth: emblem.maxWidth || '85vw',
-              maxHeight: emblem.maxHeight || '85vh',
+              width: `calc(${emblem.size} * ${scaleMult})`,
+              height: `calc(${emblem.size} * ${scaleMult})`,
+              maxWidth: emblem.maxWidth || '96vw',
+              maxHeight: emblem.maxHeight || '96vh',
               objectFit: 'contain',
               opacity: (settings?.modo_tema === 'dark' ? 0.08 : 0.055) * (emblem.opacityMult || 1),
               filter: settings?.modo_tema === 'dark' 
@@ -2381,7 +2415,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     borderRadius: '12px',
                     marginLeft: '4px'
                   }}>
-                    {t('bg_themes_badge') || '20 Opções'}
+                    {t('bg_themes_badge') || `${BACKGROUND_POSITIONS.length} Opções`}
                   </span>
                 </button>
               </div>
@@ -2760,6 +2794,140 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     </div>
                   </div>
 
+                  {/* CONTROLO DE ESCALA E TAMANHO DO BRASÃO */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    padding: '16px 20px',
+                    backgroundColor: 'var(--color-bg-card)',
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-border)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '22px' }}>📐</span>
+                      <div>
+                        <strong style={{ fontSize: '13.5px', color: 'var(--color-text-base)', display: 'block' }}>
+                          Escala / Tamanho do Brasão no Fundo
+                        </strong>
+                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+                          Aumente o porte das insígnias em qualquer tema (Padrão, Grande, Monumental e Gigante Maxi)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {ESCALAS_BRASAO.map(esc => {
+                        const isCur = String(settings.escala_brasao || '1.0') === esc.id;
+                        return (
+                          <button
+                            key={esc.id}
+                            type="button"
+                            onClick={() => handleSelectScale(esc.id)}
+                            style={{
+                              padding: '8px 14px',
+                              borderRadius: '8px',
+                              fontSize: '12px',
+                              fontWeight: isCur ? '700' : '500',
+                              backgroundColor: isCur ? 'var(--color-primary)' : 'var(--color-bg-base)',
+                              color: isCur ? '#ffffff' : 'var(--color-text-base)',
+                              border: isCur ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              boxShadow: isCur ? '0 3px 10px rgba(27, 54, 93, 0.25)' : 'none',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <span>{esc.icon}</span>
+                            <span>{esc.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* PAINEL DE SINCRONIZAÇÃO COM A PÁGINA DE LOGIN */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '14px',
+                    padding: '16px 20px',
+                    backgroundColor: 'var(--color-bg-card)',
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-border)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '22px' }}>🔐</span>
+                      <div>
+                        <strong style={{ fontSize: '13.5px', color: 'var(--color-text-base)', display: 'block' }}>
+                          Exibição na Página de Login
+                        </strong>
+                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+                          Defina a marca d'água institucional e o posicionamento exclusivo para a tela de autenticação
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={handleToggleLoginFundo}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '7px 14px',
+                          borderRadius: '8px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          backgroundColor: settings.aplicar_login_fundo !== false ? 'rgba(34, 197, 94, 0.15)' : 'var(--color-bg-base)',
+                          color: settings.aplicar_login_fundo !== false ? '#16a34a' : 'var(--color-text-muted)',
+                          border: settings.aplicar_login_fundo !== false ? '1px solid #16a34a' : '1px solid var(--color-border)',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <span>{settings.aplicar_login_fundo !== false ? '✓ Fundo Activo no Login' : '○ Desactivado no Login'}</span>
+                      </button>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Tema no Login:</span>
+                        <select
+                          value={settings.posicionamento_fundo_login || 'mesmo_sistema'}
+                          onChange={(e) => handleSelectLoginPosition(e.target.value)}
+                          style={{
+                            padding: '7px 12px',
+                            borderRadius: '8px',
+                            backgroundColor: 'var(--color-bg-base)',
+                            color: 'var(--color-text-base)',
+                            border: '1px solid var(--color-border)',
+                            fontSize: '12px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <option value="mesmo_sistema">★ Mesmo do Sistema ({activeBgPosition.nome})</option>
+                          <optgroup label="Monumentais & Gigantes (Extra Grande)">
+                            {BACKGROUND_POSITIONS.filter(p => p.categoria === 'Monumental').map(p => (
+                              <option key={p.id} value={p.id}>{p.icon} {p.nome}</option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="Outras Configurações">
+                            {BACKGROUND_POSITIONS.filter(p => p.categoria !== 'Monumental').map(p => (
+                              <option key={p.id} value={p.id}>{p.icon} {p.nome} ({p.categoria})</option>
+                            ))}
+                          </optgroup>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* BARRA DE FILTRO POR CATEGORIA */}
                   <div style={{
                     display: 'flex',
@@ -2775,11 +2943,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       Filtrar por Categoria:
                     </span>
                     {[
-                      { key: 'ALL', label: `${t('cat_all') || 'Todos'} (20)` },
-                      { key: 'Único', label: `${t('cat_single') || 'Único'} (10)` },
-                      { key: 'Duplicado', label: `${t('cat_duplicate') || 'Duplicado'} (6)` },
-                      { key: 'Triplicado', label: `${t('cat_triplicate') || 'Triplicado'} (2)` },
-                      { key: 'Múltiplo', label: `${t('cat_multiple') || 'Múltiplo'} (2)` },
+                      { key: 'ALL', label: `${t('cat_all') || 'Todos'} (${BACKGROUND_POSITIONS.length})` },
+                      { key: 'Monumental', label: `Monumentais / Gigantes (${BACKGROUND_POSITIONS.filter(p => p.categoria === 'Monumental').length})` },
+                      { key: 'Único', label: `${t('cat_single') || 'Único'} (${BACKGROUND_POSITIONS.filter(p => p.categoria === 'Único').length})` },
+                      { key: 'Duplicado', label: `${t('cat_duplicate') || 'Duplicado'} (${BACKGROUND_POSITIONS.filter(p => p.categoria === 'Duplicado').length})` },
+                      { key: 'Triplicado', label: `${t('cat_triplicate') || 'Triplicado'} (${BACKGROUND_POSITIONS.filter(p => p.categoria === 'Triplicado').length})` },
+                      { key: 'Múltiplo', label: `${t('cat_multiple') || 'Múltiplo'} (${BACKGROUND_POSITIONS.filter(p => p.categoria === 'Múltiplo').length})` },
                     ].map(cat => (
                       <button
                         key={cat.key}
@@ -2802,16 +2971,17 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     ))}
                   </div>
 
-                  {/* GRID DAS 20 OPÇÕES DE POSICIONAMENTO */}
+                  {/* GRID DAS OPÇÕES DE POSICIONAMENTO */}
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(285px, 1fr))',
                     gap: '20px'
                   }}>
                     {BACKGROUND_POSITIONS
                       .filter(pos => bgCategoryFilter === 'ALL' || pos.categoria === bgCategoryFilter)
                       .map((pos) => {
                         const isCurrentActive = currentBgPositionId === pos.id;
+                        const isLoginActive = settings.posicionamento_fundo_login === pos.id;
                         return (
                           <div
                             key={pos.id}
@@ -2820,6 +2990,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               borderRadius: '14px',
                               border: isCurrentActive 
                                 ? '2px solid var(--color-primary)' 
+                                : isLoginActive
+                                ? '1.5px dashed #2563eb'
                                 : '1px solid var(--color-border)',
                               boxShadow: isCurrentActive 
                                 ? '0 8px 24px rgba(27, 54, 93, 0.18)' 
@@ -2852,11 +3024,13 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 textTransform: 'uppercase',
                                 padding: '3px 8px',
                                 borderRadius: '6px',
-                                backgroundColor: pos.categoria === 'Único' ? 'rgba(59, 130, 246, 0.12)'
+                                backgroundColor: pos.categoria === 'Monumental' ? 'rgba(217, 119, 6, 0.15)'
+                                  : pos.categoria === 'Único' ? 'rgba(59, 130, 246, 0.12)'
                                   : pos.categoria === 'Duplicado' ? 'rgba(168, 85, 247, 0.12)'
                                   : pos.categoria === 'Triplicado' ? 'rgba(234, 179, 8, 0.15)'
                                   : 'rgba(239, 68, 68, 0.12)',
-                                color: pos.categoria === 'Único' ? '#2563eb'
+                                color: pos.categoria === 'Monumental' ? '#d97706'
+                                  : pos.categoria === 'Único' ? '#2563eb'
                                   : pos.categoria === 'Duplicado' ? '#9333ea'
                                   : pos.categoria === 'Triplicado' ? '#b45309'
                                   : '#dc2626'
@@ -2869,7 +3043,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             <div
                               style={{
                                 width: '100%',
-                                height: '110px',
+                                height: '115px',
                                 backgroundColor: settings?.modo_tema === 'dark' ? '#0b1120' : '#f1f5f9',
                                 border: '1px solid var(--color-border)',
                                 borderRadius: '8px',
@@ -2909,8 +3083,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                     width: pEmb.size,
                                     height: pEmb.size,
                                     objectFit: 'contain',
-                                    opacity: isCurrentActive ? 0.9 : 0.55,
-                                    filter: isCurrentActive ? 'drop-shadow(0 0 4px var(--color-primary))' : 'none',
+                                    opacity: isCurrentActive ? 0.95 : 0.55,
+                                    filter: isCurrentActive ? 'drop-shadow(0 0 5px var(--color-primary))' : 'none',
                                     transition: 'all 0.2s ease',
                                     pointerEvents: 'none'
                                   }}
@@ -2944,64 +3118,90 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               </div>
                             </div>
 
-                            {/* BOTÃO DE AÇÃO */}
-                            {isCurrentActive ? (
+                            {/* BOTÕES DE AÇÃO (SISTEMA E LOGIN) */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {isCurrentActive ? (
+                                <button
+                                  type="button"
+                                  disabled
+                                  style={{
+                                    width: '100%',
+                                    padding: '9px 12px',
+                                    borderRadius: '8px',
+                                    backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                                    color: '#16a34a',
+                                    border: '1px solid #16a34a',
+                                    fontWeight: '700',
+                                    fontSize: '12.5px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
+                                    cursor: 'default'
+                                  }}
+                                >
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                  {t('bg_theme_active') || 'Activo no Sistema'}
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleSelectBgPosition(pos.id)}
+                                  className="btn-animate"
+                                  style={{
+                                    width: '100%',
+                                    padding: '9px 12px',
+                                    borderRadius: '8px',
+                                    backgroundColor: 'var(--color-bg-base)',
+                                    color: 'var(--color-primary)',
+                                    border: '1px solid var(--color-primary)',
+                                    fontWeight: '600',
+                                    fontSize: '12.5px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.18s ease'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+                                    e.currentTarget.style.color = '#ffffff';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'var(--color-bg-base)';
+                                    e.currentTarget.style.color = 'var(--color-primary)';
+                                  }}
+                                >
+                                  <span>Aplicar ao Sistema</span>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </button>
+                              )}
+
+                              {/* Botão de Aplicar no Login */}
                               <button
                                 type="button"
-                                disabled
+                                onClick={() => handleSelectLoginPosition(pos.id)}
                                 style={{
                                   width: '100%',
-                                  padding: '9px 12px',
-                                  borderRadius: '8px',
-                                  backgroundColor: 'rgba(34, 197, 94, 0.12)',
-                                  color: '#16a34a',
-                                  border: '1px solid #16a34a',
-                                  fontWeight: '700',
-                                  fontSize: '12.5px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '6px',
-                                  cursor: 'default'
-                                }}
-                              >
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                {t('bg_theme_active') || 'Tema Activo no Fundo'}
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleSelectBgPosition(pos.id)}
-                                className="btn-animate"
-                                style={{
-                                  width: '100%',
-                                  padding: '9px 12px',
-                                  borderRadius: '8px',
-                                  backgroundColor: 'var(--color-bg-base)',
-                                  color: 'var(--color-primary)',
-                                  border: '1px solid var(--color-primary)',
-                                  fontWeight: '600',
-                                  fontSize: '12.5px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '6px',
+                                  padding: '6px 10px',
+                                  borderRadius: '6px',
+                                  fontSize: '11.5px',
+                                  fontWeight: isLoginActive ? '700' : '500',
+                                  backgroundColor: isLoginActive ? 'rgba(37, 99, 235, 0.12)' : 'transparent',
+                                  color: isLoginActive ? '#2563eb' : 'var(--color-text-muted)',
+                                  border: isLoginActive ? '1px solid #2563eb' : '1px dashed var(--color-border)',
                                   cursor: 'pointer',
-                                  transition: 'all 0.18s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                                  e.currentTarget.style.color = '#ffffff';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = 'var(--color-bg-base)';
-                                  e.currentTarget.style.color = 'var(--color-primary)';
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '6px',
+                                  transition: 'all 0.15s ease'
                                 }}
                               >
-                                <span>{t('bg_apply_theme') || 'Aplicar ao Fundo'}</span>
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                <span>{isLoginActive ? '✓ Activo no Login' : '🔐 Definir no Login'}</span>
                               </button>
-                            )}
+                            </div>
                           </div>
                         );
                       })}
