@@ -3,7 +3,6 @@ import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import useTranslation from './hooks/useTranslation';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
-import { getBackgroundModel } from './utils/backgroundModels';
 
 const DEFAULT_SETTINGS = {
   nome_instituicao: 'Serviço Nacional de Investigação Criminal',
@@ -14,19 +13,14 @@ const DEFAULT_SETTINGS = {
   cor_destaque: '#FFFFFF',
   modo_tema: 'light',
   cores_aleatorias: false,
-  modelo_fundo: 'soberania_sernic', // Fundo futurista, elegante e simples padrão
   data_atualizacao: new Date().toISOString(),
   usuario_responsavel: 'Sistema (Padrão)'
 };
 
-export const CORES_PALETA = [
-  '#B71C1C', '#DC2626', '#C62828', '#880E4F', '#991B1B', '#7F1D1D', '#9D174D',
-  '#1B365D', '#0D1B4B', '#1565C0', '#0277BD', '#1E40AF', '#1D4ED8', '#0369A1',
-  '#0891B2', '#0F766E', '#004D40', '#0E7490', '#3730A3', '#4338CA', '#0F172A',
-  '#1B5E20', '#00695C', '#15803D', '#059669', '#33691E', '#047857', '#3F6212',
-  '#4A148C', '#6A1B9A', '#5B21B6', '#701A75', '#6B21A8', '#581C87', '#BE185D',
-  '#D97706', '#F57F17', '#BF360C', '#B45309', '#C2410C', '#78350F',
-  '#212121', '#37474F', '#1E293B', '#334155', '#1F2937'
+const CORES_PALETA = [
+  '#B71C1C', '#C62828', '#880E4F', '#DC2626', '#BF360C', '#1B365D',
+  '#0D1B4B', '#1565C0', '#0277BD', '#1B5E20', '#00695C', '#33691E',
+  '#212121', '#37474F', '#F57F17', '#004D40', '#01579B', '#4A148C'
 ];
 
 import { useAuth } from './contexts/AuthContext';
@@ -48,9 +42,6 @@ export default function App() {
         if (!parsed.cor_principal || parsed.cor_principal.toUpperCase() === '#1B365D') {
           parsed.cor_principal = '#B71C1C';
         }
-        if (!parsed.modelo_fundo) {
-          parsed.modelo_fundo = 'soberania_sernic';
-        }
         // Se a opção de cores aleatórias estiver ativa, sorteia uma cor ao iniciar/recarregar a página
         if (parsed.cores_aleatorias) {
           const randomCor = CORES_PALETA[Math.floor(Math.random() * CORES_PALETA.length)];
@@ -68,40 +59,13 @@ export default function App() {
     }
   }, []);
 
-  // Ciclo automático a cada 3 segundos quando o modo de Cores Aleatórias estiver ativo
-  useEffect(() => {
-    if (!settings.cores_aleatorias) return;
-
-    const timer = setInterval(() => {
-      setSettings(prev => {
-        if (!prev.cores_aleatorias) return prev;
-        const current = (prev.cor_principal || '').toUpperCase();
-        const available = CORES_PALETA.filter(c => c.toUpperCase() !== current);
-        const randomCor = available[Math.floor(Math.random() * available.length)] || CORES_PALETA[0];
-        const updated = {
-          ...prev,
-          cor_principal: randomCor,
-          data_atualizacao: new Date().toISOString()
-        };
-        try {
-          localStorage.setItem('sernic_identity_settings', JSON.stringify(updated));
-        } catch (e) {}
-        return updated;
-      });
-    }, 3000);
-
-    return () => clearInterval(timer);
-  }, [settings.cores_aleatorias]);
-
-  // Aplicar cores, modelo de fundo e tema globalmente sempre que houver alteração
+  // Aplicar cores e tema globalmente sempre que houver alteração
   useEffect(() => {
     const activeColor = (!settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D')
       ? '#B71C1C'
       : settings.cor_principal;
 
-    const activeBgModel = getBackgroundModel(settings.modelo_fundo || 'soberania_sernic');
-
-    // Injeção de variáveis CSS customizadas de cores e fundo
+    // Injeção de variáveis CSS customizadas
     if (settings.modo_tema === 'dark') {
       document.documentElement.style.setProperty('--color-primary', activeColor);
       document.documentElement.style.setProperty('--color-secondary', settings.cor_secundaria || '#3A4A66');
@@ -112,18 +76,6 @@ export default function App() {
       document.documentElement.style.setProperty('--color-accent', settings.cor_destaque || '#FFFFFF');
     }
     
-    // Injeção de variáveis do modelo de fundo futurista simples e refinado
-    const isDarkTheme = settings.modo_tema === 'dark';
-    const resolvedBgGradient = isDarkTheme
-      ? activeBgModel.bgGradient
-      : (!activeBgModel.isDark
-          ? activeBgModel.bgGradient
-          : `radial-gradient(ellipse 90% 60% at 50% 12%, rgba(183, 28, 28, 0.08) 0%, transparent 70%), radial-gradient(circle at 15% 85%, rgba(27, 54, 93, 0.05) 0%, transparent 50%), linear-gradient(160deg, #FFFFFF 0%, #F1F5F9 55%, #E2E8F0 100%)`);
-
-    document.documentElement.style.setProperty('--system-bg-gradient', resolvedBgGradient);
-    document.documentElement.style.setProperty('--system-glow-color', activeBgModel.glowColor);
-    document.documentElement.style.setProperty('--system-watermark-opacity', isDarkTheme ? '0.095' : '0.075');
-
     // Injeção do modo de tema no html/root
     document.documentElement.setAttribute('data-theme', settings.modo_tema || 'light');
   }, [settings]);

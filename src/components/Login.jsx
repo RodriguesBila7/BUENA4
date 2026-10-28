@@ -3,83 +3,27 @@ import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
 import useAuthData from '../hooks/useAuthData';
 import useSecuritySettings from '../hooks/useSecuritySettings';
 import useAuditLog from '../hooks/useAuditLog';
-import { getBackgroundModel } from '../utils/backgroundModels';
 
-/* ── Paleta VIP em Destaque (Cores Oficiais e Futuristas Curadas) ── */
-export const TEMAS_VIP = [
-  { nome: 'Carmesim SERNIC',   cor: '#B71C1C' },
-  { nome: 'Rubi Tático',        cor: '#DC2626' },
-  { nome: 'Azul Meia-Noite',   cor: '#0D1B4B' },
-  { nome: 'Azul Safira',       cor: '#1E40AF' },
-  { nome: 'Ciano Profundo',    cor: '#0891B2' },
-  { nome: 'Verde Jade',        cor: '#059669' },
-  { nome: 'Violeta Real',      cor: '#5B21B6' },
-  { nome: 'Âmbar Soberano',    cor: '#D97706' },
-  { nome: 'Titânio Escuro',    cor: '#1E293B' },
-  { nome: 'Carvão Supremo',    cor: '#212121' },
-];
-
-/* ── Paleta Expandida Completa (46 Cores Nobres e Profissionais) ── */
-export const TEMAS = [
-  // Vermelhos & Carmins
-  { nome: 'Vermelho Moçambique', cor: '#B71C1C' },
-  { nome: 'Carmésim Oficial',    cor: '#DC2626' },
-  { nome: 'Rubi Escarlate',      cor: '#C62828' },
-  { nome: 'Bordô Profundo',      cor: '#880E4F' },
-  { nome: 'Granada Nobre',       cor: '#991B1B' },
-  { nome: 'Vinho Executivo',     cor: '#7F1D1D' },
-  { nome: 'Cereja Escuro',       cor: '#9D174D' },
-
-  // Azuis Institucionais & Forenses
-  { nome: 'Azul Institucional',  cor: '#1B365D' },
-  { nome: 'Azul Meia-Noite',     cor: '#0D1B4B' },
-  { nome: 'Azul Real',           cor: '#1565C0' },
-  { nome: 'Azul Aço',           cor: '#0277BD' },
-  { nome: 'Azul Safira',         cor: '#1E40AF' },
-  { nome: 'Azul Cobalto',        cor: '#1D4ED8' },
-  { nome: 'Azul Oceano',         cor: '#0369A1' },
-
-  // Cianos & Teals Tecnológicos
-  { nome: 'Ciano Profundo',      cor: '#0891B2' },
-  { nome: 'Teal Forense',        cor: '#0F766E' },
-  { nome: 'Teal Profundo',       cor: '#004D40' },
-  { nome: 'Turquesa Escuro',     cor: '#0E7490' },
-  { nome: 'Azul Índigo',         cor: '#3730A3' },
-  { nome: 'Índigo Cibernético',  cor: '#4338CA' },
-  { nome: 'Marinho Escuro',      cor: '#0F172A' },
-
-  // Verdes & Táticos
+/* ── Temas pré-definidos ── */
+const TEMAS = [
+  { nome: 'Azul Institucional', cor: '#1B365D' },
+  { nome: 'Azul Escuro',        cor: '#0D1B4B' },
+  { nome: 'Azul Real',          cor: '#1565C0' },
+  { nome: 'Azul Aço',          cor: '#0277BD' },
   { nome: 'Verde Institucional', cor: '#1B5E20' },
-  { nome: 'Verde Esmeralda',     cor: '#00695C' },
-  { nome: 'Verde Floresta',      cor: '#15803D' },
-  { nome: 'Verde Jade',          cor: '#059669' },
-  { nome: 'Verde Oliva',         cor: '#33691E' },
-  { nome: 'Malaquita Forense',   cor: '#047857' },
-  { nome: 'Musgo Tático',        cor: '#3F6212' },
-
-  // Roxos & Violetas
-  { nome: 'Roxo Imperial',       cor: '#4A148C' },
-  { nome: 'Roxo Médio',         cor: '#6A1B9A' },
-  { nome: 'Violeta Real',        cor: '#5B21B6' },
-  { nome: 'Ametista Escura',     cor: '#701A75' },
-  { nome: 'Púrpura Tática',      cor: '#6B21A8' },
-  { nome: 'Ameixa Noturna',      cor: '#581C87' },
-  { nome: 'Rosa Escuro Tático',  cor: '#BE185D' },
-
-  // Âmbar, Dourados & Terracota
-  { nome: 'Âmbar Soberano',      cor: '#D97706' },
-  { nome: 'Castanho Dourado',    cor: '#F57F17' },
-  { nome: 'Terracota Nobre',     cor: '#BF360C' },
-  { nome: 'Bronze Tático',       cor: '#B45309' },
-  { nome: 'Laranja Queimado',    cor: '#C2410C' },
-  { nome: 'Cobre Escuro',        cor: '#78350F' },
-
-  // Grafites & Carvão
-  { nome: 'Carvão Supremo',      cor: '#212121' },
-  { nome: 'Cinza Grafite',       cor: '#37474F' },
-  { nome: 'Titânio Escuro',      cor: '#1E293B' },
-  { nome: 'Ardósia Tática',      cor: '#334155' },
-  { nome: 'Chumbo Operacional',   cor: '#1F2937' },
+  { nome: 'Verde Esmeralda',    cor: '#00695C' },
+  { nome: 'Verde Oliva',        cor: '#33691E' },
+  { nome: 'Vermelho Moçambique', cor: '#B71C1C' },
+  { nome: 'Carmésim',          cor: '#C62828' },
+  { nome: 'Bordô',             cor: '#880E4F' },
+  { nome: 'Roxo Imperial',      cor: '#4A148C' },
+  { nome: 'Roxo Médio',        cor: '#6A1B9A' },
+  { nome: 'Carvão',            cor: '#212121' },
+  { nome: 'Cinza Escuro',       cor: '#37474F' },
+  { nome: 'Laranja Escuro',     cor: '#BF360C' },
+  { nome: 'Castaño Dourado',   cor: '#F57F17' },
+  { nome: 'Teal Profundo',      cor: '#004D40' },
+  { nome: 'Azul Meia-Noite',    cor: '#01579B' },
 ];
 
 export default function Login({ settings, onLogin, updateSettings, t, language, setLanguage }) {
@@ -98,8 +42,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const [view, setView]               = useState('login'); // 'login' | 'register' | 'recover'
   const [hoveredTema, setHoveredTema] = useState(null);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
-  const [showLangMenu, setShowLangMenu]   = useState(false);
-  const [showAllThemes, setShowAllThemes] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   // Sincronizar com settings globais
   const [bwMode, setBwMode] = useState(() => {
     return settings.modo_tema === 'dark' ? 'noite' : 'theme';
@@ -301,51 +244,19 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const toggleCoresAleatorias = () => {
     const nextVal = !settings.cores_aleatorias;
     setBwMode('theme');
-    const current = (settings.cor_principal || '').toUpperCase();
-    const available = TEMAS.filter(t => t.cor.toUpperCase() !== current);
-    const randomTema = nextVal ? (available[Math.floor(Math.random() * available.length)]?.cor || TEMAS[0].cor) : settings.cor_principal;
+    const randomTema = nextVal ? TEMAS[Math.floor(Math.random() * TEMAS.length)].cor : settings.cor_principal;
     if (updateSettings) {
       updateSettings({
         ...settings,
         cores_aleatorias: nextVal,
         cor_principal: randomTema,
-        usuario_responsavel: 'Modo Cores Aleatórias 3s (Login)'
+        usuario_responsavel: 'Modo Cores Aleatórias (Login)'
       });
     }
   };
 
-  const selectedBgModel = getBackgroundModel(settings?.modelo_fundo);
-
-  const pageBg = bwMode === 'noite'
-    ? (selectedBgModel.isDark ? selectedBgModel.bgGradient : 'radial-gradient(ellipse 85% 65% at 50% 25%, #182333 0%, #0F1622 55%, #080D14 100%)')
-    : bwMode === 'claro'
-    ? 'radial-gradient(ellipse 90% 60% at 50% 12%, rgba(183, 28, 28, 0.08) 0%, transparent 70%), radial-gradient(circle at 15% 85%, rgba(27, 54, 93, 0.05) 0%, transparent 50%), linear-gradient(160deg, #FFFFFF 0%, #F1F5F9 55%, #E2E8F0 100%)'
-    : (settings.cores_aleatorias
-        ? `radial-gradient(ellipse 95% 75% at 50% 25%, ${settings.cor_principal} 0%, rgba(15, 23, 42, 0.95) 60%, #020617 100%)`
-        : selectedBgModel.bgGradient);
-
   return (
-    <div 
-      className="login-page-root" 
-      style={{ 
-        ...s.page, 
-        backgroundColor: bgColor, 
-        background: pageBg,
-        transition: 'background 1.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 1.2s ease' 
-      }}
-    >
-
-      {/* ══════════════ MARCA DE ÁGUA OFICIAL NO FUNDO (SERNIC) ══════════════ */}
-      <div className="landing-watermark-bg" aria-hidden="true">
-        <img
-          src="/logo-sernic-transparente.png"
-          alt=""
-          loading="eager"
-          decoding="sync"
-          className="landing-watermark-img"
-          style={{ opacity: isDark ? 0.14 : 0.10 }}
-        />
-      </div>
+    <div className="login-page-root" style={{ ...s.page, backgroundColor: bgColor, transition: 'background-color 0.35s ease' }}>
 
       {/* ══════════════ MENU TOPO DIREITO (TEMAS + IDIOMA) ══════════════ */}
       <div style={s.topRightMenu}>
@@ -354,42 +265,48 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <div style={{ position: 'relative' }} ref={langMenuRef}>
           <button
             onClick={() => setShowLangMenu(!showLangMenu)}
-            className="login-glass-btn"
-            style={s.langBtn}
+            style={{
+              ...s.langBtn,
+              backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.18)',
+              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+              border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              opacity: 1,
+              fontWeight: '700'
+            }}
             title={t('language')}
           >
-            <span style={{ fontSize: '13px' }}>🌐</span>
-            <span>{language.toUpperCase()}</span>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ transform: showLangMenu ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}>
+            {language.toUpperCase()}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="6 9 12 15 18 9"></polyline>
             </svg>
           </button>
           
           {showLangMenu && (
-            <div className="login-glass-panel" style={s.langDropdown}>
-              {['pt', 'en'].map(lang => (
+            <div style={{
+              ...s.langDropdown,
+              backgroundColor: bwMode === 'claro' ? '#FFFFFF' : 'rgba(15, 23, 42, 0.95)',
+              border: bwMode === 'claro' ? '1px solid #E2E8F0' : '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.25)'
+            }}>
+              {['pt', 'en'].filter(l => l !== language).map(lang => (
                 <button
                   key={lang}
                   onClick={() => { setLanguage(lang); setShowLangMenu(false); }}
                   style={{
-                    backgroundColor: language === lang ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                    color: language === lang ? '#EF4444' : 'inherit',
-                    border: 'none',
-                    borderRadius: '8px',
+                    ...s.langBtn,
+                    backgroundColor: 'transparent',
+                    color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+                    opacity: 0.95,
                     width: '100%',
-                    padding: '8px 12px',
                     textAlign: 'left',
-                    fontWeight: language === lang ? '800' : '600',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    transition: 'all 0.15s ease'
+                    marginTop: '2px',
+                    fontWeight: '700'
                   }}
                 >
-                  <span>{lang === 'pt' ? 'Português' : 'English'}</span>
-                  {language === lang && <span style={{ fontSize: '12px' }}>✓</span>}
+                  {lang.toUpperCase()}
                 </button>
               ))}
             </div>
@@ -399,12 +316,20 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         {/* Botão Modo Noite / Modo Claro */}
         <button
           onClick={toggleBwMode}
-          className="login-glass-btn"
           title={
             bwMode === 'theme' ? t('themes_activate_night') :
             bwMode === 'noite' ? t('themes_activate_light') : t('themes_back_theme')
           }
-          style={s.iconBtn}
+          style={{
+            ...s.iconBtn,
+            backgroundColor:
+              bwMode === 'noite' ? 'rgba(255,255,255,0.18)' :
+              bwMode === 'claro' ? 'rgba(0,0,0,0.08)' :
+              'rgba(255,255,255,0.2)',
+            color:
+              bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+            border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
+          }}
         >
           {bwMode === 'noite' ? (
             /* ícone lua */
@@ -425,7 +350,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
             </svg>
           ) : (
-            /* ícone meio círculo (tema dinâmico) */
+            /* ícone meio círculo (tema padrão) */
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 2v20"/>
@@ -433,15 +358,19 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
           )}
         </button>
 
-        {/* Botão de Temas & Paleta */}
+        {/* Botão de Temas */}
         <div style={{ position: 'relative' }} ref={themeMenuRef}>
           <button 
             onClick={() => setShowThemeMenu(!showThemeMenu)}
-            className="login-glass-btn"
             title={t('themes_title')}
-            style={s.iconBtn}
+            style={{
+              ...s.iconBtn,
+              backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.2)',
+              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
+              border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
+            }}
           >
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
               <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
               <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
@@ -450,259 +379,101 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             </svg>
           </button>
 
-          {/* Dropdown de Temas — Modo Frosted Glass Futurista e Limpo */}
+          {/* Dropdown de Temas */}
           {showThemeMenu && (
-            <div className="login-glass-panel" style={s.themeDropdown}>
-              {/* Cabeçalho do Dropdown */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                  <span style={{ fontSize: '15px' }}>🎨</span>
-                  <span style={{
-                    fontSize: '11px',
-                    fontWeight: '800',
-                    letterSpacing: '0.8px',
-                    textTransform: 'uppercase',
-                    color: bwMode === 'claro' ? '#0F172A' : '#F8FAFC'
-                  }}>
-                    {t('themes_title') || 'Tema & Cores'}
-                  </span>
-                </div>
-                <button 
-                  type="button"
-                  onClick={() => setShowThemeMenu(false)}
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: bwMode === 'claro' ? '#64748B' : '#94A3B8',
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    padding: '2px 4px',
-                    lineHeight: 1
-                  }}
-                  title="Fechar"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Rótulo da Paleta Principal */}
-              <p style={{
-                ...s.dropdownTitle,
-                color: bwMode === 'claro' ? '#475569' : '#94A3B8'
-              }}>
-                Cores em Destaque
-              </p>
-
-              {/* Grelha VIP Curada (Sem poluição visual: 10 cores perfeitamente espaçadas) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', justifyItems: 'center', marginBottom: '8px' }}>
-                {TEMAS_VIP.map((tema) => {
+            <div style={s.themeDropdown}>
+              <p style={s.dropdownTitle}>{t('themes_predefined')}</p>
+              <div style={s.temaSwatches}>
+                {TEMAS.map((tema) => {
                   const isActive = settings.cor_principal === tema.cor;
+                  const isHover  = hoveredTema === tema.cor;
                   return (
                     <button
                       key={tema.cor}
                       type="button"
                       title={tema.nome}
-                      className={`swatch-vip ${isActive ? 'active' : ''}`}
-                      onClick={() => aplicarTema(tema.cor)}
+                      onClick={() => { aplicarTema(tema.cor); setShowThemeMenu(false); }}
                       onMouseEnter={() => setHoveredTema(tema.cor)}
                       onMouseLeave={() => setHoveredTema(null)}
-                      style={{ backgroundColor: tema.cor }}
+                      style={{
+                        ...s.temaSwatch,
+                        backgroundColor: tema.cor,
+                        transform: isActive || isHover ? 'scale(1.3)' : 'scale(1)',
+                        outline: isActive ? '2px solid #333' : isHover ? '2px solid rgba(0,0,0,0.4)' : 'none',
+                        outlineOffset: '2px',
+                      }}
                     />
                   );
                 })}
               </div>
-
-              {/* Indicador e Nome da Cor Activa / Hover */}
-              <div style={{
-                ...s.temaTooltip,
-                color: bwMode === 'claro' ? '#0F172A' : '#F8FAFC'
-              }}>
-                {hoveredTema 
-                  ? TEMAS.find(t => t.cor === hoveredTema)?.nome 
-                  : `Tom Ativo: ${TEMAS.find(t => t.cor === settings.cor_principal)?.nome || 'Personalizado'}`}
-              </div>
-
-              {/* Botão de Expansão para Todas as 46 Cores */}
-              <button
-                type="button"
-                onClick={() => setShowAllThemes(!showAllThemes)}
-                style={{
-                  width: '100%',
-                  padding: '7px 10px',
-                  backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)',
-                  border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '10px',
-                  fontSize: '11px',
-                  fontWeight: '700',
-                  color: bwMode === 'claro' ? '#334155' : '#CBD5E1',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s ease',
-                  marginTop: '6px',
-                  marginBottom: '10px'
-                }}
-              >
-                <span>{showAllThemes ? '▲' : '▼'}</span>
-                <span>{showAllThemes ? 'Ocultar Catálogo Expandido' : 'Ver Todos os 46 Tons Futuristas'}</span>
-              </button>
-
-              {/* Catálogo Expandido (Apenas se o utilizador quiser explorar) */}
-              {showAllThemes && (
-                <div style={{
-                  ...s.temaSwatches,
-                  marginBottom: '10px',
-                  border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)',
-                  borderRadius: '12px',
-                  padding: '10px 8px',
-                  backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.02)' : 'rgba(0,0,0,0.25)'
-                }}>
-                  {TEMAS.map((tema) => {
-                    const isActive = settings.cor_principal === tema.cor;
-                    const isHover  = hoveredTema === tema.cor;
-                    return (
-                      <button
-                        key={tema.cor}
-                        type="button"
-                        title={tema.nome}
-                        onClick={() => aplicarTema(tema.cor)}
-                        onMouseEnter={() => setHoveredTema(tema.cor)}
-                        onMouseLeave={() => setHoveredTema(null)}
-                        style={{
-                          ...s.temaSwatch,
-                          backgroundColor: tema.cor,
-                          transform: isActive || isHover ? 'scale(1.2)' : 'scale(1)',
-                          outline: isActive ? '2px solid #FFFFFF' : 'none',
-                          outlineOffset: '2px',
-                        }}
-                      />
-                    );
-                  })}
-                </div>
+              {hoveredTema && (
+                <p style={s.temaTooltip}>
+                  {TEMAS.find(t => t.cor === hoveredTema)?.nome}
+                </p>
               )}
-
-              {/* Separador */}
-              <div style={{
-                ...s.dropdownDivider,
-                backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)'
-              }} />
-
-              {/* Linha de Cor Personalizada */}
-              <div style={{
-                ...s.colorPickerRow,
-                backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)',
-                border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)'
-              }}>
-                <label 
-                  htmlFor="custom-color-picker" 
-                  style={{
-                    ...s.colorPickerLabel,
-                    color: bwMode === 'claro' ? '#0F172A' : '#F8FAFC'
-                  }}
-                >
-                  <span style={{ fontSize: '14px' }}>✨</span>
-                  <span>{t('themes_pick') || 'Tom Personalizado'}</span>
+              {/* Separador + Color Picker personalizado */}
+              <div style={s.dropdownDivider} />
+              <p style={s.dropdownTitle}>{t('themes_custom')}</p>
+              <div style={s.colorPickerRow}>
+                <input
+                  type="color"
+                  id="custom-color-picker"
+                  defaultValue={settings.cor_principal}
+                  onChange={(e) => aplicarTema(e.target.value)}
+                  style={s.colorPicker}
+                  title={t('themes_pick')}
+                />
+                <label htmlFor="custom-color-picker" style={s.colorPickerLabel}>
+                  {t('themes_pick')}
                 </label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{
-                    fontSize: '11px',
-                    fontFamily: 'monospace',
-                    fontWeight: '700',
-                    color: bwMode === 'claro' ? '#64748B' : '#94A3B8'
-                  }}>
-                    {settings.cor_principal?.toUpperCase() || '#BA1B1D'}
-                  </span>
-                  <input
-                    type="color"
-                    id="custom-color-picker"
-                    defaultValue={settings.cor_principal}
-                    onChange={(e) => aplicarTema(e.target.value)}
-                    style={s.colorPicker}
-                    title={t('themes_pick')}
-                  />
-                </div>
               </div>
 
-              {/* Separador */}
-              <div style={{
-                ...s.dropdownDivider,
-                backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)'
-              }} />
-
-              {/* Card de Cores Aleatórias (Ciclo a cada 3s) */}
+              {/* Separador + Opção de Cores Aleatórias ao Entrar / Refresh */}
+              <div style={s.dropdownDivider} />
               <div
                 onClick={toggleCoresAleatorias}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '10px 12px',
-                  backgroundColor: settings.cores_aleatorias
-                    ? (bwMode === 'claro' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.14)')
-                    : (bwMode === 'claro' ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.05)'),
-                  border: settings.cores_aleatorias
-                    ? '1px solid rgba(16, 185, 129, 0.35)'
-                    : (bwMode === 'claro' ? '1px solid rgba(0,0,0,0.06)' : '1px solid rgba(255,255,255,0.08)'),
-                  borderRadius: '12px',
+                  padding: '6px 2px 2px',
                   cursor: 'pointer',
                   userSelect: 'none',
-                  transition: 'all 0.25s ease'
+                  gap: '8px'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                  <span style={{ fontSize: '16px' }}>⚡</span>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{
-                      fontSize: '11.5px',
-                      fontWeight: '700',
-                      color: bwMode === 'claro' ? '#0F172A' : '#F8FAFC',
-                      letterSpacing: '0.2px'
-                    }}>
-                      Ciclo Quântico de Cores
-                    </span>
-                    <span style={{ 
-                      fontSize: '9.5px', 
-                      fontWeight: '700', 
-                      color: settings.cores_aleatorias ? '#10B981' : (bwMode === 'claro' ? '#64748B' : '#94A3B8'), 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '5px',
-                      marginTop: '2px'
-                    }}>
-                      {settings.cores_aleatorias ? (
-                        <>
-                          <span className="pulse-dot-green"></span>
-                          A MUDAR CADA 3 SEGUNDOS
-                        </>
-                      ) : (
-                        'Alternar cores a cada 3s'
-                      )}
-                    </span>
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '15px' }}>🎲</span>
+                  <span style={{
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: bwMode === 'claro' ? '#2c3e50' : 'var(--color-text-base, #F8FAFC)',
+                    letterSpacing: '0.2px'
+                  }}>
+                    {t('themes_random_mode') || 'Cores Aleatórias'}
+                  </span>
                 </div>
 
                 {/* Switch estilo toggle moderno */}
                 <div style={{
-                  width: '34px',
-                  height: '20px',
-                  backgroundColor: settings.cores_aleatorias ? '#10B981' : (bwMode === 'claro' ? '#CBD5E1' : '#475569'),
-                  borderRadius: '12px',
+                  width: '32px',
+                  height: '18px',
+                  backgroundColor: settings.cores_aleatorias ? 'var(--color-primary, #EF4444)' : (bwMode === 'claro' ? '#CBD5E1' : '#475569'),
+                  borderRadius: '10px',
                   position: 'relative',
                   transition: 'all 0.2s ease',
                   flexShrink: 0
                 }}>
                   <div style={{
-                    width: '16px',
-                    height: '16px',
+                    width: '14px',
+                    height: '14px',
                     backgroundColor: '#FFFFFF',
                     borderRadius: '50%',
                     position: 'absolute',
                     top: '2px',
                     left: settings.cores_aleatorias ? '16px' : '2px',
                     transition: 'left 0.2s ease',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.35)'
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.35)'
                   }} />
                 </div>
               </div>
@@ -712,6 +483,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       </div>
 
       {/* ══════════════ CABEÇALHO INSTITUCIONAL ELEGANTE E MINIMALISTA ══════════════ */}
+      {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
       <div style={s.header}>
         <div style={s.logoContainer}>
           <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
@@ -719,37 +491,37 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <h1 style={{
           ...s.instNome,
           color: lightActive ? '#0F172A' : '#FFFFFF',
-          textShadow: lightActive ? '0 1px 2px rgba(255,255,255,0.8)' : '0 2px 8px rgba(0,0,0,0.6)'
+          textShadow: lightActive ? 'none' : '0 1px 4px rgba(0,0,0,0.35)'
         }}>
           SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL
         </h1>
         <div style={{
           ...s.sysTitleBold,
-          color: lightActive ? '#1E293B' : '#F1F5F9',
-          textShadow: lightActive ? '0 1px 2px rgba(255,255,255,0.8)' : '0 2px 6px rgba(0,0,0,0.5)'
+          color: lightActive ? '#1E293B' : '#FFFFFF',
+          textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
         }}>
           DIRECÇÃO GERAL
         </div>
         <div style={{
           ...s.sysTitleBold,
-          color: lightActive ? '#1E293B' : '#F1F5F9',
-          textShadow: lightActive ? '0 1px 2px rgba(255,255,255,0.8)' : '0 2px 6px rgba(0,0,0,0.5)'
+          color: lightActive ? '#1E293B' : '#FFFFFF',
+          textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
         }}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
-        <div style={{ marginTop: '8px', marginBottom: '14px' }}>
+        <div style={{ marginTop: 'calc(18px + 1.0cm)', marginBottom: '10px' }}>
           <p style={{
             ...s.sysTitleSub,
-            color: lightActive ? '#334155' : 'rgba(255,255,255,0.92)',
-            textShadow: lightActive ? 'none' : '0 1px 4px rgba(0,0,0,0.5)'
+            color: lightActive ? '#1E293B' : '#FFFFFF',
+            textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
           }}>
             SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
           </p>
         </div>
       </div>
 
-      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR (MODO VIDRO) ══════════════ */}
-      <div className="login-card login-card-glass" style={{...s.card, marginTop: '4px'}}>
+      {/* ══════════════ CARD DE LOGIN / REGISTO / RECUPERAR ══════════════ */}
+      <div className="login-card" style={{...s.card, marginTop: '4px'}}>
         {successMsg && <p style={{...s.errorMsg, backgroundColor: '#ECFDF5', color: '#10B981', borderColor: '#A7F3D0'}}>{successMsg}</p>}
         {error && <p style={s.errorMsg}>{error}</p>}
 
@@ -804,35 +576,32 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               >
                 {isLoading ? (t('login_submit_loading') || 'A ENTRAR...') : (t('login_submit') || 'ENTRAR')}
               </button>
-              <button 
-                type="submit" 
-                style={{
+              <button
+                type="button"
+                onClick={() => { clearCredentials(); setView('recover'); }}
+                style={{ 
                   ...s.btnPrimary, 
-                  backgroundColor: isLoading ? '#CE6767' : '#C0262B',
-                  boxShadow: '0 4px 16px rgba(192, 38, 43, 0.4)',
-                  marginTop: '8px'
-                }} 
-                disabled={isLoading}
+                  backgroundColor: '#BA1B1D', 
+                  marginTop: '12px', 
+                  textTransform: 'uppercase',
+                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)'
+                }}
               >
-                {isLoading ? (t('login_submit_loading') || 'A ENTRAR...') : (t('login_submit') || 'ENTRAR')}
+                {t('login_forgot') || 'ESQUECEU A SENHA?'}
               </button>
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
-                <button
-                  type="button"
-                  onClick={() => { clearCredentials(); setView('recover'); }}
-                  style={s.btnGlassSecondary}
-                >
-                  {t('login_forgot') || 'ESQUECEU A SENHA?'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { clearCredentials(); setView('register'); }}
-                  style={s.btnGlassSecondary}
-                >
-                  {t('login_request_access') || 'SOLICITAR ACESSO'}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => { clearCredentials(); setView('register'); }}
+                style={{ 
+                  ...s.btnPrimary, 
+                  backgroundColor: '#BA1B1D', 
+                  marginTop: '12px', 
+                  textTransform: 'uppercase',
+                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)'
+                }}
+              >
+                {t('login_request_access') || 'SOLICITAR ACESSO'}
+              </button>
             </form>
           </>
         )}
@@ -907,12 +676,9 @@ const s = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    padding: '30px 16px 20px',
+    padding: '36px 16px 20px',
     transition: 'background-color 0.35s ease',
     fontFamily: "'Inter', system-ui, sans-serif",
-    position: 'relative',
-    overflowY: 'auto',
-    overflowX: 'hidden',
   },
 
   /* ── Cabeçalho ── */
@@ -922,25 +688,23 @@ const s = {
     alignItems: 'center',
     marginBottom: '0',
     textAlign: 'center',
-    position: 'relative',
-    zIndex: 2,
   },
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '10px',
+    marginBottom: '14px',
   },
   logo: {
-    width: '140px',
-    height: '140px',
+    width: '160px',
+    height: '160px',
     objectFit: 'contain',
-    filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.3))',
-    transition: 'transform 0.25s ease',
+    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.25))',
+    transition: 'transform 0.2s ease',
   },
   instNome: {
     color: '#FFFFFF',
-    fontSize: '15px',
+    fontSize: '15.5px',
     fontWeight: '800',
     letterSpacing: '0.8px',
     textAlign: 'center',
@@ -950,7 +714,7 @@ const s = {
   },
   sysTitleBold: {
     color: '#FFFFFF',
-    fontSize: '14px',
+    fontSize: '15px',
     fontWeight: '800',
     letterSpacing: '0.8px',
     margin: '2px 0',
@@ -958,30 +722,31 @@ const s = {
   },
   sysTitleSub: {
     color: '#FFFFFF',
-    fontSize: '13px',
+    fontSize: '13.5px',
     fontWeight: '700',
     letterSpacing: '0.6px',
     margin: 0,
     textShadow: '0 1px 3px rgba(0,0,0,0.35)',
   },
 
-  /* ── Card (Modo Vidro) ── */
+  /* ── Card ── */
   card: {
     width: '100%',
     maxWidth: '430px',
-    borderRadius: '24px',
-    padding: '34px 30px 28px',
-    boxSizing: 'border-box',
-    position: 'relative',
-    zIndex: 2,
+    backgroundColor: '#FFFFFF',
+    border: 'none',
+    borderRadius: '20px',
+    padding: '38px 34px calc(34px + 1.6cm)',
+    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+    boxSizing: 'border-box'
   },
   cardTitle: {
-    fontSize: '24px',
+    fontSize: '26px',
     fontWeight: '800',
-    color: 'inherit',
+    color: '#0A192F',
     textAlign: 'center',
-    margin: '0 0 20px',
-    letterSpacing: '-0.2px'
+    margin: '0 0 24px',
+    letterSpacing: '-0.3px'
   },
   errorMsg: {
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
@@ -999,25 +764,23 @@ const s = {
     gap: '14px',
   },
 
-  /* ── Campos Translúcidos Glass ── */
+  /* ── Campos ── */
   fieldWrap: {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    border: '1px solid var(--color-border)',
-    borderRadius: '12px',
-    backgroundColor: 'var(--color-bg-subtle)',
-    backdropFilter: 'blur(10px)',
-    WebkitBackdropFilter: 'blur(10px)',
+    border: '1px solid #E2E8F0',
+    borderRadius: '10px',
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
-    transition: 'all 0.2s ease',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
   },
   fieldIcon: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     width: '42px',
-    color: 'var(--color-text-light)',
+    color: '#64748B',
     flexShrink: 0,
   },
   field: {
@@ -1026,9 +789,8 @@ const s = {
     background: 'transparent',
     padding: '13px 8px',
     fontSize: '14px',
-    color: 'var(--color-text-base)',
+    color: '#0F172A',
     outline: 'none',
-    fontWeight: '500',
   },
   fieldIconRight: {
     display: 'flex',
@@ -1054,46 +816,25 @@ const s = {
   btnPrimary: {
     width: '100%',
     padding: '13.5px',
-    background: 'linear-gradient(135deg, #C0262B 0%, #991B1B 100%)',
+    backgroundColor: '#BA1B1D',
     color: '#FFFFFF',
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: '8px',
     fontSize: '13.5px',
     fontWeight: '700',
     letterSpacing: '0.8px',
     cursor: 'pointer',
     marginTop: '6px',
     transition: 'all 0.2s ease',
-    boxShadow: '0 4px 16px rgba(192, 38, 43, 0.4)',
-  },
-  btnGlassSecondary: {
-    flex: 1,
-    padding: '10.5px 6px',
-    backgroundColor: 'var(--color-bg-subtle)',
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
-    color: 'var(--color-text-base)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '10px',
-    fontSize: '11px',
-    fontWeight: '700',
-    letterSpacing: '0.4px',
-    cursor: 'pointer',
-    textTransform: 'uppercase',
-    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
+    boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)',
   },
   btnSecondary: {
     width: '100%',
     padding: '13px',
-    backgroundColor: 'var(--color-bg-subtle)',
-    color: 'var(--color-text-base)',
-    border: '1px solid var(--color-border)',
-    borderRadius: '12px',
+    backgroundColor: 'transparent',
+    color: '#64748B',
+    border: '1px solid #E2E8F0',
+    borderRadius: '8px',
     fontSize: '13.5px',
     fontWeight: '600',
     letterSpacing: '0.8px',
@@ -1102,7 +843,7 @@ const s = {
     transition: 'all 0.2s ease',
   },
 
-  /* ── Dropdown de Temas & Menu Topo ── */
+  /* ── Dropdown de Temas ── */
   topRightMenu: {
     position: 'absolute',
     top: '20px',
@@ -1110,111 +851,117 @@ const s = {
     display: 'flex',
     gap: '10px',
     alignItems: 'center',
-    zIndex: 20,
   },
   iconBtn: {
-    borderRadius: '12px',
-    width: '42px',
-    height: '42px',
+    background: 'rgba(255, 255, 255, 0.15)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '50%',
+    width: '40px',
+    height: '40px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    color: '#FFFFFF',
     cursor: 'pointer',
-    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-    outline: 'none',
+    transition: 'all 0.2s',
+    backdropFilter: 'blur(6px)',
   },
   themeDropdown: {
     position: 'absolute',
-    top: '52px',
+    top: '50px',
     right: '0',
-    padding: '18px 18px 16px',
-    width: '320px',
-    zIndex: 25,
+    backgroundColor: 'var(--color-bg-card, #243044)',
+    border: '1px solid var(--color-border, #3A4A66)',
+    borderRadius: '12px',
+    padding: '18px 16px 14px',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+    width: '252px',
+    zIndex: 10,
+    color: 'var(--color-text-base, #F8FAFC)'
   },
   dropdownTitle: {
-    fontSize: '11px',
-    fontWeight: '800',
+    fontSize: '10px',
+    fontWeight: '700',
+    color: 'var(--color-text-muted, #A8B7CD)',
     letterSpacing: '0.8px',
     textTransform: 'uppercase',
     margin: '0 0 10px',
   },
   dropdownDivider: {
     height: '1px',
+    backgroundColor: 'var(--color-border, #3A4A66)',
     margin: '12px 0',
   },
   temaSwatches: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(7, 1fr)',
-    gap: '8px',
-    maxHeight: '170px',
-    overflowY: 'auto',
-    padding: '4px 2px',
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '10px',
   },
   temaSwatch: {
-    width: '26px',
-    height: '26px',
+    width: '22px',
+    height: '22px',
     borderRadius: '50%',
-    border: '1px solid rgba(255,255,255,0.22)',
+    border: '1px solid rgba(0,0,0,0.12)',
     cursor: 'pointer',
     transition: 'transform 0.15s ease, outline 0.15s ease',
     padding: 0,
-    boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
   },
   temaTooltip: {
-    fontSize: '11.5px',
-    fontWeight: '700',
+    fontSize: '11px',
+    fontWeight: '600',
+    color: '#555',
     margin: '8px 0 0',
     textAlign: 'center',
     minHeight: '16px',
-    letterSpacing: '0.2px',
   },
   colorPickerRow: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '8px 12px',
-    borderRadius: '12px',
-    marginTop: '4px',
+    gap: '10px',
+    marginTop: '2px',
   },
   colorPicker: {
-    width: '30px',
-    height: '30px',
-    border: 'none',
-    borderRadius: '50%',
-    padding: '0',
+    width: '38px',
+    height: '38px',
+    border: '1px solid #E0E0E0',
+    borderRadius: '8px',
+    padding: '2px',
     cursor: 'pointer',
     background: 'none',
     flexShrink: 0,
   },
   colorPickerLabel: {
-    fontSize: '12px',
+    fontSize: '13px',
+    color: '#555',
     cursor: 'pointer',
-    fontWeight: '700',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
+    fontWeight: '500',
   },
 
   /* ── Seletor de Idioma ── */
   langDropdown: {
     position: 'absolute',
-    top: '52px',
+    top: '36px',
     right: '0',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: '8px',
     padding: '8px',
-    zIndex: 25,
-    minWidth: '90px',
+    backdropFilter: 'blur(8px)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    zIndex: 10,
+    minWidth: '60px',
   },
   langBtn: {
-    fontSize: '12.5px',
+    background: 'rgba(255, 255, 255, 0.15)',
+    border: 'none',
+    color: '#FFFFFF',
+    fontSize: '13px',
     cursor: 'pointer',
-    padding: '7px 14px',
-    borderRadius: '12px',
-    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-    letterSpacing: '0.6px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    fontWeight: '700',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    transition: 'all 0.2s ease',
+    letterSpacing: '0.5px',
+    backdropFilter: 'blur(4px)',
   },
 
   /* ── Rodapé ── */
