@@ -112,10 +112,17 @@ export default function App() {
       document.documentElement.style.setProperty('--color-accent', settings.cor_destaque || '#FFFFFF');
     }
     
-    // Injeção de variáveis do modelo de fundo futurista simples
-    document.documentElement.style.setProperty('--system-bg-gradient', activeBgModel.bgGradient);
+    // Injeção de variáveis do modelo de fundo futurista simples e refinado
+    const isDarkTheme = settings.modo_tema === 'dark';
+    const resolvedBgGradient = isDarkTheme
+      ? activeBgModel.bgGradient
+      : (!activeBgModel.isDark
+          ? activeBgModel.bgGradient
+          : `radial-gradient(ellipse 90% 60% at 50% 12%, rgba(183, 28, 28, 0.08) 0%, transparent 70%), radial-gradient(circle at 15% 85%, rgba(27, 54, 93, 0.05) 0%, transparent 50%), linear-gradient(160deg, #FFFFFF 0%, #F1F5F9 55%, #E2E8F0 100%)`);
+
+    document.documentElement.style.setProperty('--system-bg-gradient', resolvedBgGradient);
     document.documentElement.style.setProperty('--system-glow-color', activeBgModel.glowColor);
-    document.documentElement.style.setProperty('--system-watermark-opacity', String(activeBgModel.watermarkOpacity));
+    document.documentElement.style.setProperty('--system-watermark-opacity', isDarkTheme ? '0.095' : '0.075');
 
     // Injeção do modo de tema no html/root
     document.documentElement.setAttribute('data-theme', settings.modo_tema || 'light');

@@ -9,10 +9,13 @@
   --color-secondary: #2D3748;  /* Cinza Escuro padrão */
   --color-accent: #FFFFFF;     /* Branco de Destaque padrão */
 
-  /* Cores de Fundo e Texto do Modo Claro (invertidas: base ↔ card) */
-  --color-bg-base: #FFFFFF;
-  --color-bg-card: #F8FAFC;
-  --color-bg-subtle: #F1F5F9;
+  /* Cores de Fundo e Superfícies Glass no Modo Claro */
+  --color-bg-base: #F8FAFC;
+  --color-bg-card: rgba(255, 255, 255, 0.82);
+  --color-bg-subtle: rgba(241, 245, 249, 0.82);
+  --color-bg-header-glass: rgba(255, 255, 255, 0.84);
+  --color-bg-sidebar-glass: rgba(22, 30, 46, 0.90);
+  --color-border-glass: rgba(255, 255, 255, 0.12);
   --color-bg-sidebar: #1E293B; /* Sidebar sempre escura para contraste institucional */
   --color-sidebar-text: #F8FAFC;
   --color-sidebar-text-muted: #94A3B8;
@@ -42,11 +45,14 @@
 
 /* Modo Escuro - Reestruturado: Mais Claro, Nobre, Suave e Visualmente Agradável */
 [data-theme="dark"] {
-  /* Fundo e Superfícies Elevadas (Tons Grafite Suaves - Muito mais claros que o preto antigo) */
-  --color-bg-base: #1C2433;      /* Fundo geral da aplicação: ardósia suave, sem preto pesado */
-  --color-bg-card: #243044;      /* Cards e superfícies: tom elevado, acolhedor e nítido */
-  --color-bg-subtle: #2A3850;    /* Pequenos blocos e badges neutros */
-  --color-bg-sidebar: #1A2130;   /* Sidebar elegante e integrada */
+  /* Fundo e Superfícies Elevadas Glass no Modo Escuro */
+  --color-bg-base: #0F172A;
+  --color-bg-card: rgba(30, 41, 59, 0.72);
+  --color-bg-subtle: rgba(42, 56, 80, 0.65);
+  --color-bg-header-glass: rgba(24, 32, 47, 0.82);
+  --color-bg-sidebar-glass: rgba(15, 23, 42, 0.92);
+  --color-border-glass: rgba(255, 255, 255, 0.08);
+  --color-bg-sidebar: #151D2C;
   --color-sidebar-text: #F8FAFC;
   --color-sidebar-text-muted: #A4B5CD;
 
@@ -218,7 +224,10 @@ body {
   font-family: var(--font-family);
   color: var(--color-text-base);
   min-height: 100vh;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  background: var(--system-bg-gradient, #F8FAFC);
+  background-attachment: fixed;
+  background-size: cover;
+  transition: background var(--transition-normal), color var(--transition-fast);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -1189,20 +1198,23 @@ button.evaluation-tab.active:focus,
   max-width: 88vw;
   max-height: 82vh;
   object-fit: contain;
-  opacity: var(--system-watermark-opacity, 0.075);
+  opacity: var(--system-watermark-opacity, 0.09);
   user-select: none;
   image-rendering: -webkit-optimize-contrast;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.35s ease, filter 0.35s ease;
   position: relative;
   z-index: 0;
+  filter: drop-shadow(0 0 45px rgba(0, 0, 0, 0.25));
 }
 
 [data-theme="dark"] .landing-watermark-img {
-  opacity: calc(var(--system-watermark-opacity, 0.075) * 0.9);
+  opacity: 0.12;
+  filter: drop-shadow(0 0 50px rgba(220, 38, 38, 0.25));
 }
 
 [data-theme="light"] .landing-watermark-img {
-  opacity: calc(var(--system-watermark-opacity, 0.075) * 0.7);
+  opacity: 0.085;
+  filter: drop-shadow(0 0 35px rgba(0, 0, 0, 0.08));
 }
 
 /* Esconder marcas laterais duplicadas para eliminar poluição visual */
@@ -1210,13 +1222,22 @@ button.evaluation-tab.active:focus,
   display: none !important;
 }
 
-/* Marca de água no interior do sistema (Dashboard) - Ultra sutil, elegante e limpa */
+/* Marca de água no interior do sistema (Dashboard) - Nítida, elegante, sem poluição visual */
 .dashboard-watermark .landing-watermark-img {
-  opacity: 0.028 !important;
+  opacity: 0.075 !important;
+  width: 720px !important;
+  max-width: 76vw !important;
+  max-height: 76vh !important;
 }
 
 [data-theme="dark"] .dashboard-watermark .landing-watermark-img {
-  opacity: 0.024 !important;
+  opacity: 0.085 !important;
+  filter: drop-shadow(0 0 40px rgba(220, 38, 38, 0.2)) !important;
+}
+
+[data-theme="light"] .dashboard-watermark .landing-watermark-img {
+  opacity: 0.065 !important;
+  filter: drop-shadow(0 0 30px rgba(0, 0, 0, 0.06)) !important;
 }
 
 /* ========================================================
@@ -1427,28 +1448,28 @@ button.evaluation-tab.active:focus,
 
 /* Glassmorphism Cyber-Glass / Interface Tecnológica */
 .login-card-glass {
-  background: rgba(255, 255, 255, 0.94) !important;
+  background: rgba(255, 255, 255, 0.65) !important;
   backdrop-filter: blur(28px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.80) !important;
   box-shadow: 
-    0 24px 60px rgba(0, 0, 0, 0.42),
-    0 0 35px rgba(220, 38, 38, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+    0 24px 60px rgba(0, 0, 0, 0.18),
+    0 0 35px rgba(220, 38, 38, 0.10),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95) !important;
   position: relative !important;
   z-index: 2 !important;
-  transition: box-shadow 0.3s ease, border-color 0.3s ease !important;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease !important;
 }
 
 [data-theme="dark"] .login-card-glass {
-  background: rgba(18, 25, 38, 0.90) !important;
-  backdrop-filter: blur(28px) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  background: rgba(18, 25, 42, 0.62) !important;
+  backdrop-filter: blur(32px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(190%) !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
   box-shadow: 
-    0 24px 60px rgba(0, 0, 0, 0.7),
-    0 0 40px rgba(220, 38, 38, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+    0 28px 70px rgba(0, 0, 0, 0.65),
+    0 0 45px rgba(220, 38, 38, 0.22),
+    inset 0 1px 1px rgba(255, 255, 255, 0.14) !important;
 }
 
 /* ========================================================
@@ -1564,3 +1585,75 @@ button.evaluation-tab.active:focus,
   70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
 }
+
+/* ========================================================
+   SISTEMA VIDRO TRANSLÚCIDO LUXURY (GLASSMORPHY) — BUENA4
+   ======================================================== */
+.app-container {
+  background: var(--system-bg-gradient, var(--color-bg-base)) !important;
+  background-attachment: fixed !important;
+  background-size: cover !important;
+  min-height: 100vh;
+}
+
+/* Header com efeito de vidro límpido */
+.app-header,
+header {
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+}
+
+/* Sidebar com acabamento translúcido integrado */
+.sidebar-desktop {
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+}
+
+/* Superfícies, Cards e Painéis em Modo Glass (Transparente e Nítido) */
+.bg-models-section,
+.bg-model-card,
+.stat-card,
+.welcome-banner,
+.system-card,
+.dashboard-card,
+.report-card,
+[class*="statCard"],
+[class*="welcomeBanner"],
+[class*="stat-card"] {
+  backdrop-filter: blur(16px) saturate(175%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(175%) !important;
+  border-color: var(--color-border) !important;
+}
+
+/* Tabelas com acabamento vidro e contraste perfeito */
+[data-theme="light"] .premium-table {
+  background: rgba(255, 255, 255, 0.84) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+  border: 1px solid rgba(226, 232, 240, 0.85) !important;
+}
+
+[data-theme="dark"] .premium-table {
+  background: rgba(30, 41, 59, 0.72) !important;
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="light"] .premium-table th {
+  background: rgba(241, 245, 249, 0.92) !important;
+}
+
+[data-theme="dark"] .premium-table th {
+  background: rgba(42, 56, 80, 0.88) !important;
+}
+
+/* Modais de Sistema em Vidro Profundo */
+.system-modal-content,
+.modal-content,
+[class*="modal-container"] {
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
+}
+

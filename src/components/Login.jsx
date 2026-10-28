@@ -319,7 +319,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const pageBg = bwMode === 'noite'
     ? (selectedBgModel.isDark ? selectedBgModel.bgGradient : 'radial-gradient(ellipse 85% 65% at 50% 25%, #182333 0%, #0F1622 55%, #080D14 100%)')
     : bwMode === 'claro'
-    ? '#F8FAFC'
+    ? 'radial-gradient(ellipse 90% 60% at 50% 12%, rgba(183, 28, 28, 0.08) 0%, transparent 70%), radial-gradient(circle at 15% 85%, rgba(27, 54, 93, 0.05) 0%, transparent 50%), linear-gradient(160deg, #FFFFFF 0%, #F1F5F9 55%, #E2E8F0 100%)'
     : (settings.cores_aleatorias
         ? `radial-gradient(ellipse 95% 75% at 50% 25%, ${settings.cor_principal} 0%, rgba(15, 23, 42, 0.95) 60%, #020617 100%)`
         : selectedBgModel.bgGradient);
@@ -343,7 +343,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
           loading="eager"
           decoding="sync"
           className="landing-watermark-img"
-          style={{ opacity: selectedBgModel.watermarkOpacity }}
+          style={{ opacity: isDark ? 0.14 : 0.10 }}
         />
       </div>
 
@@ -712,7 +712,6 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       </div>
 
       {/* ══════════════ CABEÇALHO INSTITUCIONAL ELEGANTE E MINIMALISTA ══════════════ */}
-      {/* ══════════════ CABEÇALHO INSTITUCIONAL ══════════════ */}
       <div style={s.header}>
         <div style={s.logoContainer}>
           <img src={logoSrc} alt="Logótipo SERNIC" style={s.logo} />
@@ -720,29 +719,29 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
         <h1 style={{
           ...s.instNome,
           color: lightActive ? '#0F172A' : '#FFFFFF',
-          textShadow: lightActive ? 'none' : '0 1px 4px rgba(0,0,0,0.35)'
+          textShadow: lightActive ? '0 1px 2px rgba(255,255,255,0.8)' : '0 2px 8px rgba(0,0,0,0.6)'
         }}>
           SERVIÇO NACIONAL DE INVESTIGAÇÃO CRIMINAL
         </h1>
         <div style={{
           ...s.sysTitleBold,
-          color: lightActive ? '#1E293B' : '#FFFFFF',
-          textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+          color: lightActive ? '#1E293B' : '#F1F5F9',
+          textShadow: lightActive ? '0 1px 2px rgba(255,255,255,0.8)' : '0 2px 6px rgba(0,0,0,0.5)'
         }}>
           DIRECÇÃO GERAL
         </div>
         <div style={{
           ...s.sysTitleBold,
-          color: lightActive ? '#1E293B' : '#FFFFFF',
-          textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+          color: lightActive ? '#1E293B' : '#F1F5F9',
+          textShadow: lightActive ? '0 1px 2px rgba(255,255,255,0.8)' : '0 2px 6px rgba(0,0,0,0.5)'
         }}>
           DIRECÇÃO DE RECURSOS HUMANOS
         </div>
-        <div style={{ marginTop: 'calc(18px + 1.0cm)', marginBottom: '10px' }}>
+        <div style={{ marginTop: '8px', marginBottom: '14px' }}>
           <p style={{
             ...s.sysTitleSub,
-            color: lightActive ? '#1E293B' : '#FFFFFF',
-            textShadow: lightActive ? 'none' : '0 1px 3px rgba(0,0,0,0.35)'
+            color: lightActive ? '#334155' : 'rgba(255,255,255,0.92)',
+            textShadow: lightActive ? 'none' : '0 1px 4px rgba(0,0,0,0.5)'
           }}>
             SISTEMA DE INFORMAÇÃO E GESTÃO DE RECURSOS HUMANOS
           </p>
@@ -805,32 +804,35 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               >
                 {isLoading ? (t('login_submit_loading') || 'A ENTRAR...') : (t('login_submit') || 'ENTRAR')}
               </button>
-              <button
-                type="button"
-                onClick={() => { clearCredentials(); setView('recover'); }}
-                style={{ 
+              <button 
+                type="submit" 
+                style={{
                   ...s.btnPrimary, 
-                  backgroundColor: '#BA1B1D', 
-                  marginTop: '12px', 
-                  textTransform: 'uppercase',
-                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)'
-                }}
+                  backgroundColor: isLoading ? '#CE6767' : '#C0262B',
+                  boxShadow: '0 4px 16px rgba(192, 38, 43, 0.4)',
+                  marginTop: '8px'
+                }} 
+                disabled={isLoading}
               >
-                {t('login_forgot') || 'ESQUECEU A SENHA?'}
+                {isLoading ? (t('login_submit_loading') || 'A ENTRAR...') : (t('login_submit') || 'ENTRAR')}
               </button>
-              <button
-                type="button"
-                onClick={() => { clearCredentials(); setView('register'); }}
-                style={{ 
-                  ...s.btnPrimary, 
-                  backgroundColor: '#BA1B1D', 
-                  marginTop: '12px', 
-                  textTransform: 'uppercase',
-                  boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)'
-                }}
-              >
-                {t('login_request_access') || 'SOLICITAR ACESSO'}
-              </button>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => { clearCredentials(); setView('recover'); }}
+                  style={s.btnGlassSecondary}
+                >
+                  {t('login_forgot') || 'ESQUECEU A SENHA?'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { clearCredentials(); setView('register'); }}
+                  style={s.btnGlassSecondary}
+                >
+                  {t('login_request_access') || 'SOLICITAR ACESSO'}
+                </button>
+              </div>
             </form>
           </>
         )}
@@ -905,11 +907,12 @@ const s = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    padding: '36px 16px 20px',
+    padding: '30px 16px 20px',
     transition: 'background-color 0.35s ease',
     fontFamily: "'Inter', system-ui, sans-serif",
     position: 'relative',
-    overflow: 'hidden',
+    overflowY: 'auto',
+    overflowX: 'hidden',
   },
 
   /* ── Cabeçalho ── */
@@ -926,18 +929,18 @@ const s = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '14px',
+    marginBottom: '10px',
   },
   logo: {
-    width: '160px',
-    height: '160px',
+    width: '140px',
+    height: '140px',
     objectFit: 'contain',
-    filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.25))',
-    transition: 'transform 0.2s ease',
+    filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.3))',
+    transition: 'transform 0.25s ease',
   },
   instNome: {
     color: '#FFFFFF',
-    fontSize: '15.5px',
+    fontSize: '15px',
     fontWeight: '800',
     letterSpacing: '0.8px',
     textAlign: 'center',
@@ -947,7 +950,7 @@ const s = {
   },
   sysTitleBold: {
     color: '#FFFFFF',
-    fontSize: '15px',
+    fontSize: '14px',
     fontWeight: '800',
     letterSpacing: '0.8px',
     margin: '2px 0',
@@ -955,7 +958,7 @@ const s = {
   },
   sysTitleSub: {
     color: '#FFFFFF',
-    fontSize: '13.5px',
+    fontSize: '13px',
     fontWeight: '700',
     letterSpacing: '0.6px',
     margin: 0,
@@ -966,24 +969,19 @@ const s = {
   card: {
     width: '100%',
     maxWidth: '430px',
-    backgroundColor: 'rgba(255, 255, 255, 0.88)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    border: '1px solid rgba(255, 255, 255, 0.45)',
-    borderRadius: '20px',
-    padding: '38px 34px calc(34px + 1.6cm)',
-    boxShadow: '0 24px 60px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(0, 0, 0, 0.12)',
+    borderRadius: '24px',
+    padding: '34px 30px 28px',
     boxSizing: 'border-box',
     position: 'relative',
     zIndex: 2,
   },
   cardTitle: {
-    fontSize: '26px',
+    fontSize: '24px',
     fontWeight: '800',
-    color: '#0A192F',
+    color: 'inherit',
     textAlign: 'center',
-    margin: '0 0 24px',
-    letterSpacing: '-0.3px'
+    margin: '0 0 20px',
+    letterSpacing: '-0.2px'
   },
   errorMsg: {
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
@@ -1001,23 +999,25 @@ const s = {
     gap: '14px',
   },
 
-  /* ── Campos ── */
+  /* ── Campos Translúcidos Glass ── */
   fieldWrap: {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    border: '1px solid #E2E8F0',
-    borderRadius: '10px',
-    backgroundColor: '#FFFFFF',
+    border: '1px solid var(--color-border)',
+    borderRadius: '12px',
+    backgroundColor: 'var(--color-bg-subtle)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
     overflow: 'hidden',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
+    transition: 'all 0.2s ease',
   },
   fieldIcon: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     width: '42px',
-    color: '#64748B',
+    color: 'var(--color-text-light)',
     flexShrink: 0,
   },
   field: {
@@ -1026,8 +1026,9 @@ const s = {
     background: 'transparent',
     padding: '13px 8px',
     fontSize: '14px',
-    color: '#0F172A',
+    color: 'var(--color-text-base)',
     outline: 'none',
+    fontWeight: '500',
   },
   fieldIconRight: {
     display: 'flex',
@@ -1053,25 +1054,46 @@ const s = {
   btnPrimary: {
     width: '100%',
     padding: '13.5px',
-    backgroundColor: '#BA1B1D',
+    background: 'linear-gradient(135deg, #C0262B 0%, #991B1B 100%)',
     color: '#FFFFFF',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '12px',
     fontSize: '13.5px',
     fontWeight: '700',
     letterSpacing: '0.8px',
     cursor: 'pointer',
     marginTop: '6px',
     transition: 'all 0.2s ease',
-    boxShadow: '0 4px 14px rgba(186, 27, 29, 0.35)',
+    boxShadow: '0 4px 16px rgba(192, 38, 43, 0.4)',
+  },
+  btnGlassSecondary: {
+    flex: 1,
+    padding: '10.5px 6px',
+    backgroundColor: 'var(--color-bg-subtle)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    color: 'var(--color-text-base)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '10px',
+    fontSize: '11px',
+    fontWeight: '700',
+    letterSpacing: '0.4px',
+    cursor: 'pointer',
+    textTransform: 'uppercase',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
   },
   btnSecondary: {
     width: '100%',
     padding: '13px',
-    backgroundColor: 'transparent',
-    color: '#64748B',
-    border: '1px solid #E2E8F0',
-    borderRadius: '8px',
+    backgroundColor: 'var(--color-bg-subtle)',
+    color: 'var(--color-text-base)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '12px',
     fontSize: '13.5px',
     fontWeight: '600',
     letterSpacing: '0.8px',
