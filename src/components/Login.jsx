@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
-import { BACKGROUND_POSITIONS, getBackgroundPosition, ESCALAS_BRASAO, getEscalaMultiplier } from '../utils/backgroundPositions';
+import { getBackgroundPosition, getEscalaMultiplier } from '../utils/backgroundPositions';
 import useAuthData from '../hooks/useAuthData';
 import useSecuritySettings from '../hooks/useSecuritySettings';
 import useAuditLog from '../hooks/useAuditLog';
@@ -77,14 +77,12 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const [hoveredTema, setHoveredTema] = useState(null);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const [showBgMenu, setShowBgMenu] = useState(false);
   // Sincronizar com settings globais
   const [bwMode, setBwMode] = useState(() => {
     return settings.modo_tema === 'dark' ? 'noite' : 'theme';
   });
   const themeMenuRef = React.useRef(null);
   const langMenuRef = React.useRef(null);
-  const bgMenuRef = React.useRef(null);
 
   // Configuração do Brasão / Fundo no Login
   const isWatermarkEnabled = settings.aplicar_login_fundo !== false;
@@ -137,9 +135,6 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       }
       if (langMenuRef.current && !langMenuRef.current.contains(event.target)) {
         setShowLangMenu(false);
-      }
-      if (bgMenuRef.current && !bgMenuRef.current.contains(event.target)) {
-        setShowBgMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -478,157 +473,6 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
             </svg>
           )}
         </button>
-
-        {/* Botão de Fundo e Brasão Institucional no Login */}
-        <div style={{ position: 'relative' }} ref={bgMenuRef}>
-          <button 
-            onClick={() => setShowBgMenu(!showBgMenu)}
-            title="Temas do Fundo e Brasão no Login"
-            style={{
-              ...s.iconBtn,
-              backgroundColor: bwMode === 'claro' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.2)',
-              color: bwMode === 'claro' ? '#1B365D' : '#FFFFFF',
-              border: bwMode === 'claro' ? '1px solid rgba(0,0,0,0.15)' : 'none',
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
-          </button>
-
-          {/* Dropdown de Fundo e Brasão */}
-          {showBgMenu && (
-            <div style={{
-              ...s.themeDropdown,
-              width: '286px',
-              padding: '16px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span style={{ fontSize: '13px', fontWeight: '700' }}>🛡️ Brasão no Fundo</span>
-                <span style={{ fontSize: '11px', color: 'var(--color-primary, #EF4444)', fontWeight: '700' }}>
-                  {activeLoginBg.nome}
-                </span>
-              </div>
-
-              {/* Toggle de Exibição */}
-              <div
-                onClick={() => {
-                  const nextVal = settings.aplicar_login_fundo === false ? true : false;
-                  updateSettings({ ...settings, aplicar_login_fundo: nextVal });
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 10px',
-                  backgroundColor: 'rgba(255,255,255,0.06)',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  marginBottom: '12px',
-                  userSelect: 'none'
-                }}
-              >
-                <span style={{ fontSize: '12px', fontWeight: '600' }}>Exibir Marca d'Água</span>
-                <div style={{
-                  width: '32px',
-                  height: '18px',
-                  backgroundColor: isWatermarkEnabled ? 'var(--color-primary, #EF4444)' : '#64748b',
-                  borderRadius: '10px',
-                  position: 'relative',
-                  transition: 'all 0.2s ease',
-                  flexShrink: 0
-                }}>
-                  <div style={{
-                    width: '14px',
-                    height: '14px',
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    top: '2px',
-                    left: isWatermarkEnabled ? '16px' : '2px',
-                    transition: 'left 0.2s ease',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.35)'
-                  }} />
-                </div>
-              </div>
-
-              {/* Seletor de Tamanho / Escala */}
-              <div style={{ marginBottom: '12px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', display: 'block', marginBottom: '6px' }}>
-                  Tamanho / Escala do Brasão:
-                </span>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                  {ESCALAS_BRASAO.map(esc => {
-                    const isCur = String(settings.escala_brasao || '1.0') === esc.id;
-                    return (
-                      <button
-                        key={esc.id}
-                        type="button"
-                        onClick={() => updateSettings({ ...settings, escala_brasao: esc.id })}
-                        style={{
-                          padding: '6px 8px',
-                          borderRadius: '6px',
-                          fontSize: '11px',
-                          fontWeight: isCur ? '700' : '500',
-                          backgroundColor: isCur ? 'var(--color-primary, #1B365D)' : 'rgba(255,255,255,0.08)',
-                          color: isCur ? '#ffffff' : 'inherit',
-                          border: isCur ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          justifyContent: 'center',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <span>{esc.icon}</span>
-                        <span>{esc.label.split(' ')[0]}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Seletor de Tema / Posicionamento */}
-              <div>
-                <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', display: 'block', marginBottom: '6px' }}>
-                  Tema de Posicionamento no Login:
-                </span>
-                <select
-                  value={settings.posicionamento_fundo_login || 'mesmo_sistema'}
-                  onChange={(e) => updateSettings({ ...settings, posicionamento_fundo_login: e.target.value })}
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    borderRadius: '8px',
-                    backgroundColor: 'var(--color-bg-base, #1E293B)',
-                    color: 'var(--color-text-base, #FFFFFF)',
-                    border: '1px solid var(--color-border, rgba(255,255,255,0.2))',
-                    fontSize: '12px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <option value="mesmo_sistema">★ Mesmo do Sistema ({getBackgroundPosition(settings.posicionamento_fundo).nome})</option>
-                  <optgroup label="Monumentais & Gigantes (Extra Grande)">
-                    {BACKGROUND_POSITIONS.filter(p => p.categoria === 'Monumental').map(p => (
-                      <option key={p.id} value={p.id}>{p.icon} {p.nome}</option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Únicos">
-                    {BACKGROUND_POSITIONS.filter(p => p.categoria === 'Único').map(p => (
-                      <option key={p.id} value={p.id}>{p.icon} {p.nome}</option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Duplicados, Triplicados & Múltiplos">
-                    {BACKGROUND_POSITIONS.filter(p => p.categoria !== 'Monumental' && p.categoria !== 'Único').map(p => (
-                      <option key={p.id} value={p.id}>{p.icon} {p.nome} ({p.categoria})</option>
-                    ))}
-                  </optgroup>
-                </select>
-              </div>
-            </div>
-          )}
-        </div>
 
         {/* Botão de Temas de Cores */}
         <div style={{ position: 'relative' }} ref={themeMenuRef}>

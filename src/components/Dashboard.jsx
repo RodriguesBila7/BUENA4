@@ -714,12 +714,13 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const [identitySubTab, setIdentitySubTab] = useState('general'); // 'general' | 'background_themes'
   const [bgCategoryFilter, setBgCategoryFilter] = useState('ALL');
   const [bgSaveFeedback, setBgSaveFeedback] = useState('');
-
+  const isSuperAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(user?.roleId || user?.role) || user?.username === 'admin';
   const currentBgPositionId = settings?.posicionamento_fundo || 'centro_imponente';
   const activeBgPosition = getBackgroundPosition(currentBgPositionId);
   const scaleMult = getEscalaMultiplier(settings?.escala_brasao);
 
   const handleSelectBgPosition = (positionId) => {
+    if (!isSuperAdmin) return;
     updateSettings({
       ...settings,
       posicionamento_fundo: positionId,
@@ -731,6 +732,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   };
 
   const handleSelectScale = (scaleId) => {
+    if (!isSuperAdmin) return;
     updateSettings({
       ...settings,
       escala_brasao: scaleId,
@@ -742,6 +744,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   };
 
   const handleToggleLoginFundo = () => {
+    if (!isSuperAdmin) return;
     const nextVal = settings.aplicar_login_fundo === false ? true : false;
     updateSettings({
       ...settings,
@@ -753,6 +756,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   };
 
   const handleSelectLoginPosition = (posId) => {
+    if (!isSuperAdmin) return;
     updateSettings({
       ...settings,
       posicionamento_fundo_login: posId,
@@ -1066,9 +1070,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [canGoBack, canGoForward, navIndex, navHistory, activeTab, confirmModal, showShortcutsModal, showProfileMenu, showLangMenu, navigateToAdjacentTab]);
 
-
-
-  const isSuperAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(user.roleId || user.role) || user.username === 'admin';
   const userDisplayName = user?.name || (user?.username ? user.username.toUpperCase() : 'ADMINISTRADOR');
   const userRoleDisplay = isSuperAdmin 
     ? 'Super Administrador Principal' 
@@ -2712,9 +2713,16 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                 </>
               )}
 
-              {/* ABA 2: TEMAS DO FUNDO (20 OPÇÕES DE POSICIONAMENTO) */}
+              {/* ABA 2: TEMAS DO FUNDO (28 OPÇÕES DE POSICIONAMENTO) */}
               {identitySubTab === 'background_themes' && (
                 <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {!isSuperAdmin && (
+                    <div style={styles.warningBanner}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '10px' }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                      <span>Apenas Administradores do Sistema têm permissão para configurar o brasão e os fundos institucionais do sistema e da página de login.</span>
+                    </div>
+                  )}
+
                   {bgSaveFeedback && (
                     <div style={{
                       ...styles.successBanner,
@@ -2826,6 +2834,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           <button
                             key={esc.id}
                             type="button"
+                            disabled={!isSuperAdmin}
                             onClick={() => handleSelectScale(esc.id)}
                             style={{
                               padding: '8px 14px',
@@ -2835,7 +2844,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               backgroundColor: isCur ? 'var(--color-primary)' : 'var(--color-bg-base)',
                               color: isCur ? '#ffffff' : 'var(--color-text-base)',
                               border: isCur ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
-                              cursor: 'pointer',
+                              cursor: isSuperAdmin ? 'pointer' : 'not-allowed',
+                              opacity: isSuperAdmin ? 1 : 0.65,
                               display: 'flex',
                               alignItems: 'center',
                               gap: '6px',
@@ -2879,6 +2889,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                       <button
                         type="button"
+                        disabled={!isSuperAdmin}
                         onClick={handleToggleLoginFundo}
                         style={{
                           display: 'flex',
@@ -2891,7 +2902,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           backgroundColor: settings.aplicar_login_fundo !== false ? 'rgba(34, 197, 94, 0.15)' : 'var(--color-bg-base)',
                           color: settings.aplicar_login_fundo !== false ? '#16a34a' : 'var(--color-text-muted)',
                           border: settings.aplicar_login_fundo !== false ? '1px solid #16a34a' : '1px solid var(--color-border)',
-                          cursor: 'pointer'
+                          cursor: isSuperAdmin ? 'pointer' : 'not-allowed',
+                          opacity: isSuperAdmin ? 1 : 0.65
                         }}
                       >
                         <span>{settings.aplicar_login_fundo !== false ? '✓ Fundo Activo no Login' : '○ Desactivado no Login'}</span>
@@ -2900,6 +2912,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>Tema no Login:</span>
                         <select
+                          disabled={!isSuperAdmin}
                           value={settings.posicionamento_fundo_login || 'mesmo_sistema'}
                           onChange={(e) => handleSelectLoginPosition(e.target.value)}
                           style={{
@@ -2909,7 +2922,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             color: 'var(--color-text-base)',
                             border: '1px solid var(--color-border)',
                             fontSize: '12px',
-                            cursor: 'pointer'
+                            cursor: isSuperAdmin ? 'pointer' : 'not-allowed',
+                            opacity: isSuperAdmin ? 1 : 0.65
                           }}
                         >
                           <option value="mesmo_sistema">★ Mesmo do Sistema ({activeBgPosition.nome})</option>
@@ -3146,6 +3160,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               ) : (
                                 <button
                                   type="button"
+                                  disabled={!isSuperAdmin}
                                   onClick={() => handleSelectBgPosition(pos.id)}
                                   className="btn-animate"
                                   style={{
@@ -3161,10 +3176,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     gap: '6px',
-                                    cursor: 'pointer',
+                                    cursor: isSuperAdmin ? 'pointer' : 'not-allowed',
+                                    opacity: isSuperAdmin ? 1 : 0.65,
                                     transition: 'all 0.18s ease'
                                   }}
                                   onMouseEnter={(e) => {
+                                    if (!isSuperAdmin) return;
                                     e.currentTarget.style.backgroundColor = 'var(--color-primary)';
                                     e.currentTarget.style.color = '#ffffff';
                                   }}
@@ -3181,6 +3198,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               {/* Botão de Aplicar no Login */}
                               <button
                                 type="button"
+                                disabled={!isSuperAdmin}
                                 onClick={() => handleSelectLoginPosition(pos.id)}
                                 style={{
                                   width: '100%',
@@ -3191,7 +3209,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                   backgroundColor: isLoginActive ? 'rgba(37, 99, 235, 0.12)' : 'transparent',
                                   color: isLoginActive ? '#2563eb' : 'var(--color-text-muted)',
                                   border: isLoginActive ? '1px solid #2563eb' : '1px dashed var(--color-border)',
-                                  cursor: 'pointer',
+                                  cursor: isSuperAdmin ? 'pointer' : 'not-allowed',
+                                  opacity: isSuperAdmin ? 1 : 0.65,
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
