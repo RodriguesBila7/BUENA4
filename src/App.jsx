@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS = {
   modo_tema: 'light',
   posicionamento_fundo: 'centro_imponente', // 28 posições disponíveis para o brasão
   escala_brasao: '1.0', // '1.0' (Padrão), '1.35' (Grande), '1.7' (Monumental), '2.1' (Gigante Maxi)
+  opacidade_brasao: 'padrao', // 'suave', 'padrao', 'nitido', 'destacado'
   aplicar_login_fundo: true, // Exibir o brasão transparente também na página de login
   posicionamento_fundo_login: 'mesmo_sistema', // 'mesmo_sistema' ou ID específico
   cores_aleatorias: false,

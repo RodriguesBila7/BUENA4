@@ -10,6 +10,18 @@ export const ESCALAS_BRASAO = [
   { id: '2.1', label: 'Gigante Maxi (210%)', mult: 2.1, icon: '👑' },
 ];
 
+export const OPACIDADES_BRASAO = [
+  { id: 'suave', label: 'Suave', pct: '6%', mult: 0.75, icon: '🌫️' },
+  { id: 'padrao', label: 'Equilibrado', pct: '10%', mult: 1.0, icon: '👁️' },
+  { id: 'nitido', label: 'Nítido', pct: '16%', mult: 1.5, icon: '✨' },
+  { id: 'destacado', label: 'Marcante', pct: '24%', mult: 2.2, icon: '🌟' }
+];
+
+export const getOpacidadeMultiplier = (opacidadeId) => {
+  const found = OPACIDADES_BRASAO.find(o => o.id === String(opacidadeId));
+  return found ? found.mult : 1.0;
+};
+
 export const getEscalaMultiplier = (val) => {
   if (!val) return 1.0;
   if (typeof val === 'number') return val;

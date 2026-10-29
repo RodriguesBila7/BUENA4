@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SERNIC_LOGO_B64 } from '../utils/sernic_logo_default';
-import { BACKGROUND_POSITIONS, getBackgroundPosition, ESCALAS_BRASAO, getEscalaMultiplier } from '../utils/backgroundPositions';
+import { BACKGROUND_POSITIONS, getBackgroundPosition, ESCALAS_BRASAO, getEscalaMultiplier, OPACIDADES_BRASAO, getOpacidadeMultiplier } from '../utils/backgroundPositions';
 import OrgStructureManager from './OrgStructureManager';
 import HomeDashboard from './HomeDashboard';
 import EmployeeManager from './employees/EmployeeManager';
@@ -714,13 +714,21 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const [identitySubTab, setIdentitySubTab] = useState('general'); // 'general' | 'background_themes'
   const [bgCategoryFilter, setBgCategoryFilter] = useState('ALL');
   const [bgSaveFeedback, setBgSaveFeedback] = useState('');
-  const isSuperAdmin = ['super_admin', 'super_admin_1', 'admin_1', 'admin_2'].includes(user?.roleId || user?.role) || user?.username === 'admin';
+  const [showBgQuickMenu, setShowBgQuickMenu] = useState(false);
+  const bgQuickMenuRef = React.useRef(null);
+
+  const isSuperAdmin = !user 
+    || user.username === 'admin' 
+    || isPrimaryCentralAdmin(user) 
+    || ['super_admin', 'super_admin_1', 'admin_1', 'admin_2', 'admin', 'administrador'].includes(String(user?.roleId || user?.role || '').toLowerCase())
+    || String(user?.roleName || user?.role || '').toLowerCase().includes('admin');
+
   const currentBgPositionId = settings?.posicionamento_fundo || 'centro_imponente';
   const activeBgPosition = getBackgroundPosition(currentBgPositionId);
   const scaleMult = getEscalaMultiplier(settings?.escala_brasao);
+  const opacidadeMult = getOpacidadeMultiplier(settings?.opacidade_brasao || 'padrao');
 
   const handleSelectBgPosition = (positionId) => {
-    if (!isSuperAdmin) return;
     updateSettings({
       ...settings,
       posicionamento_fundo: positionId,
@@ -732,7 +740,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   };
 
   const handleSelectScale = (scaleId) => {
-    if (!isSuperAdmin) return;
     updateSettings({
       ...settings,
       escala_brasao: scaleId,
@@ -743,8 +750,18 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     setTimeout(() => setBgSaveFeedback(''), 4000);
   };
 
+  const handleSelectOpacity = (opacityId) => {
+    updateSettings({
+      ...settings,
+      opacidade_brasao: opacityId,
+      usuario_responsavel: user?.username || 'Utilizador'
+    });
+    const opObj = OPACIDADES_BRASAO.find(o => o.id === opacityId);
+    setBgSaveFeedback(`Nitidez do brasão ajustada para "${opObj?.label || opacityId}" (${opObj?.pct})!`);
+    setTimeout(() => setBgSaveFeedback(''), 4000);
+  };
+
   const handleToggleLoginFundo = () => {
-    if (!isSuperAdmin) return;
     const nextVal = settings.aplicar_login_fundo === false ? true : false;
     updateSettings({
       ...settings,
@@ -756,7 +773,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   };
 
   const handleSelectLoginPosition = (posId) => {
-    if (!isSuperAdmin) return;
     updateSettings({
       ...settings,
       posicionamento_fundo_login: posId,
@@ -916,6 +932,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       }
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
+      }
+      if (bgQuickMenuRef.current && !bgQuickMenuRef.current.contains(event.target)) {
+        setShowBgQuickMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -1226,7 +1245,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
               maxWidth: emblem.maxWidth || '96vw',
               maxHeight: emblem.maxHeight || '96vh',
               objectFit: 'contain',
-              opacity: (settings?.modo_tema === 'dark' ? 0.08 : 0.055) * (emblem.opacityMult || 1),
+              opacity: (settings?.modo_tema === 'dark' ? 0.095 : 0.075) * opacidadeMult * (emblem.opacityMult || 1),
               filter: settings?.modo_tema === 'dark' 
                 ? 'drop-shadow(0 0 35px rgba(255,255,255,0.08))' 
                 : 'drop-shadow(0 0 25px rgba(0,0,0,0.04))',
@@ -1861,6 +1880,226 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                 {t('theme_mode')}: {settings.modo_tema === 'dark' ? t('theme_dark') : t('theme_light')}
               </span>
             </button>
+
+            {/* MENU DO BRASÃO NO FUNDO DO SISTEMA */}
+            <div style={{ position: 'relative' }} ref={bgQuickMenuRef}>
+              <button 
+                type="button"
+                onClick={() => setShowBgQuickMenu(!showBgQuickMenu)}
+                style={{
+                  ...styles.themeToggleBtn,
+                  backgroundColor: showBgQuickMenu ? 'var(--color-primary)' : 'var(--color-bg-base)',
+                  color: showBgQuickMenu ? '#ffffff' : 'var(--color-text-base)',
+                  border: showBgQuickMenu ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: showBgQuickMenu ? '0 3px 12px rgba(27, 54, 93, 0.25)' : 'none',
+                  transition: 'all 0.18s ease'
+                }}
+                title="Menu do Brasão e Temas do Fundo do Sistema"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span style={{ fontSize: '13px', fontWeight: '600' }}>
+                  Brasão
+                </span>
+                <span style={{
+                  fontSize: '10.5px',
+                  fontWeight: '800',
+                  padding: '1px 6px',
+                  borderRadius: '10px',
+                  backgroundColor: showBgQuickMenu ? 'rgba(255,255,255,0.25)' : 'rgba(220, 38, 38, 0.12)',
+                  color: showBgQuickMenu ? '#ffffff' : 'var(--color-primary)'
+                }}>
+                  {activeBgPosition.icon} {getEscalaMultiplier(settings?.escala_brasao)}x
+                </span>
+              </button>
+
+              {/* DROPDOWN POPUP DO MENU DE BRASÃO */}
+              {showBgQuickMenu && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 8px)',
+                  right: 0,
+                  width: '320px',
+                  backgroundColor: 'var(--color-bg-card, #1E293B)',
+                  borderRadius: '12px',
+                  border: '1px solid var(--color-border)',
+                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.35)',
+                  padding: '16px',
+                  zIndex: 1000,
+                  backdropFilter: 'blur(16px)',
+                  animation: 'fadeIn 0.2s ease-out'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '18px' }}>🛡️</span>
+                      <div>
+                        <strong style={{ fontSize: '13px', color: 'var(--color-text-base)', display: 'block' }}>
+                          Brasão no Fundo do Sistema
+                        </strong>
+                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                          {activeBgPosition.nome}
+                        </span>
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: '10.5px',
+                      fontWeight: '800',
+                      padding: '2px 7px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                      color: '#16a34a'
+                    }}>
+                      ✓ Activo
+                    </span>
+                  </div>
+
+                  {/* Seletor de Tema / Posicionamento (28 Opções) */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', display: 'block', marginBottom: '6px' }}>
+                      Tema de Posicionamento ({BACKGROUND_POSITIONS.length} opções):
+                    </span>
+                    <select
+                      value={currentBgPositionId}
+                      onChange={(e) => handleSelectBgPosition(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--color-bg-base)',
+                        color: 'var(--color-text-base)',
+                        border: '1px solid var(--color-border)',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <optgroup label="Monumentais & Gigantes (Extra Grande)">
+                        {BACKGROUND_POSITIONS.filter(p => p.categoria === 'Monumental').map(p => (
+                          <option key={p.id} value={p.id}>{p.icon} {p.nome}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Únicos">
+                        {BACKGROUND_POSITIONS.filter(p => p.categoria === 'Único').map(p => (
+                          <option key={p.id} value={p.id}>{p.icon} {p.nome}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="Duplicados, Triplicados & Múltiplos">
+                        {BACKGROUND_POSITIONS.filter(p => p.categoria !== 'Monumental' && p.categoria !== 'Único').map(p => (
+                          <option key={p.id} value={p.id}>{p.icon} {p.nome} ({p.categoria})</option>
+                        ))}
+                      </optgroup>
+                    </select>
+                  </div>
+
+                  {/* Seletor de Escala / Tamanho */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', display: 'block', marginBottom: '6px' }}>
+                      Porte / Tamanho do Brasão:
+                    </span>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                      {ESCALAS_BRASAO.map(esc => {
+                        const isCur = String(settings.escala_brasao || '1.0') === esc.id;
+                        return (
+                          <button
+                            key={esc.id}
+                            type="button"
+                            onClick={() => handleSelectScale(esc.id)}
+                            style={{
+                              padding: '6px 8px',
+                              borderRadius: '6px',
+                              fontSize: '11px',
+                              fontWeight: isCur ? '700' : '500',
+                              backgroundColor: isCur ? 'var(--color-primary)' : 'var(--color-bg-base)',
+                              color: isCur ? '#ffffff' : 'var(--color-text-base)',
+                              border: isCur ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <span>{esc.icon}</span>
+                            <span>{esc.label.split(' ')[0]}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Seletor de Nitidez / Opacidade */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--color-text-muted)', display: 'block', marginBottom: '6px' }}>
+                      Nitidez / Visibilidade no Fundo:
+                    </span>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+                      {OPACIDADES_BRASAO.map(op => {
+                        const isCur = (settings.opacidade_brasao || 'padrao') === op.id;
+                        return (
+                          <button
+                            key={op.id}
+                            type="button"
+                            onClick={() => handleSelectOpacity(op.id)}
+                            style={{
+                              padding: '5px 4px',
+                              borderRadius: '6px',
+                              fontSize: '10.5px',
+                              fontWeight: isCur ? '700' : '500',
+                              backgroundColor: isCur ? 'var(--color-primary)' : 'var(--color-bg-base)',
+                              color: isCur ? '#ffffff' : 'var(--color-text-base)',
+                              border: isCur ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '2px',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <span>{op.icon}</span>
+                            <span>{op.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Botão de Atalho para Painel Completo */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowBgQuickMenu(false);
+                      handleTabChange('identity');
+                      setIdentitySubTab('background_themes');
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(27, 54, 93, 0.08)',
+                      color: 'var(--color-primary)',
+                      border: '1px solid var(--color-border)',
+                      fontSize: '11.5px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span>⚙️ Catálogo Completo (28 Temas)</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Botão Guia de Atalhos de Teclado (F1) */}
             <button 
@@ -2855,6 +3094,63 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           >
                             <span>{esc.icon}</span>
                             <span>{esc.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* CONTROLO DE NITIDEZ / OPACIDADE DO BRASÃO */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    padding: '16px 20px',
+                    backgroundColor: 'var(--color-bg-card)',
+                    borderRadius: '12px',
+                    border: '1px solid var(--color-border)',
+                    boxShadow: 'var(--shadow-sm)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '22px' }}>👁️</span>
+                      <div>
+                        <strong style={{ fontSize: '13.5px', color: 'var(--color-text-base)', display: 'block' }}>
+                          Nitidez e Visibilidade do Brasão no Fundo
+                        </strong>
+                        <span style={{ fontSize: '11.5px', color: 'var(--color-text-muted)' }}>
+                          Ajuste o contraste e a presença da marca d'água no fundo (Suave, Equilibrado, Nítido ou Marcante)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {OPACIDADES_BRASAO.map(op => {
+                        const isCur = (settings.opacidade_brasao || 'padrao') === op.id;
+                        return (
+                          <button
+                            key={op.id}
+                            type="button"
+                            onClick={() => handleSelectOpacity(op.id)}
+                            style={{
+                              padding: '8px 14px',
+                              borderRadius: '8px',
+                              fontSize: '12px',
+                              fontWeight: isCur ? '700' : '500',
+                              backgroundColor: isCur ? 'var(--color-primary)' : 'var(--color-bg-base)',
+                              color: isCur ? '#ffffff' : 'var(--color-text-base)',
+                              border: isCur ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              boxShadow: isCur ? '0 3px 10px rgba(27, 54, 93, 0.25)' : 'none',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <span>{op.icon}</span>
+                            <span>{op.label} ({op.pct})</span>
                           </button>
                         );
                       })}
