@@ -180,7 +180,7 @@ export default function DistrictOrganogram({ data, t }) {
                       {selectedSecDetails.chief.photo ? (
                         <img src={selectedSecDetails.chief.photo} alt="Chefe" style={styles.chiefPhoto} />
                       ) : (
-                        <div style={styles.photoPlaceholder}>👤</div>
+                        <div style={styles.photoPlaceholder}></div>
                       )}
                     </div>
                     <div style={styles.chiefTextDetails}>

@@ -128,10 +128,10 @@ export default function ApprovalModal({ act, mode = 'approve', onClose, onConfir
           onPointerDown={isMaximized ? undefined : onPointerDown} 
           onDoubleClick={handleHeaderDoubleClick}
           className={isMaximized ? '' : 'drag-handle'}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '18px' }}>{mode === 'approve' ? '✍️' : '🚫'}</span>
+            <span style={{ fontSize: '18px' }}>{mode === 'approve' ? '' : ''}</span>
             <div>
               <h3 style={styles.title}>
                 {mode === 'approve' ? 'Conceder Aprovação Oficial' : 'Rejeitar Processo'}
@@ -146,7 +146,7 @@ export default function ApprovalModal({ act, mode = 'approve', onClose, onConfir
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
           </div>
@@ -177,7 +177,7 @@ export default function ApprovalModal({ act, mode = 'approve', onClose, onConfir
           {mode === 'approve' ? (
             <>
               <div style={styles.infoBanner}>
-                <span style={{ fontSize: '16px' }}>🛡️</span>
+                <span style={{ fontSize: '16px' }}></span>
                 <div>
                   <strong>Conformidade Regulatória:</strong> Ao confirmar, estará a registar digitalmente a aprovação do nível <strong>{roleLabels[selectedRoleKey]?.title}</strong> com o seu utilizador (<strong>{currentUser?.name || currentUser?.username}</strong>).
                 </div>
@@ -197,7 +197,7 @@ export default function ApprovalModal({ act, mode = 'approve', onClose, onConfir
           ) : (
             <>
               <div style={styles.dangerBanner}>
-                <span style={{ fontSize: '16px' }}>⚠️</span>
+                <span style={{ fontSize: '16px' }}></span>
                 <div>
                   <strong>Atenção:</strong> A rejeição deste processo cancelará a tramitação e exigirá uma nova formulação ou correcção.
                 </div>
@@ -226,7 +226,7 @@ export default function ApprovalModal({ act, mode = 'approve', onClose, onConfir
               style={mode === 'approve' ? styles.approveBtn : styles.rejectBtn} 
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'A Processar...' : mode === 'approve' ? '✅ Assinar e Confirmar Aprovação' : '🚫 Confirmar Rejeição'}
+              {isSubmitting ? 'A Processar...' : mode === 'approve' ? 'Assinar e Confirmar Aprovação' : 'Confirmar Rejeição'}
             </button>
           </div>
         </form>

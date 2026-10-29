@@ -36,10 +36,10 @@ export default function GenericAdminActsList({ title, actTypes, emptyMessage }) 
   const handleGiveConformity = (act, emp) => {
     setConfirmModal({
       isOpen: true,
-      title: '✍️ Dar Conformidade ao Acto Administrativo',
+      title: 'Dar Conformidade ao Acto Administrativo',
       message: `Tem a certeza que pretende DAR CONFORMIDADE e aprovar formalmente o acto de "${act.actType}" para o funcionário ${emp?.name || 'selecionado'}? O estado passará a Confirmado e o registo será efetivado no histórico.`,
       isDestructive: false,
-      confirmText: '✍️ Dar Conformidade',
+      confirmText: 'Dar Conformidade',
       onConfirm: async () => {
         const res = await confirmAct(act.id);
         if (res.success) {
@@ -110,14 +110,12 @@ export default function GenericAdminActsList({ title, actTypes, emptyMessage }) 
           <button 
             style={{...styles.tabBtn, ...(viewMode === 'lista' ? styles.tabBtnActive : {})}} 
             onClick={() => setViewMode('lista')}
-          >
-            📋 Lista de Registos
+          >Lista de Registos
           </button>
           <button 
             style={{...styles.tabBtn, ...(viewMode === 'estatisticas' ? styles.tabBtnActive : {})}} 
             onClick={() => setViewMode('estatisticas')}
-          >
-            📊 Estatísticas Analíticas
+          >Estatísticas Analíticas
           </button>
         </div>
         
@@ -130,8 +128,7 @@ export default function GenericAdminActsList({ title, actTypes, emptyMessage }) 
               onChange={(e) => setSearchTerm(e.target.value)}
               style={styles.searchInput}
             />
-            <button onClick={handleExportExcel} style={styles.btnExport}>
-              📥 Exportar Excel
+            <button onClick={handleExportExcel} style={styles.btnExport}>Exportar Excel
             </button>
             <button onClick={() => setIsSearchOpen(true)} style={styles.btnAdd}>
               + Nova Solicitação
@@ -175,12 +172,10 @@ export default function GenericAdminActsList({ title, actTypes, emptyMessage }) 
                       <td>{act.br || '-'}</td>
                       <td>
                         {isPending ? (
-                          <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                            🟡 Pendente
+                          <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)' }}>Pendente
                           </span>
                         ) : (
-                          <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                            ✅ Confirmado
+                          <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '700', backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.3)' }}>Confirmado
                           </span>
                         )}
                       </td>
@@ -200,8 +195,7 @@ export default function GenericAdminActsList({ title, actTypes, emptyMessage }) 
                                 cursor: 'pointer'
                               }}
                               title="Aprovar e Dar Conformidade ao Acto"
-                            >
-                              ✍️ Dar Conformidade
+                            >Dar Conformidade
                             </button>
                           )}
                           {['Expulsão', 'Demissão'].includes(act.actType) && ['Expulso', 'Demitido'].includes(emp?.status) && isSuperAdmin && (

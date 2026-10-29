@@ -99,7 +99,7 @@ export default function TransferManager() {
             backgroundColor: statusFilter === '' ? 'rgba(37, 99, 235, 0.04)' : 'var(--color-bg-card)'
           }}
         >
-          <div style={styles.cardIconBox}><span style={{fontSize: '24px'}}>🔄</span></div>
+          <div style={styles.cardIconBox}><span style={{fontSize: '24px'}}></span></div>
           <div>
             <div style={styles.cardValue}>{stats.total}</div>
             <div style={styles.cardTitle}>Total Processos</div>
@@ -131,7 +131,7 @@ export default function TransferManager() {
             backgroundColor: statusFilter === 'Aprovada' ? 'rgba(16, 185, 129, 0.06)' : 'var(--color-bg-card)'
           }}
         >
-          <div style={styles.cardIconBoxGreen}><span style={{fontSize: '24px'}}>✅</span></div>
+          <div style={styles.cardIconBoxGreen}><span style={{fontSize: '24px'}}></span></div>
           <div>
             <div style={{ ...styles.cardValue, color: '#059669' }}>{stats.approved}</div>
             <div style={styles.cardTitle}>Aprovados / Concluídos</div>
@@ -147,7 +147,7 @@ export default function TransferManager() {
             backgroundColor: statusFilter === 'Rejeitada' ? 'rgba(239, 68, 68, 0.06)' : 'var(--color-bg-card)'
           }}
         >
-          <div style={styles.cardIconBoxRed}><span style={{fontSize: '24px'}}>❌</span></div>
+          <div style={styles.cardIconBoxRed}><span style={{fontSize: '24px'}}></span></div>
           <div>
             <div style={{ ...styles.cardValue, color: '#dc2626' }}>{stats.rejected}</div>
             <div style={styles.cardTitle}>Rejeitados</div>

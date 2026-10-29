@@ -33,7 +33,7 @@ export default function FunctionalHistory({ employeeId, orgData }) {
   if (history.length === 0) {
     return (
       <div style={{ padding: '30px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-        <div style={{ fontSize: '30px', marginBottom: '10px' }}>📄</div>
+        <div style={{ fontSize: '30px', marginBottom: '10px' }}></div>
         Nenhum acto administrativo registado para este funcionário.
       </div>
     );
@@ -120,8 +120,7 @@ export default function FunctionalHistory({ employeeId, orgData }) {
                         border: '1px solid var(--color-border)', borderRadius: '6px',
                         color: 'var(--color-primary)', textDecoration: 'none', fontSize: '13px', fontWeight: '500'
                       }}
-                    >
-                      📎 Ver Despacho Anexo (PDF)
+                    >Ver Despacho Anexo (PDF)
                     </a>
                   </div>
                 )}

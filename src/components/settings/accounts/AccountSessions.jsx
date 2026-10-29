@@ -35,7 +35,7 @@ export default function AccountSessions({ t }) {
           <div key={sess.id} style={styles.card}>
             <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
               <div style={styles.iconBox}>
-                {sess.device.includes('iPhone') ? '📱' : '💻'}
+                {sess.device.includes('iPhone') ? '' : ''}
               </div>
               <div style={styles.infoCol}>
                 <div style={styles.deviceLabel}>

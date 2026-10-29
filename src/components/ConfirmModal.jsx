@@ -56,7 +56,7 @@ export default function ConfirmModal({
           className={isMaximized ? '' : 'drag-handle'} 
           onPointerDown={isMaximized ? undefined : onPointerDown}
           onDoubleClick={handleHeaderDoubleClick}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <h3 style={styles.title}>{title || 'Atenção'}</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -66,7 +66,7 @@ export default function ConfirmModal({
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onCancel} style={styles.closeBtn}>×</button>
           </div>

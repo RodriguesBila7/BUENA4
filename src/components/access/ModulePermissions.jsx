@@ -56,7 +56,7 @@ export default function ModulePermissions() {
 
           return (
             <div key={mod} style={styles.card}>
-              <h4 style={styles.cardTitle}>📌 {mod}</h4>
+              <h4 style={styles.cardTitle}>{mod}</h4>
               <ul style={styles.roleList}>
                 {matchingRoles.map(r => {
                   const perms = r.permissions || {};

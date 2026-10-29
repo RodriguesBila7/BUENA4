@@ -60,7 +60,7 @@ export default function EvolucaoSaudeModal({ isOpen, onClose, act, onSave }) {
           onPointerDown={isMaximized ? undefined : onPointerDown}
           onDoubleClick={handleHeaderDoubleClick}
           className={isMaximized ? '' : 'drag-handle'}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <h2 style={styles.title}>Evolução para Incapacidade Permanente</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -70,7 +70,7 @@ export default function EvolucaoSaudeModal({ isOpen, onClose, act, onSave }) {
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">×</button>
           </div>

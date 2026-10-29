@@ -52,7 +52,7 @@ export default function SystemModal({
           onPointerDown={isMaximized ? undefined : onPointerDown} 
           onDoubleClick={handleHeaderDoubleClick}
           className={isMaximized ? '' : 'drag-handle'}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <h2 style={styles.title}>{title}</h2>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -63,7 +63,7 @@ export default function SystemModal({
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
           </div>

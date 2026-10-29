@@ -83,8 +83,8 @@ export default function VacationPlan() {
           </select>
         </div>
         <div style={{ flex: 1 }}></div>
-        <button onClick={handleExportExcel} style={styles.btnExcel}>📊 Excel</button>
-        <button onClick={handleExportPDF} style={styles.btnPdf}>📕 PDF</button>
+        <button onClick={handleExportExcel} style={styles.btnExcel}>Excel</button>
+        <button onClick={handleExportPDF} style={styles.btnPdf}>PDF</button>
       </div>
 
       <div style={styles.tableContainer}>

@@ -138,9 +138,9 @@ export default function TransferList({
     if (isApprove) {
       setConfirmModal({
         isOpen: true,
-        title: '✍️ Dar Conformidade / Aprovar Transferência',
+        title: 'Dar Conformidade / Aprovar Transferência',
         message: `Tem certeza que deseja APROVAR e dar conformidade a esta transferência? O cadastro do funcionário será automaticamente atualizado para a nova lotação.`,
-        confirmText: '✍️ Aprovar & Efetivar',
+        confirmText: 'Aprovar & Efetivar',
         onConfirm: () => {
           onUpdateStatus(id, newStatus, `Aprovado e efetivado por ${user?.name || 'Administrador'}`, updateEmployeeFn, employees);
         }
@@ -177,15 +177,15 @@ export default function TransferList({
       case 'Pendente':
       case 'Submetida':
       case 'Em análise':
-        return <span style={{ ...styles.badge, backgroundColor: 'rgba(245, 158, 11, 0.12)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)' }}>🟡 {status}</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(245, 158, 11, 0.12)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)' }}>{status}</span>;
       case 'Aprovada':
-        return <span style={{ ...styles.badge, backgroundColor: 'rgba(16, 185, 129, 0.12)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.3)' }}>✅ Aprovada</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(16, 185, 129, 0.12)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.3)' }}>Aprovada</span>;
       case 'Concluída':
-        return <span style={{ ...styles.badge, backgroundColor: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed', border: '1px solid rgba(139, 92, 246, 0.3)' }}>🟣 Concluída</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(139, 92, 246, 0.12)', color: '#7c3aed', border: '1px solid rgba(139, 92, 246, 0.3)' }}>Concluída</span>;
       case 'Rejeitada':
-        return <span style={{ ...styles.badge, backgroundColor: 'rgba(239, 68, 68, 0.12)', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.3)' }}>🔴 Rejeitada</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(239, 68, 68, 0.12)', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.3)' }}>Rejeitada</span>;
       case 'Cancelada':
-        return <span style={{ ...styles.badge, backgroundColor: 'rgba(100, 116, 139, 0.12)', color: '#475569', border: '1px solid rgba(100, 116, 139, 0.3)' }}>⚫ Cancelada</span>;
+        return <span style={{ ...styles.badge, backgroundColor: 'rgba(100, 116, 139, 0.12)', color: '#475569', border: '1px solid rgba(100, 116, 139, 0.3)' }}>Cancelada</span>;
       default:
         return <span style={styles.badge}>{status}</span>;
     }
@@ -203,13 +203,12 @@ export default function TransferList({
       {/* Filtros de Pesquisa */}
       <div style={styles.filtersCard}>
         <div style={styles.filtersHeader}>
-          <h4 style={styles.filtersTitle}>
-            🔍 Filtros Avançados de Movimentação
+          <h4 style={styles.filtersTitle}>Filtros Avançados de Movimentação
           </h4>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <span style={styles.resultsCount}>{filteredTransfers.length} processo(s) encontrado(s)</span>
-            <button onClick={handleExportExcel} style={styles.btnTool}>📊 Excel</button>
-            <button onClick={handleExportPDF} style={styles.btnTool}>📄 PDF</button>
+            <button onClick={handleExportExcel} style={styles.btnTool}>Excel</button>
+            <button onClick={handleExportPDF} style={styles.btnTool}>PDF</button>
           </div>
         </div>
         
@@ -279,7 +278,7 @@ export default function TransferList({
             {filteredTransfers.length === 0 ? (
               <tr>
                 <td colSpan="6" style={styles.empty}>
-                  <div style={{ fontSize: '36px', marginBottom: '8px' }}>📂</div>
+                  <div style={{ fontSize: '36px', marginBottom: '8px' }}></div>
                   <div style={{ fontWeight: '600', fontSize: '15px' }}>Nenhum processo de transferência encontrado.</div>
                   <div style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}>Ajuste os filtros de pesquisa ou clique em "+ Nova Transferência" para criar um novo processo.</div>
                 </td>
@@ -304,8 +303,7 @@ export default function TransferList({
                       <div style={styles.primaryText}>{tr.processNumber || `PROC-${tr.id.substring(0,6)}`}</div>
                       <div style={styles.secondaryText}>Despacho: <strong>{tr.documentNumber || '-'}</strong></div>
                       {tr.attachments && tr.attachments.length > 0 && (
-                        <div style={styles.attachmentBadge}>
-                          📎 {tr.attachments.length} Anexo(s)
+                        <div style={styles.attachmentBadge}>{tr.attachments.length} Anexo(s)
                         </div>
                       )}
                     </td>
@@ -369,12 +367,11 @@ export default function TransferList({
                             onClick={() => handleStatusChange(tr.id, 'Aprovada')}
                             style={styles.btnApprove}
                             title="Aprovar e Dar Conformidade à Transferência"
-                          >
-                            ✍️ Aprovar
+                          >Aprovar
                           </button>
                         )}
 
-                        {/* ✏️ Editar */}
+                        {/* Editar */}
                         <button
                           onClick={() => onEdit(tr)}
                           style={styles.btnActionIcon}
@@ -397,9 +394,7 @@ export default function TransferList({
                           }}
                           style={styles.btnDeleteIcon}
                           title="Apagar Processo"
-                        >
-                          🗑️
-                        </button>
+                        >Eliminar</button>
                       </div>
                     </td>
                   </tr>

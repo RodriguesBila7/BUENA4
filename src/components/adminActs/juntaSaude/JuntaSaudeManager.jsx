@@ -146,21 +146,21 @@ export default function JuntaSaudeManager() {
           </div>
         </div>
         <div style={styles.card}>
-          <div style={styles.cardIconBoxOrange}><span style={{fontSize: '24px'}}>🤒</span></div>
+          <div style={styles.cardIconBoxOrange}><span style={{fontSize: '24px'}}></span></div>
           <div>
             <div style={styles.cardValue}>{baixasTemporarias}</div>
             <div style={styles.cardTitle}>Doenças Temporárias</div>
           </div>
         </div>
         <div style={styles.card}>
-          <div style={styles.cardIconBoxRed}><span style={{fontSize: '24px'}}>♿</span></div>
+          <div style={styles.cardIconBoxRed}><span style={{fontSize: '24px'}}></span></div>
           <div>
             <div style={styles.cardValue}>{baixasPermanentes}</div>
             <div style={styles.cardTitle}>Incapacidade (Junta)</div>
           </div>
         </div>
         <div style={styles.card}>
-          <div style={styles.cardIconBoxGreen}><span style={{fontSize: '24px'}}>✅</span></div>
+          <div style={styles.cardIconBoxGreen}><span style={{fontSize: '24px'}}></span></div>
           <div>
             <div style={styles.cardValue}>{altasMedicas}</div>
             <div style={styles.cardTitle}>Altas Médicas dadas</div>
@@ -174,14 +174,12 @@ export default function JuntaSaudeManager() {
           <button 
             style={{...styles.tabBtn, ...(viewMode === 'lista' ? styles.tabBtnActive : {})}} 
             onClick={() => setViewMode('lista')}
-          >
-            📋 Lista de Doentes
+          >Lista de Doentes
           </button>
           <button 
             style={{...styles.tabBtn, ...(viewMode === 'estatisticas' ? styles.tabBtnActive : {})}} 
             onClick={() => setViewMode('estatisticas')}
-          >
-            📊 Estatísticas Analíticas
+          >Estatísticas Analíticas
           </button>
         </div>
         
@@ -194,8 +192,7 @@ export default function JuntaSaudeManager() {
               onChange={e => setSearchTerm(e.target.value)}
               style={styles.searchInput}
             />
-            <button onClick={handleExportExcel} style={styles.btnExport}>
-              📥 Exportar Excel
+            <button onClick={handleExportExcel} style={styles.btnExport}>Exportar Excel
             </button>
             <button onClick={() => setIsModalOpen(true)} style={styles.btnPrimary}>
               + Nova Junta de Saúde/Baixa
@@ -244,9 +241,9 @@ export default function JuntaSaudeManager() {
                     </td>
                     <td>
                       {act.status === 'Em Baixa' ? (
-                        <span style={styles.statusEmBaixa}>🌡️ Em Baixa</span>
+                        <span style={styles.statusEmBaixa}>Em Baixa</span>
                       ) : (
-                        <span style={styles.statusAlta}>✅ Alta Médica</span>
+                        <span style={styles.statusAlta}>Alta Médica</span>
                       )}
                     </td>
                     <td>
@@ -254,7 +251,7 @@ export default function JuntaSaudeManager() {
                         <div style={{display: 'flex', gap: '8px'}}>
                           <button onClick={() => handleDarAlta(act)} style={styles.btnAlta}>Dar Alta</button>
                           {act.details?.tipoCondicao === 'Temporária' && (
-                            <button onClick={() => setEvolucaoAct(act)} style={styles.btnAgravar} title="Passar a Junta Médica Permanente">⚠️ Agravar</button>
+                            <button onClick={() => setEvolucaoAct(act)} style={styles.btnAgravar} title="Passar a Junta Médica Permanente">Agravar</button>
                           )}
                         </div>
                       )}

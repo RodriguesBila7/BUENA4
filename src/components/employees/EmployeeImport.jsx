@@ -191,8 +191,7 @@ export default function EmployeeImport({ orgData, onBulkAdd, onSuccess }) {
                 <h3 style={styles.cardTitle}>Importação Massiva (Excel/CSV)</h3>
                 <p style={styles.cardDesc}>Carregue uma lista de funcionários. O sistema fará a correspondência da estrutura pelos nomes exatos.</p>
               </div>
-              <button onClick={handleDownloadTemplate} style={styles.btnSecondary}>
-                📥 Baixar Ficheiro Modelo
+              <button onClick={handleDownloadTemplate} style={styles.btnSecondary}>Baixar Ficheiro Modelo
               </button>
             </div>
 
@@ -205,7 +204,7 @@ export default function EmployeeImport({ orgData, onBulkAdd, onSuccess }) {
                 id="file-upload"
               />
               <label htmlFor="file-upload" style={styles.dropLabel}>
-                <div style={{ fontSize: '32px', marginBottom: '12px' }}>📁</div>
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}></div>
                 {file ? <strong>{file.name}</strong> : <span>Clique para selecionar ou arraste o seu Excel/CSV aqui</span>}
               </label>
             </div>

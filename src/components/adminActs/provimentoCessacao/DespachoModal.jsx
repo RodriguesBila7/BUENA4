@@ -72,10 +72,10 @@ export default function DespachoModal({ act, onClose, onSaveDespacho, currentUse
           onPointerDown={isMaximized ? undefined : onPointerDown} 
           onDoubleClick={handleHeaderDoubleClick}
           className={isMaximized ? '' : 'drag-handle'}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <div>
-            <h3 style={styles.title}>📜 Inserir Despacho da DRH</h3>
+            <h3 style={styles.title}>Inserir Despacho da DRH</h3>
             <p style={styles.subtitle}>Processo: {act.actType} • {act.employeeName}</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -85,7 +85,7 @@ export default function DespachoModal({ act, onClose, onSaveDespacho, currentUse
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
           </div>
@@ -134,7 +134,7 @@ export default function DespachoModal({ act, onClose, onSaveDespacho, currentUse
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
             >
-              {isSubmitting ? 'A Processar...' : '📜 Gravar Despacho e Avançar para Aprovação'}
+              {isSubmitting ? 'A Processar...' : 'Gravar Despacho e Avançar para Aprovação'}
             </button>
           </div>
         </form>

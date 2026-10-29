@@ -205,7 +205,7 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
                 [{r.level}] {r.name}
               </option>
             ))}
-            <option value="custom">✍️ Outro / Perfil Personalizado...</option>
+            <option value="custom">Outro / Perfil Personalizado...</option>
           </select>
 
           {(!OFFICIAL_ROLES.some(r => r.name === role.name) || role.name === '') && (
@@ -228,7 +228,7 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
       {/* Barra Profissional de Ações Globais: Selecionar Todos / Desmarcar Todos */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          🛡️ Matriz Institucional de Permissões por Módulo
+          Matriz de Permissões por Módulo
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button
@@ -249,8 +249,7 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
               transition: 'all 0.2s ease'
             }}
             title="Marcar todas as permissões de todos os módulos"
-          >
-            ✅ Selecionar Todos
+          >Selecionar Todos
           </button>
           <button
             type="button"
@@ -270,8 +269,7 @@ export default function RolePermissionsEditor({ initialData, onSave, onCancel })
               transition: 'all 0.2s ease'
             }}
             title="Desmarcar todas as permissões da matriz"
-          >
-            ❌ Desmarcar Todos
+          >Desmarcar Todos
           </button>
         </div>
       </div>

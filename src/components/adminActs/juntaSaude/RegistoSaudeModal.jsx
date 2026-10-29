@@ -90,7 +90,7 @@ export default function RegistoSaudeModal({ isOpen, onClose, employees, onSave }
           onPointerDown={isMaximized ? undefined : onPointerDown}
           onDoubleClick={handleHeaderDoubleClick}
           className={isMaximized ? '' : 'drag-handle'}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <h2 style={styles.title}>Registar Baixa ou Junta Médica</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -100,7 +100,7 @@ export default function RegistoSaudeModal({ isOpen, onClose, employees, onSave }
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">×</button>
           </div>

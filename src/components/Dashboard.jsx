@@ -162,8 +162,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
             backgroundColor: 'rgba(13, 148, 136, 0.12)', color: '#0d9488', border: '1px solid rgba(13, 148, 136, 0.25)',
             width: 'fit-content'
-          }}>
-            📍 {name}
+          }}>{name}
           </span>
           {sec && <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>↳ {sec.name}</span>}
         </div>
@@ -182,8 +181,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
             backgroundColor: 'rgba(37, 99, 235, 0.12)', color: '#2563eb', border: '1px solid rgba(37, 99, 235, 0.25)',
             width: 'fit-content'
-          }}>
-            🏬 {depName}
+          }}>{depName}
           </span>
           {(div || sec) && (
             <span style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>
@@ -201,7 +199,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         backgroundColor: 'rgba(217, 119, 6, 0.12)', color: '#d97706', border: '1px solid rgba(217, 119, 6, 0.25)',
         width: 'fit-content'
       }}>
-        ⚠️ Sede Provincial (Pendente)
+        Sede Provincial (Pendente)
       </span>
     );
   };
@@ -465,12 +463,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     };
 
     const academicLevels = {
-      'Doutoramento': { total: 0, M: 0, F: 0, icon: '🎓', color: '#7C3AED', label: 'Doutoramento' },
-      'Mestrado': { total: 0, M: 0, F: 0, icon: '📜', color: '#2563EB', label: 'Mestrado' },
-      'Licenciatura': { total: 0, M: 0, F: 0, icon: '🏛️', color: '#0D9488', label: 'Licenciatura' },
-      'Ensino Médio': { total: 0, M: 0, F: 0, icon: '📘', color: '#D97706', label: 'Ensino Médio' },
-      'Ensino Básico': { total: 0, M: 0, F: 0, icon: '📗', color: '#4B5563', label: 'Ensino Básico' },
-      'Outro': { total: 0, M: 0, F: 0, icon: '📋', color: '#6B7280', label: 'Outro' }
+      'Doutoramento': { total: 0, M: 0, F: 0, icon: '', color: '#7C3AED', label: 'Doutoramento' },
+      'Mestrado': { total: 0, M: 0, F: 0, icon: '', color: '#2563EB', label: 'Mestrado' },
+      'Licenciatura': { total: 0, M: 0, F: 0, icon: '', color: '#0D9488', label: 'Licenciatura' },
+      'Ensino Médio': { total: 0, M: 0, F: 0, icon: '', color: '#D97706', label: 'Ensino Médio' },
+      'Ensino Básico': { total: 0, M: 0, F: 0, icon: '', color: '#4B5563', label: 'Ensino Básico' },
+      'Outro': { total: 0, M: 0, F: 0, icon: '', color: '#6B7280', label: 'Outro' }
     };
 
     effectiveEmployees.forEach(emp => {
@@ -1936,7 +1934,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '18px' }}>🛡️</span>
+                      <span style={{ fontSize: '18px' }}></span>
                       <div>
                         <strong style={{ fontSize: '13px', color: 'var(--color-text-base)', display: 'block' }}>
                           Brasão no Fundo do Sistema
@@ -1953,8 +1951,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       borderRadius: '8px',
                       backgroundColor: 'rgba(34, 197, 94, 0.15)',
                       color: '#16a34a'
-                    }}>
-                      ✓ Activo
+                    }}>Activo
                     </span>
                   </div>
 
@@ -2095,7 +2092,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    <span>⚙️ Catálogo Completo (28 Temas)</span>
+                    <span>Catálogo de Temas de Fundo (28 Temas)</span>
                   </button>
                 </div>
               )}
@@ -2380,8 +2377,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                         justifyContent: 'center',
                         gap: '4px'
                       }}
-                    >
-                      📷 {profilePhoto ? 'Substituir Foto' : 'Adicionar Foto'}
+                    >{profilePhoto ? 'Substituir Foto' : 'Adicionar Foto'}
                     </button>
                     {profilePhoto && (
                       <button
@@ -3012,8 +3008,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             borderRadius: '10px',
                             backgroundColor: 'rgba(34, 197, 94, 0.15)',
                             color: '#16a34a'
-                          }}>
-                            ✓ Em Uso
+                          }}>Em Uso
                           </span>
                         </div>
                         <h4 style={{ margin: '3px 0 0 0', fontSize: '18px', fontWeight: '800', color: 'var(--color-text-base)' }}>
@@ -3055,7 +3050,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     boxShadow: 'var(--shadow-sm)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '22px' }}>📐</span>
+                      <span style={{ fontSize: '22px' }}></span>
                       <div>
                         <strong style={{ fontSize: '13.5px', color: 'var(--color-text-base)', display: 'block' }}>
                           Escala / Tamanho do Brasão no Fundo
@@ -3114,7 +3109,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     boxShadow: 'var(--shadow-sm)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '22px' }}>👁️</span>
+                      <span style={{ fontSize: '22px' }}></span>
                       <div>
                         <strong style={{ fontSize: '13.5px', color: 'var(--color-text-base)', display: 'block' }}>
                           Nitidez e Visibilidade do Brasão no Fundo
@@ -3171,7 +3166,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                     boxShadow: 'var(--shadow-sm)'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '22px' }}>🔐</span>
+                      <span style={{ fontSize: '22px' }}></span>
                       <div>
                         <strong style={{ fontSize: '13.5px', color: 'var(--color-text-base)', display: 'block' }}>
                           Exibição na Página de Login
@@ -3202,7 +3197,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           opacity: isSuperAdmin ? 1 : 0.65
                         }}
                       >
-                        <span>{settings.aplicar_login_fundo !== false ? '✓ Fundo Activo no Login' : '○ Desactivado no Login'}</span>
+                        <span>{settings.aplicar_login_fundo !== false ? 'Fundo Activo no Login' : '○ Desactivado no Login'}</span>
                       </button>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -3222,7 +3217,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             opacity: isSuperAdmin ? 1 : 0.65
                           }}
                         >
-                          <option value="mesmo_sistema">★ Mesmo do Sistema ({activeBgPosition.nome})</option>
+                          <option value="mesmo_sistema">Mesmo do Sistema ({activeBgPosition.nome})</option>
                           <optgroup label="Monumentais & Gigantes (Extra Grande)">
                             {BACKGROUND_POSITIONS.filter(p => p.categoria === 'Monumental').map(p => (
                               <option key={p.id} value={p.id}>{p.icon} {p.nome}</option>
@@ -3514,7 +3509,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                   transition: 'all 0.15s ease'
                                 }}
                               >
-                                <span>{isLoginActive ? '✓ Activo no Login' : '🔐 Definir no Login'}</span>
+                                <span>{isLoginActive ? 'Activo no Login' : 'Definir no Login'}</span>
                               </button>
                             </div>
                           </div>
@@ -3663,7 +3658,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 justifyContent: 'center',
                                 fontSize: '15px'
                               }}>
-                                📊
+                                
                               </div>
                               <span style={{ 
                                 fontWeight: '700', 
@@ -3794,7 +3789,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 justifyContent: 'center',
                                 fontSize: '15px'
                               }}>
-                                👥
+                                
                               </div>
                               <span style={{ 
                                 fontWeight: '700', 
@@ -3824,7 +3819,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ fontSize: '11.5px', fontWeight: '700', color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                  👨 Homens
+                                  Homens
                                 </span>
                                 <span style={{ 
                                   fontSize: '11px', 
@@ -3863,7 +3858,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ fontSize: '11.5px', fontWeight: '700', color: '#BE185D', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                  👩 Mulheres
+                                  Mulheres
                                 </span>
                                 <span style={{ 
                                   fontSize: '11px', 
@@ -3933,7 +3928,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       gap: '8px',
                       marginBottom: '16px'
                     }}>
-                      <span>📍</span>
+                      <span></span>
                       <span>
                         <strong>Gerência Territorial Exclusiva:</strong> {reportStats.userDirectorateName} — Estrutura orgânica e quadro de pessoal restritos a esta Província.
                       </span>
@@ -3957,7 +3952,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                       </span>
                       
                       <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                        💡 Navegação em Cascatas: Direcção ➔ Departamento ➔ Repartição ➔ Secção
+                        Navegação da Estrutura Orgânica
                       </span>
                     </div>
 
@@ -3979,7 +3974,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           gap: '6px'
                         }}
                       >
-                        🏢 Direcções ({reportStats.allDirectoratesList.length})
+                        Direcções ({reportStats.allDirectoratesList.length})
                       </button>
 
                       <button
@@ -3998,7 +3993,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           gap: '6px'
                         }}
                       >
-                        🏬 Departamentos ({reportStats.allDepartmentsList.length})
+                        Departamentos ({reportStats.allDepartmentsList.length})
                       </button>
 
                       <button
@@ -4017,7 +4012,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           gap: '6px'
                         }}
                       >
-                        🏛️ Repartições ({reportStats.allDivisionsList.length})
+                        Repartições ({reportStats.allDivisionsList.length})
                       </button>
 
                       <button
@@ -4036,7 +4031,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           gap: '6px'
                         }}
                       >
-                        🔖 Secções ({reportStats.allSectionsList.length})
+                        Secções ({reportStats.allSectionsList.length})
                       </button>
 
                       <button
@@ -4055,7 +4050,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           gap: '6px'
                         }}
                       >
-                        📍 Distritos ({reportStats.allDistrictsList.length})
+                        Distritos ({reportStats.allDistrictsList.length})
                       </button>
                     </div>
                   </div>
@@ -4106,8 +4101,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               </select>
                             </div>
                           ) : (
-                            <div style={{ padding: '4px 10px', backgroundColor: 'rgba(27, 54, 93, 0.08)', borderRadius: '6px', fontSize: '12px', fontWeight: '700', color: 'var(--color-primary, #1B365D)' }}>
-                              📍 {reportStats.userDirectorateName}
+                            <div style={{ padding: '4px 10px', backgroundColor: 'rgba(27, 54, 93, 0.08)', borderRadius: '6px', fontSize: '12px', fontWeight: '700', color: 'var(--color-primary, #1B365D)' }}>{reportStats.userDirectorateName}
                             </div>
                           )}
 
@@ -4145,8 +4139,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 cursor: 'pointer',
                                 fontWeight: 'bold'
                               }}
-                            >
-                              ✕ Ver Todas
+                            >Ver Todas
                             </button>
                           )}
                         </div>
@@ -4201,7 +4194,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             </tbody>
                           </table>
                           <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
-                            💡 Dica: Clique em qualquer linha da tabela para ver a lista de funcionários e os Departamentos afetos a essa Direcção.
+                            
                           </p>
                         </>
                       ) : (
@@ -4225,8 +4218,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                                 <div>
-                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
-                                    🏢 {selectedObj.name}
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>{selectedObj.name}
                                   </h3>
                                   <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
                                     Detalhe do Efetivo Afeto a esta Direcção
@@ -4253,7 +4245,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                                     <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                      🏬 Departamentos Pertencentes a esta Direcção ({childDeps.length})
+                                      Departamentos Pertencentes a esta Direcção ({childDeps.length})
                                     </h5>
                                     <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
                                       Clique num departamento para filtrar ou clique em "+ Alocar" para vincular efetivos
@@ -4304,7 +4296,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                             }}
                                             title={`Alocar funcionário a ${dep.name}`}
                                           >
-                                            ➕ Alocar
+                                            Alocar
                                           </button>
                                         </div>
                                       </div>
@@ -4318,8 +4310,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 <div style={{ marginBottom: '20px', padding: '14px', backgroundColor: 'rgba(27, 54, 93, 0.04)', borderRadius: '8px', border: '1px solid var(--color-primary)' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
                                     <div>
-                                      <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        📍 Direcções Distritais Subordinadas a esta Direcção Provincial ({childDistricts.length})
+                                      <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>Direcções Distritais Subordinadas a esta Direcção Provincial ({childDistricts.length})
                                       </h5>
                                       <p style={{ margin: '2px 0 0 0', fontSize: '11px', color: 'var(--color-text-muted)' }}>
                                         As Direcções Distritais enquadram-se na estrutura provincial e possuem Secções diretamente.
@@ -4352,14 +4343,12 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                         }}
                                       >
                                         <div>
-                                          <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)' }}>
-                                            📍 {dist.name}
+                                          <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)' }}>{dist.name}
                                           </div>
                                           <div style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-text-main)', marginTop: '4px' }}>
                                             {dist.count} {dist.count === 1 ? 'funcionário' : 'funcionários'} ({dist.M} H / {dist.F} M)
                                           </div>
-                                          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
-                                            🔖 {dist.sections ? dist.sections.length : 0} Secção(ões) Registadas
+                                          <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>{dist.sections ? dist.sections.length : 0} Secção(ões) Registadas
                                           </div>
                                         </div>
                                         <div style={{ marginTop: '8px', display: 'flex', justifyContent: 'flex-end' }}>
@@ -4381,7 +4370,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                             }}
                                             title={`Alocar funcionário a ${dist.name}`}
                                           >
-                                            ➕ Alocar
+                                            Alocar
                                           </button>
                                         </div>
                                       </div>
@@ -4415,7 +4404,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                     }}
                                     title="Alocar funcionário desta província a um departamento ou distrito"
                                   >
-                                    ⚡ Alocar Efectivo da Província
+                                    Alocar Efectivo da Província
                                   </button>
                                 )}
                               </div>
@@ -4477,7 +4466,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                               }}
                                               title="Definir ou alterar lotação orgânica deste funcionário"
                                             >
-                                              ⚙️ Lotação
+                                              Lotação
                                             </button>
                                           </td>
                                         </tr>
@@ -4592,8 +4581,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)',
                                 fontSize: '12px', cursor: 'pointer', fontWeight: 'bold'
                               }}
-                            >
-                              ✕ Ver Todos
+                            >Ver Todos
                             </button>
                           )}
                         </div>
@@ -4654,7 +4642,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             </tbody>
                           </table>
                           <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
-                            💡 Dica: Clique em qualquer linha para ver os funcionários e Repartições pertencentes àquele departamento.
+                            
                           </p>
                         </>
                       ) : (
@@ -4674,8 +4662,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                                 <div>
-                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
-                                    🏬 {selectedObj.name}
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>{selectedObj.name}
                                   </h3>
                                   <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
                                     Direcção de Origem: {selectedObj.directorateName || 'Central'}
@@ -4702,7 +4689,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                     <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                      🏛️ Repartições Pertencentes a este Departamento ({childDivs.length})
+                                      Repartições Pertencentes a este Departamento ({childDivs.length})
                                     </h5>
                                     <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
                                       Clique numa repartição para filtrar secções e funcionários
@@ -4796,7 +4783,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                               }}
                                               title="Alterar lotação orgânica deste funcionário"
                                             >
-                                              ⚙️ Lotação
+                                              Lotação
                                             </button>
                                           </td>
                                         </tr>
@@ -4911,8 +4898,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)',
                                 fontSize: '12px', cursor: 'pointer', fontWeight: 'bold'
                               }}
-                            >
-                              ✕ Ver Todas
+                            >Ver Todas
                             </button>
                           )}
                         </div>
@@ -4977,7 +4963,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             </tbody>
                           </table>
                           <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
-                            💡 Dica: Clique em qualquer linha para ver os funcionários e Secções pertencentes àquela repartição.
+                            
                           </p>
                         </>
                       ) : (
@@ -4997,8 +4983,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                                 <div>
-                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
-                                    🏛️ {selectedObj.name}
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>{selectedObj.name}
                                   </h3>
                                   <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
                                     Departamento Pai: {selectedObj.departmentName} • Direcção: {selectedObj.directorateName}
@@ -5025,7 +5010,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                     <h5 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                      🔖 Secções Pertencentes a esta Repartição ({childSecs.length})
+                                      Secções Pertencentes a esta Repartição ({childSecs.length})
                                     </h5>
                                     <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
                                       Clique numa secção para ver os funcionários afetos
@@ -5205,8 +5190,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)',
                                 fontSize: '12px', cursor: 'pointer', fontWeight: 'bold'
                               }}
-                            >
-                              ✕ Ver Todas
+                            >Ver Todas
                             </button>
                           )}
                         </div>
@@ -5271,7 +5255,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             </tbody>
                           </table>
                           <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
-                            💡 Dica: Clique em qualquer linha para ver a lista de funcionários pertencentes àquela secção.
+                            
                           </p>
                         </>
                       ) : (
@@ -5288,8 +5272,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                                 <div>
-                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
-                                    🔖 {selectedObj.name}
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>{selectedObj.name}
                                   </h3>
                                   <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
                                     Repartição Pai: {selectedObj.divisionName} • Dept: {selectedObj.departmentName} • Dir: {selectedObj.directorateName}
@@ -5463,8 +5446,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                 backgroundColor: 'var(--color-primary)', color: 'var(--color-accent)',
                                 fontSize: '12px', cursor: 'pointer', fontWeight: 'bold'
                               }}
-                            >
-                              ✕ Ver Todos
+                            >Ver Todos
                             </button>
                           )}
                         </div>
@@ -5530,7 +5512,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             </tbody>
                           </table>
                           <p className="no-print" style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '6px', fontStyle: 'italic' }}>
-                            💡 Dica: Clique em qualquer linha para ver os funcionários afetos àquela unidade distrital.
+                            
                           </p>
                         </>
                       ) : (
@@ -5547,8 +5529,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                             <div style={{ border: '2px solid var(--color-primary)', borderRadius: '8px', padding: '16px', backgroundColor: 'var(--color-bg-base)', marginBottom: '20px' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                                 <div>
-                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>
-                                    📍 {selectedObj.name}
+                                  <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '17px', fontWeight: 'bold' }}>{selectedObj.name}
                                   </h3>
                                   <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
                                     Província de Afetação: {selectedObj.provinceName || 'N/A'}
@@ -5574,7 +5555,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               {selectedObj.sections && selectedObj.sections.length > 0 && (
                                 <div style={{ marginBottom: '20px', padding: '12px', backgroundColor: 'var(--color-card-bg)', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                                   <h5 style={{ margin: '0 0 8px 0', color: 'var(--color-primary)', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    🔖 Secções Registadas nesta Direcção Distrital ({selectedObj.sections.length})
+                                    Secções Registadas nesta Direcção Distrital ({selectedObj.sections.length})
                                   </h5>
                                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
                                     {selectedObj.sections.map(sec => {
@@ -5653,7 +5634,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                                               }}
                                               title="Alterar lotação orgânica deste funcionário"
                                             >
-                                              ⚙️ Lotação
+                                              Lotação
                                             </button>
                                           </td>
                                         </tr>
@@ -5738,7 +5719,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                           alignItems: 'center',
                           gap: '10px'
                         }}>
-                          <span style={{ fontSize: '20px' }}>🎓</span>
+                          <span style={{ fontSize: '20px' }}></span>
                           Nível Académico (Qualificação do Efetivo)
                         </h4>
                         <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--color-text-muted)' }}>
@@ -5788,7 +5769,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                         const count = typeof data === 'number' ? data : (data?.total || 0);
                         const mCount = typeof data === 'object' ? (data?.M || 0) : 0;
                         const fCount = typeof data === 'object' ? (data?.F || 0) : 0;
-                        const icon = typeof data === 'object' && data?.icon ? data.icon : '🎓';
+                        const icon = typeof data === 'object' && data?.icon ? data.icon : '';
                         const themeColor = typeof data === 'object' && data?.color ? data.color : 'var(--color-primary)';
                         const pct = reportStats.total > 0 ? Math.round((count / reportStats.total) * 100) : 0;
 
@@ -5874,9 +5855,9 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                               gap: '8px',
                               fontWeight: '600'
                             }}>
-                              <span title="Homens">👨 {mCount}</span>
+                              <span title="Homens">{mCount}</span>
                               <span>•</span>
-                              <span title="Mulheres">👩 {fCount}</span>
+                              <span title="Mulheres">{fCount}</span>
                             </div>
                           </div>
                         );
@@ -5956,7 +5937,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
           fontWeight: 'bold',
           borderLeft: '4px solid #10b981'
         }}>
-          <span>✅</span> {allocationSuccessToast}
+          <span></span> {allocationSuccessToast}
         </div>
       )}
     </div>

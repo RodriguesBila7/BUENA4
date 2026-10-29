@@ -212,9 +212,9 @@ export default function EmployeeDeletedTab({ employees = [], orgData, onRestore,
         </div>
 
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={exportExcel} style={styles.btnTool}>📊 Excel</button>
-          <button onClick={exportPDF} style={styles.btnTool}>📄 PDF</button>
-          <button onClick={() => window.print()} style={styles.btnTool}>🖨️ Imprimir</button>
+          <button onClick={exportExcel} style={styles.btnTool}>Excel</button>
+          <button onClick={exportPDF} style={styles.btnTool}>PDF</button>
+          <button onClick={() => window.print()} style={styles.btnTool}>Imprimir</button>
         </div>
       </div>
 
@@ -341,7 +341,7 @@ export default function EmployeeDeletedTab({ employees = [], orgData, onRestore,
       {/* Tabela de Funcionários Eliminados */}
       {filteredList.length === 0 ? (
         <div style={{ padding: '45px 20px', textAlign: 'center', backgroundColor: 'var(--color-bg-base)', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
-          <div style={{ fontSize: '40px', marginBottom: '10px' }}>📂</div>
+          <div style={{ fontSize: '40px', marginBottom: '10px' }}></div>
           <h4 style={{ margin: '0 0 6px 0', color: 'var(--color-text-base)', fontSize: '16px' }}>Nenhum funcionário eliminado encontrado.</h4>
           <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '13px' }}>Ajuste os filtros de pesquisa para localizar registos desvinculados.</p>
         </div>
@@ -419,7 +419,7 @@ export default function EmployeeDeletedTab({ employees = [], orgData, onRestore,
                           style={styles.btnRestore}
                           title={isApagado ? 'Restaurar funcionário' : 'Submeter Despacho de Reintegração'}
                         >
-                          {isApagado ? '🔄 Restaurar' : '✍️ Reintegrar'}
+                          {isApagado ? 'Restaurar' : 'Reintegrar'}
                         </button>
 
                         {/* Apagar Permanentemente */}
@@ -427,8 +427,7 @@ export default function EmployeeDeletedTab({ employees = [], orgData, onRestore,
                           onClick={() => handleDeleteClick(emp)}
                           style={styles.btnDelete}
                           title="Apagar permanentemente da base de dados"
-                        >
-                          🗑️ Apagar
+                        >Apagar
                         </button>
                       </div>
                     </td>
@@ -521,8 +520,7 @@ export default function EmployeeDeletedTab({ employees = [], orgData, onRestore,
             <button 
               type="submit" 
               style={styles.btnSubmitModal}
-            >
-              ✍️ Submeter Reintegração
+            >Submeter Reintegração
             </button>
           </div>
         </form>

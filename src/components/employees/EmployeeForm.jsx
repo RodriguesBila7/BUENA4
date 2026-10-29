@@ -315,7 +315,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
           {formData.photo ? (
             <img src={formData.photo} alt="Avatar" style={styles.photoPreview} title="Clique para expandir" />
           ) : (
-            <div style={styles.photoPlaceholder}>📷</div>
+            <div style={styles.photoPlaceholder}></div>
           )}
         </div>
         <div>
@@ -432,7 +432,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
                 <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
                   {formData.academicHistory.map((item, idx) => (
                     <div key={item.id} style={{padding: '15px', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '8px', position: 'relative'}}>
-                      <button type="button" onClick={() => removeAcademicHistory(item.id)} style={{position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px'}}>✕ Remover</button>
+                      <button type="button" onClick={() => removeAcademicHistory(item.id)} style={{position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '12px'}}>Remover</button>
                       <h5 style={{margin: '0 0 15px 0', fontSize: '14px', color: 'var(--color-primary)'}}>Passo {idx + 1}: Preencher Dados do Nível</h5>
                       
                       <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px'}}>
@@ -459,7 +459,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
                             <div style={{fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--color-text-muted)'}}>Certificado do Nível {item.level}</div>
                             {item.certB64 ? (
                               <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                <span style={{color: 'green', fontSize: '12px'}}>✓ Anexado</span>
+                                <span style={{color: 'green', fontSize: '12px'}}>Anexado</span>
                                 <button type="button" onClick={() => viewDocument(item.certB64)} style={{padding: '4px 8px', border: '1px solid var(--color-primary)', background: 'transparent', color: 'var(--color-primary)', borderRadius: '4px', cursor: 'pointer', fontSize: '11px'}}>Ver</button>
                                 <button type="button" onClick={() => updateAcademicHistory(item.id, 'certB64', '')} style={{padding: '4px 8px', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '11px'}}>Remover</button>
                               </div>
@@ -474,7 +474,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
                               <div style={{fontSize: '12px', fontWeight: 'bold', marginBottom: '8px', color: 'var(--color-text-muted)'}}>Diploma de {item.level}</div>
                               {item.diplomaB64 ? (
                                 <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                  <span style={{color: 'green', fontSize: '12px'}}>✓ Anexado</span>
+                                  <span style={{color: 'green', fontSize: '12px'}}>Anexado</span>
                                   <button type="button" onClick={() => viewDocument(item.diplomaB64)} style={{padding: '4px 8px', border: '1px solid var(--color-primary)', background: 'transparent', color: 'var(--color-primary)', borderRadius: '4px', cursor: 'pointer', fontSize: '11px'}}>Ver</button>
                                   <button type="button" onClick={() => updateAcademicHistory(item.id, 'diplomaB64', '')} style={{padding: '4px 8px', border: '1px solid #ef4444', background: 'transparent', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', fontSize: '11px'}}>Remover</button>
                                 </div>

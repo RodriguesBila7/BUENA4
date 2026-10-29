@@ -137,11 +137,11 @@ export default function ProvimentoCessacaoWizard({
           onPointerDown={isMaximized ? undefined : onPointerDown} 
           onDoubleClick={handleHeaderDoubleClick}
           className={isMaximized ? '' : 'drag-handle'}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontSize: '20px' }}>
-              {actType === 'Nomeação' ? '👔' : actType === 'Cessação de Funções' ? '🛑' : '🔄'}
+              {actType === 'Nomeação' ? '' : actType === 'Cessação de Funções' ? '' : ''}
             </span>
             <div>
               <h3 style={styles.title}>Novo Processo de Provimento e Cessação</h3>
@@ -155,7 +155,7 @@ export default function ProvimentoCessacaoWizard({
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
           </div>
@@ -181,7 +181,7 @@ export default function ProvimentoCessacaoWizard({
                       border: actType === t ? '1px solid #DC2626' : '1px solid #CBD5E1'
                     }}
                   >
-                    {t === 'Nomeação' ? '👔 Nomeação' : t === 'Cessação de Funções' ? '🛑 Cessação de Funções' : '🔄 Reintegração'}
+                    {t === 'Nomeação' ? 'Nomeação' : t === 'Cessação de Funções' ? 'Cessação de Funções' : 'Reintegração'}
                   </button>
                 ))}
               </div>
@@ -189,7 +189,7 @@ export default function ProvimentoCessacaoWizard({
 
             {/* Aviso Institucional de Regras e Níveis */}
             <div style={!isPrimary ? styles.secondaryNotice : styles.primaryNotice}>
-              <span style={{ fontSize: '16px' }}>{!isPrimary ? '🛡️' : '⚖️'}</span>
+              <span style={{ fontSize: '16px' }}>{!isPrimary ? '' : ''}</span>
               <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
                 {!isPrimary ? (
                   <>
@@ -210,7 +210,7 @@ export default function ProvimentoCessacaoWizard({
                 <div>
                   <input
                     type="text"
-                    placeholder="🔍 Pesquisar por Nome, NUIT ou ID..."
+                    placeholder="Pesquisar por Nome, NUIT ou ID..."
                     value={searchFilter}
                     onChange={e => setSearchFilter(e.target.value)}
                     style={styles.input}
@@ -415,7 +415,7 @@ export default function ProvimentoCessacaoWizard({
             {/* Inserção de Despacho (Exclusivo para Usuário Primário) */}
             {isPrimary && (
               <div style={styles.despachoFieldBox}>
-                <label style={{ ...styles.label, color: '#DC2626' }}>📜 Despacho da Direcção de Recursos Humanos (Opcional na Criação)</label>
+                <label style={{ ...styles.label, color: '#DC2626' }}>Despacho da Direcção de Recursos Humanos (Opcional na Criação)</label>
                 <textarea
                   value={despacho}
                   onChange={e => setDespacho(e.target.value)}
@@ -439,7 +439,7 @@ export default function ProvimentoCessacaoWizard({
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B91C1C'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC2626'}
             >
-              {isSubmitting ? 'A Gravar...' : '🚀 Submeter Processo'}
+              {isSubmitting ? 'A Gravar...' : 'Submeter Processo'}
             </button>
           </div>
         </form>

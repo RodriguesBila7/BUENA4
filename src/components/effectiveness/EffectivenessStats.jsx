@@ -137,7 +137,7 @@ export default function EffectivenessStats({ user, orgData: passedOrgData, emplo
           flexWrap: 'wrap'
         }}>
           <span style={{ fontWeight: 'bold', color: 'var(--color-primary)', fontSize: '13px' }}>
-            🏛️ Filtrar Estatísticas por Perfil Secundário / Direcção:
+            Filtrar Estatísticas por Direcção:
           </span>
           <select
             value={selectedDirFilter}
@@ -152,9 +152,9 @@ export default function EffectivenessStats({ user, orgData: passedOrgData, emplo
               fontWeight: '600'
             }}
           >
-            <option value="">🌐 Estatísticas Globais (Consolidado Nacional)</option>
+            <option value="">Estatísticas Globais (Consolidado Nacional)</option>
             {(orgData?.directorates || []).map(d => (
-              <option key={d.id} value={d.id}>📍 {d.name}</option>
+              <option key={d.id} value={d.id}>{d.name}</option>
             ))}
           </select>
         </div>
@@ -177,7 +177,7 @@ export default function EffectivenessStats({ user, orgData: passedOrgData, emplo
         <div style={styles.card}>
           <div style={styles.cardTitle}>Faltas Justificadas vs Injustificadas</div>
           <div style={{fontSize: '14px', fontWeight: 'bold', marginTop: '6px'}}>
-            <span style={{color: '#059669'}}>✓ {stats.totalJustified}d Just.</span> | <span style={{color: '#dc2626'}}>✕ {stats.totalUnjustified}d Injust.</span>
+            <span style={{color: '#059669'}}>{stats.totalJustified}d Just.</span> | <span style={{color: '#dc2626'}}>{stats.totalUnjustified}d Injust.</span>
           </div>
         </div>
       </div>
@@ -212,7 +212,7 @@ export default function EffectivenessStats({ user, orgData: passedOrgData, emplo
             ) : (
               orgStats.provinces.map((p, i) => (
                 <div key={i} style={{display: 'flex', justifyContent: 'space-between', padding: '8px 12px', backgroundColor: 'var(--color-bg-card)', borderRadius: '6px', border: '1px solid var(--color-border)'}}>
-                  <span style={{fontWeight: '600', fontSize: '13px'}}>📍 {p.name}</span>
+                  <span style={{fontWeight: '600', fontSize: '13px'}}>{p.name}</span>
                   <span style={{fontWeight: 'bold', color: '#dc2626'}}>{p.days} Dias</span>
                 </div>
               ))

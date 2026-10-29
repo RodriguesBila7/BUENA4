@@ -20,21 +20,21 @@ const HIERARCHY_ORDER = {
 const getLevelInfo = (roleName) => {
   switch (roleName) {
     case 'Super Administrador Principal':
-      return { level: '1º Nível (DRH)', icon: '👑', color: '#991b1b', bg: '#fef2f2', border: '#fca5a5' };
+      return { level: '1º Nível (DRH)', icon: '', color: '#991b1b', bg: '#fef2f2', border: '#fca5a5' };
     case 'Super Administrador':
       return { level: '2º Nível (Gestão Pessoal)', icon: '⭐', color: '#1e40af', bg: '#eff6ff', border: '#93c5fd' };
     case 'Administrador Principal':
-      return { level: '3º Nível (Central RH)', icon: '🛡️', color: '#065f46', bg: '#ecfdf5', border: '#6ee7b7' };
+      return { level: '3º Nível (Central RH)', icon: '', color: '#065f46', bg: '#ecfdf5', border: '#6ee7b7' };
     case 'Administrador':
-      return { level: '4º Nível (Provincial)', icon: '🏛️', color: '#6b21a8', bg: '#faf5ff', border: '#d8b4fe' };
+      return { level: '4º Nível (Provincial)', icon: '', color: '#6b21a8', bg: '#faf5ff', border: '#d8b4fe' };
     case 'Técnico de Pensões e Reserva':
-      return { level: 'Específico (Reserva)', icon: '📜', color: '#9a3412', bg: '#fff7ed', border: '#ffedd5' };
+      return { level: 'Específico (Reserva)', icon: '', color: '#9a3412', bg: '#fff7ed', border: '#ffedd5' };
     case 'Técnico de Saúde e Óbitos':
-      return { level: 'Específico (Saúde)', icon: '⚕️', color: '#075985', bg: '#f0f9ff', border: '#bae6fd' };
+      return { level: 'Específico (Saúde)', icon: '', color: '#075985', bg: '#f0f9ff', border: '#bae6fd' };
     case 'Usuário':
-      return { level: '5º Nível (Adjunto)', icon: '👥', color: '#334155', bg: '#f8fafc', border: '#cbd5e1' };
+      return { level: '5º Nível (Adjunto)', icon: '', color: '#334155', bg: '#f8fafc', border: '#cbd5e1' };
     default:
-      return { level: 'Personalizado', icon: '🔹', color: '#475569', bg: '#f1f5f9', border: '#cbd5e1' };
+      return { level: 'Personalizado', icon: '', color: '#475569', bg: '#f1f5f9', border: '#cbd5e1' };
   }
 };
 
@@ -214,16 +214,16 @@ export default function RoleManager() {
                   </td>
                   <td>
                     <span style={{ padding: '2px 8px', borderRadius: '10px', backgroundColor: assignedUsersCount > 0 ? 'rgba(4, 120, 87, 0.1)' : 'var(--color-bg-base)', color: assignedUsersCount > 0 ? '#047857' : 'var(--color-text-muted)', fontSize: '11px', fontWeight: 'bold' }}>
-                      👤 {assignedUsersCount} {assignedUsersCount === 1 ? 'Utilizador' : 'Utilizadores'}
+                      {assignedUsersCount} {assignedUsersCount === 1 ? 'Utilizador' : 'Utilizadores'}
                     </span>
                   </td>
                   <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
                       <button style={styles.btnAction} onClick={() => setPreviewRole(r)} title="Visualizar Matriz de Permissões">
-                        👁️ Matriz
+                        Matriz
                       </button>
                       <button style={styles.btnAction} onClick={() => { setEditingRole(r); setView('edit'); }} title="Editar Permissões">
-                        ✏️ Editar
+                        Editar
                       </button>
                       {r.id !== 'super_admin' && r.id !== 'super_admin_1' && (
                         <button
@@ -243,7 +243,7 @@ export default function RoleManager() {
                             });
                           }}
                         >
-                          🗑️ Eliminar
+                          Eliminar
                         </button>
                       )}
                     </div>

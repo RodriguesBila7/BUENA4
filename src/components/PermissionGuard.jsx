@@ -62,7 +62,7 @@ export default function PermissionGuard({ module, action, children, fallback = n
         margin: '20px',
         boxShadow: '0 4px 12px rgba(0,0,0,0.02)'
       }}>
-        <div style={{ fontSize: '40px', marginBottom: '12px' }}>🔒</div>
+        <div style={{ fontSize: '40px', marginBottom: '12px' }}></div>
         <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--color-text-base)', marginBottom: '8px' }}>
           Acesso Não Autorizado
         </h3>

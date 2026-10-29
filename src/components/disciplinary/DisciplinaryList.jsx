@@ -497,7 +497,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
           gap: '8px',
           marginBottom: '16px'
         }}>
-          <span>📍</span>
+          <span></span>
           <span>
             <strong>Gestão Provincial de Contencioso Laboral:</strong> Acesso restrito aos efectivos sob gerência da sua Província. Conclusão formal requer homologação do Despacho Final.
           </span>
@@ -542,7 +542,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
         </select>
         
         <button onClick={exportExcel} style={styles.btnExport}>
-          📊 Exportar Excel
+          Exportar Excel
         </button>
       </div>
 
@@ -582,8 +582,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                             (NIP: {emp.employeeNip}) • {emp.directorate}
                           </span>
                           {emp.employeeStatus && ['Expulso', 'Demitido'].includes(emp.employeeStatus) && (
-                            <span style={{ padding: '2px 8px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>
-                              ⛔ {emp.employeeStatus}
+                            <span style={{ padding: '2px 8px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>{emp.employeeStatus}
                             </span>
                           )}
                         </div>
@@ -628,8 +627,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                         <td>
                           {p.despachoNumero ? (
                             <div>
-                              <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
-                                📜 {p.despachoNumero}
+                              <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--color-primary)' }}>{p.despachoNumero}
                               </span>
                               <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
                                 Data: {p.despachoData || '-'}
@@ -648,13 +646,12 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                               backgroundColor: p.status === 'Concluído' ? 'rgba(16, 185, 129, 0.15)' : (p.status === 'Em Instrução' || p.status === 'Aberto' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(100, 116, 139, 0.15)'),
                               color: p.status === 'Concluído' ? '#059669' : (p.status === 'Em Instrução' || p.status === 'Aberto' ? '#d97706' : 'var(--color-text-muted)')
                             }}>
-                              {p.status === 'Concluído' ? '✓ Concluído' : p.status}
+                              {p.status === 'Concluído' ? 'Concluído' : p.status}
                             </span>
 
                             {isSevereSanction && p.status === 'Concluído' && (
                               isExecuted ? (
-                                <span style={{ fontSize: '10.5px', color: '#059669', fontWeight: '700' }}>
-                                  ✓ Executado no Cadastro
+                                <span style={{ fontSize: '10.5px', color: '#059669', fontWeight: '700' }}>Executado no Cadastro
                                 </span>
                               ) : (
                                 <button
@@ -674,8 +671,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                                   }}
                                   style={styles.btnExecuteSanction}
                                   title="Executar Sanção de Expulsão/Demissão no Quadro"
-                                >
-                                  ⚠️ Executar Sanção
+                                >Executar Sanção
                                 </button>
                               )
                             )}
@@ -687,8 +683,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                               onClick={(e) => { e.stopPropagation(); handleOpenView(p); }}
                               style={styles.btnActionView}
                               title="Ver Detalhes do Processo e Despacho"
-                            >
-                              👁️ Ver
+                            >Ver
                             </button>
 
                             {/* Botão de Despacho Final */}
@@ -696,25 +691,20 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                               onClick={(e) => { e.stopPropagation(); handleOpenDespacho(p); }}
                               style={p.despachoNumero ? styles.btnActionDespachoDone : styles.btnActionDespachoPending}
                               title={p.despachoNumero ? "Ver / Retificar Despacho Final" : "Adicionar Despacho Final e Concluir"}
-                            >
-                              ⚖️ {p.despachoNumero ? 'Despacho' : 'Adicionar Despacho'}
+                            >{p.despachoNumero ? 'Despacho' : 'Adicionar Despacho'}
                             </button>
 
                             <button
                               onClick={(e) => { e.stopPropagation(); handleOpenEdit(p); }}
                               style={styles.btnActionEdit}
                               title="Editar Instrução do Processo"
-                            >
-                              ✏️
-                            </button>
+                            >Editar</button>
 
                             <button
                               onClick={(e) => { e.stopPropagation(); setConfirmDelete({ isOpen: true, processId: p.id, processNumber: p.processNumber }); }}
                               style={styles.btnActionDelete}
                               title="Eliminar Processo"
-                            >
-                              🗑️
-                            </button>
+                            >Eliminar</button>
                           </div>
                         </td>
                       </tr>
@@ -970,7 +960,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
       {/* MODAL 2: INSERÇÃO DO DESPACHO FINAL */}
       <DraggableModal
         isOpen={isDespachoModalOpen}
-        title={`⚖️ Despacho Final - Processo ${despachoData.processNumber}`}
+        title={`Despacho Final - Processo ${despachoData.processNumber}`}
         onClose={() => setIsDespachoModalOpen(false)}
         maxWidth="720px"
       >
@@ -1119,7 +1109,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
             {despachoData.despachoFiles && despachoData.despachoFiles.length > 0 && (
               <ul style={{ fontSize: '12px', marginTop: '6px', color: 'var(--color-text-muted)' }}>
                 {despachoData.despachoFiles.map((f, i) => (
-                  <li key={i}>📄 {f.name} ({(f.size / 1024).toFixed(1)} KB)</li>
+                  <li key={i}>{f.name} ({(f.size / 1024).toFixed(1)} KB)</li>
                 ))}
               </ul>
             )}

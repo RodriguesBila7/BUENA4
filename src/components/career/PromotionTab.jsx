@@ -139,7 +139,7 @@ export default function PromotionTab({ elegibles = [], orgData, onPromote, onRef
       <div style={styles.filterCard}>
         <div style={styles.filterCardHeader}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '18px' }}>🔍</span>
+            
             <h4 style={styles.filterCardTitle}>Filtros de Elegíveis para Promoção</h4>
           </div>
 
@@ -150,8 +150,7 @@ export default function PromotionTab({ elegibles = [], orgData, onPromote, onRef
                 onClick={handleClearFilters}
                 style={styles.btnClearFilters}
                 title="Limpar todos os filtros"
-              >
-                ✕ Limpar Filtros
+              >Limpar Filtros
               </button>
             )}
             <button onClick={handleExportExcel} style={styles.exportBtn}>
@@ -276,7 +275,7 @@ export default function PromotionTab({ elegibles = [], orgData, onPromote, onRef
 
         <div style={styles.filterFooter}>
           <span style={styles.resultsBadge}>
-            📊 <strong>{filtered.length}</strong> {filtered.length === 1 ? 'funcionário elegível' : 'funcionários elegíveis'}
+            <strong>{filtered.length}</strong> {filtered.length === 1 ? 'funcionário elegível' : 'funcionários elegíveis'}
           </span>
         </div>
       </div>

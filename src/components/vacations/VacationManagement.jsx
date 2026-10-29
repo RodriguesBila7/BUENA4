@@ -344,7 +344,7 @@ export default function VacationManagement() {
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid var(--color-primary, #1B365D)' }}>
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Total de Registos</span>
-            <span style={styles.kpiIcon}>📋</span>
+            <span style={styles.kpiIcon}></span>
           </div>
           <div style={styles.kpiValue}>{stats.total}</div>
           <div style={styles.kpiDesc}>Histórico global cadastrado</div>
@@ -366,7 +366,7 @@ export default function VacationManagement() {
         }}>
           <div style={styles.kpiHeader}>
             <span style={{ ...styles.kpiTitle, color: '#DC2626' }}>Término Próximo (≤ 5 dias)</span>
-            <span style={styles.kpiIcon}>⚠️</span>
+            <span style={styles.kpiIcon}></span>
           </div>
           <div style={{ ...styles.kpiValue, color: '#DC2626' }}>{stats.endingSoon}</div>
           <div style={styles.kpiDesc}>Alertas para regresso ao serviço</div>
@@ -375,7 +375,7 @@ export default function VacationManagement() {
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid #2563EB' }}>
           <div style={styles.kpiHeader}>
             <span style={{ ...styles.kpiTitle, color: '#2563EB' }}>Agendadas (Futuras)</span>
-            <span style={styles.kpiIcon}>📅</span>
+            <span style={styles.kpiIcon}></span>
           </div>
           <div style={{ ...styles.kpiValue, color: '#2563EB' }}>{stats.scheduled}</div>
           <div style={styles.kpiDesc}>Programadas para início breve</div>
@@ -384,7 +384,7 @@ export default function VacationManagement() {
         <div style={{ ...styles.kpiCard, borderLeft: '4px solid #64748B' }}>
           <div style={styles.kpiHeader}>
             <span style={styles.kpiTitle}>Concluídas</span>
-            <span style={styles.kpiIcon}>✅</span>
+            <span style={styles.kpiIcon}></span>
           </div>
           <div style={styles.kpiValue}>{stats.completed}</div>
           <div style={styles.kpiDesc}>Férias terminadas com êxito</div>
@@ -403,8 +403,7 @@ export default function VacationManagement() {
             </span>
           </div>
           {(searchTerm || filterDirectorate || filterDepartment || filterDivision || filterStatus || filterAlertOnly) && (
-            <button type="button" onClick={handleClearFilters} style={styles.btnClearFilters}>
-              ✕ Limpar filtros
+            <button type="button" onClick={handleClearFilters} style={styles.btnClearFilters}>Limpar filtros
             </button>
           )}
         </div>
@@ -515,7 +514,7 @@ export default function VacationManagement() {
               }}
               title="Filtrar férias que terminam em 5 dias ou menos"
             >
-              <span>⚠️ A terminar breve (≤ 5 dias)</span>
+              <span>A terminar breve (≤ 5 dias)</span>
             </button>
           </div>
         </div>
@@ -546,8 +545,7 @@ export default function VacationManagement() {
               onClick={handleExportExcel} 
               style={styles.btnSecondary}
               title="Exportar listagem em formato Excel"
-            >
-              📥 Exportar Excel
+            >Exportar Excel
             </button>
           </div>
         </div>
@@ -730,14 +728,14 @@ export default function VacationManagement() {
               onDoubleClick={viewModal.handleHeaderDoubleClick}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ fontSize: '20px' }}>🌴</span>
+                <span style={{ fontSize: '20px' }}></span>
                 <h3 style={styles.modalTitle}>
                   Ficha de Férias e Contagem Regressiva: {viewingRecord.emp?.name || viewingRecord.employeeName}
                 </h3>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <button type="button" onClick={viewModal.toggleMaximize} style={styles.expandBtn}>
-                  {viewModal.isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+                  {viewModal.isMaximized ? 'Restaurar' : 'Maximizar'}
                 </button>
                 <button type="button" onClick={() => setViewingRecord(null)} style={styles.closeBtn}>✕</button>
               </div>
@@ -756,8 +754,7 @@ export default function VacationManagement() {
                       </div>
                     </div>
                     {viewingRecord.countdown.isEndingSoon && (
-                      <div style={styles.pulseAlertBadge}>
-                        ⚠️ Alerta: Faltam menos de 5 dias para o regresso ao serviço!
+                      <div style={styles.pulseAlertBadge}>Alerta: Faltam menos de 5 dias para o regresso ao serviço!
                       </div>
                     )}
                   </div>
@@ -799,8 +796,7 @@ export default function VacationManagement() {
                 </div>
               ) : viewingRecord.countdown.isScheduled ? (
                 <div style={{ ...styles.liveCountdownCard, backgroundColor: 'rgba(37, 99, 235, 0.08)', borderColor: '#2563EB' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#2563EB' }}>
-                    📅 Férias Agendadas: {viewingRecord.countdown.displayText}
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#2563EB' }}>Férias Agendadas: {viewingRecord.countdown.displayText}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                     Período previsto: de {formatDate(viewingRecord.startDate)} a {formatDate(viewingRecord.endDate)} ({viewingRecord.daysCount} dias).
@@ -808,8 +804,7 @@ export default function VacationManagement() {
                 </div>
               ) : (
                 <div style={{ ...styles.liveCountdownCard, backgroundColor: 'rgba(100, 116, 139, 0.08)', borderColor: '#64748B' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#475569' }}>
-                    ✅ {viewingRecord.countdown.displayText}
+                  <div style={{ fontSize: '14px', fontWeight: '700', color: '#475569' }}>{viewingRecord.countdown.displayText}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
                     Período cumprido: de {formatDate(viewingRecord.startDate)} a {formatDate(viewingRecord.endDate)} ({viewingRecord.daysCount} dias).
@@ -817,7 +812,7 @@ export default function VacationManagement() {
                 </div>
               )}
 
-              <div style={styles.sectionHeader}>👤 Dados Cadastrais do Funcionário</div>
+              <div style={styles.sectionHeader}>Dados Cadastrais do Funcionário</div>
               <div style={styles.infoGrid}>
                 <div style={styles.infoItem}>
                   <span style={styles.infoLabel}>Nome Completo:</span>
@@ -853,7 +848,7 @@ export default function VacationManagement() {
                 </div>
               </div>
 
-              <div style={styles.sectionHeader}>📜 Histórico Completo de Férias e Licenças deste Funcionário</div>
+              <div style={styles.sectionHeader}>Histórico Completo de Férias e Licenças deste Funcionário</div>
               <div style={{ overflowX: 'auto', marginTop: '10px' }}>
                 <table className="premium-table" style={{ width: '100%', fontSize: '12px' }}>
                   <thead>
@@ -903,7 +898,7 @@ export default function VacationManagement() {
                 }} 
                 style={styles.btnSecondary}
               >
-                ✏️ Editar Registo
+                Editar Registo
               </button>
               <button type="button" onClick={() => setViewingRecord(null)} style={styles.btnPrimary}>
                 Fechar
@@ -1026,14 +1021,14 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
           onDoubleClick={modalProps.handleHeaderDoubleClick}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>🌴</span>
+            <span style={{ fontSize: '20px' }}></span>
             <h3 style={styles.modalTitle}>
               {initialData ? 'Editar Marcação de Férias' : 'Novo Agendamento de Férias'}
             </h3>
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button type="button" onClick={modalProps.toggleMaximize} style={styles.expandBtn}>
-              {modalProps.isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {modalProps.isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button type="button" onClick={onClose} style={styles.closeBtn}>✕</button>
           </div>
@@ -1041,7 +1036,7 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <div style={styles.modalBody}>
-            {errorMsg && <div style={styles.errorBanner}>⚠️ {errorMsg}</div>}
+            {errorMsg && <div style={styles.errorBanner}>{errorMsg}</div>}
 
             <div style={styles.formGroupModal}>
               <label style={styles.filterLabel}>Funcionário SERNIC <span style={{ color: '#DC2626' }}>*</span></label>
@@ -1151,8 +1146,7 @@ function VacationFormModal({ isOpen, initialData, employees, orgData, onClose, o
             <button type="button" onClick={onClose} style={styles.btnSecondary}>
               Cancelar
             </button>
-            <button type="submit" style={styles.btnPrimary}>
-              💾 Guardar Registo
+            <button type="submit" style={styles.btnPrimary}>Guardar Registo
             </button>
           </div>
         </form>

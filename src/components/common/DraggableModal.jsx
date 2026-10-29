@@ -51,7 +51,7 @@ export default function DraggableModal({
           className={isMaximized ? '' : 'drag-handle'} 
           onPointerDown={isMaximized ? undefined : onPointerDown}
           onDoubleClick={handleHeaderDoubleClick}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <div style={styles.titleContainer}>
             {icon && <span style={styles.icon}>{icon}</span>}
@@ -64,7 +64,7 @@ export default function DraggableModal({
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button
               type="button"

@@ -234,8 +234,7 @@ export default function DistrictDashboard({ data, t }) {
             boxShadow: subTab === 'records' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
             transition: 'all 0.2s ease'
           }}
-        >
-          📋 Registos Guardados
+        >Registos Guardados
         </button>
 
         <button
@@ -253,8 +252,7 @@ export default function DistrictDashboard({ data, t }) {
             boxShadow: subTab === 'sections' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
             transition: 'all 0.2s ease'
           }}
-        >
-          📁 Secções Distritais
+        >Secções Distritais
         </button>
 
         <button
@@ -272,8 +270,7 @@ export default function DistrictDashboard({ data, t }) {
             boxShadow: subTab === 'charts' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
             transition: 'all 0.2s ease'
           }}
-        >
-          📊 Indicadores & Gráficos
+        >Indicadores & Gráficos
         </button>
 
         <button
@@ -291,8 +288,7 @@ export default function DistrictDashboard({ data, t }) {
             boxShadow: subTab === 'tree' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
             transition: 'all 0.2s ease'
           }}
-        >
-          🌳 Organograma Distrital
+        >Organograma Distrital
         </button>
 
         <button
@@ -310,8 +306,7 @@ export default function DistrictDashboard({ data, t }) {
             boxShadow: subTab === 'queries' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
             transition: 'all 0.2s ease'
           }}
-        >
-          🔍 Pesquisa Distrital
+        >Pesquisa Distrital
         </button>
       </div>
 
@@ -336,12 +331,11 @@ export default function DistrictDashboard({ data, t }) {
           boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 }}>
-              📋 Registos Guardados de Direcções Distritais ({filteredDistricts.length})
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 }}>Registos Guardados de Direcções Distritais ({filteredDistricts.length})
             </h3>
             <input
               type="text"
-              placeholder="🔍 Pesquisar por distrito ou província..."
+              placeholder="Pesquisar por distrito ou província..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
@@ -534,12 +528,11 @@ export default function DistrictDashboard({ data, t }) {
           boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 }}>
-              📁 Registos de Secções Distritais ({filteredSections.length})
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 }}>Registos de Secções Distritais ({filteredSections.length})
             </h3>
             <input
               type="text"
-              placeholder="🔍 Pesquisar por secção ou distrito..."
+              placeholder="Pesquisar por secção ou distrito..."
               value={secSearchTerm}
               onChange={(e) => {
                 setSecSearchTerm(e.target.value);
@@ -720,7 +713,7 @@ export default function DistrictDashboard({ data, t }) {
             <div style={{ ...styles.card, borderLeft: '4px solid #3B82F6' }}>
               <div style={styles.cardHeader}>
                 <span style={styles.cardVal}>{stats.totalProvDirs}</span>
-                <span style={styles.cardIcon}>🏢</span>
+                <span style={styles.cardIcon}></span>
               </div>
               <p style={styles.cardTitle}>Direções Provinciais</p>
             </div>
@@ -728,7 +721,7 @@ export default function DistrictDashboard({ data, t }) {
             <div style={{ ...styles.card, borderLeft: '4px solid #10B981' }}>
               <div style={styles.cardHeader}>
                 <span style={styles.cardVal}>{stats.totalDistDirs}</span>
-                <span style={styles.cardIcon}>📍</span>
+                <span style={styles.cardIcon}></span>
               </div>
               <p style={styles.cardTitle}>Direções Distritais Ativas</p>
             </div>
@@ -736,7 +729,7 @@ export default function DistrictDashboard({ data, t }) {
             <div style={{ ...styles.card, borderLeft: '4px solid #F59E0B' }}>
               <div style={styles.cardHeader}>
                 <span style={styles.cardVal}>{stats.totalSections}</span>
-                <span style={styles.cardIcon}>📁</span>
+                <span style={styles.cardIcon}></span>
               </div>
               <p style={styles.cardTitle}>Secções Distritais</p>
             </div>
@@ -744,7 +737,7 @@ export default function DistrictDashboard({ data, t }) {
             <div style={{ ...styles.card, borderLeft: '4px solid #8B5CF6' }}>
               <div style={styles.cardHeader}>
                 <span style={styles.cardVal}>{stats.totalEmployees}</span>
-                <span style={styles.cardIcon}>👤</span>
+                <span style={styles.cardIcon}></span>
               </div>
               <p style={styles.cardTitle}>Efetivos em Distritos</p>
             </div>
@@ -754,7 +747,7 @@ export default function DistrictDashboard({ data, t }) {
             <div style={{ ...styles.card, borderLeft: '4px solid #EF4444' }}>
               <div style={styles.cardHeader}>
                 <span style={{ ...styles.cardVal, color: '#EF4444' }}>{stats.totalDistsWithoutDirector}</span>
-                <span style={styles.cardIcon}>⚠️</span>
+                <span style={styles.cardIcon}></span>
               </div>
               <p style={styles.cardTitle}>Distritos sem Diretor</p>
             </div>
@@ -762,7 +755,7 @@ export default function DistrictDashboard({ data, t }) {
             <div style={{ ...styles.card, borderLeft: '4px solid #EF4444' }}>
               <div style={styles.cardHeader}>
                 <span style={{ ...styles.cardVal, color: '#EF4444' }}>{stats.totalSecsWithoutChief}</span>
-                <span style={styles.cardIcon}>⚠️</span>
+                <span style={styles.cardIcon}></span>
               </div>
               <p style={styles.cardTitle}>Secções sem Chefe</p>
             </div>
@@ -770,7 +763,7 @@ export default function DistrictDashboard({ data, t }) {
             <div style={{ ...styles.card, borderLeft: '4px solid #F59E0B' }}>
               <div style={styles.cardHeader}>
                 <span style={styles.cardVal}>{stats.totalVacantPositions}</span>
-                <span style={styles.cardIcon}>💼</span>
+                <span style={styles.cardIcon}></span>
               </div>
               <p style={styles.cardTitle}>Cargos Vagos</p>
             </div>
@@ -780,7 +773,7 @@ export default function DistrictDashboard({ data, t }) {
                 <span style={styles.cardVal} title={`Nomeações: ${stats.totalAppointments} / Exonerações: ${stats.totalExonerations}`}>
                   {stats.totalAppointments + stats.totalExonerations}
                 </span>
-                <span style={styles.cardIcon}>📝</span>
+                <span style={styles.cardIcon}></span>
               </div>
               <p style={styles.cardTitle}>Movimentações de Cargo</p>
             </div>

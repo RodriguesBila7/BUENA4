@@ -731,7 +731,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
           boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>🏛️</span>
+            <span style={{ fontSize: '20px' }}></span>
             <div>
               <div style={{ fontSize: '13.5px', fontWeight: 'bold', color: 'var(--color-primary, #1B365D)' }}>
                 Direcção Provincial de RH:
@@ -761,10 +761,9 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                 minWidth: '280px'
               }}
             >
-              <option value="">🌐 Todas as Direcções Provinciais (Consolidado Nacional)</option>
+              <option value="">Todas as Direcções Provinciais (Consolidado Nacional)</option>
               {(orgData?.directorates || []).map(d => (
-                <option key={d.id} value={d.id}>
-                  📍 {d.name} ({absenceCountByDir[String(d.id)] || 0} dias de falta)
+                <option key={d.id} value={d.id}>{d.name} ({absenceCountByDir[String(d.id)] || 0} dias de falta)
                 </option>
               ))}
             </select>
@@ -784,7 +783,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
           gap: '8px',
           marginBottom: '16px'
         }}>
-          <span>📍</span>
+          <span></span>
           <span>
             <strong>Gerência Provincial Ativa:</strong> {userDirObj?.name || 'Direcção Local'} — Visualização restrita aos efectivos sob sua alçada.
           </span>
@@ -1041,14 +1040,14 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                     }}
                     title="Imprimir mapa consolidado de todas as direcções do SERNIC"
                   >
-                    🏛️ Imprimir Todas as Direcções
+                    Imprimir Todas as Direcções
                   </button>
                 )}
                 <button onClick={handlePrintProvincialMap} style={{...styles.btnGoToRegister, backgroundColor: 'var(--color-primary, #1B365D)'}} title="Imprimir Mapa Oficial">
-                  🖨️ Imprimir Mapa
+                  Imprimir Mapa
                 </button>
                 <button onClick={exportToExcel} style={{...styles.btnGoToRegister, backgroundColor: '#107c41'}} title="Exportar para Excel">
-                  📊 Exportar Excel
+                  Exportar Excel
                 </button>
                 <button onClick={() => handleOpenRegister(null)} style={styles.btnGoToRegister} title="Registar Nova Falta">
                   + Registar Falta
@@ -1096,8 +1095,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                             </div>
                           </td>
                           <td>
-                            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-primary)' }}>
-                              📍 {emp.directorate}
+                            <span style={{ fontSize: '12px', fontWeight: '600', color: 'var(--color-primary)' }}>{emp.directorate}
                             </span>
                             <div style={{ fontSize: '10.5px', color: 'var(--color-text-muted)' }}>
                               Reg: {emp.registeredBy}
@@ -1129,7 +1127,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                                 style={styles.btnViewDetails}
                                 title="Ver histórico de faltas"
                               >
-                                {selectedEmpId === emp.employeeId ? 'Fechar' : '👁️ Histórico'}
+                                {selectedEmpId === emp.employeeId ? 'Fechar' : 'Histórico'}
                               </button>
                               <button
                                 onClick={(e) => {
@@ -1139,7 +1137,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                                 style={{...styles.btnViewDetails, borderColor: '#059669', color: '#059669'}}
                                 title="Registar nova falta para este funcionário"
                               >
-                                ➕ Falta
+                                Registar Falta
                               </button>
                               <button
                                 onClick={(e) => {
@@ -1148,9 +1146,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                                 }}
                                 style={{...styles.btnViewDetails, borderColor: '#ef4444', color: '#ef4444'}}
                                 title="Anular todas as faltas deste funcionário"
-                              >
-                                🗑️
-                              </button>
+                              >Eliminar</button>
                             </div>
                           </td>
                         </tr>
@@ -1203,7 +1199,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                       gap: '4px'
                     }}
                   >
-                    ➕ Registar Falta
+                    Registar Falta
                   </button>
                   <button
                     onClick={() => handleDeleteAllForEmployee(selectedEmpDetails.employeeId, selectedEmpDetails.name)}
@@ -1219,7 +1215,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                     }}
                     title="Anular todas as faltas deste funcionário"
                   >
-                    🗑️ Anular Todas
+                    Anular Todas
                   </button>
                 </div>
 
@@ -1236,8 +1232,8 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                         </span>
                         
                         <div style={{display: 'flex', gap: '4px'}}>
-                          <button onClick={() => handleOpenEdit(abs)} style={styles.btnSmallEdit} title="Editar Falta">✏️</button>
-                          <button onClick={() => handleSoftDelete(abs.id)} style={styles.btnSmallDelete} title="Anular Falta">🗑️</button>
+                          <button onClick={() => handleOpenEdit(abs)} style={styles.btnSmallEdit} title="Editar Falta">Editar</button>
+                          <button onClick={() => handleSoftDelete(abs.id)} style={styles.btnSmallDelete} title="Anular Falta">Eliminar</button>
                         </div>
                       </div>
 

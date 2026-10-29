@@ -71,7 +71,7 @@ export default function EvaluationDashboard({ user }) {
   if (errorEvals) {
     return (
       <div style={styles.errorBanner}>
-        <span style={{ fontSize: '20px' }}>⚠️</span>
+        <span style={{ fontSize: '20px' }}></span>
         <div>
           <strong style={{ display: 'block', color: '#b91c1c' }}>Aviso ao carregar dados de avaliação</strong>
           <span style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>{errorEvals}</span>

@@ -27,15 +27,13 @@ export default function DisciplinaryManager({ orgData, employeesData, user, onNa
           type="button"
           onClick={() => setActiveTab('list')} 
           className={`module-tab ${activeTab === 'list' ? 'active' : ''}`}
-        >
-          📋 Listagem & Despachos
+        >Listagem & Despachos
         </button>
         <button 
           type="button"
           onClick={() => setActiveTab('dashboard')} 
           className={`module-tab ${activeTab === 'dashboard' ? 'active' : ''}`}
-        >
-          📊 Dashboard & Estatísticas
+        >Dashboard & Estatísticas
         </button>
       </div>
 

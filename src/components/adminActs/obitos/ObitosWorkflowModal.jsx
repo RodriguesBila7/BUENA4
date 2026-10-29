@@ -104,7 +104,7 @@ export default function ObitosWorkflowModal({ workflow, employee, onClose, onCom
           className={isMaximized ? '' : 'drag-handle'} 
           onPointerDown={isMaximized ? undefined : onPointerDown}
           onDoubleClick={handleHeaderDoubleClick}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <h3 style={styles.title}>Processo de Óbito: {employee?.name}</h3>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -131,7 +131,7 @@ export default function ObitosWorkflowModal({ workflow, employee, onClose, onCom
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">×</button>
           </div>
@@ -142,28 +142,28 @@ export default function ObitosWorkflowModal({ workflow, employee, onClose, onCom
           <div style={styles.stepper}>
             <div style={{ ...styles.stepItem, opacity: step >= 1 ? 1 : 0.5 }}>
               <div style={{ ...styles.stepCircle, backgroundColor: step > 1 ? '#48bb78' : step === 1 ? '#3182ce' : '#cbd5e0' }}>
-                {step > 1 ? '✓' : '1'}
+                {step > 1 ? '' : '1'}
               </div>
               <span style={styles.stepLabel}>1. Suspensão de Salário</span>
             </div>
             <div style={styles.stepLine} />
             <div style={{ ...styles.stepItem, opacity: step >= 2 ? 1 : 0.5 }}>
               <div style={{ ...styles.stepCircle, backgroundColor: step > 2 ? '#48bb78' : step === 2 ? '#3182ce' : '#cbd5e0' }}>
-                {step > 2 ? '✓' : '2'}
+                {step > 2 ? '' : '2'}
               </div>
               <span style={styles.stepLabel}>2. Certidão de Óbito</span>
             </div>
             <div style={styles.stepLine} />
             <div style={{ ...styles.stepItem, opacity: step >= 3 ? 1 : 0.5 }}>
               <div style={{ ...styles.stepCircle, backgroundColor: step > 3 ? '#48bb78' : step === 3 ? '#3182ce' : '#cbd5e0' }}>
-                {step > 3 ? '✓' : '3'}
+                {step > 3 ? '' : '3'}
               </div>
               <span style={styles.stepLabel}>3. Subsídio por Morte</span>
             </div>
             <div style={styles.stepLine} />
             <div style={{ ...styles.stepItem, opacity: step >= 4 ? 1 : 0.5 }}>
               <div style={{ ...styles.stepCircle, backgroundColor: workflow?.isCompleted ? '#48bb78' : step === 4 ? '#3182ce' : '#cbd5e0' }}>
-                {workflow?.isCompleted ? '✓' : '4'}
+                {workflow?.isCompleted ? '' : '4'}
               </div>
               <span style={styles.stepLabel}>4. Homologação</span>
             </div>
@@ -216,7 +216,7 @@ export default function ObitosWorkflowModal({ workflow, employee, onClose, onCom
                 <h4>Passo 4: Homologação Final do Processo de Óbito</h4>
                 <p>Todos os requisitos foram preenchidos. Homologue para finalizar e atualizar definitivamente o cadastro.</p>
                 {workflow?.isCompleted ? (
-                  <div style={styles.successBadge}>✅ Processo Homologado e Finalizado</div>
+                  <div style={styles.successBadge}>Processo Homologado e Finalizado</div>
                 ) : (
                   <button onClick={handleApprove} style={{ ...styles.btnPrimary, backgroundColor: '#38a169' }}>
                     Homologar e Concluir Processo

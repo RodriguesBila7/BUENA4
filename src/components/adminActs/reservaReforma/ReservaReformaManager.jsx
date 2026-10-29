@@ -216,8 +216,7 @@ export default function ReservaReformaManager() {
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.searchInput}
           />
-          <button onClick={handleExportExcel} style={styles.btnExport}>
-            📥 Exportar Excel
+          <button onClick={handleExportExcel} style={styles.btnExport}>Exportar Excel
           </button>
           <button onClick={() => setIsSearchOpen(true)} style={styles.btnAdd}>
             + Nova Solicitação ({activeTab})
@@ -258,7 +257,7 @@ export default function ReservaReformaManager() {
                     </span>
                     {activeTab === 'Reserva' && row.yearsInReserve >= 5 && (
                       <div style={{ marginTop: '8px' }}>
-                        <span style={styles.alertText}>⚠️ +5 Anos na Reserva</span>
+                        <span style={styles.alertText}>+5 Anos na Reserva</span>
                       </div>
                     )}
                   </td>

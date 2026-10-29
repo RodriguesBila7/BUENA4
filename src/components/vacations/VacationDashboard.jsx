@@ -87,7 +87,7 @@ export default function VacationDashboard() {
       </div>
 
       <div style={styles.alertsContainer}>
-        <h4 style={styles.alertsTitle}>🔔 Alertas Próximos (próximos 7 dias)</h4>
+        <h4 style={styles.alertsTitle}>Alertas Próximos (próximos 7 dias)</h4>
         {upcomingVacations.length === 0 ? (
           <div style={{ color: 'var(--color-text-muted)', fontSize: '14px', fontStyle: 'italic', padding: '10px 0' }}>
             Não existem funcionários com férias aprovadas a iniciar nos próximos 7 dias.
@@ -104,7 +104,7 @@ export default function VacationDashboard() {
               
               return (
                 <div key={req.id} style={styles.alertItem}>
-                  <div style={styles.alertIcon}>⚠️</div>
+                  <div style={styles.alertIcon}></div>
                   <div style={styles.alertContent}>
                     <strong>{req.employeeName}</strong> ({req.employeeNip}) inicia as férias/licença em <strong>{diffDays === 0 ? 'hoje' : diffDays === 1 ? '1 dia' : `${diffDays} dias`}</strong>.
                     <br />

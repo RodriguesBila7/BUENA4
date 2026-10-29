@@ -141,7 +141,7 @@ export default function UserManager() {
           </span>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button style={styles.btnAction} onClick={exportToCSV}>📥 Exportar CSV</button>
+          <button style={styles.btnAction} onClick={exportToCSV}>Exportar CSV</button>
           <button style={styles.btnPrimary} onClick={() => setView('create')}>+ Adicionar Utilizador</button>
         </div>
       </div>
@@ -186,9 +186,7 @@ export default function UserManager() {
                       {(u.photo || u.avatar) ? (
                         <img src={u.photo || u.avatar} style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--color-border)', flexShrink: 0 }} alt="" />
                       ) : (
-                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--color-bg-card)', border: '1.5px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: 'bold', flexShrink: 0 }}>
-                          👤
-                        </div>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--color-bg-card)', border: '1.5px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px', fontWeight: 'bold', flexShrink: 0 }}></div>
                       )}
                       <div>
                         <div style={{ fontWeight: '700', fontSize: '13px', color: 'var(--color-text-base)', whiteSpace: 'nowrap' }}>{u.name}</div>
@@ -204,8 +202,7 @@ export default function UserManager() {
                             color: 'var(--color-primary)',
                             border: '1px solid rgba(179, 38, 30, 0.2)',
                             whiteSpace: 'nowrap'
-                          }}>
-                            💳 NUIT: {u.nuit || u.username}
+                          }}>NUIT: {u.nuit || u.username}
                           </span>
                           {u.username && u.username !== u.nuit && (
                             <span style={{ fontSize: '10.5px', color: 'var(--color-text-muted)', fontWeight: '600', whiteSpace: 'nowrap' }}>
@@ -219,18 +216,17 @@ export default function UserManager() {
                   <td style={styles.td}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--color-text-base)', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontSize: '11px' }}>✉️</span>
+                        <span style={{ fontSize: '11px' }}></span>
                         <span>{u.email || 'Não informado'}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11.5px', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontSize: '11px' }}>📞</span>
+                        <span style={{ fontSize: '11px' }}></span>
                         <span>{u.contact || 'Sem contacto'}</span>
                       </div>
                     </div>
                   </td>
                   <td style={styles.td}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: '700', fontSize: '12px', color: 'var(--color-primary)', backgroundColor: 'var(--color-bg-card)', padding: '3px 8px', borderRadius: '5px', border: '1px solid var(--color-border)', whiteSpace: 'nowrap' }}>
-                      🛡️ {formatProvincialRoleName(getRoleName(u.roleId), u.directorateId, orgData)}
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: '700', fontSize: '12px', color: 'var(--color-primary)', backgroundColor: 'var(--color-bg-card)', padding: '3px 8px', borderRadius: '5px', border: '1px solid var(--color-border)', whiteSpace: 'nowrap' }}>{formatProvincialRoleName(getRoleName(u.roleId), u.directorateId, orgData)}
                     </div>
                     {u.delegatedRoleId && (
                       <div style={{
@@ -244,17 +240,16 @@ export default function UserManager() {
                         lineHeight: '1.4'
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-                          <span>🔄 Secundário:</span>
+                          <span>Secundário:</span>
                           <strong>{formatProvincialRoleName(getRoleName(u.delegatedRoleId), u.directorateId, orgData)}</strong>
                         </div>
                         <div style={{ fontSize: '10px', marginTop: '2px', fontWeight: '600' }}>
                           {u.delegationStatus === 'Pendente' && `⏳ Aguarda Conformidade (${u.delegationRequestedBy || 'Admin Provincial'})`}
-                          {u.delegationStatus === 'Aprovado' && `✅ Concedida (${u.delegationApprovedBy || 'Central'})`}
-                          {u.delegationStatus === 'Rejeitado' && `❌ Recusada`}
+                          {u.delegationStatus === 'Aprovado' && `Concedida (${u.delegationApprovedBy || 'Central'})`}
+                          {u.delegationStatus === 'Rejeitado' && `Recusada`}
                         </div>
                         {u.delegationStartDate && u.delegationEndDate && (
-                          <div style={{ fontSize: '9.5px', marginTop: '2px', opacity: 0.85, whiteSpace: 'nowrap' }}>
-                            📅 {u.delegationStartDate} a {u.delegationEndDate}
+                          <div style={{ fontSize: '9.5px', marginTop: '2px', opacity: 0.85, whiteSpace: 'nowrap' }}>{u.delegationStartDate} a {u.delegationEndDate}
                           </div>
                         )}
                       </div>
@@ -281,34 +276,28 @@ export default function UserManager() {
                   <td style={{ ...styles.td, textAlign: 'right' }}>
                     <div style={{ display: 'inline-flex', gap: '6px', alignItems: 'center', justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
                       <button style={{ ...styles.btnAction, fontWeight: '600' }} onClick={() => { setEditingUser(u); setView('edit'); }} title="Editar Utilizador">
-                        ✏️ Editar
+                        Editar
                       </button>
                       {isCentralUser(currentUser) && u.delegatedRoleId && u.delegationStatus === 'Pendente' && (
                         <>
-                          <button style={{ ...styles.btnAction, backgroundColor: '#047857', color: '#fff', fontWeight: 'bold', borderColor: '#047857' }} onClick={() => handleConfirmDelegation(u.id, u.name)}>
-                            ✍️ Confirmar
+                          <button style={{ ...styles.btnAction, backgroundColor: '#047857', color: '#fff', fontWeight: 'bold', borderColor: '#047857' }} onClick={() => handleConfirmDelegation(u.id, u.name)}>Confirmar
                           </button>
-                          <button style={{ ...styles.btnAction, color: '#b91c1c', borderColor: '#b91c1c' }} onClick={() => handleRejectDelegation(u.id, u.name)}>
-                            ❌ Recusar
+                          <button style={{ ...styles.btnAction, color: '#b91c1c', borderColor: '#b91c1c' }} onClick={() => handleRejectDelegation(u.id, u.name)}>Recusar
                           </button>
                         </>
                       )}
                       {u.status === 'Ativo' && (
-                        <button style={{ ...styles.btnAction, color: '#b45309', borderColor: 'rgba(245, 158, 11, 0.4)' }} onClick={() => updateUser(u.id, { status: 'Bloqueada' })} title="Bloquear Acesso">
-                          🔒 Bloquear
+                        <button style={{ ...styles.btnAction, color: '#b45309', borderColor: 'rgba(245, 158, 11, 0.4)' }} onClick={() => updateUser(u.id, { status: 'Bloqueada' })} title="Bloquear Acesso">Bloquear
                         </button>
                       )}
                       {u.status === 'Bloqueada' && (
-                        <button style={{ ...styles.btnAction, color: '#047857', borderColor: 'rgba(16, 185, 129, 0.4)' }} onClick={() => updateUser(u.id, { status: 'Ativo', failedAttempts: 0, lockedUntil: null })} title="Desbloquear Acesso">
-                          🔓 Desbloquear
+                        <button style={{ ...styles.btnAction, color: '#047857', borderColor: 'rgba(16, 185, 129, 0.4)' }} onClick={() => updateUser(u.id, { status: 'Ativo', failedAttempts: 0, lockedUntil: null })} title="Desbloquear Acesso">Desbloquear
                         </button>
                       )}
                       {u.status !== 'Inativo' && (
                         <button style={{ ...styles.btnAction, color: '#b91c1c', borderColor: 'rgba(239, 68, 68, 0.4)' }} onClick={() => {
                           showModal('Atenção', 'Eliminar (Soft Delete) este utilizador?', 'confirm', () => deleteUser(u.id));
-                        }} title="Eliminar">
-                          🗑️
-                        </button>
+                        }} title="Eliminar">Eliminar</button>
                       )}
                     </div>
                   </td>

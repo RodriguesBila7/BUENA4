@@ -576,7 +576,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '15px' }}>🎲</span>
+                  <span style={{ fontSize: '15px' }}></span>
                   <div>
                     <span style={{
                       fontSize: '11px',

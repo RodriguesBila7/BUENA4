@@ -215,7 +215,7 @@ export default function StartVacationModal({ request, onClose, onStart }) {
           onPointerDown={isMaximized ? undefined : onPointerDown} 
           onDoubleClick={handleHeaderDoubleClick}
           className={isMaximized ? '' : 'drag-handle'}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <h2 style={styles.title}>Iniciar Férias: {request.employeeName}</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -225,7 +225,7 @@ export default function StartVacationModal({ request, onClose, onStart }) {
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={handleClose} style={styles.closeBtn}>✕</button>
           </div>

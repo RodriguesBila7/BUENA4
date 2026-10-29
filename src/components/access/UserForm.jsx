@@ -342,7 +342,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
       {!initialData && (
         <div style={{ backgroundColor: 'var(--color-bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '20px' }}>
           <label style={{ ...styles.label, color: 'var(--color-primary)', display: 'block', marginBottom: '10px', fontSize: '13px' }}>
-            🎯 Seleccione o Tipo de Perfil a Cadastrar:
+            Seleccione o Tipo de Perfil a Cadastrar:
           </label>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             {isCentralUser(currentUser) && (
@@ -365,7 +365,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
                   gap: '10px'
                 }}
               >
-                <span style={{ fontSize: '20px' }}>🏛️</span>
+                <span style={{ fontSize: '20px' }}></span>
                 <div>
                   <div>Administrador Provincial</div>
                   <div style={{ fontSize: '11px', fontWeight: 'normal', opacity: 0.8 }}>4º Nível (Chefe de RH Provincial & Apoio)</div>
@@ -392,7 +392,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
                 gap: '10px'
               }}
             >
-              <span style={{ fontSize: '20px' }}>👤</span>
+              <span style={{ fontSize: '20px' }}></span>
               <div>
                 <div>Usuário / Adjunto</div>
                 <div style={{ fontSize: '11px', fontWeight: 'normal', opacity: 0.8 }}>5º Nível (Adicionado pelo Admin Provincial)</div>
@@ -419,7 +419,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
                   gap: '10px'
                 }}
               >
-                <span style={{ fontSize: '20px' }}>👑</span>
+                <span style={{ fontSize: '20px' }}></span>
                 <div>
                   <div>Perfil Central / Específico</div>
                   <div style={{ fontSize: '11px', fontWeight: 'normal', opacity: 0.8 }}>1º, 2º, 3º Níveis ou Técnicos Específicos</div>
@@ -435,7 +435,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         {!initialData && (
           <div style={{ gridColumn: '1 / -1', backgroundColor: 'var(--color-bg-card)', padding: '14px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '10px' }}>
             <label style={{ ...styles.label, color: 'var(--color-primary)', display: 'block', marginBottom: '8px', fontSize: '13px' }}>
-              💡 Seleccionar Funcionário Cadastrado (Preenchimento Automático por NUIT)
+              Seleccionar Funcionário Cadastrado
             </label>
             <select
               style={{ ...styles.select, width: '100%', fontWeight: 'bold', cursor: 'pointer' }}
@@ -488,9 +488,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
                 </button>
               </div>
             ) : (
-              <div style={{...styles.photoPreview, backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px'}}>
-                👤
-              </div>
+              <div style={{...styles.photoPreview, backgroundColor: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px'}}></div>
             )}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <input type="file" accept="image/*" onChange={handlePhotoUpload} />
@@ -536,7 +534,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         
         <div style={{ gridColumn: '1 / -1', backgroundColor: 'var(--color-bg-card)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--color-border)', marginBottom: '10px' }}>
           <label style={{ ...styles.label, color: 'var(--color-primary)', display: 'block', marginBottom: '8px', fontSize: '13px' }}>
-            ⚙️ Escolha do Utilizador para o Login Principal:
+            Utilizador para o Acesso Principal:
           </label>
           <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: 'var(--color-text-base)' }}>
@@ -545,8 +543,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
                 name="loginTypeSelect" 
                 checked={loginType === 'nuit'} 
                 onChange={() => handleLoginTypeChange('nuit')} 
-              />
-              🔢 Usar NUIT (12 dígitos numéricos)
+              />Usar NUIT (12 dígitos numéricos)
             </label>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: 'var(--color-text-base)' }}>
@@ -555,8 +552,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
                 name="loginTypeSelect" 
                 checked={loginType === 'custom'} 
                 onChange={() => handleLoginTypeChange('custom')} 
-              />
-              ✍️ Username Personalizado (Nome ao seu gosto)
+              />Username Personalizado (Nome ao seu gosto)
             </label>
           </div>
         </div>
@@ -582,7 +578,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
           <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
             {loginType === 'nuit' 
               ? 'ℹ️ O login será feito digitando os 12 dígitos do NUIT.' 
-              : '💡 O utilizador poderá fazer login usando este Nome Personalizado, o seu NUIT ou Email.'}
+              : 'O utilizador poderá fazer login usando este Nome Personalizado, o seu NUIT ou Email.'}
           </div>
         </div>
         <div style={styles.formGroup}>
@@ -685,8 +681,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
             gap: '10px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                🏛️ Designação Oficial do Perfil a Gerar (Distribuição por Província):
+              <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>Designação Oficial do Perfil a Gerar (Distribuição por Província):
               </div>
               <div style={{
                 fontSize: '13px',
@@ -703,22 +698,21 @@ export default function UserForm({ initialData, onSave, onCancel }) {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '12px', color: 'var(--color-text-main)', marginTop: '4px' }}>
               <div>
-                <strong>📍 Direcção Atribuída:</strong> {(orgData?.directorates || []).find(d => String(d.id) === String(formData.directorateId))?.name || 'N/A'}
+                <strong>Direcção Atribuída:</strong> {(orgData?.directorates || []).find(d => String(d.id) === String(formData.directorateId))?.name || 'N/A'}
               </div>
               <div>
-                <strong>🔐 Escopo de Acesso:</strong> {!isCentralUser({ roleId: formData.roleId, directorateId: formData.directorateId }) ? 'Visibilidade Local Provincial (10 Módulos Autorizados)' : 'Acesso Global Nacional (Central)'}
+                <strong>Escopo de Acesso:</strong> {!isCentralUser({ roleId: formData.roleId, directorateId: formData.directorateId }) ? 'Visibilidade Local Provincial (10 Módulos Autorizados)' : 'Acesso Global Nacional (Central)'}
               </div>
             </div>
 
             {isPrimaryRoleAdmin && (
-              <div style={{ fontSize: '12px', color: '#047857', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold' }}>
-                🔑 Perfil Titular Provincial: O Administrador Provincial tem competência exclusiva para cadastrar Usuários (5º Nível) e delegar substituições temporárias.
+              <div style={{ fontSize: '12px', color: '#047857', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold' }}>Perfil Titular Provincial: O Administrador Provincial tem competência exclusiva para cadastrar Usuários (5º Nível) e delegar substituições temporárias.
               </div>
             )}
 
             {/* Guia Rápido de Siglas SERNIC */}
             <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', borderTop: '1px dashed var(--color-border)', paddingTop: '8px', marginTop: '4px' }}>
-              <strong>💡 Distribuição Oficial de Siglas SERNIC:</strong> NPL (Nampula) | GZ (Gaza) | IBN (Inhambane) | CM (Cidade de Maputo) | MP (Maputo Província) | SFL (Sofala) | MN (Manica) | TT (Tete) | ZBZ (Zambézia) | NS (Niassa) | CD (Cabo Delgado)
+              <strong>Distribuição Oficial de Siglas SERNIC:</strong> NPL (Nampula) | GZ (Gaza) | IBN (Inhambane) | CM (Cidade de Maputo) | MP (Maputo Província) | SFL (Sofala) | MN (Manica) | TT (Tete) | ZBZ (Zambézia) | NS (Niassa) | CD (Cabo Delgado)
             </div>
           </div>
         )}

@@ -97,7 +97,7 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
         return (
           <div style={styles.stepContainer}>
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div style={{ fontSize: '48px', marginBottom: '10px' }}>✅</div>
+              <div style={{ fontSize: '48px', marginBottom: '10px' }}></div>
               <h3 style={{ color: '#10B981', marginBottom: '8px' }}>Processo Finalizado</h3>
               <p style={{ color: 'var(--color-text-muted, #64748b)', fontSize: '14px', marginBottom: '24px' }}>O funcionário encontra-se inativo (Na Reserva).</p>
               <button onClick={() => setIsReactivating(true)} style={styles.btnAction}>
@@ -110,7 +110,7 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
         return (
           <div style={styles.stepContainer}>
             <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <div style={{ fontSize: '48px', marginBottom: '10px' }}>✅</div>
+              <div style={{ fontSize: '48px', marginBottom: '10px' }}></div>
               <h3 style={{ color: '#10B981', marginBottom: '8px' }}>Processo Finalizado</h3>
               <p style={{ color: 'var(--color-text-muted, #64748b)', fontSize: '14px' }}>O funcionário encontra-se reformado definitivamente.</p>
             </div>
@@ -204,7 +204,7 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
           className={isMaximized ? '' : 'drag-handle'} 
           onPointerDown={isMaximized ? undefined : onPointerDown}
           onDoubleClick={handleHeaderDoubleClick}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <div>
             <h3 style={styles.title}>Tramitação: {act.actType}</h3>
@@ -217,7 +217,7 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">×</button>
           </div>
@@ -228,14 +228,14 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
           <div style={styles.stepper}>
             <div style={{ ...styles.stepItem, opacity: workflow.step >= 1 ? 1 : 0.5 }}>
               <div style={{ ...styles.stepCircle, backgroundColor: workflow.step > 1 ? '#10B981' : workflow.step === 1 ? '#1B365D' : '#CBD5E1' }}>
-                {workflow.step > 1 ? '✓' : '1'}
+                {workflow.step > 1 ? '' : '1'}
               </div>
               <span style={styles.stepLabel}>1. Fixação Provisória</span>
             </div>
             <div style={styles.stepLine} />
             <div style={{ ...styles.stepItem, opacity: workflow.step >= 2 ? 1 : 0.5 }}>
               <div style={{ ...styles.stepCircle, backgroundColor: workflow.isCompleted ? '#10B981' : workflow.step === 2 ? '#1B365D' : '#CBD5E1' }}>
-                {workflow.isCompleted ? '✓' : '2'}
+                {workflow.isCompleted ? '' : '2'}
               </div>
               <span style={styles.stepLabel}>2. Visto do T.A.</span>
             </div>

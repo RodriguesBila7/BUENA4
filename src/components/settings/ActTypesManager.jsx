@@ -114,7 +114,7 @@ export default function ActTypesManager() {
         textAlign: 'center',
         margin: '24px'
       }}>
-        <div style={{ fontSize: '56px', marginBottom: '16px' }}>🚫</div>
+        <div style={{ fontSize: '56px', marginBottom: '16px' }}></div>
         <h2 style={{ color: '#DC2626', margin: '0 0 8px 0', fontSize: '22px', fontWeight: 'bold' }}>
           Acesso Restrito ao Módulo
         </h2>
@@ -129,8 +129,7 @@ export default function ActTypesManager() {
           color: '#DC2626',
           fontSize: '12px',
           fontWeight: 'bold'
-        }}>
-          🔒 Regra Institucional SERNIC — Acesso Bloqueado a Perfis Locais ou Secundários
+        }}>Regra Institucional SERNIC — Acesso Bloqueado a Perfis Locais ou Secundários
         </div>
       </div>
     );
@@ -153,7 +152,7 @@ export default function ActTypesManager() {
           alignItems: 'center',
           gap: '12px'
         }}>
-          <span style={{ fontSize: '22px' }}>⛔</span>
+          <span style={{ fontSize: '22px' }}></span>
           <div>
             <div>Acesso Restrito (Operando sob Perfil Secundário em Substituição):</div>
             <div style={{ fontWeight: 'normal', fontSize: '12px', marginTop: '2px', opacity: 0.9 }}>
@@ -167,7 +166,7 @@ export default function ActTypesManager() {
       <div style={styles.header}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <h2 style={styles.title}>📑 Gestão de Tipos de Actos Administrativos</h2>
+            <h2 style={styles.title}>Gestão de Tipos de Actos Administrativos</h2>
             <span style={styles.totalBadge}>{actTypes.length} Actos Registados</span>
           </div>
           <p style={styles.subtitle}>
@@ -195,7 +194,7 @@ export default function ActTypesManager() {
         <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
           <input
             type="text"
-            placeholder="🔍 Pesquisar por nome do acto ou grupo..."
+            placeholder="Pesquisar por nome do acto ou grupo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={styles.searchInput}
@@ -258,7 +257,7 @@ export default function ActTypesManager() {
           {Object.keys(groupedActs).map(group => (
             <div key={group} style={styles.groupCard}>
               <div style={styles.groupHeader}>
-                <h3 style={styles.groupTitle}>📁 {group}</h3>
+                <h3 style={styles.groupTitle}>{group}</h3>
                 <span style={styles.groupCountBadge}>{groupedActs[group].length} actos</span>
               </div>
               
@@ -284,7 +283,7 @@ export default function ActTypesManager() {
                           color: act.is_active === 1 ? '#059669' : '#DC2626',
                           border: act.is_active === 1 ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)'
                         }}>
-                          {act.is_active === 1 ? '✓ Activo' : '✕ Inactivo'}
+                          {act.is_active === 1 ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
                       <td style={styles.tdActions}>
@@ -312,7 +311,7 @@ export default function ActTypesManager() {
                           disabled={userIsSecondary}
                           title="Editar nome ou grupo"
                         >
-                          ✏️ Editar
+                          Editar
                         </button>
                         <button
                           style={{
@@ -324,9 +323,7 @@ export default function ActTypesManager() {
                           onClick={userIsSecondary ? undefined : () => handleDelete(act)}
                           disabled={userIsSecondary}
                           title="Eliminar este tipo de acto"
-                        >
-                          🗑️
-                        </button>
+                        >Eliminar</button>
                       </td>
                     </tr>
                   ))}
@@ -340,7 +337,7 @@ export default function ActTypesManager() {
       {/* Modal de Criação / Edição */}
       <DraggableModal
         isOpen={isModalOpen}
-        title={editingType ? '✏️ Editar Tipo de Acto' : '✨ Novo Tipo de Acto Administrativo'}
+        title={editingType ? 'Editar Tipo de Acto' : 'Novo Tipo de Acto Administrativo'}
         onClose={() => setIsModalOpen(false)}
         maxWidth="500px"
       >

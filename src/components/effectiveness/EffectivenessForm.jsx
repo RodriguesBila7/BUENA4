@@ -451,8 +451,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
               onClick={handleClearFilters}
               style={styles.btnClearFilters}
               title="Limpar todos os filtros ativos"
-            >
-              ✕ Limpar Filtros
+            >Limpar Filtros
             </button>
           )}
         </div>
@@ -654,7 +653,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
                       onClick={() => handleOpenModal(emp)} 
                       style={styles.btnRegisterFalta}
                     >
-                      ✍️ Registar Falta
+                      Registar Falta
                     </button>
                   </div>
                 ))}

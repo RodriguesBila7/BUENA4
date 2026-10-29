@@ -93,14 +93,12 @@ export default function MudancaCarreiraHistory({ acts, onNewRequest }) {
           <button 
             style={{...styles.tabBtn, ...(viewMode === 'lista' ? styles.tabBtnActive : {})}} 
             onClick={() => setViewMode('lista')}
-          >
-            📋 Lista de Registos
+          >Lista de Registos
           </button>
           <button 
             style={{...styles.tabBtn, ...(viewMode === 'estatisticas' ? styles.tabBtnActive : {})}} 
             onClick={() => setViewMode('estatisticas')}
-          >
-            📊 Estatísticas Analíticas
+          >Estatísticas Analíticas
           </button>
         </div>
         
@@ -113,8 +111,7 @@ export default function MudancaCarreiraHistory({ acts, onNewRequest }) {
               onChange={(e) => setSearchTerm(e.target.value)}
               style={styles.searchInput}
             />
-            <button onClick={handleExportExcel} style={styles.btnExport}>
-              📥 Exportar Excel
+            <button onClick={handleExportExcel} style={styles.btnExport}>Exportar Excel
             </button>
             {onNewRequest && (
               <button onClick={onNewRequest} style={styles.btnAdd}>

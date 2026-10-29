@@ -108,7 +108,7 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
           onPointerDown={isMaximized ? undefined : onPointerDown} 
           onDoubleClick={handleHeaderDoubleClick}
           className={isMaximized ? '' : 'drag-handle'}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
             <h2 style={styles.title}>Detalhes do Funcionário</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -134,7 +134,7 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
                 style={styles.expandBtn}
                 title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
               >
-                {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+                {isMaximized ? 'Restaurar' : 'Maximizar'}
               </button>
               <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
             </div>
@@ -146,7 +146,7 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
             {emp.photo ? (
               <img src={emp.photo} alt="Foto" style={styles.photo} />
             ) : (
-              <div style={styles.photoPlaceholder}>👤</div>
+              <div style={styles.photoPlaceholder}></div>
             )}
             <div style={styles.profileTitle}>
               <h3 style={styles.name}>{emp.name}</h3>
@@ -156,7 +156,7 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
                   {emp.isActive ? 'Ativo' : 'Inativo'}
                 </span>
                 {emp.healthStatus === 'Baixa Médica' && (
-                  <span style={styles.badgeSaude} title="Em Baixa / Junta Médica">🌡️ Doente</span>
+                  <span style={styles.badgeSaude} title="Em Baixa / Junta Médica">Doente</span>
                 )}
               </div>
             </div>
@@ -271,8 +271,7 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
               <h4 style={styles.cardTitle}>Mudança de Carreira (Avaliação Automática)</h4>
               {careerChangeEval.isEligible ? (
                 <div style={{ backgroundColor: '#ecfdf5', padding: '15px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-                  <div style={{ color: '#065f46', fontWeight: 'bold', marginBottom: '8px', fontSize: '15px' }}>
-                    ✅ Funcionário Elegível para Mudança de Carreira.
+                  <div style={{ color: '#065f46', fontWeight: 'bold', marginBottom: '8px', fontSize: '15px' }}>Funcionário Elegível para Mudança de Carreira.
                   </div>
                   <p style={{ color: '#047857', fontSize: '14px', marginBottom: '15px' }}>
                     Todos os requisitos legais e institucionais foram verificados. O processo encontra-se disponível para submissão e aprovação pelo Departamento de Recursos Humanos.
@@ -282,14 +281,12 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
                       setWizardConfig({ isOpen: true, allowedActTypes: ['Mudança de Carreira'] });
                     }}
                     style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
-                  >
-                    🚀 Iniciar Processo de Mudança de Carreira
+                  >Iniciar Processo de Mudança de Carreira
                   </button>
                 </div>
               ) : (
                 <div style={{ backgroundColor: '#fef2f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecaca' }}>
-                  <div style={{ color: '#991b1b', fontWeight: 'bold', marginBottom: '8px', fontSize: '15px' }}>
-                    ❌ Funcionário Não Elegível para Mudança de Carreira.
+                  <div style={{ color: '#991b1b', fontWeight: 'bold', marginBottom: '8px', fontSize: '15px' }}>Funcionário Não Elegível para Mudança de Carreira.
                   </div>
                   <p style={{ color: '#b91c1c', fontSize: '14px', marginBottom: '10px' }}>
                     Verifique os requisitos pendentes (categoria profissional, formação superior ou tempo mínimo de 4 anos de serviço).

@@ -39,14 +39,14 @@ export default function AccountManager({ currentView, onViewChange, t = (k) => k
   }, [currentView]);
 
   const tabs = [
-    { id: 'users', label: '👥 Utilizadores e Contas' },
-    { id: 'roles', label: '🛡️ Perfis de Acesso' },
-    { id: 'permissions', label: '📌 Permissões por Módulo' },
-    { id: 'dashboard', label: '📊 Dashboard' },
-    { id: 'policies', label: '🔐 Políticas de Segurança' },
-    { id: 'sessions', label: '🌐 Sessões Ativas' },
-    { id: 'recovery', label: '🔑 Recuperação' },
-    { id: 'audit', label: '📜 Auditoria' }
+    { id: 'users', label: 'Utilizadores e Contas' },
+    { id: 'roles', label: 'Perfis de Acesso' },
+    { id: 'permissions', label: 'Permissões por Módulo' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'policies', label: 'Políticas de Segurança' },
+    { id: 'sessions', label: 'Sessões Ativas' },
+    { id: 'recovery', label: 'Recuperação' },
+    { id: 'audit', label: 'Auditoria' }
   ];
 
   const handleTabChange = (tabId) => {

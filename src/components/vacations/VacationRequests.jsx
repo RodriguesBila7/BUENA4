@@ -82,8 +82,7 @@ export default function VacationRequests() {
       <div style={styles.headerRow}>
         <h3 style={styles.title}>Gestão de Solicitações</h3>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={handleExportExcel} style={styles.btnExport}>
-            📥 Exportar Excel
+          <button onClick={handleExportExcel} style={styles.btnExport}>Exportar Excel
           </button>
           <button onClick={() => { setSelectedRequest(null); setIsFormOpen(true); }} style={styles.btnAdd}>
             + Nova Solicitação
@@ -131,18 +130,18 @@ export default function VacationRequests() {
                         <>
                           {!['Aprovada', 'Rejeitada', 'Cancelada', 'Concluída', 'Em gozo'].includes(row.status) && (
                             <>
-                              <button onClick={() => handleStatusChange(row.id, row.status)} style={styles.btnApprove} title="Avançar Estado">✔️ Avançar</button>
-                              <button onClick={() => handleReject(row.id)} style={styles.btnReject} title="Rejeitar">❌</button>
+                              <button onClick={() => handleStatusChange(row.id, row.status)} style={styles.btnApprove} title="Avançar Estado">Avançar</button>
+                              <button onClick={() => handleReject(row.id)} style={styles.btnReject} title="Rejeitar"></button>
                             </>
                           )}
                           {row.status === 'Aprovada' && (
                             <button onClick={() => setStartModalReq(row)} style={styles.btnApprove} title="Iniciar Gozo">▶️ Iniciar</button>
                           )}
                           {row.status === 'Em gozo' && (
-                            <button onClick={() => handleStatusChange(row.id, row.status)} style={styles.btnApprove} title="Concluir">🏁 Concluir</button>
+                            <button onClick={() => handleStatusChange(row.id, row.status)} style={styles.btnApprove} title="Concluir">Concluir</button>
                           )}
                           {['Aprovada', 'Submetida', 'Em análise'].includes(row.status) && (
-                            <button onClick={() => handleCancel(row.id)} style={styles.btnReject} title="Cancelar">🚫 Cancelar</button>
+                            <button onClick={() => handleCancel(row.id)} style={styles.btnReject} title="Cancelar">Cancelar</button>
                           )}
                         </>
                       }

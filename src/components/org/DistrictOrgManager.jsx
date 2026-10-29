@@ -15,29 +15,25 @@ export default function DistrictOrgManager({ data, t }) {
           type="button"
           onClick={() => setActiveSubTab('dashboard')} 
           className={`module-tab ${activeSubTab === 'dashboard' ? 'active' : ''}`}
-        >
-          📊 Dashboard Distrital
+        >Dashboard Distrital
         </button>
         <button 
           type="button"
           onClick={() => setActiveSubTab('list')} 
           className={`module-tab ${activeSubTab === 'list' ? 'active' : ''}`}
-        >
-          📍 Direções Distritais & Secções
+        >Direções Distritais & Secções
         </button>
         <button 
           type="button"
           onClick={() => setActiveSubTab('queries')} 
           className={`module-tab ${activeSubTab === 'queries' ? 'active' : ''}`}
-        >
-          🔍 Consultas & Pesquisa
+        >Consultas & Pesquisa
         </button>
         <button 
           type="button"
           onClick={() => setActiveSubTab('organogram')} 
           className={`module-tab ${activeSubTab === 'organogram' ? 'active' : ''}`}
-        >
-          🌳 Organograma Interativo
+        >Organograma Interativo
         </button>
       </div>
 

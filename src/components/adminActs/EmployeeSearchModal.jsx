@@ -65,15 +65,15 @@ export default function EmployeeSearchModal({ isOpen, onClose, employees = [], o
           style={styles.header}
           onPointerDown={isMaximized ? undefined : onPointerDown}
           onDoubleClick={handleHeaderDoubleClick}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <div>
             <h2 style={styles.title}>Selecionar Funcionário</h2>
             <div style={styles.scopeBadge}>
               {!isCentral ? (
-                `📍 Direcção Provincial (${scopedEmployees.length} funcionários)`
+                `Direcção Provincial (${scopedEmployees.length} funcionários)`
               ) : (
-                `🌐 Âmbito Nacional (${scopedEmployees.length} funcionários)`
+                `Âmbito Nacional (${scopedEmployees.length} funcionários)`
               )}
             </div>
           </div>
@@ -84,7 +84,7 @@ export default function EmployeeSearchModal({ isOpen, onClose, employees = [], o
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">&times;</button>
           </div>
@@ -109,8 +109,7 @@ export default function EmployeeSearchModal({ isOpen, onClose, employees = [], o
                 color: showAll ? '#fff' : 'var(--color-text-base, #1e293b)',
                 borderColor: showAll ? 'var(--color-primary, #1B365D)' : 'var(--color-border, #cbd5e1)'
               }}
-            >
-              👥 {showAll ? 'Ocultar' : 'Visualizar Todos'}
+            >{showAll ? 'Ocultar' : 'Visualizar Todos'}
             </button>
           </div>
 
@@ -123,8 +122,7 @@ export default function EmployeeSearchModal({ isOpen, onClose, employees = [], o
           </div>
 
           {displayedResults.length === 0 ? (
-            <div style={styles.empty}>
-              🔍 Nenhum funcionário encontrado com os critérios introduzidos.
+            <div style={styles.empty}>Nenhum funcionário encontrado com os critérios introduzidos.
             </div>
           ) : (
             <div style={styles.resultsList}>

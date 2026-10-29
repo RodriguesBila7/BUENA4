@@ -146,7 +146,7 @@ export default function OrganicAllocationModal({
         label: dist ? dist.name : 'Direcção Distrital',
         sub: sec ? `Secção: ${sec.name}` : null,
         badgeColor: '#0d9488',
-        icon: '📍'
+        icon: ''
       };
     }
     if (currentEmployee.departmentId) {
@@ -163,7 +163,7 @@ export default function OrganicAllocationModal({
         label: dep ? dep.name : 'Departamento',
         sub: div ? `Repartição: ${div.name}` : (sec ? `Secção: ${sec.name}` : null),
         badgeColor: '#2563eb',
-        icon: '🏬'
+        icon: ''
       };
     }
     return {
@@ -172,7 +172,7 @@ export default function OrganicAllocationModal({
       label: 'Sede Provincial (Pendente de Lotação)',
       sub: 'Sem departamento ou distrito específico',
       badgeColor: '#d97706',
-      icon: '⚠️'
+      icon: ''
     };
   }, [currentEmployee, orgData]);
 
@@ -303,7 +303,7 @@ export default function OrganicAllocationModal({
           title="Arraste para mover ou dê duplo clique para maximizar"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '20px' }}>🏛️</span>
+            <span style={{ fontSize: '20px' }}></span>
             <div>
               <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: '#ffffff' }}>
                 Lotação Orgânica de Efectivo
@@ -332,7 +332,7 @@ export default function OrganicAllocationModal({
                 fontSize: '12px'
               }}
             >
-              {isMaximized ? '🗗' : '🗖'}
+              {isMaximized ? '' : ''}
             </button>
             <button
               type="button"
@@ -407,8 +407,7 @@ export default function OrganicAllocationModal({
                 }}
               >
                 <div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--color-primary, #1b365d)' }}>
-                    👤 {currentEmployee.name}
+                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: 'var(--color-primary, #1b365d)' }}>{currentEmployee.name}
                   </div>
                   <div style={{ fontSize: '12px', color: 'var(--color-text-muted, #64748b)', marginTop: '2px' }}>
                     NUIT: <strong>{currentEmployee.nuit || '-'}</strong> • Género: {currentEmployee.gender === 'M' || currentEmployee.gender === 'Masculino' ? 'Homem' : 'Mulher'} • Estado: {currentEmployee.isActive !== false ? 'Ativo' : 'Inativo'}
@@ -462,7 +461,7 @@ export default function OrganicAllocationModal({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '13px', color: 'var(--color-primary, #1b365d)' }}>
-                    <span>🏬</span> Departamento
+                    <span></span> Departamento
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--color-text-muted, #64748b)', marginTop: '4px' }}>
                     Alocar aos departamentos provinciais e suas repartições/secções ({availableDepartments.length} disponíveis).
@@ -486,7 +485,7 @@ export default function OrganicAllocationModal({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '13px', color: '#0d9488' }}>
-                    <span>📍</span> Direcção Distrital
+                    <span></span> Direcção Distrital
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--color-text-muted, #64748b)', marginTop: '4px' }}>
                     Alocar a uma direcção distrital subordinada ({availableDistricts.length} disponíveis).
@@ -510,7 +509,7 @@ export default function OrganicAllocationModal({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', fontSize: '13px', color: '#d97706' }}>
-                    <span>🏢</span> Sede Provincial
+                    <span></span> Sede Provincial
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--color-text-muted, #64748b)', marginTop: '4px' }}>
                     Manter na Sede sem alocação em departamento ou distrito específico.
@@ -754,8 +753,7 @@ export default function OrganicAllocationModal({
 
             {/* MENSAGEM DE ERRO SE HOUVER */}
             {errorMsg && (
-              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid #dc2626', color: '#b91c1c', fontSize: '12px', fontWeight: 'bold' }}>
-                ⚠️ {errorMsg}
+              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: 'rgba(220, 38, 38, 0.1)', border: '1px solid #dc2626', color: '#b91c1c', fontSize: '12px', fontWeight: 'bold' }}>{errorMsg}
               </div>
             )}
           </div>
@@ -792,8 +790,7 @@ export default function OrganicAllocationModal({
                     alignItems: 'center',
                     gap: '6px'
                   }}
-                >
-                  🗑️ Remover Lotação
+                >Remover Lotação
                 </button>
               )}
             </div>
@@ -835,7 +832,7 @@ export default function OrganicAllocationModal({
                   boxShadow: '0 2px 4px rgba(27, 54, 93, 0.25)'
                 }}
               >
-                {isSubmitting ? 'A salvar...' : '💾 Salvar Lotação'}
+                {isSubmitting ? 'A salvar...' : 'Salvar Lotação'}
               </button>
             </div>
           </div>

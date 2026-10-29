@@ -125,14 +125,12 @@ export default function ObitosManager() {
           <button 
             style={{...styles.tabBtn, ...(viewMode === 'lista' ? styles.tabBtnActive : {})}} 
             onClick={() => setViewMode('lista')}
-          >
-            📋 Lista de Óbitos
+          >Lista de Óbitos
           </button>
           <button 
             style={{...styles.tabBtn, ...(viewMode === 'estatisticas' ? styles.tabBtnActive : {})}} 
             onClick={() => setViewMode('estatisticas')}
-          >
-            📊 Estatísticas Analíticas
+          >Estatísticas Analíticas
           </button>
         </div>
         
@@ -145,8 +143,7 @@ export default function ObitosManager() {
               onChange={e => setSearchTerm(e.target.value)}
               style={styles.searchInput}
             />
-            <button onClick={handleExportExcel} style={styles.btnExport}>
-              📥 Exportar Excel
+            <button onClick={handleExportExcel} style={styles.btnExport}>Exportar Excel
             </button>
             <button onClick={() => setIsSearchOpen(true)} style={styles.btnAdd}>
               + Novo Registo de Óbito

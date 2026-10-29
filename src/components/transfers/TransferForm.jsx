@@ -224,9 +224,9 @@ export default function TransferForm({ employees = [], orgData, initialData, onS
             <p style={styles.searchSubtitle}>Pesquise pelo Nome, NUIT, NIP ou Cargo para iniciar o processo.</p>
             <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#2563eb', marginTop: '6px' }}>
               {!isCentral ? (
-                `📍 Escopo Provincial (${scopedEmployees.length} funcionários disponíveis)`
+                `Escopo Provincial (${scopedEmployees.length} funcionários disponíveis)`
               ) : (
-                `🌐 Escopo Nacional (${scopedEmployees.length} funcionários disponíveis)`
+                `Escopo Nacional (${scopedEmployees.length} funcionários disponíveis)`
               )}
             </div>
           </div>
@@ -257,8 +257,7 @@ export default function TransferForm({ employees = [], orgData, initialData, onS
                 cursor: 'pointer',
                 whiteSpace: 'nowrap'
               }}
-            >
-              👥 {showAll ? 'Ocultar' : 'Visualizar Todos'}
+            >{showAll ? 'Ocultar' : 'Visualizar Todos'}
             </button>
           </div>
           

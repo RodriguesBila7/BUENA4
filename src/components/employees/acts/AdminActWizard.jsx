@@ -251,7 +251,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
         if (userIsSecondary || isPendingAct) {
           setConfirmModal({
             isOpen: true,
-            title: '✍️ Acto Submetido para Conformidade',
+            title: 'Acto Submetido para Conformidade',
             message: 'O acto administrativo foi registado com sucesso em estado PENDENTE. Ficará a aguardar aprovação / conformidade formal do Administrador titular ou central.',
             hideCancel: true,
             onConfirm: () => {
@@ -579,8 +579,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
           onChange={handleFileUpload}
         />
         {formData.details.documentB64 && (
-          <div style={{ fontSize: '12px', color: 'var(--color-success)', marginTop: '4px' }}>
-            ✓ Documento anexado com sucesso.
+          <div style={{ fontSize: '12px', color: 'var(--color-success)', marginTop: '4px' }}>Documento anexado com sucesso.
           </div>
         )}
       </div>

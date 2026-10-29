@@ -173,7 +173,7 @@ export default function DistrictOrgList({ data, t }) {
                         <div style={styles.actions} onClick={(e) => e.stopPropagation()}>
                           {!isEditing ? (
                             <>
-                              <button onClick={() => handleEditNotes(dist)} style={styles.btnAction} title="Editar Observações">✎</button>
+                              <button onClick={() => handleEditNotes(dist)} style={styles.btnAction} title="Editar Observações"></button>
                               <button onClick={() => handleToggleDistrict(dist.id)} style={styles.btnAction} title="Activar/Desactivar">⏻</button>
                             </>
                           ) : (

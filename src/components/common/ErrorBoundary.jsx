@@ -71,8 +71,7 @@ export default class ErrorBoundary extends React.Component {
               fontSize: '14px',
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
-          >
-            🔄 Recarregar Módulo e Voltar ao Início
+          >Recarregar Módulo e Voltar ao Início
           </button>
         </div>
       );

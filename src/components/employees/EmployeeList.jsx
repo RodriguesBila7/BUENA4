@@ -160,7 +160,7 @@ export default function EmployeeList({ employees, orgData, onEdit, onDelete }) {
                         {emp.isActive ? 'Ativo' : 'Inativo'}
                       </span>
                       {emp.healthStatus === 'Baixa Médica' && (
-                        <span style={styles.badgeSaude} title="Em Baixa / Junta Médica">🌡️ Doente</span>
+                        <span style={styles.badgeSaude} title="Em Baixa / Junta Médica">Doente</span>
                       )}
                     </div>
                   </td>

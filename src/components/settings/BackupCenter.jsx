@@ -304,7 +304,7 @@ export default function BackupCenter({ t }) {
       {/* Confirmação de restauro */}
       <ConfirmModal
         isOpen={restoreModal.isOpen}
-        title="⚠️ Aviso Crítico de Restauração"
+        title="Aviso Crítico de Restauração"
         isDestructive
         message={
           <div>
@@ -408,10 +408,10 @@ function ModuleBackupTab({ title, description, onSaveBackup, onDownload, onFileC
         <h4 style={styles.cardTitle}>{title}</h4>
         <p style={styles.descText}>{description}</p>
         <div style={styles.actionBtns}>
-          <ActionBtn icon="💾" label="Guardar Backup Local" onClick={onSaveBackup} color="var(--color-primary)" light="var(--color-accent)" />
+          <ActionBtn icon="" label="Guardar Backup Local" onClick={onSaveBackup} color="var(--color-primary)" light="var(--color-accent)" />
           <ActionBtn icon="⬇" label="Baixar Backup (.json)" onClick={onDownload} color="#10b981" light="#fff" />
           <label style={{ ...styles.actionBtnBase, backgroundColor: '#f59e0b', color: '#fff', cursor: 'pointer' }}>
-            <span style={{ fontSize: '18px' }}>📂</span>
+            <span style={{ fontSize: '18px' }}></span>
             <span style={{ fontSize: '12px', fontWeight: '600' }}>Restaurar de Ficheiro</span>
             <input type="file" accept=".json" onChange={onFileChange} style={{ display: 'none' }} />
           </label>
@@ -441,8 +441,7 @@ function FullBackupTab({ isGenerating, onDownload, onFileChange, stats }) {
               <>⬇ Baixar Backup Geral do Sistema</>
             )}
           </button>
-          <label style={{ ...styles.bigBtn, backgroundColor: '#f59e0b', cursor: 'pointer' }}>
-            📂 Restaurar Backup Geral
+          <label style={{ ...styles.bigBtn, backgroundColor: '#f59e0b', cursor: 'pointer' }}>Restaurar Backup Geral
             <input type="file" accept=".json" onChange={onFileChange} style={{ display: 'none' }} />
           </label>
         </div>
@@ -459,8 +458,7 @@ function FullBackupTab({ isGenerating, onDownload, onFileChange, stats }) {
       </div>
 
       <div style={{ ...styles.card, backgroundColor: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.3)' }}>
-        <p style={{ margin: 0, fontSize: '13px', color: '#ef4444', fontWeight: '600' }}>
-          ⚠️ Aviso: A restauração de um Backup Geral irá substituir <strong>todos</strong> os dados ativos da aplicação e exige um recarregamento da página. Certifique-se de que guarda uma cópia antes de restaurar.
+        <p style={{ margin: 0, fontSize: '13px', color: '#ef4444', fontWeight: '600' }}>Aviso: A restauração de um Backup Geral irá substituir <strong>todos</strong> os dados ativos da aplicação e exige um recarregamento da página. Certifique-se de que guarda uma cópia antes de restaurar.
         </p>
       </div>
     </div>

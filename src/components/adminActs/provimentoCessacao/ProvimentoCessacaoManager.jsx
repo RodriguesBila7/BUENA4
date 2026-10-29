@@ -200,14 +200,14 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
       {/* ═══════════ CABEÇALHO DO MÓDULO ═══════════ */}
       <div style={styles.header}>
         <div>
-          <h2 style={styles.title}>👔 Módulo de Provimento e Cessação de Funções</h2>
+          <h2 style={styles.title}>Módulo de Provimento e Cessação de Funções</h2>
           <p style={styles.subtitle}>
             Tramitação institucional de <strong>Nomeações, Cessações de Funções e Reintegrações</strong> com exigência de <strong>Despacho DRH</strong> e <strong>Tripla Aprovação Central Obrigatória</strong>.
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <button onClick={handleExportExcel} style={styles.btnSecondary}>
-            📊 Exportar Excel
+            Exportar Excel
           </button>
           <button 
             onClick={() => setWizardOpen(true)} 
@@ -257,10 +257,10 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
       <div style={styles.tabNavRow}>
         <div style={styles.tabsList}>
           {[
-            { id: 'todos', label: '📑 Todos os Processos', count: acts.length },
-            { id: 'nomeacao', label: '👔 Nomeações', count: acts.filter(a => a.actType === 'Nomeação').length },
-            { id: 'cessacao', label: '🛑 Cessações de Funções', count: acts.filter(a => a.actType === 'Cessação de Funções').length },
-            { id: 'reintegracao', label: '🔄 Reintegrações', count: acts.filter(a => a.actType === 'Reintegração').length },
+            { id: 'todos', label: 'Todos os Processos', count: acts.length },
+            { id: 'nomeacao', label: 'Nomeações', count: acts.filter(a => a.actType === 'Nomeação').length },
+            { id: 'cessacao', label: 'Cessações de Funções', count: acts.filter(a => a.actType === 'Cessação de Funções').length },
+            { id: 'reintegracao', label: 'Reintegrações', count: acts.filter(a => a.actType === 'Reintegração').length },
           ].map(t => (
             <button
               key={t.id}
@@ -283,7 +283,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
         <div style={{ flex: 1, minWidth: '220px' }}>
           <input
             type="text"
-            placeholder="🔍 Pesquisar por funcionário, NUIT, cargo ou despacho..."
+            placeholder="Pesquisar por funcionário, NUIT, cargo ou despacho..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             style={styles.searchInput}
@@ -314,7 +314,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
           </div>
         ) : filteredActs.length === 0 ? (
           <div style={styles.emptyBox}>
-            <span style={{ fontSize: '32px' }}>📂</span>
+            <span style={{ fontSize: '32px' }}></span>
             <p style={{ margin: '8px 0 0', fontWeight: '600', color: '#334155' }}>Nenhum processo encontrado.</p>
             <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#94A3B8' }}>
               Utilize o botão "+ Novo Processo" para registar uma nova proposta de Nomeação, Cessação de Funções ou Reintegração.
@@ -387,7 +387,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                       <td style={styles.td}>
                         {act.despacho ? (
                           <div style={styles.despachoSnippet} title={act.despacho}>
-                            <span style={{ color: '#059669', fontWeight: '700' }}>✓ Emitido</span>
+                            <span style={{ color: '#059669', fontWeight: '700' }}>Emitido</span>
                             <span style={{ display: 'block', fontSize: '11px', color: '#475569', maxWidth: '140px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {act.despacho}
                             </span>
@@ -407,19 +407,19 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                               style={{ ...styles.pillMini, backgroundColor: app1 ? '#DCFCE7' : '#F1F5F9', color: app1 ? '#15803D' : '#94A3B8' }}
                               title={app1 ? `Chefe DRH Aprovou a ${new Date(act.approvals.super_admin_1.date).toLocaleString('pt-PT')}` : 'Chefe DRH: Pendente'}
                             >
-                              DRH {app1 ? '✓' : '…'}
+                              DRH {app1 ? '' : '…'}
                             </span>
                             <span 
                               style={{ ...styles.pillMini, backgroundColor: app2 ? '#DCFCE7' : '#F1F5F9', color: app2 ? '#15803D' : '#94A3B8' }}
                               title={app2 ? `Chefe Gestão Pessoal Aprovou a ${new Date(act.approvals.admin_1.date).toLocaleString('pt-PT')}` : 'Chefe Gestão Pessoal: Pendente'}
                             >
-                              Gestão {app2 ? '✓' : '…'}
+                              Gestão {app2 ? '' : '…'}
                             </span>
                             <span 
                               style={{ ...styles.pillMini, backgroundColor: app3 ? '#DCFCE7' : '#F1F5F9', color: app3 ? '#15803D' : '#94A3B8' }}
                               title={app3 ? `Técnico Central Aprovou a ${new Date(act.approvals.admin_2.date).toLocaleString('pt-PT')}` : 'Técnico Central: Pendente'}
                             >
-                              Técnico {app3 ? '✓' : '…'}
+                              Técnico {app3 ? '' : '…'}
                             </span>
                           </div>
                           <span style={{ fontSize: '11px', color: '#475569', fontWeight: '600', marginTop: '2px', display: 'block' }}>
@@ -460,9 +460,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                             onClick={() => setViewingAct(act)}
                             style={styles.actionBtnIcon}
                             title="Visualizar Detalhes e Matriz de Aprovação"
-                          >
-                            👁️
-                          </button>
+                          >Ver</button>
 
                           {/* Inserir Despacho (Primary only, if pending) */}
                           {isPrimary && (!act.despacho || act.status === 'Pendente de Despacho') && (
@@ -470,9 +468,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                               onClick={() => setDespachoAct(act)}
                               style={{ ...styles.actionBtnIcon, backgroundColor: '#EFF6FF', color: '#1D4ED8' }}
                               title="Inserir Despacho DRH"
-                            >
-                              📜
-                            </button>
+                            >Despacho</button>
                           )}
 
                           {/* Conceder Aprovação (Primary only, if pending approval) */}
@@ -481,9 +477,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                               onClick={() => setApprovalModalData({ isOpen: true, act, mode: 'approve' })}
                               style={{ ...styles.actionBtnIcon, backgroundColor: '#ECFDF5', color: '#059669' }}
                               title="Registar Aprovação"
-                            >
-                              ✍️
-                            </button>
+                            >Aprovar</button>
                           )}
 
                           {/* Rejeitar Processo (Primary only, if pending approval) */}
@@ -492,9 +486,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                               onClick={() => setApprovalModalData({ isOpen: true, act, mode: 'reject' })}
                               style={{ ...styles.actionBtnIcon, backgroundColor: '#FEF2F2', color: '#DC2626' }}
                               title="Rejeitar Processo"
-                            >
-                              🚫
-                            </button>
+                            >Rejeitar</button>
                           )}
 
                           {/* Apagar (Primary only) */}
@@ -503,9 +495,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                               onClick={() => setDeleteConfirm({ isOpen: true, actId: act.id })}
                               style={{ ...styles.actionBtnIcon, color: '#94A3B8' }}
                               title="Eliminar Processo"
-                            >
-                              🗑️
-                            </button>
+                            >Eliminar</button>
                           )}
                         </div>
                       </td>

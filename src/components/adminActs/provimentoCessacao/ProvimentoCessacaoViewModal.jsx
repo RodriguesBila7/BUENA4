@@ -67,11 +67,11 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
           onPointerDown={isMaximized ? undefined : onPointerDown} 
           onDoubleClick={handleHeaderDoubleClick}
           className={isMaximized ? '' : 'drag-handle'}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ fontSize: '18px' }}>
-              {act.actType === 'Nomeação' ? '👔' : act.actType === 'Cessação de Funções' ? '🛑' : '🔄'}
+              {act.actType === 'Nomeação' ? '' : act.actType === 'Cessação de Funções' ? '' : ''}
             </span>
             <div>
               <h3 style={styles.title}>Processo de {act.actType}</h3>
@@ -93,7 +93,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
           </div>
@@ -103,7 +103,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
         <div style={styles.body}>
           {/* Seção 1: Dados do Funcionário */}
           <div style={styles.sectionCard}>
-            <h4 style={styles.sectionTitle}>👤 Identificação do Funcionário</h4>
+            <h4 style={styles.sectionTitle}>Identificação do Funcionário</h4>
             <div style={styles.empGrid}>
               <div>
                 <span style={styles.fieldLabel}>Nome Completo:</span>
@@ -126,7 +126,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
 
           {/* Seção 2: Especificações do Acto */}
           <div style={styles.sectionCard}>
-            <h4 style={styles.sectionTitle}>📋 Detalhes do Acto Administrativo</h4>
+            <h4 style={styles.sectionTitle}>Detalhes do Acto Administrativo</h4>
             <div style={styles.detailsGrid}>
               <div>
                 <span style={styles.fieldLabel}>Data do Acto:</span>
@@ -166,7 +166,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
           {/* Seção 3: Despacho da Direcção de Recursos Humanos */}
           <div style={{ ...styles.sectionCard, borderLeft: '4px solid #DC2626' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h4 style={{ ...styles.sectionTitle, margin: 0 }}>📜 Despacho da Direcção de Recursos Humanos</h4>
+              <h4 style={{ ...styles.sectionTitle, margin: 0 }}>Despacho da Direcção de Recursos Humanos</h4>
               {isPrimary && (!act.despacho || act.status === 'Pendente de Despacho') && (
                 <button onClick={() => onOpenDespacho(act)} style={styles.actionBtnPrimary}>
                   + Inserir Despacho
@@ -193,7 +193,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
           <div style={styles.sectionCard}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <div>
-                <h4 style={{ ...styles.sectionTitle, margin: 0 }}>🛡️ Matriz de Tripla Aprovação Central (Obrigatória)</h4>
+                <h4 style={{ ...styles.sectionTitle, margin: 0 }}>Matriz de Tripla Aprovação Central (Obrigatória)</h4>
                 <p style={{ fontSize: '12px', color: '#6B7280', margin: '2px 0 0' }}>
                   O processo só é finalizado após a aprovação individual e vinculativa dos 3 perfis centrais.
                 </p>
@@ -205,7 +205,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
 
             {act.status === 'Rejeitado' && act.rejection && (
               <div style={styles.rejectionBanner}>
-                <strong>⚠️ Processo Rejeitado por {act.rejection.roleTitle || act.rejection.rejectedBy}:</strong>
+                <strong>Processo Rejeitado por {act.rejection.roleTitle || act.rejection.rejectedBy}:</strong>
                 <p style={{ margin: '4px 0 0', fontSize: '13px' }}>Motivo: {act.rejection.reason}</p>
                 <span style={{ fontSize: '11px', color: '#991B1B', display: 'block', marginTop: '2px' }}>
                   Data: {new Date(act.rejection.date).toLocaleString('pt-PT')}
@@ -221,7 +221,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
                 backgroundColor: isApproved1 ? '#F0FDF4' : '#FAFAFA'
               }}>
                 <div style={styles.approvalHeader}>
-                  <span style={styles.approvalIcon}>{isApproved1 ? '✅' : '⏳'}</span>
+                  <span style={styles.approvalIcon}>{isApproved1 ? '' : '⏳'}</span>
                   <div>
                     <span style={styles.approvalRoleTitle}>1. Super Administrador Principal</span>
                     <span style={styles.approvalRoleSub}>Chefe da Direcção de Recursos Humanos</span>
@@ -250,7 +250,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
                 backgroundColor: isApproved2 ? '#F0FDF4' : '#FAFAFA'
               }}>
                 <div style={styles.approvalHeader}>
-                  <span style={styles.approvalIcon}>{isApproved2 ? '✅' : '⏳'}</span>
+                  <span style={styles.approvalIcon}>{isApproved2 ? '' : '⏳'}</span>
                   <div>
                     <span style={styles.approvalRoleTitle}>2. Super Administrador</span>
                     <span style={styles.approvalRoleSub}>Chefe do Dep. Central de Administração de Pessoal</span>
@@ -279,7 +279,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
                 backgroundColor: isApproved3 ? '#F0FDF4' : '#FAFAFA'
               }}>
                 <div style={styles.approvalHeader}>
-                  <span style={styles.approvalIcon}>{isApproved3 ? '✅' : '⏳'}</span>
+                  <span style={styles.approvalIcon}>{isApproved3 ? '' : '⏳'}</span>
                   <div>
                     <span style={styles.approvalRoleTitle}>3. Administrador Principal</span>
                     <span style={styles.approvalRoleSub}>Técnico Central de Recursos Humanos</span>
@@ -305,11 +305,9 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
             {/* Ação rápida de Aprovar/Rejeitar se elegível */}
             {isPrimary && act.status === 'Pendente de Aprovação' && (
               <div style={styles.approvalActionsRow}>
-                <button onClick={() => onOpenApproval(act, 'approve')} style={styles.actionBtnSuccess}>
-                  ✍️ Registar Minha Aprovação
+                <button onClick={() => onOpenApproval(act, 'approve')} style={styles.actionBtnSuccess}>Registar Minha Aprovação
                 </button>
-                <button onClick={() => onOpenApproval(act, 'reject')} style={styles.actionBtnDanger}>
-                  🚫 Rejeitar Processo
+                <button onClick={() => onOpenApproval(act, 'reject')} style={styles.actionBtnDanger}>Rejeitar Processo
                 </button>
               </div>
             )}
@@ -317,7 +315,7 @@ export default function ProvimentoCessacaoViewModal({ act, employee, onClose, on
 
           {/* Seção 5: Histórico de Tramitação e Auditoria */}
           <div style={styles.sectionCard}>
-            <h4 style={styles.sectionTitle}>🕒 Histórico de Tramitação e Auditoria</h4>
+            <h4 style={styles.sectionTitle}>Histórico de Tramitação e Auditoria</h4>
             <div style={styles.timeline}>
               {(act.history && act.history.length > 0) ? (
                 act.history.map((item, idx) => (

@@ -510,7 +510,7 @@ export default function OrgStructureManager({ t }) {
             }}
             title="Sincroniza todos os Departamentos e Repartições de Maputo com todas as Direcções Provinciais"
           >
-            <span>🔄</span> Sincronizar Estrutura Provincial
+            <span></span> Sincronizar Estrutura Provincial
           </button>
         </div>
       </div>
@@ -544,8 +544,7 @@ export default function OrgStructureManager({ t }) {
               
               {activeTab === 'dist_dir' && !editingId && (!data.districtDirectorates || data.districtDirectorates.length === 0) && (
                 <div style={{marginBottom: '20px'}}>
-                  <button type="button" onClick={handleBootstrapDistricts} style={{...styles.btnPrimary, backgroundColor: '#38a169', borderColor: '#2f855a', width: '100%'}}>
-                    🌟 Injetar Todos os Distritos Nacionais Automaticamente
+                  <button type="button" onClick={handleBootstrapDistricts} style={{...styles.btnPrimary, backgroundColor: '#38a169', borderColor: '#2f855a', width: '100%'}}>Injetar Todos os Distritos Nacionais Automaticamente
                   </button>
                   <p style={{fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '8px', textAlign: 'center'}}>Irá popular todos os distritos de Moçambique nas suas respetivas províncias.</p>
                 </div>
@@ -675,7 +674,7 @@ export default function OrgStructureManager({ t }) {
                         {availableDistricts.map(d => (
                           <option key={d.id} value={d.id}>{formatDistrictName(d.name)}</option>
                         ))}
-                        <option value="NEW">➕ Criar Nova Direcção Distrital...</option>
+                        <option value="NEW">Criar Nova Direcção Distrital...</option>
                       </select>
                     </div>
 
@@ -818,8 +817,8 @@ export default function OrgStructureManager({ t }) {
                           <span style={{...styles.btnIcon, cursor: 'grab', fontSize: '16px', display: 'inline-flex'}} title="Arraste para reordenar">☰</span>
                           <span style={styles.divider}></span>
                           <button onClick={() => handleToggleStatus(item.id)} style={styles.btnIcon} title="Toggle Status">⏻</button>
-                          <button onClick={() => handleEdit(item)} style={styles.btnIcon}>✎</button>
-                          <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
+                          <button onClick={() => handleEdit(item)} style={styles.btnIcon}></button>
+                          <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}></button>
                         </td>
                       </tr>
                     ))}
@@ -855,8 +854,8 @@ export default function OrgStructureManager({ t }) {
                             <span style={{...styles.btnIcon, cursor: 'grab', fontSize: '16px', display: 'inline-flex'}} title="Arraste para reordenar">☰</span>
                             <span style={styles.divider}></span>
                             <button onClick={() => handleToggleStatus(sec.id)} style={styles.btnIcon} title="Toggle Status">⏻</button>
-                            <button onClick={() => handleEdit(sec)} style={styles.btnIcon}>✎</button>
-                            <button onClick={() => requestDelete(sec.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
+                            <button onClick={() => handleEdit(sec)} style={styles.btnIcon}></button>
+                            <button onClick={() => requestDelete(sec.id)} style={{...styles.btnIcon, color: '#e53e3e'}}></button>
                           </td>
                         </tr>
                       ));
@@ -880,8 +879,8 @@ export default function OrgStructureManager({ t }) {
                             <span style={{...styles.btnIcon, cursor: 'grab', fontSize: '16px', display: 'inline-flex'}} title="Arraste para reordenar">☰</span>
                             <span style={styles.divider}></span>
                             <button onClick={() => handleToggleStatus(item.id)} style={styles.btnIcon} title="Toggle Status">⏻</button>
-                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}>✎</button>
-                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
+                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}></button>
+                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}></button>
                           </td>
                         </tr>
                       );
@@ -900,8 +899,8 @@ export default function OrgStructureManager({ t }) {
                             <span style={{...styles.btnIcon, cursor: 'grab', fontSize: '16px', display: 'inline-flex'}} title="Arraste para reordenar">☰</span>
                             <span style={styles.divider}></span>
                             <button onClick={() => handleToggleStatus(item.id)} style={styles.btnIcon}>⏻</button>
-                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}>✎</button>
-                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
+                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}></button>
+                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}></button>
                           </td>
                         </tr>
                       )
@@ -930,8 +929,8 @@ export default function OrgStructureManager({ t }) {
                             <span style={{...styles.btnIcon, cursor: 'grab', fontSize: '16px', display: 'inline-flex'}} title="Arraste para reordenar">☰</span>
                             <span style={styles.divider}></span>
                             <button onClick={() => handleToggleStatus(item.id)} style={styles.btnIcon}>⏻</button>
-                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}>✎</button>
-                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
+                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}></button>
+                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}></button>
                           </td>
                         </tr>
                       )
@@ -963,8 +962,8 @@ export default function OrgStructureManager({ t }) {
                             <span style={{...styles.btnIcon, cursor: 'grab', fontSize: '16px', display: 'inline-flex'}} title="Arraste para reordenar">☰</span>
                             <span style={styles.divider}></span>
                             <button onClick={() => handleToggleStatus(item.id)} style={styles.btnIcon}>⏻</button>
-                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}>✎</button>
-                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
+                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}></button>
+                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}></button>
                           </td>
                         </tr>
                       )
@@ -981,8 +980,8 @@ export default function OrgStructureManager({ t }) {
                           <button onClick={() => handleReorder(item.id, 'down')} style={styles.btnIcon} title="Mover para Baixo">↓</button>
                           <span style={styles.divider}></span>
                           <button onClick={() => handleToggleStatus(item.id)} style={styles.btnIcon}>⏻</button>
-                          <button onClick={() => handleEdit(item)} style={styles.btnIcon}>✎</button>
-                          <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
+                          <button onClick={() => handleEdit(item)} style={styles.btnIcon}></button>
+                          <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}></button>
                         </td>
                       </tr>
                     ))}
@@ -1000,8 +999,8 @@ export default function OrgStructureManager({ t }) {
                             <span style={{...styles.btnIcon, cursor: 'grab', fontSize: '16px', display: 'inline-flex'}} title="Arraste para reordenar">☰</span>
                             <span style={styles.divider}></span>
                             <button onClick={() => handleToggleStatus(item.id)} style={styles.btnIcon}>⏻</button>
-                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}>✎</button>
-                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}>🗑</button>
+                            <button onClick={() => handleEdit(item)} style={styles.btnIcon}></button>
+                            <button onClick={() => requestDelete(item.id)} style={{...styles.btnIcon, color: '#e53e3e'}}></button>
                           </td>
                         </tr>
                       )

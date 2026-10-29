@@ -476,7 +476,7 @@ export default function EvaluationList({ user }) {
     <div style={styles.container}>
       {error && (
         <div style={styles.errorBanner}>
-          <span>⚠️ {error}</span>
+          <span>{error}</span>
         </div>
       )}
 
@@ -493,8 +493,7 @@ export default function EvaluationList({ user }) {
               onClick={handleClearFilters}
               style={styles.btnClearFilters}
               title="Limpar todos os filtros ativos"
-            >
-              ✕ Limpar Filtros
+            >Limpar Filtros
             </button>
           )}
         </div>
@@ -710,9 +709,7 @@ export default function EvaluationList({ user }) {
                           style={styles.actionBtnDelete}
                           onClick={() => handleDelete(ev)}
                           title="Eliminar Avaliação"
-                        >
-                          🗑️
-                        </button>
+                        >Eliminar</button>
                       )}
                     </div>
                   </td>
@@ -744,7 +741,7 @@ export default function EvaluationList({ user }) {
             onClose={() => setViewingEval(null)}
             title="Ficha Detalhada de Avaliação de Desempenho"
             maxWidth="720px"
-            icon="📋"
+            icon=""
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Cabeçalho com dados do funcionário */}
@@ -880,7 +877,7 @@ export default function EvaluationList({ user }) {
                 <div style={{ fontSize: '13px' }}>
                   <strong>Documento Comprovativo / Declaração:</strong>{' '}
                   {viewingEval.pdfBase64 ? (
-                    <span style={{ color: '#059669', fontWeight: 'bold' }}>✓ Documento PDF Anexado</span>
+                    <span style={{ color: '#059669', fontWeight: 'bold' }}>Documento PDF Anexado</span>
                   ) : (
                     <span style={{ color: 'var(--color-text-muted)' }}>Nenhum ficheiro anexado</span>
                   )}
@@ -911,8 +908,7 @@ export default function EvaluationList({ user }) {
                   type="button"
                   style={styles.btnPrintSheet}
                   onClick={() => handlePrintOfficialSheet(viewingEval)}
-                >
-                  🖨️ Imprimir Ficha Oficial
+                >Imprimir Ficha Oficial
                 </button>
                 <button
                   type="button"
@@ -934,7 +930,7 @@ export default function EvaluationList({ user }) {
           onClose={() => setEditingEval(null)}
           title={`Editar Avaliação - ${editingEval.employeeName || 'Funcionário'}`}
           maxWidth="700px"
-          icon="✏️"
+          icon=""
         >
           <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={styles.editGrid}>
@@ -1084,7 +1080,7 @@ export default function EvaluationList({ user }) {
                 />
                 {editFormData.pdfBase64 ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
-                    <span style={{ color: '#059669', fontSize: '12px', fontWeight: 'bold' }}>✓ Ficheiro PDF Carregado</span>
+                    <span style={{ color: '#059669', fontSize: '12px', fontWeight: 'bold' }}>Ficheiro PDF Carregado</span>
                     <button
                       type="button"
                       onClick={() => setEditFormData(prev => ({ ...prev, pdfBase64: '' }))}

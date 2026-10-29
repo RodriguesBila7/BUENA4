@@ -68,7 +68,7 @@ export default function EditActModal({ act, onClose, onSave }) {
           className={isMaximized ? '' : 'drag-handle'} 
           onPointerDown={isMaximized ? undefined : onPointerDown}
           onDoubleClick={handleHeaderDoubleClick}
-          title="💡 Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
+          title="Arraste para mover ou dê duplo clique com o rato para expandir / reduzir"
         >
           <h2 style={styles.title}>Editar Registo: {act.actType}</h2>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -78,7 +78,7 @@ export default function EditActModal({ act, onClose, onSave }) {
               style={styles.expandBtn}
               title={isMaximized ? "Reduzir Tamanho (Restaurar)" : "Modo Expandir (Tela Cheia)"}
             >
-              {isMaximized ? '🗗 Reduzir' : '⛶ Expandir'}
+              {isMaximized ? 'Restaurar' : 'Maximizar'}
             </button>
             <button onClick={onClose} style={styles.closeBtn} title="Fechar">✕</button>
           </div>

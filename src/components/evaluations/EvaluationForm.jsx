@@ -149,12 +149,11 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
         <div style={styles.section}>
           <div style={styles.sectionHeader}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px' }}>👤</span>
+              <span style={{ fontSize: '18px' }}></span>
               <h4 style={styles.sectionTitle}>1. Identificação do Funcionário</h4>
             </div>
             {selectedEmp && (
-              <span style={styles.selectedBadge}>
-                ✓ Funcionário Selecionado: <strong>{selectedEmp.name}</strong> ({selectedEmp.nip})
+              <span style={styles.selectedBadge}>Funcionário Selecionado: <strong>{selectedEmp.name}</strong> ({selectedEmp.nip})
               </span>
             )}
           </div>
@@ -221,8 +220,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
           </div>
 
           <div style={styles.resultsBar}>
-            <span style={styles.resultsBadge}>
-              👥 {filteredEmployees.length} funcionário(s) na listagem (clique para selecionar)
+            <span style={styles.resultsBadge}>{filteredEmployees.length} funcionário(s) na listagem (clique para selecionar)
             </span>
           </div>
 
@@ -273,16 +271,14 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                     </span>
                   </div>
                   {isSelected && (
-                    <span style={styles.selectedBadge}>
-                      ✓ SELECIONADO
+                    <span style={styles.selectedBadge}>SELECIONADO
                     </span>
                   )}
                 </div>
               );
             })}
             {filteredEmployees.length === 0 && (
-              <div style={{ padding: '24px', color: 'var(--color-text-muted)', fontSize: '13px', textAlign: 'center' }}>
-                🔍 Nenhum funcionário encontrado nos critérios ou pesquisa selecionada.
+              <div style={{ padding: '24px', color: 'var(--color-text-muted)', fontSize: '13px', textAlign: 'center' }}>Nenhum funcionário encontrado nos critérios ou pesquisa selecionada.
               </div>
             )}
           </div>
@@ -318,7 +314,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                 {/* CABEÇALHO DO PERFIL */}
                 <div style={styles.profileHeader}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '15px' }}>👤</span>
+                    <span style={{ fontSize: '15px' }}></span>
                     <span style={styles.profileHeaderTitle}>Funcionário Selecionado para Avaliação</span>
                     <span style={styles.statusBadge}>
                       <span style={styles.statusDot}></span>
@@ -330,8 +326,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                     onClick={() => setSelectedEmpId('')}
                     style={styles.btnClearSelection}
                     title="Remover seleção e escolher outro funcionário"
-                  >
-                    ✕ Alterar Funcionário
+                  >Alterar Funcionário
                   </button>
                 </div>
 
@@ -359,8 +354,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                         </span>
                       )}
                       {roleName && roleName !== '-' && roleName.toLowerCase() !== 'nenhum' && (
-                        <span style={styles.roleBadge}>
-                          🏷️ {roleName}
+                        <span style={styles.roleBadge}>{roleName}
                         </span>
                       )}
                     </div>
@@ -370,7 +364,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                 {/* GRADE DE METADADOS ESTRUTURADOS */}
                 <div style={styles.metaGrid}>
                   <div style={styles.metaCard}>
-                    <div style={styles.metaIcon}>💼</div>
+                    <div style={styles.metaIcon}></div>
                     <div style={styles.metaContent}>
                       <span style={styles.metaLabel}>Carreira Profissional</span>
                       <strong style={styles.metaValue}>{careerName !== '-' ? careerName : 'Não atribuída'}</strong>
@@ -378,7 +372,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                   </div>
 
                   <div style={styles.metaCard}>
-                    <div style={styles.metaIcon}>🎖️</div>
+                    <div style={styles.metaIcon}></div>
                     <div style={styles.metaContent}>
                       <span style={styles.metaLabel}>Categoria Funcional</span>
                       <strong style={styles.metaValue}>{categoryName !== '-' ? categoryName : 'Não atribuída'}</strong>
@@ -386,7 +380,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                   </div>
 
                   <div style={styles.metaCard}>
-                    <div style={styles.metaIcon}>🏢</div>
+                    <div style={styles.metaIcon}></div>
                     <div style={styles.metaContent}>
                       <span style={styles.metaLabel}>Unidade Orgânica / Lotação</span>
                       <strong style={styles.metaValue}>{directorateName !== '-' ? directorateName : 'Sede Central'}</strong>
@@ -418,7 +412,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
         <div style={styles.section}>
           <div style={styles.sectionHeader}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px' }}>📋</span>
+              <span style={{ fontSize: '18px' }}></span>
               <h4 style={styles.sectionTitle}>2. Dados da Avaliação</h4>
             </div>
           </div>
@@ -466,7 +460,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
         <div style={styles.section}>
           <div style={styles.sectionHeader}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '18px' }}>⚖️</span>
+              <span style={{ fontSize: '18px' }}></span>
               <h4 style={styles.sectionTitle}>3. Classificação e Anexos</h4>
             </div>
           </div>
@@ -510,7 +504,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
             <div style={{ ...styles.formGroup, gridColumn: 'span 2' }}>
               <label style={styles.label}>Declaração da Avaliação (PDF max 500KB)</label>
               <input type="file" accept=".pdf" onChange={handleFileChange} style={styles.fileInput} />
-              {formData.pdfBase64 && <span style={styles.fileSuccess}>✓ Ficheiro PDF anexado com sucesso</span>}
+              {formData.pdfBase64 && <span style={styles.fileSuccess}>Ficheiro PDF anexado com sucesso</span>}
             </div>
           </div>
         </div>
@@ -522,8 +516,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
               Cancelar
             </button>
           )}
-          <button type="submit" style={styles.btnSave}>
-            💾 Gravar Avaliação
+          <button type="submit" style={styles.btnSave}>Gravar Avaliação
           </button>
         </div>
       </form>
