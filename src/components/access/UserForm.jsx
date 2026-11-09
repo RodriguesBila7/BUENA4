@@ -233,7 +233,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
 
     const nuitCheck = validateNuit(formData.nuit, true);
     if (!nuitCheck.isValid) {
-      showModal('NUIT Inválido', nuitCheck.message || 'O NUIT deve conter apenas números, até ao limite máximo de 12 dígitos.');
+      showModal('NUIT Inválido', nuitCheck.message || 'O NUIT deve conter exactamente 9 dígitos numéricos moçambicanos.');
       return;
     }
 
@@ -500,20 +500,20 @@ export default function UserForm({ initialData, onSave, onCancel }) {
         </div>
 
         <div style={styles.formGroup}>
-          <label style={styles.label}>NUIT (Identificação Única - Máx 12 dígitos) <span style={{ color: '#e53e3e' }}>*</span></label>
+          <label style={styles.label}>NUIT (Identificação Fiscal Moçambicana - 9 dígitos) <span style={{ color: '#e53e3e' }}>*</span></label>
           <input
             required
             style={styles.input}
             name="nuit"
             value={formData.nuit || ''}
-            maxLength={12}
+            maxLength={9}
             onChange={(e) => {
               handleChange(e);
               if (!initialData && (!formData.username || formData.username === formData.nuit)) {
                 setFormData(prev => ({ ...prev, nuit: e.target.value, username: e.target.value }));
               }
             }}
-            placeholder="Ex: 123456789012"
+            placeholder="Ex: 123922328"
           />
         </div>
         <div style={styles.formGroup}>
@@ -543,7 +543,7 @@ export default function UserForm({ initialData, onSave, onCancel }) {
                 name="loginTypeSelect" 
                 checked={loginType === 'nuit'} 
                 onChange={() => handleLoginTypeChange('nuit')} 
-              />Usar NUIT (12 dígitos numéricos)
+              />Usar NUIT (9 dígitos numéricos)
             </label>
 
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: 'var(--color-text-base)' }}>
@@ -571,13 +571,13 @@ export default function UserForm({ initialData, onSave, onCancel }) {
             name="username" 
             value={formData.username} 
             onChange={handleChange} 
-            maxLength={loginType === 'nuit' ? 12 : 30} 
+            maxLength={loginType === 'nuit' ? 9 : 30} 
             disabled={loginType === 'nuit' || !!initialData} 
-            placeholder={loginType === 'nuit' ? "Igual ao NUIT (ex: 123456789012)..." : "Digite um nome ao seu gosto (ex: rodrigo.admin)..."} 
+            placeholder={loginType === 'nuit' ? "Igual ao NUIT (ex: 123922328)..." : "Digite um nome ao seu gosto (ex: rodrigo.admin)..."} 
           />
           <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '4px' }}>
             {loginType === 'nuit' 
-              ? 'ℹ️ O login será feito digitando os 12 dígitos do NUIT.' 
+              ? 'ℹ️ O login será feito digitando os 9 dígitos do NUIT moçambicano.' 
               : 'O utilizador poderá fazer login usando este Nome Personalizado, o seu NUIT ou Email.'}
           </div>
         </div>

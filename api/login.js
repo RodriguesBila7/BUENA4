@@ -51,7 +51,7 @@ const SERVER_SEED_USERS = [
     id: 'usr_admin',
     name: 'Administrador Principal',
     username: 'admin',
-    nuit: 'admin',
+    nuit: '100123456',
     role_id: 'super_admin_1',
     status: 'Ativo',
     password: '$2b$10$.NQzvFdQBf.NIoZ3aN/3KOoGB697/wgHTRP7TAEKeCFo8OY59oYo2'
@@ -60,7 +60,7 @@ const SERVER_SEED_USERS = [
     id: 'usr_admin_maputo_cidade',
     name: 'Administrador RH (Cidade de Maputo)',
     username: 'Administrador',
-    nuit: 'Administrador',
+    nuit: '100456789',
     role_id: 'usuario_admin',
     status: 'Ativo',
     password: '$2b$10$Ed7ryvQDHuZG9RGde3XEWOr5DQR4JLQNqLQEb/tkaEAO5UL2o0nmq'
@@ -69,7 +69,7 @@ const SERVER_SEED_USERS = [
     id: 'usr_1788863244291',
     name: 'Buenaverte',
     username: 'Buenaverte',
-    nuit: '256487895555',
+    nuit: '256487895',
     role_id: 'usuario_admin',
     status: 'Ativo',
     password: '$2b$10$0jp4WGvblRHYVC4stu/m6.VpPvOhSGXFnP/Q5CPH7YWwnr9rCHTfW'

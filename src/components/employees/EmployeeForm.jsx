@@ -171,7 +171,7 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
 
     const nuitCheck = validateNuit(formData.nip, true);
     if (!nuitCheck.isValid) {
-      setErrorMsg(nuitCheck.message || 'O NUIT deve conter apenas números, até ao máximo de 12 dígitos.');
+      setErrorMsg(nuitCheck.message || 'O NUIT deve conter exactamente 9 dígitos numéricos moçambicanos.');
       return;
     }
 
@@ -362,8 +362,8 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
               <input type="text" name="name" value={formData.name} onChange={handleChange} style={styles.input} required />
             </div>
             <div style={styles.formGroup}>
-              <label style={styles.label}>NUIT * (Máx. 12 dígitos)</label>
-              <input type="text" name="nip" value={formData.nip} onChange={handleChange} style={styles.input} required maxLength={12} pattern="\d{1,12}" title="Apenas números, máximo de 12 dígitos" placeholder="Ex: 123456789012" />
+              <label style={styles.label}>NUIT * (9 dígitos numéricos)</label>
+              <input type="text" name="nip" value={formData.nip} onChange={handleChange} style={styles.input} required maxLength={9} pattern="\d{9}" title="O NUIT moçambicano deve conter exactamente 9 dígitos numéricos" placeholder="Ex: 123922328" />
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Contacto Principal (+258)</label>

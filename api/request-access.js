@@ -39,7 +39,7 @@ const SERVER_SEED_USERS = [
     id: 'usr_admin',
     name: 'Administrador Principal',
     username: 'admin',
-    nuit: 'admin',
+    nuit: '100123456',
     role_id: 'super_admin_1',
     status: 'Ativo'
   },
@@ -47,7 +47,7 @@ const SERVER_SEED_USERS = [
     id: 'usr_admin_maputo_cidade',
     name: 'Administrador RH (Cidade de Maputo)',
     username: 'Administrador',
-    nuit: 'Administrador',
+    nuit: '100456789',
     role_id: 'usuario_admin',
     status: 'Ativo'
   },
@@ -55,7 +55,7 @@ const SERVER_SEED_USERS = [
     id: 'usr_1788863244291',
     name: 'Buenaverte',
     username: 'Buenaverte',
-    nuit: '256487895555',
+    nuit: '256487895',
     role_id: 'usuario_admin',
     status: 'Ativo'
   }
@@ -163,3 +163,4 @@ export default async function handler(req, res) {
     message: `Acesso ativado com sucesso para ${existingUser.name || 'o seu perfil'}! Inicie sessão com o seu NUIT.`
   });
 }
+

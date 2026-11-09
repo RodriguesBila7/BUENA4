@@ -4,6 +4,7 @@ import { getBackgroundPosition, getEscalaMultiplier } from '../utils/backgroundP
 import useAuthData from '../hooks/useAuthData';
 import useSecuritySettings from '../hooks/useSecuritySettings';
 import useAuditLog from '../hooks/useAuditLog';
+import { sanitizeNuit, validateNuit } from '../utils/formatters';
 
 /* ── Temas pré-definidos Expandidos (40 Cores Oficiais, Vívidas e Nobres) ── */
 const TEMAS = [
@@ -259,9 +260,10 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    const cleanNuit = username.trim();
-    if (!cleanNuit) {
-      setError(t('msg_fill_register') || 'Introduza o NUIT do perfil.');
+    const cleanNuit = sanitizeNuit(username.trim());
+    const nuitCheck = validateNuit(cleanNuit, true);
+    if (!nuitCheck.isValid) {
+      setError(nuitCheck.message);
       return;
     }
     if (!password.trim()) {
@@ -289,6 +291,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       }
       logAction('Ativação de Acesso', 'Utilizadores', `Acesso ativado para o NUIT: ${cleanNuit}`).catch(() => {});
       setSuccessMsg(res.message || t('msg_register_success') || 'Acesso ativado com sucesso! Inicie sessão com o seu NUIT.');
+      setUsername(cleanNuit);
       setPassword('');
       setConfirmPassword('');
       setView('login');
@@ -801,9 +804,10 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                   type="text" 
                   name="username" 
                   autoComplete="off" 
-                  placeholder={t('register_nuit_placeholder') || 'NUIT do Perfil Cadastrado'} 
+                  placeholder={t('register_nuit_placeholder') || 'NUIT do Perfil Cadastrado (9 dígitos)'} 
                   value={username} 
-                  onChange={e => setUsername(e.target.value)} 
+                  maxLength={9}
+                  onChange={e => setUsername(sanitizeNuit(e.target.value))} 
                   style={s.field} 
                   required
                 />

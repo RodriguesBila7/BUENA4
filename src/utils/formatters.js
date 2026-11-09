@@ -4,27 +4,36 @@
  */
 
 /**
- * Sanitiza o NUIT para conter no máximo 12 dígitos numéricos.
+ * Sanitiza o NUIT para conter estritamente no máximo 9 dígitos numéricos (Padrão Moçambicano Oficial da Autoridade Tributária).
  */
 export function sanitizeNuit(val) {
   if (!val) return '';
-  return String(val).replace(/\D/g, '').slice(0, 12);
+  return String(val).replace(/\D/g, '').slice(0, 9);
 }
 
 /**
- * Valida se o NUIT é válido (numérico, entre 1 e 12 dígitos).
+ * Valida se o NUIT é válido no padrão oficial de Moçambique:
+ * - Deve conter exactamente 9 dígitos numéricos (sem passar o limite).
+ * - Não pode conter letras nem caracteres especiais.
  */
 export function validateNuit(nuit, isRequired = true) {
   if (!nuit || !String(nuit).trim()) {
     if (isRequired) return { isValid: false, message: 'O NUIT é obrigatório.' };
     return { isValid: true, value: '' };
   }
-  const cleaned = sanitizeNuit(nuit);
-  if (!cleaned || cleaned.length === 0) {
+  const raw = String(nuit).trim();
+  if (/\D/.test(raw)) {
     return { isValid: false, message: 'O NUIT deve conter apenas números.' };
   }
-  if (cleaned.length > 12) {
-    return { isValid: false, message: 'O NUIT não pode ultrapassar o limite de 12 dígitos.' };
+  const cleaned = sanitizeNuit(raw);
+  if (cleaned.length !== 9) {
+    return { 
+      isValid: false, 
+      message: `O NUIT moçambicano deve conter exactamente 9 dígitos numéricos (introduziu ${raw.length} dígito${raw.length === 1 ? '' : 's'}).` 
+    };
+  }
+  if (/^(\d)\1{8}$/.test(cleaned)) {
+    return { isValid: false, message: 'O NUIT introduzido é inválido (dígitos repetidos).' };
   }
   return { isValid: true, value: cleaned };
 }
