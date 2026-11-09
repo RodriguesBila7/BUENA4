@@ -943,6 +943,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
 
   // Lista sequencial de módulos para navegação por teclado (Setas Cima / Baixo)
   const MAIN_NAV_TABS = React.useMemo(() => [
+    'emp_list',
     'home',
     'reports',
     'disciplinary',
@@ -951,7 +952,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
     'vacations',
     'transfers',
     'admin_acts_dashboard',
-    'emp_list',
     'settings_system'
   ], []);
 
@@ -1280,6 +1280,56 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
         </div>
 
         <nav style={styles.sidebarNav}>
+          {/* Menu Funcionários */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <button 
+              onClick={() => toggleMenu('funcionarios')}
+              style={{ 
+                ...styles.navItem, 
+                justifyContent: 'space-between', 
+                paddingRight: '16px',
+                backgroundColor: expandedMenu === 'funcionarios' ? 'rgba(0,0,0,0.03)' : 'transparent'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <svg style={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Funcionários
+              </div>
+              <svg style={{ width: '16px', height: '16px', transition: 'transform 0.3s ease', transform: expandedMenu === 'funcionarios' ? 'rotate(180deg)' : 'rotate(0)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            
+            {expandedMenu === 'funcionarios' && (
+              <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+                 <div style={{ position: 'absolute', left: '32px', top: '0', bottom: '16px', width: '1px', backgroundColor: 'var(--color-border)' }}></div>
+
+                 {[
+                   { id: 'emp_list', label: 'Visualizar Funcionários', icon: <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path> },
+                   { id: 'emp_form', label: 'Cadastrar Funcionário', icon: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path> },
+                   { id: 'emp_import', label: 'Carregar e Importar', icon: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path> },
+                   { id: 'emp_deleted', label: 'Funcionários Eliminados', icon: <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path> }
+                 ].map(item => (
+                   <button 
+                     key={item.id}
+                     onClick={() => handleTabChange(item.id)}
+                     style={{
+                       ...getNavItemStyle(activeTab === item.id, true),
+                       fontSize: '13px',
+                       position: 'relative'
+                     }}
+                   >
+                     <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)' }}></div>
+                     <span style={{ fontWeight: activeTab === item.id ? '700' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                       <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                         {item.icon}
+                       </svg>
+                       {item.label}
+                     </span>
+                   </button>
+                 ))}
+              </div>
+            )}
+          </div>
+
           <button 
             onClick={() => handleTabChange('home')}
             style={getNavItemStyle(activeTab === 'home')}
@@ -1404,56 +1454,6 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             )}
           </div>
 
-
-          {/* Menu Funcionários */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <button 
-              onClick={() => toggleMenu('funcionarios')}
-              style={{ 
-                ...styles.navItem, 
-                justifyContent: 'space-between', 
-                paddingRight: '16px',
-                backgroundColor: expandedMenu === 'funcionarios' ? 'rgba(0,0,0,0.03)' : 'transparent'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <svg style={styles.navIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                Funcionários
-              </div>
-              <svg style={{ width: '16px', height: '16px', transition: 'transform 0.3s ease', transform: expandedMenu === 'funcionarios' ? 'rotate(180deg)' : 'rotate(0)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
-            
-            {expandedMenu === 'funcionarios' && (
-              <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                 <div style={{ position: 'absolute', left: '32px', top: '0', bottom: '16px', width: '1px', backgroundColor: 'var(--color-border)' }}></div>
-
-                 {[
-                   { id: 'emp_list', label: 'Visualizar Funcionários', icon: <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path> },
-                   { id: 'emp_form', label: 'Cadastrar Funcionário', icon: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path> },
-                   { id: 'emp_import', label: 'Carregar e Importar', icon: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path> },
-                   { id: 'emp_deleted', label: 'Funcionários Eliminados', icon: <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path> }
-                 ].map(item => (
-                   <button 
-                     key={item.id}
-                     onClick={() => handleTabChange(item.id)}
-                     style={{
-                       ...getNavItemStyle(activeTab === item.id, true),
-                       fontSize: '13px',
-                       position: 'relative'
-                     }}
-                   >
-                     <div style={{ position: 'absolute', left: '32px', top: '50%', width: '8px', height: '1px', backgroundColor: 'var(--color-border)' }}></div>
-                     <span style={{ fontWeight: activeTab === item.id ? '700' : '400', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                       <svg style={{ width: '14px', height: '14px', color: activeTab === item.id ? 'var(--color-primary, #1B365D)' : 'var(--color-text-muted)' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                         {item.icon}
-                       </svg>
-                       {item.label}
-                     </span>
-                   </button>
-                 ))}
-              </div>
-            )}
-          </div>
 
           {/* Menu Definições */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
