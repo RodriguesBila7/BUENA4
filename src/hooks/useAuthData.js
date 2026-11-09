@@ -162,7 +162,7 @@ export default function useAuthData() {
     }
   }, []);
 
-  // ─── Solicitar / Activar Acesso (Apenas perfis pré-cadastrados por NUIT) ───
+  // ─── Solicitar Acesso (Apenas perfis pré-cadastrados por NUIT) ───
   const requestAccess = useCallback(async (nuit, password) => {
     const cleanNuit = String(nuit).trim().toLowerCase();
     try {

@@ -792,7 +792,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               margin: '0 0 14px',
               lineHeight: '1.4'
             }}>
-              Introduza o NUIT previamente registado pelo Administrador para activar o seu acesso.
+              Introduza o NUIT previamente registado pelo Administrador para solicitar o seu acesso.
             </p>
             <form onSubmit={handleRegister} style={s.form} autoComplete="off">
               <input type="text" name="fake_user_prevent2" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
@@ -853,7 +853,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 }} 
                 disabled={isLoading}
               >
-                {isLoading ? (t('register_submit_loading') || 'A VALIDAR PERFIL...') : (t('register_submit') || 'ACTIVAR ACESSO')}
+                {isLoading ? (t('register_submit_loading') || 'A VALIDAR PERFIL...') : (t('register_submit') || 'SOLICITAR ACESSO')}
               </button>
               <button 
                 type="button" 

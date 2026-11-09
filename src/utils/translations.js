@@ -24,7 +24,7 @@ const translations = {
     register_nuit_placeholder: 'NUIT do Perfil Cadastrado',
     register_password_placeholder: 'Definir Palavra-passe',
     register_confirm_password_placeholder: 'Confirmar Palavra-passe',
-    register_submit: 'ACTIVAR ACESSO',
+    register_submit: 'SOLICITAR ACESSO',
     register_submit_loading: 'A VALIDAR PERFIL...',
     register_back: 'VOLTAR AO LOGIN',
 
