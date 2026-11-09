@@ -212,6 +212,27 @@ export default function useAuthData() {
     }
   }, []);
 
+  // ─── Recuperação de Palavra-passe via E-mail Institucional ───────────────
+  const recoverPassword = useCallback(async (email) => {
+    const cleanEmail = String(email).trim().toLowerCase();
+    try {
+      const endpoint = isVercelHost() ? '/api/recover-password' : '/api/auth/recover-password';
+      const res = await safeApiCall(endpoint, {
+        method: 'POST',
+        body: { email: cleanEmail }
+      });
+      if (res && res.success) {
+        return { success: true, message: res.message, simulated: res.simulated };
+      }
+      return { success: false, error: res?.error || 'Erro ao processar o pedido de recuperação.' };
+    } catch (e) {
+      return {
+        success: false,
+        error: e.message || 'Erro ao comunicar com o servidor de e-mail.'
+      };
+    }
+  }, []);
+
   // ─── Perfis (Roles) ─────────────────────────────────────────────────────
   const addRole = useCallback(async (roleData) => {
     try {
@@ -265,6 +286,7 @@ export default function useAuthData() {
     deleteUser,
     authenticate,
     requestAccess,
+    recoverPassword,
     addRole,
     updateRole,
     deleteRole

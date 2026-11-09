@@ -10,6 +10,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { getDb } from '../db.js';
 import { generateToken } from '../middleware/auth.js';
+import { sendPasswordRecoveryEmail, isEmailConfigured } from '../services/emailService.js';
 
 const router = Router();
 
@@ -256,6 +257,71 @@ router.post('/request-access', (req, res) => {
     });
   } catch (e) {
     return res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── RECUPERAR PALAVRA-PASSE VIA GOOGLE SMTP / EMAIL ────────────────────────
+router.post('/recover-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email || !String(email).trim()) {
+    return res.status(400).json({ error: 'E-mail institucional obrigatório.' });
+  }
+  const cleanEmail = String(email).trim().toLowerCase();
+  try {
+    const db = getDb();
+
+    // 1. Procurar utilizador ou funcionário pelo e-mail
+    const user = db.prepare(`
+      SELECT id, name, username, nuit, email, role_id FROM users
+      WHERE LOWER(email) = ? OR LOWER(username) = ?
+    `).get(cleanEmail, cleanEmail);
+
+    let targetEmail = cleanEmail;
+    let targetName = 'Funcionário';
+    let targetUserId = null;
+
+    if (user) {
+      targetEmail = user.email || cleanEmail;
+      targetName = user.name || user.username || 'Funcionário';
+      targetUserId = user.id;
+    } else {
+      const emp = db.prepare(`
+        SELECT id, name, nuit, email FROM employees WHERE LOWER(email) = ?
+      `).get(cleanEmail);
+      if (emp) {
+        targetEmail = emp.email || cleanEmail;
+        targetName = emp.name;
+        const assocUser = db.prepare('SELECT id FROM users WHERE LOWER(nuit) = ?').get(String(emp.nuit).toLowerCase());
+        if (assocUser) targetUserId = assocUser.id;
+      }
+    }
+
+    const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Registar na auditoria
+    logAudit(db, cleanEmail, 'Pedido de Recuperação de Palavra-passe', 'Autenticação', {
+      email: targetEmail,
+      userId: targetUserId,
+      simulated: !isEmailConfigured()
+    }, req.ip);
+
+    // Enviar e-mail formatado via Nodemailer (Google SMTP)
+    const result = await sendPasswordRecoveryEmail({
+      to: targetEmail,
+      name: targetName,
+      recoveryCode
+    });
+
+    return res.json({
+      success: true,
+      simulated: result.simulated || false,
+      message: result.simulated
+        ? 'Pedido registado com sucesso (Modo simulação: configure SMTP_USER e SMTP_PASS no .env).'
+        : `Instruções e código de recuperação enviados com sucesso para ${targetEmail}.`
+    });
+  } catch (e) {
+    console.error('[ERRO RECUPERAR PALAVRA-PASSE]', e);
+    return res.status(500).json({ error: e.message || 'Erro ao processar a recuperação de senha.' });
   }
 });
 

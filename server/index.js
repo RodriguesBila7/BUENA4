@@ -53,6 +53,10 @@ app.use('/api/security',      securityRouter);
 import syncPhotoHandler from '../api/sync-photo.js';
 app.all('/api/sync-photo', (req, res) => syncPhotoHandler(req, res));
 
+// Recuperação de palavra-passe e envio de e-mails
+import recoverPasswordHandler from '../api/recover-password.js';
+app.all('/api/recover-password', (req, res) => recoverPasswordHandler(req, res));
+
 // ─── Healthcheck ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 

@@ -62,7 +62,7 @@ const TEMAS = [
 ];
 
 export default function Login({ settings, onLogin, updateSettings, t, language, setLanguage }) {
-  const { authenticate, requestAccess } = useAuthData();
+  const { authenticate, requestAccess, recoverPassword } = useAuthData();
   const { policies } = useSecuritySettings();
   const { logAction } = useAuditLog();
 
@@ -301,21 +301,34 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     }
   };
 
-  const handleRecuperarSubmit = (e) => {
+  const handleRecuperarSubmit = async (e) => {
     e.preventDefault();
     if (!regEmail.trim()) {
-      setError(t('msg_fill_email'));
+      setError(t('msg_fill_email') || 'Por favor, introduza o seu e-mail institucional.');
       return;
     }
     setError('');
     setSuccessMsg('');
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await recoverPassword(regEmail);
       setIsLoading(false);
-      setSuccessMsg(t('msg_recover_sent'));
-      clearCredentials();
-      setView('login');
-    }, 1000);
+      if (res && res.success) {
+        setSuccessMsg(res.message || t('msg_recover_sent') || 'Instruções enviadas para o seu e-mail institucional!');
+        if (logAction) {
+          logAction('Solicitação de Recuperação de Palavra-passe', 'Autenticação', { email: regEmail.trim() });
+        }
+        clearCredentials();
+        setTimeout(() => {
+          setView('login');
+        }, 3500);
+      } else {
+        setError(res?.error || 'Não foi possível processar o pedido de recuperação.');
+      }
+    } catch (err) {
+      setIsLoading(false);
+      setError(err.message || 'Erro ao comunicar com o servidor de e-mail.');
+    }
   };
 
   const aplicarTema = (cor) => {

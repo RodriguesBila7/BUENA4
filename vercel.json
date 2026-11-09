@@ -23,6 +23,22 @@
       "destination": "/api/login.js"
     },
     {
+      "source": "/api/request-access",
+      "destination": "/api/request-access.js"
+    },
+    {
+      "source": "/api/auth/request-access",
+      "destination": "/api/request-access.js"
+    },
+    {
+      "source": "/api/recover-password",
+      "destination": "/api/recover-password.js"
+    },
+    {
+      "source": "/api/auth/recover-password",
+      "destination": "/api/recover-password.js"
+    },
+    {
       "source": "/api/sync",
       "destination": "/api/sync.js"
     },
