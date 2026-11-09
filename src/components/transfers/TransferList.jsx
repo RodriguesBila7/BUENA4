@@ -83,7 +83,7 @@ export default function TransferList({
         'Nº Processo': tr.processNumber || tr.id,
         'Nº Despacho': tr.documentNumber || '-',
         'Funcionário': tr.employeeName || (emp ? emp.name : 'Desconhecido'),
-        'NUIT/NIP': tr.employeeNip || (emp ? emp.nip : 'N/D'),
+        'NUIT': tr.employeeNip || (emp ? (emp.nuit || emp.nip) : 'N/D'),
         'Tipo de Movimentação': tr.type || 'Transferência',
         'Motivo': tr.reason || '-',
         'Província Destino': tr.toProvinceId || '-',
@@ -114,7 +114,7 @@ export default function TransferList({
         tr.processNumber || tr.id,
         tr.documentNumber || '-',
         tr.employeeName || (emp ? emp.name : '-'),
-        tr.employeeNip || (emp ? emp.nip : '-'),
+        tr.employeeNip || (emp ? (emp.nuit || emp.nip) : '-'),
         tr.type || '-',
         toDir,
         tr.transferDate || '-',
@@ -287,7 +287,7 @@ export default function TransferList({
               filteredTransfers.map(tr => {
                 const emp = employees.find(e => e.id === tr.employeeId);
                 const empName = tr.employeeName || (emp ? emp.name : 'Funcionário Desconhecido');
-                const empNip = tr.employeeNip || (emp ? emp.nip : 'N/D');
+                const empNip = tr.employeeNip || (emp ? (emp.nuit || emp.nip) : 'N/D');
                 const empRole = emp?.role || (emp ? getName(data?.categories, emp.categoryId) : 'Agente SERNIC');
 
                 const fromDir = getName(data?.directorates, tr.fromDirectorateId || emp?.directorateId);

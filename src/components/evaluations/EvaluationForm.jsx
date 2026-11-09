@@ -126,7 +126,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
     try {
       await addEvaluation({
         employeeId: selectedEmpId,
-        employeeNip: selectedEmp.nip || 'Sem NUIT',
+        employeeNip: selectedEmp.nuit || selectedEmp.nip || 'Sem NUIT',
         employeeName: selectedEmp.name || 'Sem Nome',
         directorateId: selectedEmp.directorateId,
         provincialDirectorateId: selectedEmp.provincialDirectorateId,
@@ -153,7 +153,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
               <h4 style={styles.sectionTitle}>1. Identificação do Funcionário</h4>
             </div>
             {selectedEmp && (
-              <span style={styles.selectedBadge}>Funcionário Selecionado: <strong>{selectedEmp.name}</strong> ({selectedEmp.nip})
+              <span style={styles.selectedBadge}>Funcionário Selecionado: <strong>{selectedEmp.name}</strong> ({selectedEmp.nuit || selectedEmp.nip})
               </span>
             )}
           </div>
@@ -260,7 +260,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                       fontSize: '12px',
                       color: isSelected ? '#ffffff' : 'var(--color-primary)' 
                     }}>
-                      {emp.nip || emp.nuit}
+                      {emp.nuit || emp.nip}
                     </span>
                     <span style={{ 
                       fontWeight: isSelected ? '700' : '600', 
@@ -346,7 +346,7 @@ export default function EvaluationForm({ user, onSave, onCancel }) {
                     <h3 style={styles.profileName}>{selectedEmp.name}</h3>
                     <div style={styles.profileTagRow}>
                       <span style={styles.nuitBadge}>
-                        NUIT: <strong>{selectedEmp.nip || selectedEmp.nuit || '-'}</strong>
+                        NUIT: <strong>{selectedEmp.nuit || selectedEmp.nip || '-'}</strong>
                       </span>
                       {rankName && rankName !== '-' && (
                         <span style={styles.rankBadge}>

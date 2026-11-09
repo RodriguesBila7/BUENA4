@@ -760,7 +760,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                 <option value="">-- Selecionar Funcionário --</option>
                 {filteredModalEmployees.map(emp => (
                   <option key={emp.id} value={emp.id}>
-                    {emp.name} {emp.nip ? `(NIP: ${emp.nip})` : ''} - {getName(data?.directorates, emp.directorateId)}
+                    {emp.name} (NUIT: {emp.nuit || emp.nip}) - {getName(data?.directorates, emp.directorateId)}
                   </option>
                 ))}
               </select>

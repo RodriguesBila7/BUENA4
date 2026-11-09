@@ -72,7 +72,7 @@ export default function VacationForm({ onBack, requestToEdit }) {
 
     const payload = {
       employeeId: selectedEmp.id,
-      employeeNip: selectedEmp.nip,
+      employeeNip: selectedEmp.nuit || selectedEmp.nip,
       employeeName: selectedEmp.name,
       year,
       type,
@@ -133,7 +133,7 @@ export default function VacationForm({ onBack, requestToEdit }) {
                   <div style={styles.autocomplete}>
                     {filteredEmployees.map(e => (
                       <div key={e.id} style={styles.autocompleteItem} onClick={() => { setSelectedEmpId(e.id); setSearchTerm(''); }}>
-                        <strong>{e.nip}</strong> - {e.name}
+                        <strong>{e.nuit || e.nip}</strong> - {e.name}
                       </div>
                     ))}
                   </div>
@@ -149,7 +149,7 @@ export default function VacationForm({ onBack, requestToEdit }) {
                     <button onClick={() => setSelectedEmpId('')} style={styles.btnLink}>Alterar</button>
                   )}
                 </div>
-                <div style={{fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px'}}>NUIT: {selectedEmp.nip}</div>
+                <div style={{fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px'}}>NUIT: {selectedEmp.nuit || selectedEmp.nip}</div>
                 <div style={{fontSize: '13px', color: 'var(--color-text-muted)'}}>Cargo: {selectedEmp.role || 'N/A'}</div>
                 <div style={{fontSize: '13px', color: 'var(--color-text-muted)'}}>Admissão: {selectedEmp.admissionDate || 'Desconhecida'}</div>
 

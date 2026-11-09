@@ -61,7 +61,7 @@ export default function TransferHistory({ transfers, employees, orgData, initial
                 </div>
                 <div>
                   <div style={{fontWeight: '600', color: 'var(--color-text-base)', fontSize: '13px'}}>{emp.name}</div>
-                  <div style={{color: 'var(--color-text-muted)', fontSize: '11px'}}>{emp.nip}</div>
+                  <div style={{color: 'var(--color-text-muted)', fontSize: '11px'}}>{emp.nuit || emp.nip}</div>
                 </div>
               </div>
             ))}
@@ -90,7 +90,7 @@ export default function TransferHistory({ transfers, employees, orgData, initial
                 </div>
                 <div>
                   <h3 style={styles.empName}>{selectedEmployee.name}</h3>
-                  <p style={styles.empNip}>NUIT: {selectedEmployee.nip} | {getName(data.careers, selectedEmployee.careerId)}</p>
+                  <p style={styles.empNip}>NUIT: {selectedEmployee.nuit || selectedEmployee.nip} | {getName(data.careers, selectedEmployee.careerId)}</p>
                   <p style={styles.empExtraInfo}>Ingresso: {selectedEmployee.admissionDate || '-'} | BI: {selectedEmployee.idNumber || '-'}</p>
                 </div>
               </div>

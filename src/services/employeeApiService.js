@@ -11,6 +11,7 @@ export const fetchEmployees = async (employees, orgData, filters = {}, paginatio
     const term = filters.searchTerm.toLowerCase();
     result = result.filter(emp => 
       emp.name?.toLowerCase().includes(term) || 
+      emp.nuit?.toLowerCase().includes(term) ||
       emp.nip?.toLowerCase().includes(term)
     );
   }

@@ -49,7 +49,7 @@ export default function RegistoSaudeModal({ isOpen, onClose, employees, onSave }
     onSave({
       employeeId: selectedEmployee.id,
       employeeName: selectedEmployee.name,
-      employeeNip: selectedEmployee.nip,
+      employeeNip: selectedEmployee.nuit || selectedEmployee.nip,
       tipoCondicao: tipoDoenca,
       dataInicio,
       dataFim,
@@ -123,7 +123,7 @@ export default function RegistoSaudeModal({ isOpen, onClose, employees, onSave }
                 <div style={styles.searchResults}>
                   {searchResults.map(emp => (
                     <div key={emp.id} style={styles.searchItem} onClick={() => handleSelectEmployee(emp)}>
-                      <strong>{emp.name}</strong> (NUIT: {emp.nip || emp.nuit || '-'})
+                      <strong>{emp.name}</strong> (NUIT: {emp.nuit || emp.nip || '-'})
                     </div>
                   ))}
                 </div>

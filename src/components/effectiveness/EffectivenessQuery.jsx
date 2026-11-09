@@ -354,7 +354,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
   // Exportar Excel
   const exportToExcel = () => {
     const dataToExport = faltososList.map(emp => ({
-      'NUIT / NIP': emp.nip,
+      'NUIT': emp.nuit || emp.nip,
       'Nome do Funcionário': emp.name,
       'Carreira': emp.career,
       'Categoria': emp.category,
@@ -462,7 +462,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
               ${faltososList.map((f, i) => `
                 <tr>
                   <td style="text-align: center;">${i + 1}</td>
-                  <td><strong>${f.nip}</strong></td>
+                  <td><strong>${f.nuit || f.nip}</strong></td>
                   <td><strong>${f.name}</strong></td>
                   <td>${f.category || f.career}</td>
                   <td>${f.role || 'Investigador'}</td>
@@ -1091,7 +1091,7 @@ export default function EffectivenessQuery({ onGoToRegister, user, orgData: pass
                           <td>
                             <strong>{emp.name}</strong>
                             <div style={{fontSize: '11px', color: 'var(--color-text-muted)'}}>
-                              NUIT: {emp.nip}
+                              NUIT: {emp.nuit || emp.nip}
                             </div>
                           </td>
                           <td>

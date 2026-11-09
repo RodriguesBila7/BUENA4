@@ -28,6 +28,8 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
       if (emp) {
         setFormData({
           ...emp,
+          nip: emp.nuit || emp.nip || '',
+          nuit: emp.nuit || emp.nip || '',
           unitType: emp.unitType || 'normal',
           academicLevel: emp.academicLevel || emp.academic_level || '',
           academicHistory: emp.academicHistory || []
@@ -250,6 +252,8 @@ export default function EmployeeForm({ employees, orgData, editingEmpId, onSave,
 
     const payload = {
       ...formData,
+      nuit: formData.nip || formData.nuit,
+      nip: formData.nip || formData.nuit,
       academicLevel: highestLevel,
       academic_level: highestLevel,
       // Se necessário manter compatibilidade

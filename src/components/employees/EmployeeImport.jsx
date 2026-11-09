@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
+import { sanitizeNuit } from '../../utils/formatters';
 
 export default function EmployeeImport({ orgData, onBulkAdd, onSuccess }) {
   const { data } = orgData;
@@ -49,7 +50,7 @@ export default function EmployeeImport({ orgData, onBulkAdd, onSuccess }) {
         return key ? String(row[key]).trim() : '';
       };
 
-      const nip = getVal(['nip', 'nº mecanográfico', 'nº mecanografico', 'mecanografico']);
+      const nip = getVal(['nuit', 'nip', 'nº mecanográfico', 'nº mecanografico', 'mecanografico', 'nuit/nip']);
       const name = getVal(['nome', 'nome completo']);
       const bi = getVal(['bi', 'nº bi', 'bilhete de identidade']);
       const dob = getVal(['data de nascimento', 'nascimento', 'data nascimento']);
@@ -123,8 +124,11 @@ export default function EmployeeImport({ orgData, onBulkAdd, onSuccess }) {
         }
       }
 
+      const cleanNuit = sanitizeNuit(nip) || nip;
       processed.push({
-        nip, name, bi, dob, rank, gender, role,
+        nip: cleanNuit,
+        nuit: cleanNuit,
+        name, bi, dob, rank, gender, role,
         directorateId, departmentId, divisionId, sectionId, careerId, categoryId,
         isActive: true,
         // Raw values for display

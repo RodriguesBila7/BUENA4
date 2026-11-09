@@ -134,7 +134,7 @@ export default function EmployeeSearchModal({ isOpen, onClose, employees = [], o
                   <div style={{ flex: 1 }}>
                     <div style={styles.empName}>{emp.name}</div>
                     <div style={styles.empNip}>
-                      NUIT/NIP: {emp.nip || emp.nuit || '-'} • {emp.categoryName || 'Geral'} • {emp.role || 'Agente SERNIC'}
+                      NUIT: {emp.nuit || emp.nip || '-'} • {emp.categoryName || 'Geral'} • {emp.role || 'Agente SERNIC'}
                     </div>
                   </div>
                   <span style={styles.selectArrow}>➔</span>

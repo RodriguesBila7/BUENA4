@@ -388,7 +388,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
 
     const payload = {
       employeeId: selectedEmp.id,
-      employeeNip: selectedEmp.nip,
+      employeeNip: selectedEmp.nuit || selectedEmp.nip,
       employeeName: selectedEmp.name,
       gender: selectedEmp.gender,
       type: absenceType,
@@ -625,7 +625,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
                       </div>
                       <div style={styles.empMeta}>
                         <div style={styles.empName}>{emp.name}</div>
-                        <div style={styles.empNip}>NUIT: <strong>{emp.nip}</strong></div>
+                        <div style={styles.empNip}>NUIT: <strong>{emp.nuit || emp.nip}</strong></div>
                       </div>
                     </div>
 
@@ -680,7 +680,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
                               </div>
                               <div style={{display: 'flex', flexDirection: 'column'}}>
                                 <span style={{fontWeight: '700', fontSize: '14px', color: 'var(--color-text-base)'}}>{emp.name}</span>
-                                <span style={{fontSize: '12px', color: 'var(--color-text-muted)'}}>{emp.nip}</span>
+                                <span style={{fontSize: '12px', color: 'var(--color-text-muted)'}}>{emp.nuit || emp.nip}</span>
                               </div>
                             </div>
                           </td>
@@ -755,7 +755,7 @@ export default function EffectivenessForm({ onRegistrationComplete, user, orgDat
             
             <form onSubmit={handleSubmitAbsence} style={styles.modalForm}>
               <div style={styles.empSummaryBox}>
-                <strong>{selectedEmp.name}</strong> (NUIT: {selectedEmp.nip})<br />
+                <strong>{selectedEmp.name}</strong> (NUIT: {selectedEmp.nuit || selectedEmp.nip})<br />
                 <span style={{fontSize:'12px', color:'var(--color-text-muted)'}}>
                   {selectedEmp.role || 'Investigador'} • {getName(orgData.directorates, selectedEmp.directorateId)}
                 </span>

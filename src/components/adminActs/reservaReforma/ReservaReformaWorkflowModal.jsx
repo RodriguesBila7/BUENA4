@@ -208,7 +208,7 @@ export default function ReservaReformaWorkflowModal({ act, workflow, employee, o
         >
           <div>
             <h3 style={styles.title}>Tramitação: {act.actType}</h3>
-            <span style={{ fontSize: '12px', color: 'var(--color-text-muted, #64748b)' }}>{employee.name} (NUIT: {employee.nip || employee.nuit})</span>
+            <span style={{ fontSize: '12px', color: 'var(--color-text-muted, #64748b)' }}>{employee.name} (NUIT: {employee.nuit || employee.nip})</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button

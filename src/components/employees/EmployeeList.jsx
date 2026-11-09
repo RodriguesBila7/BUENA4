@@ -42,7 +42,7 @@ export default function EmployeeList({ employees, orgData, onEdit, onDelete }) {
       // Text Search
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
-        if (!emp.name?.toLowerCase().includes(term) && !emp.nip?.toLowerCase().includes(term)) {
+        if (!emp.name?.toLowerCase().includes(term) && !emp.nuit?.toLowerCase().includes(term) && !emp.nip?.toLowerCase().includes(term)) {
           return false;
         }
       }
@@ -149,7 +149,7 @@ export default function EmployeeList({ employees, orgData, onEdit, onDelete }) {
             ) : (
               filteredEmployees.map(emp => (
                 <tr key={emp.id} style={styles.tr}>
-                  <td><strong>{emp.nip}</strong></td>
+                  <td><strong>{emp.nuit || emp.nip}</strong></td>
                   <td>{emp.name}</td>
                   <td>{emp.rank || '-'}</td>
                   <td>{getName(data.directorates, emp.directorateId)}</td>

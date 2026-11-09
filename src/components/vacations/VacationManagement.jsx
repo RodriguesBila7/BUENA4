@@ -322,7 +322,7 @@ export default function VacationManagement() {
       'ID Registo': r.id,
       'Funcionário': r.emp?.name || r.employeeName || 'N/D',
       'NUIT': r.emp?.nuit || 'N/D',
-      'NIP': r.emp?.nip || r.employeeNip || 'N/D',
+      'NUIT': r.emp?.nuit || r.emp?.nip || r.employeeNip || 'N/D',
       'Direcção': r.directorateName,
       'Departamento': r.departmentName,
       'Repartição': r.divisionName,
@@ -824,7 +824,7 @@ export default function VacationManagement() {
                 </div>
                 <div style={styles.infoItem}>
                   <span style={styles.infoLabel}>NIP:</span>
-                  <span style={styles.infoVal}>{viewingRecord.emp?.nip || viewingRecord.employeeNip || 'N/A'}</span>
+                  <span style={styles.infoVal}>{viewingRecord.emp?.nuit || viewingRecord.emp?.nip || viewingRecord.employeeNip || 'N/A'}</span>
                 </div>
                 <div style={styles.infoItem}>
                   <span style={styles.infoLabel}>Cargo / Função:</span>

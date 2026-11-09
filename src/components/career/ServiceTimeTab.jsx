@@ -138,7 +138,7 @@ export default function ServiceTimeTab({ data = [], orgData, onRegisterAct }) {
       const divisionName = orgData?.divisions?.find(div => div.id === d.emp.divisionId)?.name || 'N/A';
 
       return {
-        'NUIT': d.emp.nip || d.emp.nuit || '-',
+        'NUIT': d.emp.nuit || d.emp.nip || '-',
         'Nome': d.emp.name || 'Sem Nome',
         'Direcção': directorateName,
         'Departamento': departmentName,
@@ -345,7 +345,7 @@ export default function ServiceTimeTab({ data = [], orgData, onRegisterAct }) {
 
               return (
                 <tr key={d.emp.id} style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: isPending ? 'rgba(245, 158, 11, 0.06)' : 'transparent' }}>
-                  <td><strong>{d.emp.nip || d.emp.nuit || '-'}</strong></td>
+                  <td><strong>{d.emp.nuit || d.emp.nip || '-'}</strong></td>
                   <td><strong>{d.emp.name || 'Sem Nome'}</strong></td>
                   <td>
                     {careerName}

@@ -150,7 +150,7 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
             )}
             <div style={styles.profileTitle}>
               <h3 style={styles.name}>{emp.name}</h3>
-              <p style={styles.nip}>NUIT: {emp.nip}</p>
+              <p style={styles.nip}>NUIT: {emp.nuit || emp.nip}</p>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <span style={emp.isActive ? styles.badgeActive : styles.badgeInactive}>
                   {emp.isActive ? 'Ativo' : 'Inativo'}
@@ -169,7 +169,7 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
               <div style={styles.infoRow}><span style={styles.label}>Género:</span> <span style={styles.value}>{emp.gender || '-'}</span></div>
               <div style={styles.infoRow}><span style={styles.label}>Data Nascimento:</span> <span style={styles.value}>{emp.birthDate || '-'}</span></div>
               <div style={styles.infoRow}><span style={styles.label}>Nº Documento (B.I/Passaporte):</span> <span style={styles.value}>{emp.idNumber || '-'}</span></div>
-              <div style={styles.infoRow}><span style={styles.label}>NUIT:</span> <span style={styles.value}>{emp.nuit || '-'}</span></div>
+              <div style={styles.infoRow}><span style={styles.label}>NUIT:</span> <span style={styles.value}>{emp.nuit || emp.nip || '-'}</span></div>
               <div style={styles.infoRow}><span style={styles.label}>Estado Civil:</span> <span style={styles.value}>{emp.maritalStatus || '-'}</span></div>
               <div style={styles.infoRow}><span style={styles.label}>Nº Filhos:</span> <span style={styles.value}>{emp.childrenCount || '-'}</span></div>
             </div>

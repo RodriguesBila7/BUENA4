@@ -59,7 +59,7 @@ export default function EvaluationHistory({ user }) {
                 style={{...styles.empItem, ...(selectedEmpId === emp.id ? styles.empItemSelected : {})}}
                 onClick={() => setSelectedEmpId(emp.id)}
               >
-                <strong>{emp.nip || 'Sem NUIT'}</strong> - {emp.name || 'Sem Nome'}
+                <strong>{emp.nuit || emp.nip || 'Sem NUIT'}</strong> - {emp.name || 'Sem Nome'}
               </div>
             ))}
             {filteredEmployees.length === 0 && (

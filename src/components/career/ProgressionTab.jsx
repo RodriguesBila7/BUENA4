@@ -109,7 +109,7 @@ export default function ProgressionTab({ elegibles = [], orgData, onProgress, on
       const divName = orgData?.divisions?.find(div => div.id === e.emp.divisionId)?.name || '-';
 
       return {
-        'NUIT': e.emp.nip || e.emp.nuit || '-',
+        'NUIT': e.emp.nuit || e.emp.nip || '-',
         'Nome': e.emp.name || 'Sem Nome',
         'Direcção': dirName,
         'Departamento': depName,
@@ -297,7 +297,7 @@ export default function ProgressionTab({ elegibles = [], orgData, onProgress, on
               
               return (
                 <tr key={e.emp.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                  <td><strong>{e.emp.nip || e.emp.nuit || '-'}</strong></td>
+                  <td><strong>{e.emp.nuit || e.emp.nip || '-'}</strong></td>
                   <td><strong>{e.emp.name || 'Sem Nome'}</strong></td>
                   <td>{career}</td>
                   <td>{category}</td>

@@ -179,7 +179,7 @@ export default function TransferForm({ employees = [], orgData, initialData, onS
     const newTransferData = {
       ...formData,
       employeeId: selectedEmployee.id,
-      employeeNip: selectedEmployee.nip,
+      employeeNip: selectedEmployee.nuit || selectedEmployee.nip,
       employeeName: selectedEmployee.name,
       fromProvinceId: selectedEmployee.provinceId,
       fromDistrictId: selectedEmployee.districtId,
@@ -271,7 +271,7 @@ export default function TransferForm({ employees = [], orgData, initialData, onS
                   <div style={{flex: 1}}>
                     <div style={{display: 'flex', justifyContent: 'space-between'}}>
                       <div style={{fontWeight: '700', color: 'var(--color-text-base)'}}>{emp.name}</div>
-                      <div style={{fontSize: '13px', color: 'var(--color-text-muted)', fontWeight: '600'}}>NUIT: {emp.nip}</div>
+                      <div style={{fontSize: '13px', color: 'var(--color-text-muted)', fontWeight: '600'}}>NUIT: {emp.nuit || emp.nip}</div>
                     </div>
                     <div style={{fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px'}}>
                       {getName(data.careers, emp.careerId)} • {getName(data.directorates, emp.directorateId)}
@@ -319,7 +319,7 @@ export default function TransferForm({ employees = [], orgData, initialData, onS
                 </div>
                 <div style={styles.profileItem}>
                   <div style={styles.profileLabel}>NUIT / Número Mecanográfico</div>
-                  <div style={styles.profileValue}>{selectedEmployee.nip}</div>
+                  <div style={styles.profileValue}>{selectedEmployee.nuit || selectedEmployee.nip}</div>
                 </div>
                 <div style={styles.profileItem}>
                   <div style={styles.profileLabel}>Carreira e Categoria</div>

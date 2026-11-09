@@ -243,7 +243,7 @@ export default function MudancaCarreiraManager({ actsInGroup }) {
                   <tbody>
                     {eligibleEmployees.map(emp => (
                       <tr key={emp.id} style={styles.tr}>
-                        <td><strong>{emp.nip}</strong></td>
+                        <td><strong>{emp.nuit || emp.nip}</strong></td>
                         <td>{emp.name}</td>
                         <td>{getName(orgData.categories, emp.categoryId)}</td>
                         <td>{emp.academicLevel || 'Nível Superior'}</td>

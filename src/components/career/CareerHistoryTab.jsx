@@ -120,7 +120,7 @@ export default function CareerHistoryTab({ acts = [], employees = [], orgData, u
       return {
         'Data': dateStr,
         'Tipo': actType,
-        'NUIT': emp?.nip || emp?.nuit || '-',
+        'NUIT': emp?.nuit || emp?.nip || '-',
         'Nome do Funcionário': emp?.name || '-',
         'Detalhes': detailsStr,
         'Despacho': a.despacho || '-',
@@ -443,7 +443,7 @@ export default function CareerHistoryTab({ acts = [], employees = [], orgData, u
                     {actType}
                   </span>
                 </td>
-                <td><strong>{emp?.name || '-'}</strong> <br/><small>{emp?.nip || emp?.nuit || '-'}</small></td>
+                <td><strong>{emp?.name || '-'}</strong> <br/><small>{emp?.nuit || emp?.nip || '-'}</small></td>
                 <td>{detailsStr}</td>
                 <td>{a.despacho || '-'}</td>
                 <td>

@@ -221,7 +221,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
         
         if (['Férias', 'Licença'].includes(type)) {
           await addVacation({
-            employeeId: emp.id, employeeNip: emp.nip, employeeName: emp.name,
+            employeeId: emp.id, employeeNip: emp.nuit || emp.nip, employeeName: emp.name,
             year: new Date(formData.actDate).getFullYear().toString(),
             type: type, startDate: formData.actDate, endDate: formData.actDate, daysCount: type === 'Férias' ? 30 : 0,
             notes: `Despacho: ${formData.despacho || 'N/A'}. Criado via Registo de Acto.`,
@@ -231,7 +231,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
 
         if (['Transferência', 'Destacamento', 'Reafectação', 'Comissão de Serviço'].includes(type)) {
           await requestTransfer({
-            employeeId: emp.id, employeeNip: emp.nip, employeeName: emp.name,
+            employeeId: emp.id, employeeNip: emp.nuit || emp.nip, employeeName: emp.name,
             type: type,
             fromDirectorateId: emp.directorateId, fromDepartmentId: emp.departmentId,
             toDirectorateId: formData.details.newDirectorateId || '',
@@ -241,7 +241,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
 
         if (['Advertência', 'Repreensão', 'Multa', 'Suspensão', 'Demissão', 'Expulsão'].includes(type)) {
           await addProcess({
-            employeeId: emp.id, employeeNip: emp.nip, employeeName: emp.name,
+            employeeId: emp.id, employeeNip: emp.nuit || emp.nip, employeeName: emp.name,
             type: type, status: userIsSecondary ? 'Pendente' : 'Concluído',
             date: formData.actDate,
             description: `Sanção aplicada via Despacho: ${formData.despacho || 'N/A'}.`
@@ -530,7 +530,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
       }
     >
       <div style={styles.empSummary}>
-        <strong>Funcionário:</strong> {emp.name} ({emp.nip})<br/>
+        <strong>Funcionário:</strong> {emp.name} (NUIT: {emp.nuit || emp.nip})<br/>
         <strong>Situação Atual:</strong> {emp.status || 'Ativo'}
       </div>
 

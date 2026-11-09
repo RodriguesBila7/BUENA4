@@ -130,7 +130,7 @@ export default function EffectivenessCalendar({ initialEmployee }) {
                   style={styles.searchItem} 
                   onClick={() => { setSelectedEmployee(emp); setSearchTerm(''); }}
                 >
-                  <strong>{emp.name}</strong> (NUIT: {emp.nip})
+                  <strong>{emp.name}</strong> (NUIT: {emp.nuit || emp.nip})
                 </div>
               ))}
             </div>
@@ -139,7 +139,7 @@ export default function EffectivenessCalendar({ initialEmployee }) {
         {selectedEmployee && (
           <div style={styles.selectedEmpBadge}>
             <div style={styles.selectedEmpText}>
-              Visualizando histórico de: <strong>{selectedEmployee.name}</strong> (NUIT: {selectedEmployee.nip})
+              Visualizando histórico de: <strong>{selectedEmployee.name}</strong> (NUIT: {selectedEmployee.nuit || selectedEmployee.nip})
             </div>
             <button onClick={() => setSelectedEmployee(null)} style={styles.btnClearEmp}>✕</button>
           </div>

@@ -108,7 +108,7 @@ export default function EmployeeViewer({ employees, orgData, onEdit, onDelete, o
     // Obter todos sem paginação
     const res = await fetchEmployees(employees, orgData, filters, { page: 1, limit: 999999 }, sort);
     const exportData = res.data.map(emp => ({
-      'NUIT': emp.nip,
+      'NUIT': emp.nuit || emp.nip,
       'Nome': emp.name,
       'Género': (emp.gender === 'M' || emp.gender === 'Masculino') ? 'Masculino' : ((emp.gender === 'F' || emp.gender === 'Feminino') ? 'Feminino' : (emp.gender || '')),
       'Carreira': getName(data.careers || [], emp.careerId),
@@ -142,7 +142,7 @@ export default function EmployeeViewer({ employees, orgData, onEdit, onDelete, o
 
     res.data.forEach(emp => {
       const rowData = [
-        emp.nip,
+        emp.nuit || emp.nip,
         emp.name,
         emp.gender,
         getName(data.careers || [], emp.careerId),
@@ -221,7 +221,7 @@ export default function EmployeeViewer({ employees, orgData, onEdit, onDelete, o
               <h3>Identificação</h3>
               <div class="grid">
                 <div class="item"><div class="label">Nome Completo</div><div class="value">${emp.name || '-'}</div></div>
-                 <div class="item"><div class="label">NUIT</div><div class="value">${emp.nip || '-'}</div></div>
+                 <div class="item"><div class="label">NUIT</div><div class="value">${emp.nuit || emp.nip || '-'}</div></div>
                 <div class="item"><div class="label">Nº de BI</div><div class="value">${emp.bi || '-'}</div></div>
                 <div class="item"><div class="label">Data de Nascimento</div><div class="value">${emp.dob || '-'}</div></div>
                 <div class="item"><div class="label">Género</div><div class="value">${emp.gender || '-'}</div></div>
@@ -366,7 +366,7 @@ export default function EmployeeViewer({ employees, orgData, onEdit, onDelete, o
                   <tr key={emp.id}>
                     <td>
                       <span style={{ fontFamily: 'monospace', fontSize: '13px', color: '#475569', letterSpacing: '0.5px' }}>
-                        {emp.nip}
+                        {emp.nuit || emp.nip}
                       </span>
                     </td>
                     <td>

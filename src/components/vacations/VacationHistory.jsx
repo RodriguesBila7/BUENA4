@@ -48,7 +48,7 @@ export default function VacationHistory() {
               <div style={styles.autocomplete}>
                 {filteredEmployees.map(e => (
                   <div key={e.id} style={styles.autocompleteItem} onClick={() => { setSelectedEmpId(e.id); setSearchTerm(''); }}>
-                    <strong>{e.nip}</strong> - {e.name}
+                    <strong>{e.nuit || e.nip}</strong> - {e.name}
                   </div>
                 ))}
               </div>
@@ -66,7 +66,7 @@ export default function VacationHistory() {
             <div style={styles.card}>
               <h4 style={styles.cardTitle}>Ficha Resumo</h4>
               <p style={{margin: '0 0 4px 0', fontSize: '15px', fontWeight: 'bold'}}>{selectedEmp.name}</p>
-              <p style={{margin: '0 0 12px 0', fontSize: '13px', color: 'var(--color-text-muted)'}}>NUIT: {selectedEmp.nip}</p>
+              <p style={{margin: '0 0 12px 0', fontSize: '13px', color: 'var(--color-text-muted)'}}>NUIT: {selectedEmp.nuit || selectedEmp.nip}</p>
               
               {balance && (
                 <div style={styles.balanceBox}>
