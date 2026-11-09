@@ -213,6 +213,52 @@ const failedAttempts = new Map();
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutos de bloqueio
 
+// ─── SOLICITAR / ATIVAR ACESSO POR NUIT ──────────────────────────────────────
+router.post('/request-access', (req, res) => {
+  const { nuit, password } = req.body;
+  if (!nuit || !password) {
+    return res.status(400).json({ error: 'NUIT e palavra-passe obrigatórios.' });
+  }
+  const cleanNuit = String(nuit).trim().toLowerCase();
+  try {
+    const db = getDb();
+    // 1. Verificar se o perfil já foi previamente cadastrado pelo Administrador no sistema
+    const existingUser = db.prepare(`
+      SELECT id, name, username, nuit, role_id, status FROM users
+      WHERE LOWER(nuit) = ? OR LOWER(username) = ?
+    `).get(cleanNuit, cleanNuit);
+
+    if (!existingUser) {
+      return res.status(404).json({
+        error: 'NUIT não encontrado. O seu perfil de utilizador deve ser previamente cadastrado pelo Administrador no sistema.'
+      });
+    }
+
+    // 2. Atualizar a palavra-passe e garantir estado Ativo, preservando RIGOROSAMENTE o role_id atribuído pelo Admin
+    const hashedPassword = bcrypt.hashSync(String(password).trim(), 10);
+    db.prepare(`
+      UPDATE users 
+      SET password = ?, status = 'Ativo', updated_at = datetime('now')
+      WHERE id = ?
+    `).run(hashedPassword, existingUser.id);
+
+    // Registar na auditoria
+    logAudit(db, cleanNuit, 'Solicitação e Ativação de Acesso', 'Autenticação', {
+      userId: existingUser.id,
+      nuit: existingUser.nuit,
+      roleId: existingUser.role_id,
+      name: existingUser.name
+    }, req.ip);
+
+    return res.json({
+      success: true,
+      message: `Acesso ativado com sucesso para ${existingUser.name}! Inicie sessão com o seu NUIT.`
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── LOGIN — CONFORMIDADE TABELA 21 (JWT OBRIGATÓRIO, FIM DAS SENHAS-MESTRAS, TS08b, TS09) ─
 router.post('/login', (req, res) => {
   const { username, password } = req.body;

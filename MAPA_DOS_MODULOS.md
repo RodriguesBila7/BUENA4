@@ -61,3 +61,4 @@ Estes são os ecrãs e funcionalidades que vê e utiliza na interface gráfica:
 - **`src/data/initialDbData.json`**: Contém os dados de arranque da base de dados (estrutura orgânica de Moçambique, carreiras, etc.).
 - **`src/utils/backgroundPositions.js`**: Controla o posicionamento e transparência do Brasão da República no fundo do sistema.
 - **`src/services/`**: Serviços de gravação de dados, sincronização na nuvem e exportação de ficheiros (Excel e PDF).
+

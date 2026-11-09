@@ -43,7 +43,7 @@ export function generateToken(user) {
  */
 export function authenticateUser(req, res, next) {
   // Rotas públicas que não requerem token JWT
-  const publicPaths = ['/api/auth/login', '/api/health', '/api/sync-photo'];
+  const publicPaths = ['/api/auth/login', '/api/auth/request-access', '/api/health', '/api/sync-photo'];
   const currentPath = (req.originalUrl || req.url || '').split('?')[0];
 
   if (publicPaths.some(p => currentPath === p || currentPath.startsWith(p))) {

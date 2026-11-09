@@ -6,7 +6,7 @@ const translations = {
   pt: {
     /* ── Login ── */
     login_title: 'Entrar',
-    login_username_placeholder: 'NUIT ou Nome do Perfil',
+    login_username_placeholder: 'NUIT',
     login_password_placeholder: 'Senha',
     login_submit: 'ENTRAR',
     login_submit_loading: 'A ENTRAR...',
@@ -19,13 +19,13 @@ const translations = {
     login_footer: 'Copyright © 2026 –',
     login_footer_rights: '. Todos os direitos reservados. | Versão: 05.01.00',
 
-    /* ── Registo ── */
+    /* ── Registo / Solicitar Acesso ── */
     register_title: 'Solicitar Acesso',
-    register_name_placeholder: 'Nome Completo',
-    register_email_placeholder: 'Email Institucional',
-    register_password_placeholder: 'Definir Senha',
-    register_submit: 'REGISTAR EFECTIVO',
-    register_submit_loading: 'A PROCESSAR...',
+    register_nuit_placeholder: 'NUIT do Perfil Cadastrado',
+    register_password_placeholder: 'Definir Palavra-passe',
+    register_confirm_password_placeholder: 'Confirmar Palavra-passe',
+    register_submit: 'ACTIVAR ACESSO',
+    register_submit_loading: 'A VALIDAR PERFIL...',
     register_back: 'VOLTAR AO LOGIN',
 
     /* ── Recuperar Senha ── */
@@ -36,10 +36,11 @@ const translations = {
 
     /* ── Mensagens ── */
     msg_fill_all: 'Por favor, preencha todos os campos.',
-    msg_wrong_credentials: 'Utilizador ou senha incorrectos.',
-    msg_fill_register: 'Preencha todos os campos para solicitar acesso.',
-    msg_user_exists: 'Este NUIT já existe no sistema.',
-    msg_register_success: 'Conta criada com sucesso! Pode entrar com as suas credenciais.',
+    msg_wrong_credentials: 'NUIT ou palavra-passe incorrectos.',
+    msg_fill_register: 'Preencha o NUIT e defina a sua palavra-passe.',
+    msg_user_exists: 'Este NUIT já possui acesso activo.',
+    msg_register_success: 'Acesso activado com sucesso! Inicie sessão com o seu NUIT.',
+    msg_nuit_not_found: 'NUIT não encontrado. O seu perfil de utilizador deve ser previamente cadastrado pelo Administrador no sistema.',
     msg_fill_email: 'Preencha o seu email para recuperar a senha.',
     msg_recover_sent: 'Instruções de recuperação enviadas para o seu email.',
     msg_admin_only_theme: 'Apenas o Super Administrador pode alternar o tema institucional global.',
@@ -246,13 +247,13 @@ const translations = {
     login_footer: 'Copyright © 2026 –',
     login_footer_rights: '. All rights reserved. | Version: 01.00.00',
 
-    /* ── Register ── */
+    /* ── Register / Request Access ── */
     register_title: 'Request Access',
-    register_name_placeholder: 'Full Name',
-    register_email_placeholder: 'Institutional Email',
+    register_nuit_placeholder: 'Profile NUIT',
     register_password_placeholder: 'Set Password',
-    register_submit: 'REGISTER MEMBER',
-    register_submit_loading: 'PROCESSING...',
+    register_confirm_password_placeholder: 'Confirm Password',
+    register_submit: 'ACTIVATE ACCESS',
+    register_submit_loading: 'VALIDATING PROFILE...',
     register_back: 'BACK TO LOGIN',
 
     /* ── Recover Password ── */
@@ -263,10 +264,11 @@ const translations = {
 
     /* ── Messages ── */
     msg_fill_all: 'Please fill in all fields.',
-    msg_wrong_credentials: 'Incorrect username or password.',
-    msg_fill_register: 'Fill in all fields to request access.',
-    msg_user_exists: 'This NUIT already exists in the system.',
-    msg_register_success: 'Account created successfully! You can now sign in with your credentials.',
+    msg_wrong_credentials: 'Incorrect NUIT or password.',
+    msg_fill_register: 'Enter the NUIT and set your password.',
+    msg_user_exists: 'This NUIT already has active access.',
+    msg_register_success: 'Access activated successfully! You can now sign in with your NUIT.',
+    msg_nuit_not_found: 'NUIT not found. Your user profile must be registered by the Administrator in the system.',
     msg_fill_email: 'Enter your email to recover your password.',
     msg_recover_sent: 'Recovery instructions sent to your email.',
     msg_admin_only_theme: 'Only the Super Administrator can toggle the global institutional theme.',

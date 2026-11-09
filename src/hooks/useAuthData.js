@@ -162,6 +162,56 @@ export default function useAuthData() {
     }
   }, []);
 
+  // ─── Solicitar / Activar Acesso (Apenas perfis pré-cadastrados por NUIT) ───
+  const requestAccess = useCallback(async (nuit, password) => {
+    const cleanNuit = String(nuit).trim().toLowerCase();
+    try {
+      const endpoint = isVercelHost() ? '/api/request-access' : '/api/auth/request-access';
+      const res = await safeApiCall(endpoint, {
+        method: 'POST',
+        body: { nuit: cleanNuit, password }
+      });
+      if (res && res.success) {
+        await fetchData();
+        return { success: true, message: res.message };
+      }
+      return { success: false, error: res?.error || 'Erro ao solicitar acesso.' };
+    } catch (e) {
+      if (e.message && e.message.includes('NUIT não encontrado')) {
+        return { success: false, error: e.message };
+      }
+      // Fallback offline / local
+      const current = getFallbackUsers();
+      const existingIdx = current.findIndex(u => 
+        (u.nuit && String(u.nuit).trim().toLowerCase() === cleanNuit) ||
+        (u.username && String(u.username).trim().toLowerCase() === cleanNuit)
+      );
+
+      if (existingIdx === -1) {
+        return {
+          success: false,
+          error: 'NUIT não encontrado. O seu perfil de utilizador deve ser previamente cadastrado pelo Administrador no sistema.'
+        };
+      }
+
+      const existingUser = current[existingIdx];
+      // Atualizar palavra-passe e estado, preservando RIGOROSAMENTE o perfil atribuído
+      const updatedUser = {
+        ...existingUser,
+        password: password,
+        status: 'Ativo'
+      };
+      current[existingIdx] = updatedUser;
+      saveFallbackUsers(current);
+      notifyAll(current, getFallbackRoles());
+
+      return {
+        success: true,
+        message: `Acesso ativado com sucesso para ${existingUser.name || 'o perfil'}! Inicie sessão com o seu NUIT.`
+      };
+    }
+  }, []);
+
   // ─── Perfis (Roles) ─────────────────────────────────────────────────────
   const addRole = useCallback(async (roleData) => {
     try {
@@ -214,6 +264,7 @@ export default function useAuthData() {
     updateUser,
     deleteUser,
     authenticate,
+    requestAccess,
     addRole,
     updateRole,
     deleteRole

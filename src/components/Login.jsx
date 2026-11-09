@@ -61,7 +61,7 @@ const TEMAS = [
 ];
 
 export default function Login({ settings, onLogin, updateSettings, t, language, setLanguage }) {
-  const { authenticate, addUser } = useAuthData();
+  const { authenticate, requestAccess } = useAuthData();
   const { policies } = useSecuritySettings();
   const { logAction } = useAuditLog();
 
@@ -69,6 +69,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const [password, setPassword]       = useState('');
   const [regName, setRegName]         = useState('');
   const [regEmail, setRegEmail]       = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError]             = useState('');
   const [successMsg, setSuccessMsg]   = useState('');
@@ -200,6 +201,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const clearCredentials = () => {
     setUsername('');
     setPassword('');
+    setConfirmPassword('');
     setRegName('');
     setRegEmail('');
     setShowPassword(false);
@@ -257,8 +259,21 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim() || !regName.trim() || !regEmail.trim()) {
-      setError(t('msg_fill_register'));
+    const cleanNuit = username.trim();
+    if (!cleanNuit) {
+      setError(t('msg_fill_register') || 'Introduza o NUIT do perfil.');
+      return;
+    }
+    if (!password.trim()) {
+      setError('Por favor, defina a palavra-passe.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('A palavra-passe deve conter pelo menos 6 caracteres.');
+      return;
+    }
+    if (confirmPassword && password !== confirmPassword) {
+      setError('As palavras-passes não coincidem.');
       return;
     }
     setError('');
@@ -266,19 +281,20 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     setIsLoading(true);
     
     try {
-      const res = await addUser({ username, password, roleId: 'director', email: regEmail, name: regName, status: 'Ativo' });
+      const res = await requestAccess(cleanNuit, password);
       setIsLoading(false);
       if (res && !res.success) {
-        setError(res.error || t('msg_user_exists'));
+        setError(res.error || t('msg_nuit_not_found') || 'NUIT não encontrado. O seu perfil de utilizador deve ser previamente cadastrado pelo Administrador no sistema.');
         return;
       }
-      logAction('Registo', 'Utilizadores', `Novo utilizador registado na página de login: ${username}`);
-      setSuccessMsg(t('msg_register_success'));
-      clearCredentials();
+      logAction('Ativação de Acesso', 'Utilizadores', `Acesso ativado para o NUIT: ${cleanNuit}`).catch(() => {});
+      setSuccessMsg(res.message || t('msg_register_success') || 'Acesso ativado com sucesso! Inicie sessão com o seu NUIT.');
+      setPassword('');
+      setConfirmPassword('');
       setView('login');
     } catch (err) {
       setIsLoading(false);
-      setError(t('msg_user_exists'));
+      setError(err.message || 'Erro ao processar a solicitação de acesso.');
     }
   };
 
@@ -699,7 +715,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                   autoCorrect="off" 
                   autoCapitalize="off" 
                   spellCheck="false"
-                  placeholder={t('login_username_placeholder') || 'Nome de Utilizador / NUIT'} 
+                  placeholder={t('login_username_placeholder') || 'NUIT'} 
                   value={username} 
                   onChange={e => setUsername(e.target.value)} 
                   style={s.field} 
@@ -765,31 +781,83 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
 
         {view === 'register' && (
           <>
-            <h2 style={s.cardTitle}>{t('register_title')}</h2>
+            <h2 style={s.cardTitle}>{t('register_title') || 'Solicitar Acesso'}</h2>
+            <p style={{
+              fontSize: '12px',
+              color: '#475569',
+              textAlign: 'center',
+              margin: '0 0 14px',
+              lineHeight: '1.4'
+            }}>
+              Introduza o NUIT previamente registado pelo Administrador para activar o seu acesso.
+            </p>
             <form onSubmit={handleRegister} style={s.form} autoComplete="off">
               <input type="text" name="fake_user_prevent2" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
               <input type="password" name="fake_pass_prevent2" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
 
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                <input type="text" name="regName" autoComplete="off" placeholder={t('register_name_placeholder')} value={regName} onChange={e => setRegName(e.target.value)} style={s.field} />
+                <input 
+                  type="text" 
+                  name="username" 
+                  autoComplete="off" 
+                  placeholder={t('register_nuit_placeholder') || 'NUIT do Perfil Cadastrado'} 
+                  value={username} 
+                  onChange={e => setUsername(e.target.value)} 
+                  style={s.field} 
+                  required
+                />
               </div>
+
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-                <input type="text" name="username" autoComplete="off" placeholder={t('login_username_placeholder')} value={username} onChange={e => setUsername(e.target.value)} style={s.field} />
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  name="password" 
+                  autoComplete="new-password" 
+                  placeholder={t('register_password_placeholder') || 'Definir Palavra-passe'} 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  style={s.field} 
+                  required
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={s.eyeBtn} tabIndex={-1}>
+                  {showPassword ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C0392B" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                </button>
               </div>
-              <div style={s.fieldWrap}>
-                <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
-                <input type="email" name="email" autoComplete="off" placeholder={t('register_email_placeholder')} value={regEmail} onChange={e => setRegEmail(e.target.value)} style={s.field} />
-              </div>
+
               <div style={s.fieldWrap}>
                 <span style={s.fieldIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-                <input type="password" name="password" autoComplete="new-password" placeholder={t('register_password_placeholder')} value={password} onChange={e => setPassword(e.target.value)} style={s.field} />
+                <input 
+                  type={showPassword ? 'text' : 'password'} 
+                  name="confirmPassword" 
+                  autoComplete="new-password" 
+                  placeholder={t('register_confirm_password_placeholder') || 'Confirmar Palavra-passe'} 
+                  value={confirmPassword} 
+                  onChange={e => setConfirmPassword(e.target.value)} 
+                  style={s.field} 
+                  required
+                />
               </div>
-              <button type="submit" style={{...s.btnPrimary, opacity: isLoading ? 0.7 : 1}} disabled={isLoading}>
-                {isLoading ? t('register_submit_loading') : t('register_submit')}
+
+              <button 
+                type="submit" 
+                style={{
+                  ...s.btnPrimary, 
+                  backgroundColor: isLoading ? '#CE6767' : '#BA1B1D',
+                  marginTop: '6px'
+                }} 
+                disabled={isLoading}
+              >
+                {isLoading ? (t('register_submit_loading') || 'A VALIDAR PERFIL...') : (t('register_submit') || 'ACTIVAR ACESSO')}
               </button>
-              <button type="button" onClick={() => { clearCredentials(); setView('login'); }} style={s.btnSecondary}>{t('register_back')}</button>
+              <button 
+                type="button" 
+                onClick={() => { clearCredentials(); setView('login'); }} 
+                style={s.btnSecondary}
+              >
+                {t('register_back') || 'VOLTAR AO LOGIN'}
+              </button>
             </form>
           </>
         )}
