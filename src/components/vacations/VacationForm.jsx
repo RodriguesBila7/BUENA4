@@ -261,7 +261,7 @@ const styles = {
   btnBack: { padding: '8px 16px', backgroundColor: 'transparent', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)', borderRadius: '4px', cursor: 'pointer', fontWeight: '600' },
   title: { fontSize: '20px', fontWeight: '700', color: 'var(--color-text-base)', margin: 0 },
   content: { display: 'flex', flexDirection: 'column', gap: '20px' },
-  errorBanner: { padding: '12px 16px', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: '4px', border: '1px solid #F87171', fontWeight: '500', fontSize: '14px' },
+  errorBanner: { padding: '12px 16px', backgroundColor: 'rgba(239, 68, 68, 0.12)', color: 'var(--color-danger, #ef4444)', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.3)', fontWeight: '500', fontSize: '14px' },
   twoCol: { display: 'flex', gap: '24px', flexWrap: 'wrap' },
   card: { flex: 1, minWidth: '300px', backgroundColor: 'var(--color-bg-elevated)', borderRadius: '8px', padding: '24px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '16px' },
   cardTitle: { fontSize: '16px', fontWeight: '600', color: 'var(--color-text-base)', margin: '0 0 8px 0', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' },

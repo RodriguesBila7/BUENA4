@@ -566,7 +566,7 @@ const styles = {
   
   btnActionIcon: { background: 'none', border: '1px solid var(--color-border)', borderRadius: '6px', cursor: 'pointer', padding: '6px 10px', fontSize: '13px' },
   btnDeleteIcon: { background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', cursor: 'pointer', padding: '6px 10px', fontSize: '13px' },
-  btnApprove: { padding: '6px 12px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' },
+  btnApprove: { padding: '6px 12px', backgroundColor: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700' },
 
   detailBox: { backgroundColor: 'var(--color-bg-base)', padding: '12px', borderRadius: '6px', border: '1px solid var(--color-border)' },
   detailLabel: { fontSize: '10px', fontWeight: '700', color: 'var(--color-text-muted)', marginBottom: '4px', textTransform: 'uppercase' },

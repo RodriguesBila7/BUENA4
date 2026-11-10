@@ -436,10 +436,22 @@ export default function CareerHistoryTab({ acts = [], employees = [], orgData, u
             const stateLabel = a.details?.superAdminConfirmed ? 'Confirmado' : (a.details?.adminConfirmed ? 'Aguardando S.A.' : 'Pendente');
 
             return (
-              <tr key={a.id} style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: isPending ? '#fffbeb' : 'transparent' }}>
+              <tr key={a.id} style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: isPending ? 'rgba(245, 158, 11, 0.08)' : 'transparent' }}>
                 <td>{dateStr}</td>
                 <td>
-                  <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', backgroundColor: actType.includes('Mudança') ? '#f3e8ff' : (actType === 'Promoção' ? '#d1fae5' : '#dbeafe'), color: actType.includes('Mudança') ? '#7e22ce' : (actType === 'Promoção' ? '#065f46' : '#1e40af') }}>
+                  <span style={{ 
+                    padding: '4px 8px', 
+                    borderRadius: '4px', 
+                    fontSize: '12px', 
+                    fontWeight: '600',
+                    backgroundColor: actType.includes('Mudança') 
+                      ? 'rgba(168, 85, 247, 0.15)' 
+                      : (actType === 'Promoção' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)'), 
+                    color: actType.includes('Mudança') 
+                      ? '#c084fc' 
+                      : (actType === 'Promoção' ? 'var(--color-success, #10b981)' : 'var(--color-info, #3b82f6)'),
+                    border: `1px solid ${actType.includes('Mudança') ? 'rgba(168, 85, 247, 0.3)' : (actType === 'Promoção' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(59, 130, 246, 0.3)')}`
+                  }}>
                     {actType}
                   </span>
                 </td>
@@ -447,7 +459,15 @@ export default function CareerHistoryTab({ acts = [], employees = [], orgData, u
                 <td>{detailsStr}</td>
                 <td>{a.despacho || '-'}</td>
                 <td>
-                  <span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '12px', backgroundColor: isPending ? '#f59e0b' : '#10b981', color: '#fff' }}>
+                  <span style={{ 
+                    padding: '4px 10px', 
+                    borderRadius: '12px', 
+                    fontSize: '12px', 
+                    fontWeight: '600',
+                    backgroundColor: isPending ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
+                    color: isPending ? 'var(--color-warning, #f59e0b)' : 'var(--color-success, #10b981)',
+                    border: `1px solid ${isPending ? 'rgba(245, 158, 11, 0.35)' : 'rgba(16, 185, 129, 0.35)'}`
+                  }}>
                     {stateLabel}
                   </span>
                 </td>
@@ -458,10 +478,10 @@ export default function CareerHistoryTab({ acts = [], employees = [], orgData, u
                     isPending ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: 'bold' }}>Falta Anexo</span>
-                        <input type="file" accept=".pdf,image/*" style={{ fontSize: '10px', width: '130px' }} onChange={(e) => handleAttach(a, e)} />
+                        <input type="file" accept=".pdf,image/*" style={{ fontSize: '11px', width: '130px', color: 'var(--color-text-base)' }} onChange={(e) => handleAttach(a, e)} />
                       </div>
                     ) : (
-                      <span style={{ color: '#9ca3af', fontSize: '12px' }}>Sem anexo</span>
+                      <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>Sem anexo</span>
                     )
                   )}
                 </td>
@@ -626,12 +646,12 @@ const styles = {
     borderRadius: '6px',
     border: '1px solid var(--color-border)'
   },
-  table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px', backgroundColor: 'var(--color-bg-base)' },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px', backgroundColor: 'transparent' },
   th: { padding: '12px', textAlign: 'left', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)' },
-  td: { padding: '12px', borderBottom: '1px solid var(--color-border)' },
+  td: { padding: '12px', borderBottom: '1px solid var(--color-border)', color: 'var(--color-text-base)' },
   linkBtn: { padding: '4px 8px', backgroundColor: 'transparent', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' },
-  confirmActionBtn: { padding: '6px 12px', backgroundColor: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' },
-  deleteActionBtn: { padding: '6px 12px', backgroundColor: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' },
+  confirmActionBtn: { padding: '6px 14px', backgroundColor: 'var(--color-primary)', color: '#ffffff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '700', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' },
+  deleteActionBtn: { padding: '6px 12px', backgroundColor: 'rgba(239, 68, 68, 0.12)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
   pagination: { display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '15px', marginTop: '20px', padding: '10px' },
-  pageBtn: { padding: '6px 12px', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '4px', cursor: 'pointer' }
+  pageBtn: { padding: '6px 12px', backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', color: 'var(--color-text-base)', borderRadius: '4px', cursor: 'pointer' }
 };

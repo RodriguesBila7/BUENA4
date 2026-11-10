@@ -171,7 +171,7 @@ export default function MudancaCarreiraWizard({ employee, onClose, onComplete })
       )}
 
       {targetCategory && (
-        <div style={{...styles.infoBox, backgroundColor: '#ebf4ff', border: '1px solid #c3dafe'}}>
+        <div style={{...styles.infoBox, backgroundColor: 'rgba(59, 130, 246, 0.12)', border: '1px solid rgba(59, 130, 246, 0.3)', color: 'var(--color-text-base)'}}>
           <strong>Mapeamento Automático:</strong><br/>
           Nova Carreira: <span style={{ color: targetCareer?.notFound ? '#805ad5' : 'inherit', fontWeight: targetCareer?.notFound ? 'bold' : 'normal'}}>{targetCareer?.name} {targetCareer?.notFound && '(Será Auto-Criada)'}</span><br/>
           Nova Categoria: <span style={{ color: targetCategory?.notFound ? '#805ad5' : 'inherit', fontWeight: targetCategory?.notFound ? 'bold' : 'normal'}}>{targetCategory?.name} {targetCategory?.notFound && '(Será Auto-Criada)'}</span><br/>

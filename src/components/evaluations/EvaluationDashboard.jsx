@@ -166,7 +166,7 @@ export default function EvaluationDashboard({ user }) {
 const styles = {
   container: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '25px' },
   loadingContainer: { padding: '50px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '15px' },
-  errorBanner: { padding: '16px 20px', margin: '20px', backgroundColor: '#fee2e2', borderRadius: '8px', border: '1px solid #fca5a5', display: 'flex', alignItems: 'center', gap: '12px' },
+  errorBanner: { padding: '16px 20px', margin: '20px', backgroundColor: 'rgba(239, 68, 68, 0.12)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)', color: 'var(--color-danger, #ef4444)', display: 'flex', alignItems: 'center', gap: '12px' },
   gridCards: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' },
   card: { backgroundColor: 'var(--color-bg-card)', padding: '20px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '10px' },
   cardTitle: { fontSize: '13px', color: 'var(--color-text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' },

@@ -200,6 +200,6 @@ const styles = {
   td: { padding: '12px 16px', color: 'var(--color-text-base)', fontSize: '14px' },
   empty: { padding: '30px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '14px' },
   badge: { padding: '4px 8px', borderRadius: '12px', color: '#fff', fontSize: '12px', fontWeight: '600' },
-  btnApprove: { padding: '4px 8px', backgroundColor: '#10B981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' },
-  btnReject: { padding: '4px 8px', backgroundColor: '#EF4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }
+  btnApprove: { padding: '5px 10px', backgroundColor: 'rgba(16, 185, 129, 0.15)', color: 'var(--color-success, #10b981)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' },
+  btnReject: { padding: '5px 10px', backgroundColor: 'rgba(239, 68, 68, 0.15)', color: 'var(--color-danger, #ef4444)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '600' }
 };

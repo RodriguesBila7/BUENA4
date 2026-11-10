@@ -280,7 +280,7 @@ export default function UserManager() {
                       </button>
                       {isCentralUser(currentUser) && u.delegatedRoleId && u.delegationStatus === 'Pendente' && (
                         <>
-                          <button style={{ ...styles.btnAction, backgroundColor: '#047857', color: '#fff', fontWeight: 'bold', borderColor: '#047857' }} onClick={() => handleConfirmDelegation(u.id, u.name)}>Confirmar
+                          <button style={{ ...styles.btnAction, backgroundColor: 'var(--color-primary)', color: '#fff', fontWeight: 'bold', borderColor: 'var(--color-primary)' }} onClick={() => handleConfirmDelegation(u.id, u.name)}>Confirmar
                           </button>
                           <button style={{ ...styles.btnAction, color: '#b91c1c', borderColor: '#b91c1c' }} onClick={() => handleRejectDelegation(u.id, u.name)}>Recusar
                           </button>

@@ -466,7 +466,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                           {isPrimary && (!act.despacho || act.status === 'Pendente de Despacho') && (
                             <button
                               onClick={() => setDespachoAct(act)}
-                              style={{ ...styles.actionBtnIcon, backgroundColor: '#EFF6FF', color: '#1D4ED8' }}
+                              style={{ ...styles.actionBtnIcon, backgroundColor: 'rgba(59, 130, 246, 0.12)', color: 'var(--color-info, #3b82f6)', border: '1px solid rgba(59, 130, 246, 0.3)' }}
                               title="Inserir Despacho DRH"
                             >Despacho</button>
                           )}
@@ -475,7 +475,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                           {isPrimary && act.status === 'Pendente de Aprovação' && (
                             <button
                               onClick={() => setApprovalModalData({ isOpen: true, act, mode: 'approve' })}
-                              style={{ ...styles.actionBtnIcon, backgroundColor: '#ECFDF5', color: '#059669' }}
+                              style={{ ...styles.actionBtnIcon, backgroundColor: 'rgba(16, 185, 129, 0.12)', color: 'var(--color-success, #10b981)', border: '1px solid rgba(16, 185, 129, 0.3)' }}
                               title="Registar Aprovação"
                             >Aprovar</button>
                           )}
@@ -484,7 +484,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
                           {isPrimary && act.status === 'Pendente de Aprovação' && (
                             <button
                               onClick={() => setApprovalModalData({ isOpen: true, act, mode: 'reject' })}
-                              style={{ ...styles.actionBtnIcon, backgroundColor: '#FEF2F2', color: '#DC2626' }}
+                              style={{ ...styles.actionBtnIcon, backgroundColor: 'rgba(239, 68, 68, 0.12)', color: 'var(--color-danger, #ef4444)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
                               title="Rejeitar Processo"
                             >Rejeitar</button>
                           )}
@@ -576,7 +576,7 @@ export default function ProvimentoCessacaoManager({ actsInGroup }) {
 const styles = {
   container: {
     padding: '24px',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'transparent',
     minHeight: '100%',
     display: 'flex',
     flexDirection: 'column',

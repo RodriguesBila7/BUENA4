@@ -594,7 +594,7 @@ const styles = {
   },
   progBtn: {
     padding: '4px 10px',
-    backgroundColor: '#2563eb',
+    backgroundColor: 'var(--color-primary)',
     color: '#ffffff',
     border: 'none',
     borderRadius: '4px',

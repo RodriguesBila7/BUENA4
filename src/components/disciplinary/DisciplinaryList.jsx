@@ -582,7 +582,7 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
                             (NIP: {emp.employeeNip}) • {emp.directorate}
                           </span>
                           {emp.employeeStatus && ['Expulso', 'Demitido'].includes(emp.employeeStatus) && (
-                            <span style={{ padding: '2px 8px', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>{emp.employeeStatus}
+                            <span style={{ padding: '2px 8px', backgroundColor: 'rgba(239, 68, 68, 0.15)', color: 'var(--color-danger, #ef4444)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '10px', fontSize: '11px', fontWeight: 'bold' }}>{emp.employeeStatus}
                             </span>
                           )}
                         </div>
@@ -1246,8 +1246,8 @@ export default function DisciplinaryList({ orgData, employeesData, user, onNavig
 
 const styles = {
   toolbar: { display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' },
-  btnAddProcess: { padding: '10px 18px', backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)', transition: 'all 0.2s ease' },
-  btnQuickAdd: { padding: '4px 10px', backgroundColor: 'transparent', border: '1px solid #dc2626', color: '#dc2626', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' },
+  btnAddProcess: { padding: '10px 18px', backgroundColor: 'var(--color-primary)', color: '#ffffff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)', transition: 'all 0.2s ease' },
+  btnQuickAdd: { padding: '4px 10px', backgroundColor: 'transparent', border: '1px solid var(--color-primary)', color: 'var(--color-primary)', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' },
   searchInput: { flex: 1, minWidth: '240px', padding: '9px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px' },
   select: { padding: '9px 14px', borderRadius: '6px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-main)', fontSize: '13px' },
   btnExport: { padding: '9px 16px', backgroundColor: '#10b981', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' },
@@ -1260,7 +1260,7 @@ const styles = {
   btnActionDelete: { padding: '5px 8px', borderRadius: '4px', border: '1px solid #ef4444', backgroundColor: 'transparent', color: '#ef4444', cursor: 'pointer', fontSize: '11.5px' },
   btnActionDespachoPending: { padding: '5px 12px', borderRadius: '6px', border: '1px solid #d97706', backgroundColor: 'rgba(217, 119, 6, 0.1)', color: '#b45309', cursor: 'pointer', fontSize: '11.5px', fontWeight: '700' },
   btnActionDespachoDone: { padding: '5px 12px', borderRadius: '6px', border: '1px solid #059669', backgroundColor: 'rgba(5, 150, 105, 0.08)', color: '#059669', cursor: 'pointer', fontSize: '11.5px', fontWeight: '700' },
-  btnExecuteSanction: { padding: '3px 8px', borderRadius: '6px', border: 'none', backgroundColor: '#dc2626', color: '#fff', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' },
+  btnExecuteSanction: { padding: '3px 8px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--color-primary)', color: '#fff', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' },
   grid2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
   grid3: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' },
   formGroup: { display: 'flex', flexDirection: 'column', gap: '5px' },

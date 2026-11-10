@@ -270,28 +270,28 @@ export default function EmployeeDetailsModal({ emp, orgData, onClose, onRefresh,
             <div style={{...styles.card, gridColumn: '1 / -1'}}>
               <h4 style={styles.cardTitle}>Mudança de Carreira (Avaliação Automática)</h4>
               {careerChangeEval.isEligible ? (
-                <div style={{ backgroundColor: '#ecfdf5', padding: '15px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-                  <div style={{ color: '#065f46', fontWeight: 'bold', marginBottom: '8px', fontSize: '15px' }}>Funcionário Elegível para Mudança de Carreira.
+                <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.12)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                  <div style={{ color: 'var(--color-success, #10b981)', fontWeight: 'bold', marginBottom: '8px', fontSize: '15px' }}>Funcionário Elegível para Mudança de Carreira.
                   </div>
-                  <p style={{ color: '#047857', fontSize: '14px', marginBottom: '15px' }}>
+                  <p style={{ color: 'var(--color-text-base)', fontSize: '14px', marginBottom: '15px' }}>
                     Todos os requisitos legais e institucionais foram verificados. O processo encontra-se disponível para submissão e aprovação pelo Departamento de Recursos Humanos.
                   </p>
                   <button 
                     onClick={() => {
                       setWizardConfig({ isOpen: true, allowedActTypes: ['Mudança de Carreira'] });
                     }}
-                    style={{ backgroundColor: '#10b981', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+                    style={{ backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
                   >Iniciar Processo de Mudança de Carreira
                   </button>
                 </div>
               ) : (
-                <div style={{ backgroundColor: '#fef2f2', padding: '15px', borderRadius: '8px', border: '1px solid #fecaca' }}>
-                  <div style={{ color: '#991b1b', fontWeight: 'bold', marginBottom: '8px', fontSize: '15px' }}>Funcionário Não Elegível para Mudança de Carreira.
+                <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.12)', padding: '15px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                  <div style={{ color: 'var(--color-danger, #ef4444)', fontWeight: 'bold', marginBottom: '8px', fontSize: '15px' }}>Funcionário Não Elegível para Mudança de Carreira.
                   </div>
-                  <p style={{ color: '#b91c1c', fontSize: '14px', marginBottom: '10px' }}>
+                  <p style={{ color: 'var(--color-text-base)', fontSize: '14px', marginBottom: '10px' }}>
                     Verifique os requisitos pendentes (categoria profissional, formação superior ou tempo mínimo de 4 anos de serviço).
                   </p>
-                  <ul style={{ color: '#7f1d1d', fontSize: '13px', margin: 0, paddingLeft: '20px' }}>
+                  <ul style={{ color: 'var(--color-text-muted)', fontSize: '13px', margin: 0, paddingLeft: '20px' }}>
                     {careerChangeEval.reasons.map((r, i) => <li key={i} style={{ marginBottom: '4px' }}>{r}</li>)}
                   </ul>
                 </div>

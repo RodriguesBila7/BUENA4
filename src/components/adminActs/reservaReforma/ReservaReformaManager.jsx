@@ -373,6 +373,6 @@ const styles = {
   btnExport: { backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-base)', border: '1px solid var(--color-border)', padding: '10px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
   tableContainer: { overflowX: 'auto', borderRadius: '12px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)' },
   empty: { padding: '30px', textAlign: 'center', color: 'var(--color-text-muted)' },
-  alertText: { fontSize: '11px', color: '#DC2626', fontWeight: '700', backgroundColor: '#FEE2E2', padding: '2px 6px', borderRadius: '4px' },
+  alertText: { fontSize: '11px', color: 'var(--color-danger, #ef4444)', fontWeight: '700', backgroundColor: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '2px 6px', borderRadius: '4px' },
   btnTransfer: { marginTop: '8px', padding: '6px 12px', backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-base)', border: '1px solid var(--color-border)', borderRadius: '6px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' }
 };

@@ -119,7 +119,7 @@ export default function ObitosWorkflowModal({ workflow, employee, onClose, onCom
                     isDestructive: true
                   });
                 }}
-                style={{ ...styles.btnAction, backgroundColor: '#e53e3e', color: 'white', border: 'none' }}
+                style={{ ...styles.btnAction, backgroundColor: 'var(--color-primary)', color: 'white', border: 'none' }}
                 title="Reativar o funcionário, voltando ao estado Ativo"
               >
                 Reativar Funcionário

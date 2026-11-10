@@ -105,30 +105,38 @@
   color: #F8FAFC;
 }
 
-/* Tabelas no Modo Escuro */
+/* Tabelas no Modo Escuro (Globais e Classes Específicas) */
+[data-theme="dark"] table {
+  background-color: transparent !important;
+  color: var(--color-text-base) !important;
+}
+
+[data-theme="dark"] thead th,
+[data-theme="dark"] th,
+[data-theme="dark"] .premium-table th {
+  background-color: #29374E !important;
+  color: #CBD5E1 !important;
+  border-bottom: 2px solid #3A4A66 !important;
+}
+
+[data-theme="dark"] td,
+[data-theme="dark"] .premium-table td {
+  color: #F8FAFC !important;
+  border-bottom-color: #2C384D !important;
+}
+
+[data-theme="dark"] tbody tr:hover,
+[data-theme="dark"] .premium-table tbody tr:hover,
+[data-theme="dark"] tr:hover td {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
 [data-theme="dark"] .premium-table {
   background-color: #202B3C;
   border-color: #3A4A66;
 }
 
-[data-theme="dark"] .premium-table thead,
-[data-theme="dark"] .premium-table th {
-  background-color: #29374E !important;
-  color: #CBD5E1 !important;
-  border-bottom-color: #3A4A66 !important;
-}
-
-[data-theme="dark"] .premium-table td {
-  color: #F8FAFC;
-  border-bottom-color: #2C384D;
-}
-
-[data-theme="dark"] .premium-table tbody tr:hover,
-[data-theme="dark"] tr:hover td {
-  background-color: #2D3D56 !important;
-}
-
-/* Sincronização e Normalização Global de Cores no Modo Escuro */
+/* Intercepção e Harmonização Global de Fundos Claros / Pastéis no Modo Escuro */
 [data-theme="dark"] .card-white,
 [data-theme="dark"] [style*="background-color: #fff"],
 [data-theme="dark"] [style*="background-color: #ffffff"],
@@ -156,6 +164,81 @@
   background-color: var(--color-bg-base) !important;
   color: var(--color-text-base) !important;
   border-color: var(--color-border) !important;
+}
+
+/* Proteção contra Linhas/Alertas Amarelos, Bege ou Alaranjados no Modo Escuro */
+[data-theme="dark"] [style*="#fffbeb"],
+[data-theme="dark"] [style*="#FFFBEB"],
+[data-theme="dark"] [style*="255, 251, 235"],
+[data-theme="dark"] [style*="#fef3c7"],
+[data-theme="dark"] [style*="#FEF3C7"],
+[data-theme="dark"] [style*="#fff3e0"],
+[data-theme="dark"] [style*="#FFF3E0"],
+[data-theme="dark"] [style*="#fde68a"],
+[data-theme="dark"] [style*="#FDE68A"] {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  color: #F8FAFC !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Proteção contra Linhas/Alertas Vermelhos Claros no Modo Escuro */
+[data-theme="dark"] [style*="#fee2e2"],
+[data-theme="dark"] [style*="#FEE2E2"],
+[data-theme="dark"] [style*="#fef2f2"],
+[data-theme="dark"] [style*="#FEF2F2"],
+[data-theme="dark"] [style*="#fecaca"],
+[data-theme="dark"] [style*="#FECACA"],
+[data-theme="dark"] [style*="#fca5a5"] {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  color: #F8FAFC !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+/* Proteção contra Linhas/Alertas Verdes Claros no Modo Escuro */
+[data-theme="dark"] [style*="#ecfdf5"],
+[data-theme="dark"] [style*="#ECFDF5"],
+[data-theme="dark"] [style*="#f0fdf4"],
+[data-theme="dark"] [style*="#F0FDF4"],
+[data-theme="dark"] [style*="#d1fae5"],
+[data-theme="dark"] [style*="#D1FAE5"] {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  color: #F8FAFC !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Proteção contra Linhas/Alertas Azuis Claros no Modo Escuro */
+[data-theme="dark"] [style*="#eff6ff"],
+[data-theme="dark"] [style*="#EFF6FF"],
+[data-theme="dark"] [style*="#ebf4ff"],
+[data-theme="dark"] [style*="#dbeafe"],
+[data-theme="dark"] [style*="#DBEAFE"] {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  color: #F8FAFC !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Proteção contra Linhas/Alertas Roxos Claros no Modo Escuro */
+[data-theme="dark"] [style*="#f3e8ff"],
+[data-theme="dark"] [style*="#F3E8FF"] {
+  background-color: rgba(168, 85, 247, 0.12) !important;
+  color: #F8FAFC !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+
+/* Botão de Upload Nativo de Ficheiros no Modo Escuro */
+[data-theme="dark"] input[type="file"]::file-selector-button {
+  background-color: var(--color-bg-card);
+  color: var(--color-text-base);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+[data-theme="dark"] input[type="file"]::file-selector-button:hover {
+  background-color: var(--color-bg-subtle);
+  border-color: var(--color-border-hover);
 }
 
 [data-theme="dark"] [style*="color: #000"],

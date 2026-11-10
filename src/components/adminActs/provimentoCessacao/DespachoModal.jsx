@@ -176,7 +176,7 @@ const styles = {
     boxSizing: 'border-box'
   },
   modal: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'var(--color-bg-card, #FFFFFF)',
     borderRadius: '14px',
     display: 'flex',
     flexDirection: 'column',
@@ -186,11 +186,11 @@ const styles = {
   },
   header: {
     padding: '16px 22px',
-    borderBottom: '1px solid #E5E7EB',
+    borderBottom: '1px solid var(--color-border, #E5E7EB)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'var(--color-bg-base, #F8FAFC)',
     cursor: 'move',
     userSelect: 'none',
     flexShrink: 0

@@ -313,7 +313,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
 
       if (!isEligibleForMudanca) {
         return (
-          <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '12px', borderRadius: '6px', marginBottom: '15px', fontSize: '13px', border: '1px solid #fecaca' }}>
+          <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.12)', color: 'var(--color-danger, #ef4444)', padding: '12px', borderRadius: '6px', marginBottom: '15px', fontSize: '13px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
             <strong>Bloqueado:</strong> O funcionário não é elegível para Mudança de Carreira. A sua categoria atual (<strong>{categoryName}</strong>) já corresponde a um nível superior ou não faz parte das categorias de base permitidas.
           </div>
         );
@@ -322,7 +322,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
       return (
         <>
           {!hasValidLevel ? (
-            <div style={{ backgroundColor: '#fffbeb', color: '#b45309', padding: '12px', borderRadius: '6px', marginBottom: '15px', fontSize: '13px', border: '1px solid #fde68a' }}>
+            <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.12)', color: 'var(--color-warning, #f59e0b)', padding: '12px', borderRadius: '6px', marginBottom: '15px', fontSize: '13px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
               <strong>Aviso:</strong> O funcionário não possui o Nível Superior averbado. Preencha o <strong>Nº do Despacho</strong> e anexe o <strong>Certificado</strong> abaixo para torná-lo elegível para a Mudança de Carreira. Depois, será redirecionado para a aba "Funcionários Elegíveis".
             </div>
           ) : (
@@ -370,7 +370,7 @@ export default function AdminActWizard({ emp, orgData, onClose, onActRegistered,
           <div style={styles.formGroup}>
             <label style={styles.label}>Novo Escalão</label>
             <input 
-              style={{...styles.input, backgroundColor: '#f3f4f6', color: '#6b7280', cursor: 'not-allowed'}} 
+              style={{...styles.input, backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-muted)', cursor: 'not-allowed'}} 
               type="text" 
               value={formData.details.newEscalao || ''}
               readOnly

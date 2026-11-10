@@ -1138,7 +1138,7 @@ export default function EvaluationList({ user }) {
 const styles = {
   container: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' },
   loadingContainer: { padding: '50px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '15px' },
-  errorBanner: { padding: '12px 16px', backgroundColor: '#fee2e2', borderRadius: '8px', border: '1px solid #fca5a5', color: '#b91c1c', fontSize: '13px' },
+  errorBanner: { padding: '12px 16px', backgroundColor: 'rgba(239, 68, 68, 0.12)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)', color: 'var(--color-danger, #ef4444)', fontSize: '13px' },
   
   // Card de Filtros
   filterCard: {

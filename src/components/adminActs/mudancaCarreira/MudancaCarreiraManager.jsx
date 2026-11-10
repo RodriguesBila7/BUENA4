@@ -217,7 +217,7 @@ export default function MudancaCarreiraManager({ actsInGroup }) {
               </div>
               <button 
                 onClick={() => setSearchModalOpen(true)}
-                style={{ backgroundColor: '#e53e3e', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                style={{ backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.1)' }}
               >
                 + Nova Solicitação
               </button>

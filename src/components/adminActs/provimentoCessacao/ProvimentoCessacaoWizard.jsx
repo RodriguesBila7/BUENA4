@@ -338,7 +338,7 @@ export default function ProvimentoCessacaoWizard({
                       type="text"
                       value={selectedEmployee?.extra_data?.role || selectedEmployee?.role || 'Cargo de Direcção / Chefia'}
                       disabled
-                      style={{ ...styles.input, backgroundColor: '#F1F5F9', color: '#64748B' }}
+                      style={{ ...styles.input, backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-muted)' }}
                     />
                   </div>
                   <div style={styles.fieldGroup}>
@@ -374,7 +374,7 @@ export default function ProvimentoCessacaoWizard({
                       type="text"
                       value={selectedEmployee?.status || 'Inativo / Suspenso / Demitido'}
                       disabled
-                      style={{ ...styles.input, backgroundColor: '#F1F5F9', color: '#64748B' }}
+                      style={{ ...styles.input, backgroundColor: 'var(--color-bg-subtle)', color: 'var(--color-text-muted)' }}
                     />
                   </div>
                   <div style={styles.fieldGroup}>
@@ -566,19 +566,19 @@ const styles = {
     display: 'flex',
     gap: '10px',
     padding: '10px 14px',
-    backgroundColor: '#EFF6FF',
-    border: '1px solid #BFDBFE',
+    backgroundColor: 'rgba(59, 130, 246, 0.12)',
+    border: '1px solid rgba(59, 130, 246, 0.3)',
     borderRadius: '8px',
-    color: '#1E40AF',
+    color: 'var(--color-info, #60a5fa)',
   },
   secondaryNotice: {
     display: 'flex',
     gap: '10px',
     padding: '10px 14px',
-    backgroundColor: '#FFFBEB',
-    border: '1px solid #FDE68A',
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    border: '1px solid rgba(245, 158, 11, 0.3)',
     borderRadius: '8px',
-    color: '#B45309',
+    color: 'var(--color-warning, #f59e0b)',
   },
   fieldGroup: {
     display: 'flex',

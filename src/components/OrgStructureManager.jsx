@@ -1040,7 +1040,7 @@ const styles = {
   header: { marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   title: { fontSize: '24px', fontWeight: '700', color: 'var(--color-primary)', marginBottom: '8px' },
   desc: { color: 'var(--color-text-muted)', fontSize: '15px' },
-  bootstrapBtn: { backgroundColor: '#3182ce', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 4px rgba(49, 130, 206, 0.3)' },
+  bootstrapBtn: { backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', padding: '10px 16px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)' },
   tabsContainer: { display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: '1px solid var(--color-border)', flexWrap: 'wrap' },
   tab: { padding: '12px 20px', background: 'transparent', border: 'none', color: 'var(--color-text-muted)', fontSize: '14px', fontWeight: '600', cursor: 'pointer', borderBottom: '3px solid transparent', transition: 'all 0.2s' },
   activeTab: { padding: '12px 20px', background: 'transparent', border: 'none', color: 'var(--color-primary)', fontSize: '14px', fontWeight: '600', cursor: 'pointer', borderBottom: '3px solid var(--color-primary)', transition: 'all 0.2s' },

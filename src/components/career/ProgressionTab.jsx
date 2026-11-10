@@ -473,7 +473,7 @@ const styles = {
   },
   actionBtn: {
     padding: '4px 12px',
-    backgroundColor: '#2563eb',
+    backgroundColor: 'var(--color-primary)',
     color: '#fff',
     border: 'none',
     borderRadius: '4px',

@@ -170,7 +170,7 @@ const styles = {
   label: { fontSize: '12px', fontWeight: '600', color: 'var(--color-text-muted)', textTransform: 'uppercase' },
   select: { padding: '10px 14px', borderRadius: '8px', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-base)', color: 'var(--color-text-base)', outline: 'none', fontSize: '14px', width: '100%' },
   actions: { display: 'flex', gap: '15px', borderTop: '1px solid var(--color-border)', paddingTop: '20px' },
-  btnPdf: { flex: 1, padding: '12px', backgroundColor: '#e53e3e', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px', transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  btnPdf: { flex: 1, padding: '12px', backgroundColor: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px', transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   btnExcel: { flex: 1, padding: '12px', backgroundColor: '#38a169', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', fontSize: '14px', transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   infoBox: { backgroundColor: 'rgba(27, 54, 93, 0.05)', borderLeft: '4px solid var(--color-primary)', padding: '15px', borderRadius: '4px', fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: '1.5' }
 };

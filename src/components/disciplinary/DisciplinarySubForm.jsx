@@ -178,7 +178,7 @@ export default function DisciplinarySubForm({ employeeId, tempProcesses, setTemp
           </div>
 
           {formData.type === 'Multa' && (
-            <div style={{ ...styles.grid, marginTop: '15px', backgroundColor: '#fff3e0', padding: '10px', borderRadius: '4px' }}>
+            <div style={{ ...styles.grid, marginTop: '15px', backgroundColor: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.25)', padding: '10px', borderRadius: '6px' }}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>Dias de Multa</label>
                 <input type="number" name="multaDays" value={formData.multaDays} onChange={handleChange} style={styles.input} />

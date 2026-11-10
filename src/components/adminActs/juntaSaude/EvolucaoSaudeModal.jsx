@@ -195,7 +195,7 @@ const styles = {
   fileUpload: { padding: '14px', border: '2px dashed #EF4444', borderRadius: '8px', backgroundColor: 'var(--color-bg-base, #f8fafc)' },
   footer: { padding: '14px 22px', borderTop: '1px solid var(--color-border, #e2e8f0)', display: 'flex', justifyContent: 'flex-end', gap: '10px', backgroundColor: 'var(--color-bg-base, #f8fafc)', flexShrink: 0 },
   btnCancel: { padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--color-border, #cbd5e1)', backgroundColor: 'var(--color-bg-subtle, #fff)', color: 'var(--color-text-base, #1e293b)', fontWeight: '600', cursor: 'pointer', fontSize: '13px' },
-  btnDanger: { padding: '8px 18px', borderRadius: '6px', border: 'none', backgroundColor: '#DC2626', color: '#fff', fontWeight: '600', cursor: 'pointer', fontSize: '13px', boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)' },
+  btnDanger: { padding: '8px 18px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--color-primary)', color: '#fff', fontWeight: '600', cursor: 'pointer', fontSize: '13px', boxShadow: '0 2px 4px rgba(220, 38, 38, 0.2)' },
   resizeHandle: {
     position: 'absolute',
     bottom: 2,
