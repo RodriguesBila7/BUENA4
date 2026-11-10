@@ -127,7 +127,7 @@ const styles = {
     fontSize: '14px',
     fontWeight: '700',
     color: '#FFFFFF',
-    backgroundColor: 'var(--color-primary, #B71C1C)',
+    backgroundColor: 'var(--color-primary, #D32F2F)',
     border: 'none',
     borderRadius: '6px',
     cursor: 'pointer',
@@ -136,7 +136,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     outline: 'none',
-    boxShadow: '0 2px 8px rgba(183, 28, 28, 0.3)'
+    boxShadow: '0 2px 8px rgba(211, 47, 47, 0.3)'
   },
   badge: {
     marginLeft: '8px',

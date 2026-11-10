@@ -8,9 +8,10 @@ const DEFAULT_SETTINGS = {
   nome_instituicao: 'Serviço Nacional de Investigação Criminal',
   sigla: 'SERNIC',
   logotipo: null, // Nulo por padrão. Será exibido o logotipo padrão do sistema
-  cor_principal: '#B71C1C', // Vermelho Moçambique / SERNIC oficial
+  cor_principal: '#D32F2F', // Vermelho Rubi de Honra (Padrão Oficial do Sistema)
   cor_secundaria: '#2D3748',
   cor_destaque: '#FFFFFF',
+  cor_tema_login: '#D32F2F', // Tema exclusivo da tela de login
   modo_tema: 'light',
   posicionamento_fundo: 'centro_imponente', // 28 posições disponíveis para o brasão
   escala_brasao: '1.0', // '1.0' (Padrão), '1.35' (Grande), '1.7' (Monumental), '2.1' (Gigante Maxi)
@@ -18,12 +19,13 @@ const DEFAULT_SETTINGS = {
   aplicar_login_fundo: true, // Exibir o brasão transparente também na página de login
   posicionamento_fundo_login: 'mesmo_sistema', // 'mesmo_sistema' ou ID específico
   cores_aleatorias: false,
+  cores_aleatorias_login: false,
   data_atualizacao: new Date().toISOString(),
   usuario_responsavel: 'Sistema (Padrão)'
 };
 
 const CORES_PALETA = [
-  '#B71C1C', '#C62828', '#D32F2F', '#880E4F', '#DC2626', '#4A0E17', '#9C0006', '#E53935',
+  '#D32F2F', '#B71C1C', '#C62828', '#880E4F', '#DC2626', '#4A0E17', '#9C0006', '#E53935',
   '#1B365D', '#0A192F', '#0D1B4B', '#0D47A1', '#1565C0', '#1976D2', '#0277BD', '#1A237E', '#006064', '#00838F',
   '#1B5E20', '#00695C', '#2E7D32', '#33691E', '#004D40', '#00796B', '#133E1A',
   '#4A148C', '#6A1B9A', '#4527A0', '#512DA8', '#581845',
@@ -46,14 +48,17 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Se a cor salva for o azul legado (#1B365D) ou estiver em branco, migra imediatamente para o Vermelho Oficial (#B71C1C)
-        if (!parsed.cor_principal || parsed.cor_principal.toUpperCase() === '#1B365D') {
-          parsed.cor_principal = '#B71C1C';
+        // Garantir que a cor padrão do sistema ao entrar seja o Vermelho Rubi de Honra (#D32F2F)
+        if (!parsed.cor_principal || parsed.cor_principal.toUpperCase() === '#1B365D' || parsed.cor_principal.toUpperCase() === '#B71C1C') {
+          parsed.cor_principal = '#D32F2F';
         }
-        // Se a opção de cores aleatórias estiver ativa, sorteia uma cor ao iniciar/recarregar a página
+        if (!parsed.cor_tema_login) {
+          parsed.cor_tema_login = '#D32F2F';
+        }
+        // Desacoplar cores aleatórias para que não alterem a cor interna do sistema
         if (parsed.cores_aleatorias) {
-          const randomCor = CORES_PALETA[Math.floor(Math.random() * CORES_PALETA.length)];
-          parsed.cor_principal = randomCor;
+          parsed.cores_aleatorias_login = true;
+          parsed.cores_aleatorias = false;
         }
         if (!parsed.posicionamento_fundo) {
           parsed.posicionamento_fundo = 'centro_imponente';
@@ -81,8 +86,8 @@ export default function App() {
 
   // Aplicar cores e tema globalmente sempre que houver alteração
   useEffect(() => {
-    const activeColor = (!settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D')
-      ? '#B71C1C'
+    const activeColor = (!settings.cor_principal || settings.cor_principal.toUpperCase() === '#1B365D' || settings.cor_principal.toUpperCase() === '#B71C1C')
+      ? '#D32F2F'
       : settings.cor_principal;
 
     // Injeção de variáveis CSS customizadas
@@ -98,7 +103,7 @@ export default function App() {
     
     // Injeção do modo de tema no html/root
     document.documentElement.setAttribute('data-theme', settings.modo_tema || 'light');
-  }, [settings]);
+  }, [settings.cor_principal, settings.cor_secundaria, settings.cor_destaque, settings.modo_tema]);
 
   // Função para actualizar e salvar configurações (simulação de UPDATE SQL)
   const updateSettings = (newSettings) => {

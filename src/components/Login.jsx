@@ -9,9 +9,9 @@ import { sanitizeNuit, validateNuit } from '../utils/formatters';
 /* ── Temas pré-definidos Expandidos (40 Cores Oficiais, Vívidas e Nobres) ── */
 const TEMAS = [
   // ── Tons Vermelhos e Oficiais SERNIC ──
+  { nome: 'Rubi de Honra (Padrão Oficial)', cor: '#D32F2F' },
   { nome: 'Vermelho Moçambique (Oficial)', cor: '#B71C1C' },
   { nome: 'Carmésim Tático', cor: '#C62828' },
-  { nome: 'Rubi de Honra', cor: '#D32F2F' },
   { nome: 'Bordô Presidencial', cor: '#880E4F' },
   { nome: 'Grená Institucional', cor: '#4A0E17' },
   { nome: 'Cereja Escuro', cor: '#9C0006' },
@@ -99,28 +99,28 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   const updateSettingsRef = React.useRef(updateSettings);
   updateSettingsRef.current = updateSettings;
 
-  // ── Ciclo Automático de Cores Aleatórias a cada 5 segundos ──
+  // ── Ciclo Automático de Cores Aleatórias a cada 5 segundos na Tela de Login ──
   React.useEffect(() => {
-    if (!settings.cores_aleatorias || bwMode === 'noite' || bwMode === 'claro') {
+    if (!settings.cores_aleatorias_login || bwMode === 'noite' || bwMode === 'claro') {
       return;
     }
 
     const intervalId = setInterval(() => {
       const current = settingsRef.current;
-      const currentCor = (current.cor_principal || '').toLowerCase();
+      const currentCor = (current.cor_tema_login || '#D32F2F').toLowerCase();
       const otherThemes = TEMAS.filter(t => t.cor.toLowerCase() !== currentCor);
       const nextTheme = otherThemes[Math.floor(Math.random() * otherThemes.length)] || TEMAS[0];
       if (nextTheme && updateSettingsRef.current) {
         updateSettingsRef.current({
           ...current,
-          cor_principal: nextTheme.cor,
-          usuario_responsavel: 'Cores Aleatórias (Ciclo 5s)'
+          cor_tema_login: nextTheme.cor,
+          usuario_responsavel: 'Cores Aleatórias Login (Ciclo 5s)'
         });
       }
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, [settings.cores_aleatorias, bwMode]);
+  }, [settings.cores_aleatorias_login, bwMode]);
 
   React.useEffect(() => {
     if (settings.modo_tema === 'dark' && bwMode !== 'noite') {
@@ -158,11 +158,12 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
-  /* calcula a cor de fundo activa */
+  /* calcula a cor de fundo activa da tela de login (independente da cor do sistema) */
+  const loginColor = settings.cor_tema_login || '#D32F2F';
   const bgColor =
     bwMode === 'noite' ? '#1C2433' :
     bwMode === 'claro' ? '#F8FAFC' :
-    (settings.cor_principal && settings.cor_principal !== '#1B365D' ? settings.cor_principal : '#B71C1C');
+    loginColor;
 
   /* Deteção de fundo claro (modo claro ou tema personalizado de alta luminosidade) */
   const isLightBg = () => {
@@ -341,22 +342,22 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     if (updateSettings) {
       updateSettings({ 
         ...settings, 
-        cor_principal: cor, 
-        cores_aleatorias: false,
+        cor_tema_login: cor, 
+        cores_aleatorias_login: false,
         usuario_responsavel: 'Selecção de Tema (Login)' 
       });
     }
   };
 
   const toggleCoresAleatorias = () => {
-    const nextVal = !settings.cores_aleatorias;
+    const nextVal = !settings.cores_aleatorias_login;
     setBwMode('theme');
-    const randomTema = nextVal ? TEMAS[Math.floor(Math.random() * TEMAS.length)].cor : settings.cor_principal;
+    const randomTema = nextVal ? TEMAS[Math.floor(Math.random() * TEMAS.length)].cor : (settings.cor_tema_login || '#D32F2F');
     if (updateSettings) {
       updateSettings({
         ...settings,
-        cores_aleatorias: nextVal,
-        cor_principal: randomTema,
+        cores_aleatorias_login: nextVal,
+        cor_tema_login: randomTema,
         usuario_responsavel: 'Modo Cores Aleatórias (Login)'
       });
     }
@@ -538,7 +539,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <p style={{ ...s.dropdownTitle, margin: 0 }}>{t('themes_predefined')} ({TEMAS.length})</p>
                 {hoveredTema && (
-                  <span style={{ fontSize: '10.5px', color: 'var(--color-primary, #EF4444)', fontWeight: '700' }}>
+                  <span style={{ fontSize: '10.5px', color: (settings.cor_tema_login || '#D32F2F'), fontWeight: '700' }}>
                     {TEMAS.find(t => t.cor === hoveredTema)?.nome.split(' ')[0]}
                   </span>
                 )}
@@ -552,7 +553,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 padding: '4px 2px'
               }}>
                 {TEMAS.map((tema) => {
-                  const isActive = (settings.cor_principal || '').toLowerCase() === tema.cor.toLowerCase();
+                  const isActive = (settings.cor_tema_login || '#D32F2F').toLowerCase() === tema.cor.toLowerCase();
                   const isHover  = hoveredTema === tema.cor;
                   return (
                     <button
@@ -588,7 +589,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 <input
                   type="color"
                   id="custom-color-picker"
-                  defaultValue={settings.cor_principal}
+                  value={settings.cor_tema_login || '#D32F2F'}
                   onChange={(e) => aplicarTema(e.target.value)}
                   style={s.colorPicker}
                   title={t('themes_pick')}
@@ -634,7 +635,7 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 <div style={{
                   width: '32px',
                   height: '18px',
-                  backgroundColor: settings.cores_aleatorias ? 'var(--color-primary, #EF4444)' : (bwMode === 'claro' ? '#CBD5E1' : '#475569'),
+                  backgroundColor: settings.cores_aleatorias_login ? (settings.cor_tema_login || '#D32F2F') : (bwMode === 'claro' ? '#CBD5E1' : '#475569'),
                   borderRadius: '10px',
                   position: 'relative',
                   transition: 'all 0.2s ease',
@@ -647,14 +648,14 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                     borderRadius: '50%',
                     position: 'absolute',
                     top: '2px',
-                    left: settings.cores_aleatorias ? '16px' : '2px',
+                    left: settings.cores_aleatorias_login ? '16px' : '2px',
                     transition: 'left 0.2s ease',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.35)'
                   }} />
                 </div>
               </div>
 
-              {settings.cores_aleatorias && (
+              {settings.cores_aleatorias_login && (
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',

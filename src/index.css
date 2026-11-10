@@ -5,7 +5,7 @@
   --font-family: 'Inter', system-ui, -apple-system, sans-serif;
 
   /* Temas e Cores Dinâmicas (Serão sobrescritas via inline JS no Super Admin) */
-  --color-primary: #DC2626;    /* Vermelho Institucional padrão */
+  --color-primary: #D32F2F;    /* Vermelho Rubi de Honra padrão */
   --color-secondary: #2D3748;  /* Cinza Escuro padrão */
   --color-accent: #FFFFFF;     /* Branco de Destaque padrão */
 
@@ -956,11 +956,11 @@ button.evaluation-tab.active:focus,
 [data-theme="light"] .evaluation-tab.active:hover,
 [data-theme="dark"] .module-tab.active:hover,
 [data-theme="dark"] .evaluation-tab.active:hover {
-  background-color: var(--color-primary, #B71C1C) !important;
+  background-color: var(--color-primary, #D32F2F) !important;
   color: #FFFFFF !important;
   font-weight: 700 !important;
   border-radius: 6px !important;
-  box-shadow: 0 2px 8px rgba(183, 28, 28, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
