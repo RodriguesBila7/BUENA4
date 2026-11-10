@@ -106,6 +106,9 @@ const translations = {
     /* ── Identidade Visual (Formulário) ── */
     tab_general_settings: 'Configurações Gerais',
     tab_background_themes: 'Temas do Fundo',
+    tab_evaluation_criteria: 'Critérios de Avaliação',
+    evaluation_criteria_title: 'Critérios de Avaliação de Desempenho',
+    evaluation_criteria_desc: 'Parametrização das faixas de pontuação e cores de destaque associadas a cada classificação de serviço (Decreto n.º 22/2018).',
     bg_themes_badge: '20 Opções',
     bg_themes_title: 'Temas e Posicionamento do Brasão no Fundo',
     bg_themes_desc: 'Escolha entre 20 composições de posicionamento único, duplicado, triplicado ou múltiplos brasões institucionais como fundo transparente no sistema.',
@@ -334,6 +337,9 @@ const translations = {
     /* ── Visual Identity (Form) ── */
     tab_general_settings: 'General Settings',
     tab_background_themes: 'Background Themes',
+    tab_evaluation_criteria: 'Evaluation Criteria',
+    evaluation_criteria_title: 'Performance Evaluation Criteria',
+    evaluation_criteria_desc: 'Configure score ranges and highlight colors associated with each service classification (Decree no. 22/2018).',
     bg_themes_badge: '20 Options',
     bg_themes_title: 'Emblem Background Themes & Positioning',
     bg_themes_desc: 'Choose from 20 single, duplicate, triplicate or multiple institutional emblem compositions as transparent background across the system.',

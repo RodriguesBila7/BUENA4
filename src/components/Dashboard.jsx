@@ -8,6 +8,7 @@ import DisciplinaryManager from './disciplinary/DisciplinaryManager';
 import EffectivenessManager from './effectiveness/EffectivenessManager';
 import AdminActsManager from './adminActs/AdminActsManager';
 import EvaluationManager from './evaluations/EvaluationManager';
+import EvaluationSettings from './evaluations/EvaluationSettings';
 import AccessManager from './access/AccessManager';
 import PermissionGuard from './PermissionGuard';
 import ConfirmModal from './ConfirmModal';
@@ -709,7 +710,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
   const fileInputRef = React.useRef(null);
 
   // Sub-abas e controlo de temas do fundo transparente
-  const [identitySubTab, setIdentitySubTab] = useState('general'); // 'general' | 'background_themes'
+  const [identitySubTab, setIdentitySubTab] = useState('general'); // 'general' | 'background_themes' | 'evaluation_criteria'
   const [bgCategoryFilter, setBgCategoryFilter] = useState('ALL');
   const [bgSaveFeedback, setBgSaveFeedback] = useState('');
   const [showBgQuickMenu, setShowBgQuickMenu] = useState(false);
@@ -2341,11 +2342,15 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                 <h3 style={styles.sectionMainTitle}>
                   {identitySubTab === 'background_themes' 
                     ? (t('bg_themes_title') || 'Temas e Posicionamento do Brasão no Fundo')
+                    : identitySubTab === 'evaluation_criteria'
+                    ? (t('evaluation_criteria_title') || 'Critérios de Avaliação de Desempenho')
                     : (t('panel_title') || 'Painel de Gestão de Identidade Visual')}
                 </h3>
                 <p style={styles.sectionMainDesc}>
                   {identitySubTab === 'background_themes'
                     ? (t('bg_themes_desc') || 'Escolha entre 20 composições de posicionamento único, duplicado, triplicado ou múltiplos brasões institucionais como fundo transparente no sistema.')
+                    : identitySubTab === 'evaluation_criteria'
+                    ? (t('evaluation_criteria_desc') || 'Parametrização das faixas de pontuação e cores de destaque associadas a cada classificação de serviço (Decreto n.º 22/2018).')
                     : (t('panel_desc') || 'Ajuste as definições globais de logotipo, cores do sistema, temas institucionais e nomes exibidos.')}
                 </p>
               </div>
@@ -2415,6 +2420,29 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                   }}>
                     {t('bg_themes_badge') || `${BACKGROUND_POSITIONS.length} Opções`}
                   </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIdentitySubTab('evaluation_criteria')}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 20px',
+                    borderRadius: '10px',
+                    fontWeight: identitySubTab === 'evaluation_criteria' ? '700' : '500',
+                    fontSize: '14px',
+                    backgroundColor: identitySubTab === 'evaluation_criteria' ? 'var(--color-primary)' : 'transparent',
+                    color: identitySubTab === 'evaluation_criteria' ? '#ffffff' : 'var(--color-text-base)',
+                    border: identitySubTab === 'evaluation_criteria' ? 'none' : '1px solid var(--color-border)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: identitySubTab === 'evaluation_criteria' ? '0 4px 12px rgba(27, 54, 93, 0.25)' : 'none'
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+                  <span>{t('tab_evaluation_criteria') || 'Critérios de Avaliação'}</span>
                 </button>
               </div>
 
@@ -3278,6 +3306,13 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                         );
                       })}
                   </div>
+                </div>
+              )}
+
+              {/* ABA 3: CRITÉRIOS DE AVALIAÇÃO DE DESEMPENHO */}
+              {identitySubTab === 'evaluation_criteria' && (
+                <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <EvaluationSettings user={user} canAdmin={isSuperAdmin} />
                 </div>
               )}
             </div>

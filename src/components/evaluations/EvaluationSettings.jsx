@@ -73,7 +73,9 @@ export default function EvaluationSettings({ user, canAdmin = true }) {
                 <td>
                   <span style={{
                     padding: '6px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '700',
-                    backgroundColor: c.hexLight, color: c.hexDark, border: `1px solid ${c.hexBadge}`
+                    backgroundColor: `color-mix(in srgb, ${c.hexBadge} 18%, transparent)`,
+                    color: c.hexBadge,
+                    border: `1px solid color-mix(in srgb, ${c.hexBadge} 35%, transparent)`
                   }}>
                     {c.label}
                   </span>
@@ -134,7 +136,7 @@ export default function EvaluationSettings({ user, canAdmin = true }) {
 }
 
 const styles = {
-  container: { padding: 0, display: 'flex', flexDirection: 'column', gap: '20px', width: '75%', margin: 0 },
+  container: { padding: 0, display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '1000px', margin: 0 },
   title: { margin: 0, color: 'var(--color-primary)' },
   description: { margin: '4px 0 0 0', color: 'var(--color-text-muted)', fontSize: '14px' },
   readonlyBadge: { backgroundColor: 'rgba(27, 54, 93, 0.1)', color: 'var(--color-primary)', padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600' },
