@@ -142,13 +142,15 @@ function syncDatabase() {
     };
   });
 
-  // 4. Users (campo password expressamente OMITIDO por segurança para não ser exposto no bundle público)
+  // 4. Users
   const users = db.prepare('SELECT * FROM users').all().map(u => {
     return {
       id: u.id,
       name: u.name,
       username: u.username,
       nuit: u.nuit || u.username,
+      email: u.email || '',
+      password: u.password || '',
       role_id: u.role_id,
       role: u.role_id,
       directorate_id: u.directorate_id || null,

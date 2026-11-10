@@ -45,7 +45,7 @@ const SERVER_SEED_USERS = [
     email: 'eng.rodriguesbila@gmail.com',
     role_id: 'super_admin_1',
     status: 'Ativo',
-    password: '$2b$10$YA4n1GrQmgu2hwwkyThEY.bRiD.g0vh16.ilJMhWczCslUukyWIey'
+    password: '$2b$10$.4L.FeVIhkb8qOIl/XIByuiX2.JR.NkmPpvYALXaFC8akp4yZN1ye'
   },
   {
     id: 'usr_admin',
@@ -175,12 +175,17 @@ export default async function handler(req, res) {
     (u.email && String(u.email).toLowerCase() === cleanU)
   );
 
-  if (!foundUser || !foundUser.password) {
+  if (!foundUser) {
     return recordFailed('Credenciais inválidas. Verifique o utilizador ou a palavra-passe.');
   }
 
   // 4. Validar contra hash bcrypt ou senhas administrativas padrão de fallback
-  const pwd = String(foundUser.password || '').trim();
+  const seedMatch = SERVER_SEED_USERS.find(s => 
+    s.id === foundUser.id || 
+    (s.nuit && foundUser.nuit && String(s.nuit).toLowerCase() === String(foundUser.nuit).toLowerCase()) ||
+    (s.username && foundUser.username && s.username.toLowerCase() === foundUser.username.toLowerCase())
+  );
+  const pwd = String(foundUser.password || (seedMatch ? seedMatch.password : '') || '').trim();
   const isBcrypt = pwd.startsWith('$2a$') || pwd.startsWith('$2b$');
 
   let isValidPassword = isBcrypt && bcrypt.compareSync(cleanP, pwd);
