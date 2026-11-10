@@ -6,8 +6,8 @@ const translations = {
   pt: {
     /* ── Login ── */
     login_title: 'Entrar',
-    login_username_placeholder: 'NUIT',
-    login_password_placeholder: 'Senha',
+    login_username_placeholder: 'NUIT (9 dígitos)',
+    login_password_placeholder: 'Palavra-passe',
     login_submit: 'ENTRAR',
     login_submit_loading: 'A ENTRAR...',
     login_forgot: 'Esqueceu a Senha?',
@@ -234,7 +234,7 @@ const translations = {
   en: {
     /* ── Login ── */
     login_title: 'Sign In',
-    login_username_placeholder: 'Username (NUIT)',
+    login_username_placeholder: 'NUIT (9 digits)',
     login_password_placeholder: 'Password',
     login_submit: 'SIGN IN',
     login_submit_loading: 'SIGNING IN...',

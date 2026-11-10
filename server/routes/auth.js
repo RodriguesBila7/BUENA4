@@ -328,11 +328,19 @@ router.post('/recover-password', async (req, res) => {
 // ─── LOGIN — CONFORMIDADE TABELA 21 (JWT OBRIGATÓRIO, FIM DAS SENHAS-MESTRAS, TS08b, TS09) ─
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.status(400).json({ error: 'username e password obrigatorios' });
+  const cleanNuit = String(username || req.body.nuit || '').trim().replace(/\D/g, '').slice(0, 9);
+  
+  if (!cleanNuit || cleanNuit.length !== 9) {
+    return res.status(400).json({ error: 'O acesso ao sistema é exclusivo por NUIT moçambicano de 9 dígitos.' });
+  }
+  if (!password) {
+    return res.status(400).json({ error: 'Palavra-passe obrigatória.' });
+  }
+
   try {
     const db = getDb();
     const clientIp = req.ip || req.socket.remoteAddress || req.headers['x-forwarded-for'] || '127.0.0.1';
-    const trackKey = `${clientIp}_${String(username).toLowerCase().trim()}`;
+    const trackKey = `${clientIp}_${cleanNuit}`;
     const now = Date.now();
     const attemptInfo = failedAttempts.get(trackKey);
 
@@ -345,7 +353,7 @@ router.post('/login', (req, res) => {
       });
     }
 
-    // TS08b: Apenas username, nuit ou email do utilizador (eliminada busca por nome ou id de perfil r.name/r.id)
+    // Acesso exclusivo por NUIT moçambicano de 9 dígitos
     const candidateUsers = db.prepare(`
       SELECT 
         u.id, u.name, u.username, u.nuit, u.email, u.contact, u.password, u.status, u.avatar,
@@ -358,9 +366,9 @@ router.post('/login', (req, res) => {
       FROM users u 
       LEFT JOIN roles r ON u.role_id = r.id 
       LEFT JOIN roles dr ON u.delegated_role_id = dr.id
-      WHERE (LOWER(u.username) = LOWER(?) OR LOWER(u.nuit) = LOWER(?) OR LOWER(u.email) = LOWER(?))
+      WHERE (u.nuit = ? OR u.username = ?)
         AND u.status = 'Ativo'
-    `).all(username, username, username);
+    `).all(cleanNuit, cleanNuit);
 
     const recordFailedAttempt = (motivo) => {
       const currentCount = (attemptInfo ? attemptInfo.count : 0) + 1;

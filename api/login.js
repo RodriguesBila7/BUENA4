@@ -106,12 +106,17 @@ export default async function handler(req, res) {
   }
 
   const { username, password } = req.body || {};
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Nome de utilizador e palavra-passe obrigatórios.' });
+  const cleanNuit = String(username || req.body?.nuit || '').trim().replace(/\D/g, '').slice(0, 9);
+  const cleanP = String(password || '').trim();
+
+  if (!cleanNuit || cleanNuit.length !== 9) {
+    return res.status(400).json({ error: 'O acesso ao sistema é exclusivo por NUIT moçambicano de 9 dígitos.' });
+  }
+  if (!cleanP) {
+    return res.status(400).json({ error: 'Palavra-passe obrigatória.' });
   }
 
-  const cleanU = String(username).trim().toLowerCase();
-  const cleanP = String(password).trim();
+  const cleanU = cleanNuit;
 
   const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1';
   const trackKey = `${clientIp}_${cleanU}`;
@@ -168,11 +173,10 @@ export default async function handler(req, res) {
     usersList = SERVER_SEED_USERS;
   }
 
-  // 3. Procurar utilizador por username, nuit ou email (TS08b)
+  // 3. Procurar utilizador exclusivamente pelo NUIT moçambicano de 9 dígitos
   const foundUser = usersList.find(u => 
-    (u.username && String(u.username).toLowerCase() === cleanU) || 
-    (u.nuit && String(u.nuit).toLowerCase() === cleanU) ||
-    (u.email && String(u.email).toLowerCase() === cleanU)
+    (u.nuit && String(u.nuit).trim() === cleanNuit) || 
+    (u.username && String(u.username).trim() === cleanNuit)
   );
 
   if (!foundUser) {

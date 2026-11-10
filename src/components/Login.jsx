@@ -221,8 +221,13 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
   /* ── Autenticação e Registo ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username.trim() || !password.trim()) {
-      setError(t('msg_fill_all'));
+    const cleanNuit = sanitizeNuit(username.trim());
+    if (!cleanNuit || cleanNuit.length !== 9) {
+      setError('O acesso ao sistema é exclusivo por NUIT moçambicano de 9 dígitos.');
+      return;
+    }
+    if (!password.trim()) {
+      setError('Por favor, introduza a palavra-passe.');
       return;
     }
     setError('');
@@ -230,18 +235,18 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
     setIsLoading(true);
     
     try {
-      const result = await authenticate(username.trim(), password, policies);
+      const result = await authenticate(cleanNuit, password, policies);
       setIsLoading(false);
       
       if (result && result.success) {
-        logAction('Login', 'Sistema', `Login com sucesso: ${username}`).catch(() => {});
+        logAction('Login', 'Sistema', `Login com sucesso NUIT: ${cleanNuit}`).catch(() => {});
         const userObj = result.user;
         clearCredentials();
         onLogin(userObj);
       } else {
-        logAction('Login', 'Sistema', `Falha na autenticação: ${username}`).catch(() => {});
+        logAction('Login', 'Sistema', `Falha na autenticação NUIT: ${cleanNuit}`).catch(() => {});
         setError(result?.error || t('msg_wrong_credentials'));
-        // Preserva o username preenchido e limpa apenas a senha incorreta
+        // Preserva o NUIT preenchido e limpa apenas a senha incorreta
         setPassword('');
         setTimeout(() => {
           passwordInputRef.current?.focus();
@@ -249,8 +254,8 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
       }
     } catch (err) {
       setIsLoading(false);
-      logAction('Login', 'Sistema', `Falha na autenticação: ${username}`).catch(() => {});
-      setError(t('msg_wrong_credentials'));
+      logAction('Login', 'Sistema', `Falha na autenticação NUIT: ${cleanNuit}`).catch(() => {});
+      setError(err?.message || t('msg_wrong_credentials'));
       setPassword('');
       setTimeout(() => {
         passwordInputRef.current?.focus();
@@ -726,15 +731,18 @@ export default function Login({ settings, onLogin, updateSettings, t, language, 
                 <span style={s.fieldIcon}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                 <input 
                   type="text" 
+                  inputMode="numeric"
                   name="username"
                   autoComplete="off" 
                   autoCorrect="off" 
                   autoCapitalize="off" 
                   spellCheck="false"
-                  placeholder={t('login_username_placeholder') || 'NUIT'} 
+                  placeholder={t('login_username_placeholder') || 'NUIT (9 dígitos)'} 
                   value={username} 
-                  onChange={e => setUsername(e.target.value)} 
+                  maxLength={9}
+                  onChange={e => setUsername(sanitizeNuit(e.target.value))} 
                   style={s.field} 
+                  required
                 />
               </div>
               <div style={s.fieldWrap}>
