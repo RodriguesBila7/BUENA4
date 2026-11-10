@@ -257,9 +257,6 @@ export default function HomeDashboard({ t, onTabChange }) {
             <h2 style={styles.title}>
               {t('dash_overview') || 'Visão Geral'}
             </h2>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-              Acompanhamento integrado de efetivos, atos, estruturas e processos
-            </p>
           </div>
           {provincialRoleTag && (
             <span style={{ 
