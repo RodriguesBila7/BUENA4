@@ -1739,7 +1739,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
       <main className="app-main-content" style={styles.mainContent}>
         {/* NAVBAR SUPERIOR (Oculta na impressão) */}
         <header className="no-print app-header" style={styles.header}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* LADO ESQUERDO: Botão Mobile + Brasão e Identificação Institucional */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 0', minWidth: 0 }}>
             {/* BOTÃO HAMBURGER — apenas visível em mobile */}
             <button
               className="btn-hamburger"
@@ -1753,8 +1754,7 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
                 <line x1="3" y1="18" x2="21" y2="18"/>
               </svg>
             </button>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+
             <div style={styles.headerTitle}>
               {settings.logotipo ? (
                 <img src={settings.logotipo} alt="Logo" style={{ ...styles.headerLogo, width: '42px', height: '42px' }} />
@@ -1782,8 +1782,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             </div>
           </div>
 
-          {/* SETAS DE NAVEGAÇÃO */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '12px' }}>
+          {/* CENTRO: Botões de Navegação no Histórico (Ir e Voltar) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexShrink: 0 }}>
             <button
               onClick={handleNavBack}
               disabled={!canGoBack}
@@ -1834,7 +1834,8 @@ export default function Dashboard({ user, settings, updateSettings, resetSetting
             </button>
           </div>
 
-          <div style={styles.headerActions}>
+          {/* LADO DIREITO: Ações do Cabeçalho */}
+          <div style={{ ...styles.headerActions, flex: '1 1 0', justifyContent: 'flex-end' }}>
             {/* Seletor de Idioma no Header */}
             <div style={{ position: 'relative' }} ref={langMenuRef}>
               <button
