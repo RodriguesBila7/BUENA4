@@ -31,7 +31,7 @@ const SERVER_SEED_USERS = [
     name: 'Buenaverte',
     username: '123922328',
     nuit: '123922328',
-    email: 'buenaverte@gmail.com',
+    email: 'eng.rodriguesbila@gmail.com',
     role_id: 'super_admin_1',
     status: 'Ativo'
   },
