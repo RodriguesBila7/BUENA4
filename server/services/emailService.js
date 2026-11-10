@@ -9,8 +9,8 @@ import nodemailer from 'nodemailer';
  * Verifica se as credenciais do Google SMTP estão devidamente configuradas no ambiente
  */
 export function isEmailConfigured() {
-  const user = process.env.SMTP_USER || '';
-  const pass = process.env.SMTP_PASS || '';
+  const user = (process.env.SMTP_USER || '').trim();
+  const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
   return Boolean(
     user && 
     pass && 
@@ -26,8 +26,8 @@ function createTransporter() {
   const host = process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = parseInt(process.env.SMTP_PORT, 10) || 465;
   const secure = process.env.SMTP_SECURE === 'true' || port === 465;
-  const user = process.env.SMTP_USER || '';
-  const pass = process.env.SMTP_PASS || '';
+  const user = (process.env.SMTP_USER || '').trim();
+  const pass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
 
   return nodemailer.createTransport({
     host,
@@ -157,3 +157,4 @@ Se não solicitou esta alteração, contacte o Administrador do Sistema.
 
   return sendEmail({ to, subject, html, text });
 }
+

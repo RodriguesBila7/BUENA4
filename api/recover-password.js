@@ -51,8 +51,8 @@ export default async function handler(req, res) {
   const cleanEmail = String(email).trim().toLowerCase();
   const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-  const smtpUser = process.env.SMTP_USER || '';
-  const smtpPass = process.env.SMTP_PASS || '';
+  const smtpUser = (process.env.SMTP_USER || '').trim();
+  const smtpPass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
   const isConfigured = Boolean(
     smtpUser &&
     smtpPass &&
@@ -121,3 +121,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: `Erro ao enviar e-mail: ${error.message}` });
   }
 }
+
