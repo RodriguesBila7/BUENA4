@@ -344,7 +344,7 @@ export default function ServiceTimeTab({ data = [], orgData, onRegisterAct }) {
               const isPending = d.promoData.hasPendingPromo || d.progData.hasPendingProg;
 
               return (
-                <tr key={d.emp.id} style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: isPending ? 'rgba(245, 158, 11, 0.06)' : 'transparent' }}>
+                <tr key={d.emp.id} style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'transparent' }}>
                   <td><strong>{d.emp.nuit || d.emp.nip || '-'}</strong></td>
                   <td><strong>{d.emp.name || 'Sem Nome'}</strong></td>
                   <td>

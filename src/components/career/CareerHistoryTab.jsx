@@ -397,115 +397,117 @@ export default function CareerHistoryTab({ acts = [], employees = [], orgData, u
         </div>
       </div>
 
-      <table className="premium-table">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Tipo</th>
-            <th>Funcionário</th>
-            <th>Detalhes</th>
-            <th>Despacho</th>
-            <th>Estado</th>
-            <th>Anexo</th>
-            <th>Acção</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentData.length === 0 && (
-            <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Nenhum histórico encontrado.</td></tr>
-          )}
-          {currentData.map(a => {
-            const emp = employees.find(e => e.id === a.employeeId);
-            const actType = a.actType || a.type;
-            const dateStr = a.actDate ? new Date(a.actDate).toLocaleDateString() : (a.date ? new Date(a.date).toLocaleDateString() : '-');
-            
-            let detailsStr = '';
-            if (actType === 'Promoção' || actType === 'promotion') {
-              const newCat = orgData?.categories?.find(c => c.id === a.details?.newCategoryId)?.name || 'Desconhecida';
-              detailsStr = `Promovido para: ${newCat} (Nível ${a.details?.newEscalao || 'C'})`;
-            } else if (actType === 'Progressão' || actType === 'progression') {
-              detailsStr = `Progrediu para: Nível ${a.details?.newEscalao || 'B'}`;
-            } else if (actType === 'Mudança de Carreira') {
-              const newCareer = orgData?.careers?.find(c => c.id === a.details?.newCareerId)?.name || 'Desconhecida';
-              const newCat = orgData?.categories?.find(c => c.id === a.details?.newCategoryId)?.name || 'Desconhecida';
-              detailsStr = `Mudança para: ${newCareer} - ${newCat}`;
-            }
+      <div style={styles.tableContainer}>
+        <table className="premium-table" style={styles.table}>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Funcionário</th>
+              <th>Detalhes</th>
+              <th>Despacho</th>
+              <th>Estado</th>
+              <th>Anexo</th>
+              <th>Acção</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentData.length === 0 && (
+              <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>Nenhum histórico encontrado.</td></tr>
+            )}
+            {currentData.map(a => {
+              const emp = employees.find(e => e.id === a.employeeId);
+              const actType = a.actType || a.type;
+              const dateStr = a.actDate ? new Date(a.actDate).toLocaleDateString() : (a.date ? new Date(a.date).toLocaleDateString() : '-');
+              
+              let detailsStr = '';
+              if (actType === 'Promoção' || actType === 'promotion') {
+                const newCat = orgData?.categories?.find(c => c.id === a.details?.newCategoryId)?.name || 'Desconhecida';
+                detailsStr = `Promovido para: ${newCat} (Nível ${a.details?.newEscalao || 'C'})`;
+              } else if (actType === 'Progressão' || actType === 'progression') {
+                detailsStr = `Progrediu para: Nível ${a.details?.newEscalao || 'B'}`;
+              } else if (actType === 'Mudança de Carreira') {
+                const newCareer = orgData?.careers?.find(c => c.id === a.details?.newCareerId)?.name || 'Desconhecida';
+                const newCat = orgData?.categories?.find(c => c.id === a.details?.newCategoryId)?.name || 'Desconhecida';
+                detailsStr = `Mudança para: ${newCareer} - ${newCat}`;
+              }
 
-            // Força o estado a ser Pendente se não tiver documento e a confirmação do Super Admin
-            const isPending = !a.details?.documentB64 || !a.details?.superAdminConfirmed;
-            const stateLabel = a.details?.superAdminConfirmed ? 'Confirmado' : (a.details?.adminConfirmed ? 'Aguardando S.A.' : 'Pendente');
+              // Força o estado a ser Pendente se não tiver documento e a confirmação do Super Admin
+              const isPending = !a.details?.documentB64 || !a.details?.superAdminConfirmed;
+              const stateLabel = a.details?.superAdminConfirmed ? 'Confirmado' : (a.details?.adminConfirmed ? 'Aguardando S.A.' : 'Pendente');
 
-            return (
-              <tr key={a.id} style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: isPending ? 'rgba(245, 158, 11, 0.08)' : 'transparent' }}>
-                <td>{dateStr}</td>
-                <td>
-                  <span style={{ 
-                    padding: '4px 8px', 
-                    borderRadius: '4px', 
-                    fontSize: '12px', 
-                    fontWeight: '600',
-                    backgroundColor: actType.includes('Mudança') 
-                      ? 'rgba(168, 85, 247, 0.15)' 
-                      : (actType === 'Promoção' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)'), 
-                    color: actType.includes('Mudança') 
-                      ? '#c084fc' 
-                      : (actType === 'Promoção' ? 'var(--color-success, #10b981)' : 'var(--color-info, #3b82f6)'),
-                    border: `1px solid ${actType.includes('Mudança') ? 'rgba(168, 85, 247, 0.3)' : (actType === 'Promoção' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(59, 130, 246, 0.3)')}`
-                  }}>
-                    {actType}
-                  </span>
-                </td>
-                <td><strong>{emp?.name || '-'}</strong> <br/><small>{emp?.nuit || emp?.nip || '-'}</small></td>
-                <td>{detailsStr}</td>
-                <td>{a.despacho || '-'}</td>
-                <td>
-                  <span style={{ 
-                    padding: '4px 10px', 
-                    borderRadius: '12px', 
-                    fontSize: '12px', 
-                    fontWeight: '600',
-                    backgroundColor: isPending ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
-                    color: isPending ? 'var(--color-warning, #f59e0b)' : 'var(--color-success, #10b981)',
-                    border: `1px solid ${isPending ? 'rgba(245, 158, 11, 0.35)' : 'rgba(16, 185, 129, 0.35)'}`
-                  }}>
-                    {stateLabel}
-                  </span>
-                </td>
-                <td>
-                  {a.details?.documentB64 ? (
-                    <button onClick={() => handleViewDoc(a.details.documentB64)} style={styles.linkBtn}>Ver Anexo</button>
-                  ) : (
-                    isPending ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: 'bold' }}>Falta Anexo</span>
-                        <input type="file" accept=".pdf,image/*" style={{ fontSize: '11px', width: '130px', color: 'var(--color-text-base)' }} onChange={(e) => handleAttach(a, e)} />
-                      </div>
+              return (
+                <tr key={a.id} style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'transparent' }}>
+                  <td>{dateStr}</td>
+                  <td>
+                    <span style={{ 
+                      padding: '4px 8px', 
+                      borderRadius: '4px', 
+                      fontSize: '12px', 
+                      fontWeight: '600',
+                      backgroundColor: actType.includes('Mudança') 
+                        ? 'rgba(168, 85, 247, 0.15)' 
+                        : (actType === 'Promoção' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(59, 130, 246, 0.15)'), 
+                      color: actType.includes('Mudança') 
+                        ? '#c084fc' 
+                        : (actType === 'Promoção' ? 'var(--color-success, #10b981)' : 'var(--color-info, #3b82f6)'),
+                      border: `1px solid ${actType.includes('Mudança') ? 'rgba(168, 85, 247, 0.3)' : (actType === 'Promoção' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(59, 130, 246, 0.3)')}`
+                    }}>
+                      {actType}
+                    </span>
+                  </td>
+                  <td><strong>{emp?.name || '-'}</strong> <br/><small>{emp?.nuit || emp?.nip || '-'}</small></td>
+                  <td>{detailsStr}</td>
+                  <td>{a.despacho || '-'}</td>
+                  <td>
+                    <span style={{ 
+                      padding: '4px 10px', 
+                      borderRadius: '12px', 
+                      fontSize: '12px', 
+                      fontWeight: '600',
+                      backgroundColor: isPending ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.15)', 
+                      color: isPending ? 'var(--color-warning, #f59e0b)' : 'var(--color-success, #10b981)',
+                      border: `1px solid ${isPending ? 'rgba(245, 158, 11, 0.35)' : 'rgba(16, 185, 129, 0.35)'}`
+                    }}>
+                      {stateLabel}
+                    </span>
+                  </td>
+                  <td>
+                    {a.details?.documentB64 ? (
+                      <button onClick={() => handleViewDoc(a.details.documentB64)} style={styles.linkBtn}>Ver Anexo</button>
                     ) : (
-                      <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>Sem anexo</span>
-                    )
-                  )}
-                </td>
-                <td>
-                  {isPending ? (
-                    <CrudActionButtons 
-                      onDelete={() => handleDeleteAction(a.id)}
-                      extraButtons={
-                        isSuperAdmin ? (
-                          <button onClick={() => handleConfirmAction(a, !!a.details?.documentB64)} style={styles.confirmActionBtn}>Confirmar</button>
-                        ) : (
-                          <span style={{ fontSize: '11px', color: '#6b7280' }}>Aguardando S.Admin</span>
-                        )
-                      }
-                    />
-                  ) : (
-                    <span style={{ fontSize: '12px', color: '#10b981' }}>Efectivado</span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                      isPending ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: 'bold' }}>Falta Anexo</span>
+                          <input type="file" accept=".pdf,image/*" style={{ fontSize: '11px', width: '130px', color: 'var(--color-text-base)' }} onChange={(e) => handleAttach(a, e)} />
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>Sem anexo</span>
+                      )
+                    )}
+                  </td>
+                  <td>
+                    {isPending ? (
+                      <CrudActionButtons 
+                        onDelete={() => handleDeleteAction(a.id)}
+                        extraButtons={
+                          isSuperAdmin ? (
+                            <button onClick={() => handleConfirmAction(a, !!a.details?.documentB64)} style={styles.confirmActionBtn}>Confirmar</button>
+                          ) : (
+                            <span style={{ fontSize: '11px', color: '#6b7280' }}>Aguardando S.Admin</span>
+                          )
+                        }
+                      />
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#10b981' }}>Efectivado</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       {/* Paginação */}
       {totalPages > 1 && (
@@ -645,6 +647,13 @@ const styles = {
     padding: '4px 10px',
     borderRadius: '6px',
     border: '1px solid var(--color-border)'
+  },
+  tableContainer: {
+    overflowX: 'auto',
+    backgroundColor: 'var(--color-bg-card)',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border)',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)'
   },
   table: { width: '100%', borderCollapse: 'collapse', fontSize: '13px', backgroundColor: 'transparent' },
   th: { padding: '12px', textAlign: 'left', borderBottom: '2px solid var(--color-border)', color: 'var(--color-text-muted)' },
