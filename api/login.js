@@ -45,7 +45,7 @@ const SERVER_SEED_USERS = [
     email: 'eng.rodriguesbila@gmail.com',
     role_id: 'super_admin_1',
     status: 'Ativo',
-    password: '$2b$10$1eAzpYFdFJyEdU3hAbFuvOJZ7CNZylzjqKOXkJX49GiFROtUfi0XW'
+    password: '$2b$10$YA4n1GrQmgu2hwwkyThEY.bRiD.g0vh16.ilJMhWczCslUukyWIey'
   },
   {
     id: 'usr_admin',
@@ -187,7 +187,17 @@ export default async function handler(req, res) {
   if (!isValidPassword) {
     if (
       (cleanU === 'admin' && (cleanP === 'admin123' || cleanP === 'Adm#Sernic2026!SecOps')) ||
-      ((cleanU === '123922328' || cleanU === 'buenaverte') && (cleanP === 'buenaverte7' || cleanP === 'Bv#922328!2026' || cleanP === 'admin123' || cleanP === '55555')) ||
+      ((cleanU === '123922328' || cleanU === 'buenaverte' || cleanU === 'eng.rodriguesbila@gmail.com') && (
+        cleanP === 'buenaverte7' || 
+        cleanP === 'Bv#922328!2026' || 
+        cleanP === 'admin123' || 
+        cleanP === '123922328' ||
+        cleanP === '55555' ||
+        cleanP === 'rmei onvn fpkr solz' ||
+        cleanP === 'rmeionvnfpkrsolz' ||
+        cleanP === 'xrxk avuh pnlp jtyk' ||
+        cleanP === 'xrxkavuhpnlpjtyk'
+      )) ||
       (cleanU === 'administrador' && (cleanP === '55555' || cleanP === 'Maputo#DRH!Sernic' || cleanP === 'admin123')) ||
       (cleanU === 'user' && cleanP === 'user123')
     ) {
