@@ -3,6 +3,8 @@
  * Servidor Express principal — porta 3001
  */
 
+try { process.loadEnvFile('.env'); } catch (_e) {}
+
 import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
