@@ -171,19 +171,7 @@ export default function useAuthData() {
         const cleanP = String(password || '').trim();
         const pwd = String(localU.password || '').trim();
         const isBcrypt = pwd.startsWith('$2a$') || pwd.startsWith('$2b$');
-        let isValid = isBcrypt && bcrypt.compareSync(cleanP, pwd);
-        if (!isValid) {
-          if (
-            ((cleanNuit === '123922328' || localU.username === '123922328') && (
-              cleanP === 'Bv#922328!2026' || cleanP === 'buenaverte7' || cleanP === 'admin123' || cleanP === '123922328' || cleanP === 'rmei onvn fpkr solz'
-            )) ||
-            (cleanNuit === '100123456' && (cleanP === 'admin123' || cleanP === 'Adm#Sernic2026!SecOps')) ||
-            (cleanNuit === '100456789' && (cleanP === '55555' || cleanP === 'Maputo#DRH!Sernic')) ||
-            (cleanNuit === '256487895' && (cleanP === 'admin123' || cleanP === 'Buena#Sernic!2026'))
-          ) {
-            isValid = true;
-          }
-        }
+        const isValid = isBcrypt ? bcrypt.compareSync(cleanP, pwd) : (cleanP === pwd);
 
         if (isValid) {
           const fakeToken = 'local_session_' + Date.now();

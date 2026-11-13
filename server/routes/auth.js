@@ -8,23 +8,23 @@
 
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { getDb } from '../db.js';
+import { getDb, logServerAudit } from '../db.js';
 import { generateToken } from '../middleware/auth.js';
 import { sendPasswordRecoveryEmail, isEmailConfigured } from '../services/emailService.js';
 
 const router = Router();
 
-// Utilitário de auditoria no servidor
+// Utilitário de auditoria no servidor com encadeamento criptográfico SHA-256 (ISO/IEC 27001)
 function logAudit(db, user, action, module, details, ip) {
-  try {
-    const detailsStr = details && typeof details === 'object' ? JSON.stringify(details) : (details ? String(details) : null);
-    db.prepare(`
-      INSERT INTO audit_log (user, action, module, details, timestamp)
-      VALUES (?, ?, ?, ?, datetime('now'))
-    `).run(user || 'Sistema', action, module, detailsStr);
-  } catch (err) {
-    console.warn('[SERVER AUDIT WARNING]:', err.message);
+  logServerAudit(user, action, module, details, ip);
+}
+
+// Validador de complexidade estrita de senha (NIST SP 800-63B / OWASP ASVS)
+function validatePasswordStrength(pwd) {
+  if (!pwd || pwd.length < 8) {
+    return { isValid: false, message: 'A palavra-passe deve conter no mínimo 8 caracteres.' };
   }
+  return { isValid: true };
 }
 
 // ─── ROLES ────────────────────────────────────────────────────────────────────
@@ -209,10 +209,24 @@ router.delete('/users/:id', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Rate Limiting para proteção contra força bruta (TS09)
-const failedAttempts = new Map();
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutos de bloqueio
+// Rate Limiting Multicamada para proteção contra força bruta (Conformidade OWASP A04 / CIS Controls)
+const failedAttempts = new Map();      // Bloqueio por conta/NUIT
+const ipFailedAttempts = new Map();    // Bloqueio por endereço IP
+const MAX_FAILED_ATTEMPTS = 5;         // 5 tentativas erradas = bloqueio de conta
+const MAX_IP_FAILED_ATTEMPTS = 15;     // 15 tentativas erradas na mesma rede = bloqueio do IP
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;    // 15 minutos
+const IP_LOCKOUT_DURATION_MS = 30 * 60 * 1000; // 30 minutos
+
+// Limpeza automática de mapas de rate limiting a cada 20 minutos
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of failedAttempts.entries()) {
+    if (v.lockUntil && now > v.lockUntil + 1800000) failedAttempts.delete(k);
+  }
+  for (const [k, v] of ipFailedAttempts.entries()) {
+    if (v.lockUntil && now > v.lockUntil + 1800000) ipFailedAttempts.delete(k);
+  }
+}, 20 * 60 * 1000);
 
 // ─── SOLICITAR / ATIVAR ACESSO POR NUIT ──────────────────────────────────────
 router.post('/request-access', (req, res) => {
@@ -342,9 +356,19 @@ router.post('/login', (req, res) => {
     const clientIp = req.ip || req.socket.remoteAddress || req.headers['x-forwarded-for'] || '127.0.0.1';
     const trackKey = `${clientIp}_${cleanNuit}`;
     const now = Date.now();
-    const attemptInfo = failedAttempts.get(trackKey);
 
-    // TS09: Bloqueio automático se excedeu tentativas
+    // 1. Verificação de Bloqueio em Nível de Rede / Endereço IP (Anti-DDoS / Credential Stuffing)
+    const ipAttemptInfo = ipFailedAttempts.get(clientIp);
+    if (ipAttemptInfo && ipAttemptInfo.lockUntil && now < ipAttemptInfo.lockUntil) {
+      const waitMinutes = Math.ceil((ipAttemptInfo.lockUntil - now) / 60000);
+      return res.status(429).json({
+        error: 'ip_locked',
+        message: `Endereço IP temporariamente bloqueado por excesso de tentativas suspeitas. Tente novamente em ${waitMinutes} minutos.`
+      });
+    }
+
+    // 2. Verificação de Bloqueio em Nível de Conta / NUIT (TS09 Anti-Força Bruta)
+    const attemptInfo = failedAttempts.get(trackKey);
     if (attemptInfo && attemptInfo.lockUntil && now < attemptInfo.lockUntil) {
       const waitMinutes = Math.ceil((attemptInfo.lockUntil - now) / 60000);
       return res.status(429).json({
@@ -372,10 +396,25 @@ router.post('/login', (req, res) => {
 
     const recordFailedAttempt = (motivo) => {
       const currentCount = (attemptInfo ? attemptInfo.count : 0) + 1;
+      const currentIpCount = (ipAttemptInfo ? ipAttemptInfo.count : 0) + 1;
+
+      // Bloqueio por IP se atingir 15 tentativas na rede
+      if (currentIpCount >= MAX_IP_FAILED_ATTEMPTS) {
+        ipFailedAttempts.set(clientIp, { count: currentIpCount, lockUntil: now + IP_LOCKOUT_DURATION_MS });
+        logAudit(db, username, 'Bloqueio de IP por Força Bruta', 'Autenticação', {
+          motivo: 'Excesso de 15 tentativas consecutivas na rede',
+          ip: clientIp,
+          bloqueadoAte: new Date(now + IP_LOCKOUT_DURATION_MS).toISOString()
+        }, clientIp);
+      } else {
+        ipFailedAttempts.set(clientIp, { count: currentIpCount, lockUntil: 0 });
+      }
+
+      // Bloqueio por conta ao atingir 5 tentativas
       if (currentCount >= MAX_FAILED_ATTEMPTS) {
         failedAttempts.set(trackKey, { count: currentCount, lockUntil: now + LOCKOUT_DURATION_MS });
         logAudit(db, username, 'Bloqueio de Conta (TS09)', 'Autenticação', {
-          motivo: 'Excesso de 5 tentativas consecutivas',
+          motivo: 'Excesso de 5 tentativas consecutivas de autenticação',
           ip: clientIp,
           bloqueadoAte: new Date(now + LOCKOUT_DURATION_MS).toISOString()
         }, clientIp);
@@ -384,6 +423,7 @@ router.post('/login', (req, res) => {
           message: 'Conta temporariamente bloqueada após 5 tentativas falhadas. Tente novamente após 15 minutos.'
         });
       }
+
       failedAttempts.set(trackKey, { count: currentCount, lockUntil: 0 });
       logAudit(db, username, 'Tentativa de Login Falhada', 'Autenticação', { motivo, ip: clientIp, tentativa: currentCount }, clientIp);
       return res.status(401).json({ error: 'invalid_credentials' });
@@ -393,30 +433,17 @@ router.post('/login', (req, res) => {
       return recordFailedAttempt('Utilizador não encontrado ou inativo');
     }
     
-    // Validação por hash bcrypt, correspondência exata ou credenciais administrativas padrão
+    // Validação criptográfica rigorosa Bcrypt — Eliminação total de senhas fixas em código (OWASP A07 & NIST SP 800-63B)
     const cleanPwd = (password || '').trim();
-    const cleanU = String(username || '').trim().toLowerCase();
     const matchingUser = candidateUsers.find(user => {
       const isHash = user.password && (user.password.startsWith('$2a$') || user.password.startsWith('$2b$'));
-      if (isHash && bcrypt.compareSync(cleanPwd, user.password)) return true;
-      if (cleanPwd === user.password) return true;
-      // Compatibilidade para senhas administrativas padrão conhecidas
-      if (cleanU === 'admin' && (cleanPwd === 'admin123' || cleanPwd === 'Adm#Sernic2026!SecOps')) return true;
-      if (
-        (cleanU === '123922328' || cleanU === 'buenaverte' || cleanU === 'eng.rodriguesbila@gmail.com') && 
-        (
-          cleanPwd === 'buenaverte7' || 
-          cleanPwd === 'Bv#922328!2026' || 
-          cleanPwd === 'admin123' || 
-          cleanPwd === '123922328' ||
-          cleanPwd === '55555' ||
-          cleanPwd === 'rmei onvn fpkr solz' ||
-          cleanPwd === 'rmeionvnfpkrsolz' ||
-          cleanPwd === 'xrxk avuh pnlp jtyk' ||
-          cleanPwd === 'xrxkavuhpnlpjtyk'
-        )
-      ) return true;
-      if (cleanU === 'administrador' && (cleanPwd === '55555' || cleanPwd === 'Maputo#DRH!Sernic' || cleanPwd === 'admin123')) return true;
+      if (isHash) {
+        return bcrypt.compareSync(cleanPwd, user.password);
+      }
+      // Se a senha antiga ainda estivesse em texto simples, valida e converte para Bcrypt abaixo
+      if (cleanPwd === user.password) {
+        return true;
+      }
       return false;
     });
 
@@ -424,8 +451,13 @@ router.post('/login', (req, res) => {
       return recordFailedAttempt('Palavra-passe incorreta');
     }
     
-    // Sucesso: limpar contador de tentativas falhadas (TS09)
+    // Sucesso: limpar contadores de tentativas falhadas
     failedAttempts.delete(trackKey);
+    if (ipFailedAttempts.has(clientIp)) {
+      const cur = ipFailedAttempts.get(clientIp);
+      if (cur.count <= 1) ipFailedAttempts.delete(clientIp);
+      else ipFailedAttempts.set(clientIp, { count: Math.max(0, cur.count - 2), lockUntil: 0 });
+    }
     
     // Atualizar hash seguro caso a senha antiga na BD estivesse em texto simples
     if (matchingUser.password === password) {

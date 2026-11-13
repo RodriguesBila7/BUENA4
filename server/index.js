@@ -31,8 +31,10 @@ const app = express();
 const PORT = 3001;
 
 import { authenticateUser } from './middleware/auth.js';
+import { securityHeaders } from './middleware/securityHeaders.js';
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
+app.use(securityHeaders);
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json({ limit: '50mb' }));  // Permite fotos e documentos grandes
 app.use('/api', authenticateUser);

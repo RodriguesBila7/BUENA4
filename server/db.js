@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB_PATH = path.join(__dirname, 'sernic.db');
@@ -195,7 +196,9 @@ function initSchema(db) {
       module       TEXT NOT NULL,
       details      TEXT,
       ip           TEXT,
-      timestamp    TEXT DEFAULT (datetime('now'))
+      timestamp    TEXT DEFAULT (datetime('now')),
+      prev_hash    TEXT,
+      hash         TEXT
     );
 
     CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp);
@@ -642,22 +645,98 @@ function initSchema(db) {
     console.warn('[DB] Correção de regra estrutural:', err.message);
   }
 
+  // Garantir colunas de encadeamento criptográfico para inviolabilidade do log (ISO/IEC 27001 A.12.4)
+  try {
+    db.prepare(`ALTER TABLE audit_log ADD COLUMN prev_hash TEXT`).run();
+  } catch (_) {}
+  try {
+    db.prepare(`ALTER TABLE audit_log ADD COLUMN hash TEXT`).run();
+  } catch (_) {}
+
   console.log('[DB] Schema inicializado em:', DB_PATH);
 }
 
 /**
- * Função utilitária centralizada de auditoria no servidor
+ * Função utilitária centralizada de auditoria no servidor com encadeamento criptográfico SHA-256
  */
 export function logServerAudit(user, action, module, details, ip) {
   try {
     const database = getDb();
     const detailsStr = details && typeof details === 'object' ? JSON.stringify(details) : (details ? String(details) : null);
+    
+    // Obter o hash do último registo para criar encadeamento inviolável estilo blockchain
+    let prevHash = 'GENESIS_SERNIC_DRH_SECURITY_BLOCK';
+    try {
+      const last = database.prepare('SELECT hash FROM audit_log WHERE hash IS NOT NULL ORDER BY id DESC LIMIT 1').get();
+      if (last && last.hash) {
+        prevHash = last.hash;
+      }
+    } catch (_) {}
+
+    const nowIso = new Date().toISOString();
+    const payload = `${prevHash}|${user || 'Sistema'}|${action || 'Ação'}|${module || 'Geral'}|${detailsStr || ''}|${ip || ''}|${nowIso}`;
+    const rowHash = crypto.createHash('sha256').update(payload).digest('hex');
+
     database.prepare(`
-      INSERT INTO audit_log (user, action, module, details, ip, timestamp)
-      VALUES (?, ?, ?, ?, ?, datetime('now'))
-    `).run(user || 'Sistema', action || 'Ação', module || 'Geral', detailsStr, ip || null);
+      INSERT INTO audit_log (user, action, module, details, ip, timestamp, prev_hash, hash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(user || 'Sistema', action || 'Ação', module || 'Geral', detailsStr, ip || null, nowIso, prevHash, rowHash);
   } catch (err) {
     console.warn('[SERVER AUDIT ERROR]:', err.message);
+  }
+}
+
+/**
+ * Validador de Integridade da Cadeia de Auditoria (Detecta adulterações manuais na base de dados)
+ */
+export function verifyAuditChainIntegrity() {
+  try {
+    const database = getDb();
+    const rows = database.prepare('SELECT id, user, action, module, details, ip, timestamp, prev_hash, hash FROM audit_log ORDER BY id ASC').all();
+    if (!rows || rows.length === 0) {
+      return { verified: true, totalLogs: 0, status: 'SEM_REGISTOS', message: 'Sem registos de auditoria.' };
+    }
+
+    let previousHash = 'GENESIS_SERNIC_DRH_SECURITY_BLOCK';
+    let verifiedHashedCount = 0;
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      // Se a linha já tiver hash criptográfico gerado
+      if (row.hash && row.prev_hash) {
+        if (verifiedHashedCount > 0 && row.prev_hash !== previousHash) {
+          return {
+            verified: false,
+            brokenAtId: row.id,
+            status: 'VIOLADO_ELO_ROMPIDO',
+            message: `A cadeia de auditoria foi violada no registo ID ${row.id}. O elo criptográfico com o registo anterior foi corrompido.`
+          };
+        }
+
+        const payload = `${row.prev_hash}|${row.user}|${row.action}|${row.module}|${row.details || ''}|${row.ip || ''}|${row.timestamp}`;
+        const calculatedHash = crypto.createHash('sha256').update(payload).digest('hex');
+        if (calculatedHash !== row.hash) {
+          return {
+            verified: false,
+            brokenAtId: row.id,
+            status: 'VIOLADO_CONTEUDO_ADULTERADO',
+            message: `O conteúdo do registo de auditoria ID ${row.id} foi adulterado diretamente na base de dados.`
+          };
+        }
+        previousHash = row.hash;
+        verifiedHashedCount++;
+      }
+    }
+
+    return {
+      verified: true,
+      totalLogs: rows.length,
+      verifiedHashedCount,
+      status: 'INVIOLÁVEL',
+      message: 'Todos os registos criptográficos de auditoria conferem 100% com as assinaturas SHA-256.'
+    };
+  } catch (err) {
+    return { verified: false, error: err.message, status: 'ERRO_VERIFICACAO' };
   }
 }
 
