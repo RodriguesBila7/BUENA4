@@ -11,6 +11,7 @@
     "build": "node scripts/sync_db.cjs && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "report:security": "node scripts/generate_security_report_pdf.mjs",
     "test": "vitest run"
   },
   "dependencies": {
